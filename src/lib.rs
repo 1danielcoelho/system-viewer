@@ -122,6 +122,8 @@ pub fn initialize() {
 
                 let ctx = &context;
 
+                ctx.viewport(0, 0, canvas_width_on_screen as i32, canvas_height_on_screen as i32);
+
                 app_state::update_dynamic_data(
                     0.0,
                     canvas_height_on_screen as f32,

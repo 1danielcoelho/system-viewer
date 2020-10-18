@@ -1,3 +1,9 @@
-# Doesn't look like there's much support for imgui in the wasm target 
-- https://github.com/Gekkio/imgui-rs/issues/342#issuecomment-711178306
-- Find another UI lib? I ain't drawing UI rects with webgl 2 man
+<!-- # Why is the cube rendering at the bottom left?
+- Missing viewport -->
+# Break off the mesh stuff from material
+# Setup a time variable and animate a material rotation
+# Setup https://github.com/emilk/egui
+# Setup keyboard and mouse controls to have a basic look around
+# Get some better models and obj/gltf parsing
+- Show coordinates on screen
+# I think I'll need wasm-bindgen-futures
