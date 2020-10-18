@@ -1,5 +1,4 @@
 extern crate wasm_bindgen;
-use std::{io, time::Duration, time::Instant};
 
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
@@ -76,6 +75,8 @@ pub fn initialize() {
 
     let cube = materials::SimpleMaterial::new(&context);
 
+    let start_millis = js_sys::Date::now();
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
 
@@ -136,7 +137,7 @@ pub fn initialize() {
                 glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
                 glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
-                cube.render(&context, curr_state.canvas_width, curr_state.canvas_height);
+                cube.render(&context, (js_sys::Date::now() - start_millis) as f32, curr_state.canvas_width, curr_state.canvas_height);
             }
 
             event => {
