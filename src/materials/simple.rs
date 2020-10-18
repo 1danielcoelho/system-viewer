@@ -5,12 +5,20 @@ use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
 pub struct SimpleMaterial {
-    pub program: WebGlProgram,
-    pub indices_buffer: WebGlBuffer,
-    pub index_count: i32,
     pub position_buffer: WebGlBuffer,
+    
+    pub color_buffer: WebGlBuffer,
+    
+    pub indices_buffer: WebGlBuffer,    
+    pub index_count: i32,
+    
+    pub program: WebGlProgram,
+
     pub u_opacity: WebGlUniformLocation,
     pub u_transform: WebGlUniformLocation,
+
+    pub a_position: i32,
+    pub a_color: i32,
 }
 
 impl SimpleMaterial {
@@ -33,6 +41,18 @@ impl SimpleMaterial {
              1.0, -1.0,  1.0, 
              1.0,  1.0, -1.0, 
              1.0,  1.0,  1.0, 
+        ];
+
+        let colors_cube: [f32; 24] = [
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 1.0,
+
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 1.0,
+            1.0, 1.0, 0.0,
+            1.0, 1.0, 1.0,
         ];
 
         let indices_cube: [u16; 36] = [
@@ -69,6 +89,20 @@ impl SimpleMaterial {
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_position));
         gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
 
+        // Vertex colors
+        let color_buffer = wasm_bindgen::memory()
+            .dyn_into::<WebAssembly::Memory>()
+            .unwrap()
+            .buffer();
+        let colors_location = colors_cube.as_ptr() as u32 / 4;
+        let color_array = js_sys::Float32Array::new(&color_buffer).subarray(
+            colors_location,
+            colors_location + colors_cube.len() as u32,
+        );
+        let buffer_colors = gl.create_buffer().ok_or("failed to create buffer").unwrap();
+        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_colors));
+        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::STATIC_DRAW);
+
         // Vertex indices
         let indices_memory_buffer = wasm_bindgen::memory()
             .dyn_into::<WebAssembly::Memory>()
@@ -88,12 +122,15 @@ impl SimpleMaterial {
         );
 
         Self {
-            u_opacity: gl.get_uniform_location(&program, "uOpacity").unwrap(),
-            u_transform: gl.get_uniform_location(&program, "uTransform").unwrap(),
-            program: program,
+            position_buffer: buffer_position,
+            color_buffer: buffer_colors,
             indices_buffer: buffer_indices,
             index_count: indices_array.length() as i32,
-            position_buffer: buffer_position,
+            u_opacity: gl.get_uniform_location(&program, "uOpacity").unwrap(),
+            u_transform: gl.get_uniform_location(&program, "uTransform").unwrap(),
+            a_position: gl.get_attrib_location(&program, "aPosition"),
+            a_color: gl.get_attrib_location(&program, "aColor"),
+            program: program,
         }
     }
 
@@ -126,8 +163,13 @@ impl SimpleMaterial {
 
         // Bind vertex buffer
         gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));
+        gl.enable_vertex_attrib_array(self.a_position as u32);
         gl.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
-        gl.enable_vertex_attrib_array(0);
+        
+        // Bind color buffer
+        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
+        gl.enable_vertex_attrib_array(self.a_color as u32);
+        gl.vertex_attrib_pointer_with_i32(1, 3, GL::FLOAT, false, 0, 0);
 
         // Bind index buffer
         gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices_buffer));
