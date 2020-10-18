@@ -14,7 +14,7 @@ mod app_state;
 mod common_funcs;
 mod constants;
 mod gl_setup;
-mod programs;
+mod materials;
 mod shaders;
 
 #[macro_export]
@@ -74,7 +74,7 @@ pub fn initialize() {
             ",
     )));
 
-    let program_graph_3d = programs::Graph3D::new(&context);
+    let cube = materials::SimpleMaterial::new(&context);
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
@@ -93,9 +93,10 @@ pub fn initialize() {
             Event::RedrawRequested(window_id) if window_id == window.id() => {
                 let canvas_width_on_screen = canvas.client_width() as u32;
                 let canvas_height_on_screen = canvas.client_height() as u32;
-                
+
                 // Check if we need to resize
-                if window.inner_size().width != canvas_width_on_screen || window.inner_size().height != canvas_height_on_screen
+                if window.inner_size().width != canvas_width_on_screen
+                    || window.inner_size().height != canvas_height_on_screen
                 {
                     // Sets canvas height and width, unfortunately also setting its style height and width
                     window.set_inner_size(winit::dpi::LogicalSize::new(
@@ -103,7 +104,7 @@ pub fn initialize() {
                         canvas_height_on_screen,
                     ));
 
-                    // Restore the canvas width/height to 100% so they get driven by the window size
+                    // #HACK: Restore the canvas width/height to 100% so they get driven by the window size
                     let style = canvas.style();
                     style
                         .set_property_with_priority("width", "100%", "")
@@ -112,32 +113,28 @@ pub fn initialize() {
                         .set_property_with_priority("height", "100%", "")
                         .expect("Failed to set height!");
 
-                    log::info!("Resized to w: {}, h: {}", canvas_width_on_screen, canvas_height_on_screen);
+                    log::info!(
+                        "Resized to w: {}, h: {}",
+                        canvas_width_on_screen,
+                        canvas_height_on_screen
+                    );
                 }
 
                 let ctx = &context;
 
-                app_state::update_dynamic_data(0.0, canvas_height_on_screen as f32, canvas_width_on_screen as f32);
+                app_state::update_dynamic_data(
+                    0.0,
+                    canvas_height_on_screen as f32,
+                    canvas_width_on_screen as f32,
+                );
                 let curr_state = app_state::get_curr_state();
 
-                ctx.clear_color(0.5, 0.2, 0.2, 1.0);
-                ctx.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+                // log::info!("App state: {:?}", curr_state);
 
-                glc!(ctx, ctx.clear_color(0.2, 0.9, 0.2, 1.0));
+                glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
                 glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
-                program_graph_3d.render(
-                    &context,
-                    curr_state.control_bottom,
-                    curr_state.control_top,
-                    curr_state.control_left,
-                    curr_state.control_right,
-                    curr_state.canvas_height,
-                    curr_state.canvas_width,
-                    curr_state.rotation_x_axis,
-                    curr_state.rotation_y_axis,
-                    &common_funcs::get_updated_3d_y_values(curr_state.time),
-                );
+                cube.render(&context, curr_state.canvas_width, curr_state.canvas_height);
             }
 
             event => {

@@ -18,10 +18,10 @@ pub fn update_dynamic_data(time: f32, canvas_height: f32, canvas_width: f32) {
         canvas_height: canvas_height,
         canvas_width: canvas_width,
 
-        control_bottom: half_canvas_height - half_display_size,
-        control_top: half_canvas_height + half_display_size,
-        control_left: half_canvas_width - half_display_size,
-        control_right: half_canvas_width + half_display_size,
+        control_bottom: 0.0,
+        control_top: canvas_height,
+        control_left: 0.0,
+        control_right: canvas_width,
 
         time: time,
         ..*data.clone()
