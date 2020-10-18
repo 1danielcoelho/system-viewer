@@ -32,6 +32,7 @@ pub fn get_curr_state() -> Arc<AppState> {
     APP_STATE.lock().unwrap().clone()
 }
 
+#[derive(Debug)]
 pub struct AppState {
     pub canvas_height: f32,
     pub canvas_width: f32,

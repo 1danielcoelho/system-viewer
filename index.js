@@ -1,4 +1,4 @@
-const rust = import('./pkg/system_viewer');
+const rust = import('./pkg/index');
 const canvas = document.getElementById('rustCanvas');
 const gl = canvas.getContext("webgl", { antialias: true });
 
@@ -8,6 +8,5 @@ rust.then(m => {
         return;
     }
     
-    const viewer = new m.Viewer();
-    viewer.start();    
+    m.initialize();
 });

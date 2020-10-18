@@ -1,1 +1,3 @@
-# If I use the winit backend for imgui (https://github.com/rust-windowing/winit) I can probably get imgui to compile with wasm-bindgen like this guy https://github.com/post-rex/laserlight/
+# Doesn't look like there's much support for imgui in the wasm target 
+- https://github.com/Gekkio/imgui-rs/issues/342#issuecomment-711178306
+- Find another UI lib? I ain't drawing UI rects with webgl 2 man
