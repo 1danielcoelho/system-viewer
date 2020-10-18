@@ -1,0 +1,43 @@
+[package]
+name = "system_viewer"
+version = "0.1.0"
+authors = ["Daniel Coelho"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+console_log = "0.2"
+console_error_panic_hook = "=0.1.5"
+js-sys = "0.3.19"
+log = "0.4"
+lazy_static = "1.3.0"
+nalgebra = "0.18.0"
+wasm-bindgen = "0.2.44"
+wasm-bindgen-futures = "0.4"
+winit = { version = "0.22", features = ["web-sys"] }
+imgui = { version = "0.5", features = ["wasm"] }
+imgui-winit-support = "0.5"
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = [
+    'Document',
+    'Element',
+    'EventTarget',
+    'HtmlCanvasElement',
+    'MouseEvent',
+    'WebGlBuffer',
+    'WebGlProgram',
+    'WebGlRenderingContext',
+    'WebGlShader',
+    'WebGlUniformLocation',
+    'Window',
+]
+
+[build-dependencies]
+wasm-pack = "0.9.1"
+
+[profile.release]
+opt-level = "s"
