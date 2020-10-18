@@ -144,10 +144,8 @@ impl SimpleMaterial {
         gl.use_program(Some(&self.program));
 
         // Get uniforms
+        let w = cgmath::Matrix4::from_angle_x(cgmath::Deg(time / 10.0)) * cgmath::Matrix4::from_angle_y(cgmath::Deg(time / 13.0)) * cgmath::Matrix4::from_angle_z(cgmath::Deg(time / 17.0));        
         // TODO: Fetch framebuffer dimensions here instead of assuming canvas_dims are it
-        let w = cgmath::Matrix4::from_angle_x(cgmath::Deg(time / 10.0)) * cgmath::Matrix4::from_angle_y(cgmath::Deg(time / 13.0)) * cgmath::Matrix4::from_angle_z(cgmath::Deg(time / 17.0));
-
-
         let p = cgmath::perspective(cgmath::Deg(65.0), canvas_width as f32 / canvas_height as f32, 1.0, 200.0);
         let v = cgmath::Matrix4::look_at(
             cgmath::Point3::new(1.5, -5.0, 3.0),
