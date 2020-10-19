@@ -17,7 +17,7 @@ pub fn initialize_webgl_context() -> Result<(WebGlRenderingContext, web_sys::Htm
 
     gl.enable(GL::BLEND);
     gl.enable(GL::CULL_FACE);
-    
+
     gl.cull_face(GL::BACK);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
     gl.clear_color(0.0, 0.0, 0.0, 1.0); //RGBA

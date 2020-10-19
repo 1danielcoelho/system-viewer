@@ -73,6 +73,13 @@ pub fn initialize() {
             ",
     )));
 
+    let backend = egui_web::WebBackend::new("rustCanvas").expect("Failed to make a web backend for egui");
+    let egui_ctx = egui::Context::new();
+
+    // let app = Box::new(egui::DemoApp::default());
+    // let runner = egui_web::AppRunner::new(backend, app).expect("Failed to make app runner");
+    // egui_web::run(runner).expect("Failed to run egui");
+
     let cube = materials::SimpleMaterial::new(&context);
 
     let start_millis = js_sys::Date::now();
@@ -124,6 +131,8 @@ pub fn initialize() {
                 let ctx = &context;
 
                 ctx.viewport(0, 0, canvas_width_on_screen as i32, canvas_height_on_screen as i32);
+
+                let egui_input = egui_ctx.begin_frame();
 
                 app_state::update_dynamic_data(
                     0.0,
