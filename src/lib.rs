@@ -1,5 +1,6 @@
 extern crate wasm_bindgen;
 
+use egui_web::WebInput;
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
@@ -73,8 +74,9 @@ pub fn initialize() {
             ",
     )));
 
-    let backend = egui_web::WebBackend::new("rustCanvas").expect("Failed to make a web backend for egui");
-    let egui_ctx = egui::Context::new();
+    let mut backend =
+        egui_web::WebBackend::new("rustCanvas").expect("Failed to make a web backend for egui");
+    let mut web_input: WebInput = Default::default();
 
     // let app = Box::new(egui::DemoApp::default());
     // let runner = egui_web::AppRunner::new(backend, app).expect("Failed to make app runner");
@@ -128,12 +130,6 @@ pub fn initialize() {
                     );
                 }
 
-                let ctx = &context;
-
-                ctx.viewport(0, 0, canvas_width_on_screen as i32, canvas_height_on_screen as i32);
-
-                let egui_input = egui_ctx.begin_frame();
-
                 app_state::update_dynamic_data(
                     0.0,
                     canvas_height_on_screen as f32,
@@ -141,12 +137,42 @@ pub fn initialize() {
                 );
                 let curr_state = app_state::get_curr_state();
 
-                // log::info!("App state: {:?}", curr_state);
-
+                let ctx = &context;
                 glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
                 glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
-                cube.render(&context, (js_sys::Date::now() - start_millis) as f32, curr_state.canvas_width, curr_state.canvas_height);
+                let raw_input = web_input.new_frame();
+                let ui = backend.begin_frame(raw_input);
+
+                // generate paint jobs here
+                let mut s = String::from("test");
+                let mut value = 0.0;
+                egui::Window::new("Debug").show(&ui.ctx(), |ui| {
+                    ui.label(format!("Hello, world {}", 123));
+                    if ui.button("Save").clicked {
+                        log::info!("Save!");
+                    }
+                    ui.text_edit(&mut s);
+                    ui.add(egui::Slider::f32(&mut value, 0.0..=1.0).text("float"));
+                });
+
+                let (output, paint_jobs) = backend.end_frame().unwrap();
+                backend.paint(paint_jobs).expect("Failed to paint!");
+
+                // log::info!("App state: {:?}", curr_state);
+                
+                ctx.viewport(
+                    0,
+                    0,
+                    canvas_width_on_screen as i32,
+                    canvas_height_on_screen as i32,
+                );
+                cube.render(
+                    &context,
+                    (js_sys::Date::now() - start_millis) as f32,
+                    curr_state.canvas_width,
+                    curr_state.canvas_height,
+                );
             }
 
             event => {
