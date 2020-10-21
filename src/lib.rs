@@ -147,6 +147,7 @@ pub fn initialize() {
 
                 // Egui needs this disabled for now
                 ctx.enable(GL::CULL_FACE);
+                ctx.disable(GL::SCISSOR_TEST);
 
                 ctx.viewport(
                     0,
