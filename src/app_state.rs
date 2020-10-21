@@ -53,16 +53,15 @@ pub fn update_mouse_down(x: f32, y: f32, is_down: bool) {
     *data = Arc::new(AppState {
         mouse_down: is_down,
         mouse_x: x,
-        mouse_y: data.canvas_height - y,
+        mouse_y: y,
         ..*data.clone()
     });
 }
 
 pub fn update_mouse_position(x: f32, y: f32) {
     let mut data = APP_STATE.lock().unwrap();
-    let inverted_y = data.canvas_height - y;
     let x_delta = x - data.mouse_x;
-    let y_delta = inverted_y - data.mouse_y;
+    let y_delta = y - data.mouse_y;
     let rotation_x_delta = if data.mouse_down {
         std::f32::consts::PI * y_delta / data.canvas_height
     } else {
@@ -76,7 +75,7 @@ pub fn update_mouse_position(x: f32, y: f32) {
 
     *data = Arc::new(AppState {
         mouse_x: x,
-        mouse_y: inverted_y,
+        mouse_y: y,
         rotation_x_axis: data.rotation_x_axis + rotation_x_delta,
         rotation_y_axis: data.rotation_y_axis - rotation_y_delta,
         ..*data.clone()

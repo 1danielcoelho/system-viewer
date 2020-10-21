@@ -16,10 +16,11 @@ pub fn initialize_webgl_context() -> Result<(WebGlRenderingContext, web_sys::Htm
     attach_mouse_move_handler(&canvas)?;
 
     gl.enable(GL::BLEND);
-    gl.enable(GL::CULL_FACE);
-
-    gl.cull_face(GL::BACK);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
+    
+    gl.enable(GL::CULL_FACE);
+    gl.cull_face(GL::BACK);
+
     gl.clear_color(0.0, 0.0, 0.0, 1.0); //RGBA
     gl.clear_depth(1.);
 

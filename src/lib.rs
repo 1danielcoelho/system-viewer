@@ -1,6 +1,7 @@
 extern crate wasm_bindgen;
 
-use egui_web::WebInput;
+use egui::Pos2;
+use gui_backend::WebInput;
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
@@ -42,6 +43,15 @@ pub fn main() {
     console_log::init_with_level(log::Level::Debug).expect("Unable to initialize console logging");
 }
 
+pub fn native_pixels_per_point() -> f32 {
+    let pixels_per_point = web_sys::window().unwrap().device_pixel_ratio() as f32;
+    if pixels_per_point > 0.0 && pixels_per_point.is_finite() {
+        pixels_per_point
+    } else {
+        1.0
+    }
+}
+
 #[wasm_bindgen]
 pub fn initialize() {
     let (context, canvas) = gl_setup::initialize_webgl_context().unwrap();
@@ -75,12 +85,8 @@ pub fn initialize() {
     )));
 
     let mut backend =
-        egui_web::WebBackend::new("rustCanvas").expect("Failed to make a web backend for egui");
+        gui_backend::WebBackend::new("rustCanvas").expect("Failed to make a web backend for egui");
     let mut web_input: WebInput = Default::default();
-
-    // let app = Box::new(egui::DemoApp::default());
-    // let runner = egui_web::AppRunner::new(backend, app).expect("Failed to make app runner");
-    // egui_web::run(runner).expect("Failed to run egui");
 
     let cube = materials::SimpleMaterial::new(&context);
 
@@ -138,13 +144,36 @@ pub fn initialize() {
                 let curr_state = app_state::get_curr_state();
 
                 let ctx = &context;
-                glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
-                glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
-                let raw_input = web_input.new_frame();
+                // Egui needs this disabled for now
+                ctx.enable(GL::CULL_FACE);
+
+                ctx.viewport(
+                    0,
+                    0,
+                    canvas_width_on_screen as i32,
+                    canvas_height_on_screen as i32,
+                );
+
+                glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
+                glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT));
+
+                cube.render(
+                    &context,
+                    (js_sys::Date::now() - start_millis) as f32,
+                    curr_state.canvas_width,
+                    curr_state.canvas_height,
+                );
+
+                let mut raw_input = web_input.new_frame(1.0);
+                raw_input.mouse_pos = Some(Pos2 {
+                    x: curr_state.mouse_x,
+                    y: curr_state.mouse_y,
+                });
+                raw_input.mouse_down = curr_state.mouse_down;
+
                 let ui = backend.begin_frame(raw_input);
 
-                // generate paint jobs here
                 let mut s = String::from("test");
                 let mut value = 0.0;
                 egui::Window::new("Debug").show(&ui.ctx(), |ui| {
@@ -158,21 +187,6 @@ pub fn initialize() {
 
                 let (output, paint_jobs) = backend.end_frame().unwrap();
                 backend.paint(paint_jobs).expect("Failed to paint!");
-
-                // log::info!("App state: {:?}", curr_state);
-                
-                ctx.viewport(
-                    0,
-                    0,
-                    canvas_width_on_screen as i32,
-                    canvas_height_on_screen as i32,
-                );
-                cube.render(
-                    &context,
-                    (js_sys::Date::now() - start_millis) as f32,
-                    curr_state.canvas_width,
-                    curr_state.canvas_height,
-                );
             }
 
             event => {
