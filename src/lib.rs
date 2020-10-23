@@ -18,7 +18,10 @@ mod gl_setup;
 mod materials;
 mod shaders;
 mod object;
-mod traits;
+mod entity;
+mod components;
+mod resources;
+mod texture;
 mod mesh;
 
 #[macro_export]

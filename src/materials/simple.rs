@@ -41,6 +41,9 @@ impl SimpleMaterial {
     ) {
         gl.use_program(Some(&self.program));
 
+        gl.enable_vertex_attrib_array(self.a_position as u32);
+        gl.enable_vertex_attrib_array(self.a_color as u32);
+
         // Get uniforms
         let w = cgmath::Matrix4::from_angle_x(cgmath::Deg(time / 10.0))
             * cgmath::Matrix4::from_angle_y(cgmath::Deg(time / 13.0))

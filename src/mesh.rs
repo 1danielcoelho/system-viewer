@@ -1,9 +1,16 @@
+use std::rc::{Rc, Weak};
+
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlBuffer, WebGlRenderingContext};
 use web_sys::WebGlRenderingContext as GL;
+use web_sys::{WebGlBuffer, WebGlRenderingContext};
+
+use crate::resources::ResourceManagerInstance;
+
+static cube_mesh: Option<Weak<Mesh>> = None;
 
 pub struct Mesh {
+    pub id: u32,
     pub name: String,
     pub position_buffer: WebGlBuffer,
     pub color_buffer: WebGlBuffer,
@@ -12,50 +19,28 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new(name: &str, gl: &WebGlRenderingContext) -> Self {
-        #[rustfmt::skip]
-        let vertices_cube: [f32; 24] = [
-            -1.0, -1.0, -1.0, 
-            -1.0, -1.0,  1.0, 
-            -1.0,  1.0, -1.0, 
-            -1.0,  1.0,  1.0, 
+    // Generates a cube mesh on-demand and returns an Rc to it
+    pub fn cube(ctx: &WebGlRenderingContext) -> Rc<Mesh> {
+        // We already made a cube, just return it
+        if let Some(mesh) = cube_mesh {
+            if let Some(cube_mesh_rc) = mesh.upgrade() {
+                return cube_mesh_rc;
+            }
+        }
 
-             1.0, -1.0, -1.0, 
-             1.0, -1.0,  1.0, 
-             1.0,  1.0, -1.0, 
-             1.0,  1.0,  1.0, 
+        let vertices_cube: [f32; 24] = [
+            -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0,
+            1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0,
         ];
 
         let colors_cube: [f32; 24] = [
-            0.0, 0.0, 0.0,
-            0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0,
-            0.0, 1.0, 1.0,
-
-            1.0, 0.0, 0.0,
-            1.0, 0.0, 1.0,
-            1.0, 1.0, 0.0,
-            1.0, 1.0, 1.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+            1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0,
         ];
 
         let indices_cube: [u16; 36] = [
-            0, 1, 3,
-            0, 3, 2,
-            
-            1, 5, 3,
-            5, 7, 3,
-
-            5, 4, 6,
-            6, 7, 5,
-
-            0, 2, 4,
-            2, 6, 4,
-
-            2, 3, 7,
-            2, 7, 6,
-
-            0, 4, 5,
-            0, 5, 1
+            0, 1, 3, 0, 3, 2, 1, 5, 3, 5, 7, 3, 5, 4, 6, 6, 7, 5, 0, 2, 4, 2, 6, 4, 2, 3, 7, 2, 7,
+            6, 0, 4, 5, 0, 5, 1,
         ];
 
         // Vertex positions
@@ -68,9 +53,12 @@ impl Mesh {
             vertices_location,
             vertices_location + vertices_cube.len() as u32,
         );
-        let buffer_position = gl.create_buffer().ok_or("failed to create buffer").unwrap();
-        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_position));
-        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
+        let buffer_position = ctx
+            .create_buffer()
+            .ok_or("failed to create buffer")
+            .unwrap();
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_position));
+        ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
 
         // Vertex colors
         let color_buffer = wasm_bindgen::memory()
@@ -78,13 +66,14 @@ impl Mesh {
             .unwrap()
             .buffer();
         let colors_location = colors_cube.as_ptr() as u32 / 4;
-        let color_array = js_sys::Float32Array::new(&color_buffer).subarray(
-            colors_location,
-            colors_location + colors_cube.len() as u32,
-        );
-        let buffer_colors = gl.create_buffer().ok_or("failed to create buffer").unwrap();
-        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_colors));
-        gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::STATIC_DRAW);
+        let color_array = js_sys::Float32Array::new(&color_buffer)
+            .subarray(colors_location, colors_location + colors_cube.len() as u32);
+        let buffer_colors = ctx
+            .create_buffer()
+            .ok_or("failed to create buffer")
+            .unwrap();
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_colors));
+        ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::STATIC_DRAW);
 
         // Vertex indices
         let indices_memory_buffer = wasm_bindgen::memory()
@@ -96,38 +85,38 @@ impl Mesh {
             indices_location,
             indices_location + indices_cube.len() as u32,
         );
-        let buffer_indices = gl.create_buffer().unwrap();
-        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
-        gl.buffer_data_with_array_buffer_view(
+        let buffer_indices = ctx.create_buffer().unwrap();
+        ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
+        ctx.buffer_data_with_array_buffer_view(
             GL::ELEMENT_ARRAY_BUFFER,
             &indices_array,
             GL::STATIC_DRAW,
         );
 
-        Self {
-            name: String::from(name),
+        let new_cube_mesh = Self {
+            id: 0,
+            name: String::from("cube"),
             position_buffer: buffer_position,
             color_buffer: buffer_colors,
             indices_buffer: buffer_indices,
             index_count: indices_array.length() as i32,
-        }
+        };
+        return ResourceManagerInstance.register(new_cube_mesh);
     }
 
-    pub fn draw(&self, gl: &WebGlRenderingContext) {
+    pub fn draw(&self, ctx: &WebGlRenderingContext) {
         // Bind vertex buffer
-        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));
-        gl.enable_vertex_attrib_array(self.a_position as u32);
-        gl.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));
+        ctx.vertex_attrib_pointer_with_i32(0, 3, GL::FLOAT, false, 0, 0);
 
         // Bind color buffer
-        gl.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
-        gl.enable_vertex_attrib_array(self.a_color as u32);
-        gl.vertex_attrib_pointer_with_i32(1, 3, GL::FLOAT, false, 0, 0);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
+        ctx.vertex_attrib_pointer_with_i32(1, 3, GL::FLOAT, false, 0, 0);
 
         // Bind index buffer
-        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices_buffer));
+        ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices_buffer));
 
         // Draw
-        gl.draw_elements_with_i32(GL::TRIANGLES, self.index_count, GL::UNSIGNED_SHORT, 0);
+        ctx.draw_elements_with_i32(GL::TRIANGLES, self.index_count, GL::UNSIGNED_SHORT, 0);
     }
 }
