@@ -43,7 +43,9 @@ impl Entity {
         return ent_man.register(new_entity).unwrap();
     }
 
-    pub fn get_component<T: Component>(&self) -> Option<&T> {
+    pub fn get_component<T: Component + Component<ComponentType = T> + 'static>(
+        &self,
+    ) -> Option<&T> {
         let comp_id = self.component_ids[T::get_component_index() as usize];
         if comp_id == 0 {
             return None;
@@ -52,49 +54,29 @@ impl Entity {
         return T::get_components_vector().get(comp_id as usize);
     }
 
-    // TODO: Some generic way of doing this that also lets us pass arbitrary arguments to the new components?
-    pub fn get_transform_component(&self) -> Option<&TransformComponent> {
-        let comp_id = self.component_ids[ComponentIndex::Transform as usize];
-        if comp_id == 0 {
-            return None;
-        };
-        return ComponentManagerInstance.transform.get(comp_id as usize);
-    }
-
-    pub fn add_transform_component(&self) -> Option<&TransformComponent> {
-        // We already have one of those
-        if self.component_ids[ComponentIndex::Transform as usize] != 0 {
+    pub fn add_component<T: Default + Component + Component<ComponentType = T> + 'static>(
+        &self,
+    ) -> Option<&T> {
+        let comp_id = self.component_ids[T::get_component_index() as usize];
+        if comp_id != 0 {
             log::info!("Tried to add a repeated component");
+            return self.get_component();
         };
 
-        ComponentManagerInstance
-            .transform
-            .push(TransformComponent::new());
-        self.component_ids[ComponentIndex::Transform as usize] =
-            (ComponentManagerInstance.transform.len() - 1) as u32;
+        let comp_vec = T::get_components_vector();
+        comp_vec.push(T::default());
 
-        return ComponentManagerInstance.transform.last();
+        self.component_ids[T::get_component_index() as usize] = (comp_vec.len() - 1) as u32;
+
+        return comp_vec.last();
     }
 
-    pub fn get_mesh_component(&self) -> Option<&MeshComponent> {
-        let comp_id = self.component_ids[ComponentIndex::Transform as usize];
-        if comp_id == 0 {
-            return None;
-        };
-        return ComponentManagerInstance.mesh.get(comp_id as usize);
-    }
-
-    pub fn add_mesh_component(&self) -> Option<&MeshComponent> {
-        // We already have one of those
-        if self.component_ids[ComponentIndex::Mesh as usize] != 0 {
-            log::info!("Tried to add a repeated component");
-        };
-
-        ComponentManagerInstance.mesh.push(MeshComponent::new());
-        self.component_ids[ComponentIndex::Mesh as usize] =
-            (ComponentManagerInstance.mesh.len() - 1) as u32;
-
-        return ComponentManagerInstance.mesh.last();
+    // For builder pattern
+    pub fn with_component<T: Default + Component + Component<ComponentType = T> + 'static>(
+        &self,
+    ) -> &Self {
+        self.add_component::<T>();
+        return &self;
     }
 }
 
@@ -123,7 +105,7 @@ impl EntityManager {
     }
 }
 
-pub trait Component {
+pub trait Component: Default {
     type ComponentType;
     fn get_component_index() -> ComponentIndex;
     fn get_components_vector() -> &'static Vec<Self::ComponentType>;
@@ -156,6 +138,11 @@ pub struct PhysicsComponent {
 }
 impl PhysicsComponent {
     fn new() -> Self {
+        return Self::default();
+    }
+}
+impl Default for PhysicsComponent {
+    fn default() -> Self {
         return Self {
             collision_enabled: true,
             position: cgmath::Vector3::new(0.0, 0.0, 0.0),
@@ -188,6 +175,11 @@ pub struct MeshComponent {
 }
 impl MeshComponent {
     fn new() -> Self {
+        return Self::default();
+    }
+}
+impl Default for MeshComponent {
+    fn default() -> Self {
         return Self {
             aabb_min: cgmath::Vector3::new(0.0, 0.0, 0.0),
             aabb_max: cgmath::Vector3::new(0.0, 0.0, 0.0),
@@ -217,6 +209,15 @@ pub struct TransformComponent {
 }
 impl TransformComponent {
     pub fn new() -> Self {
+        return Self::default();
+    }
+
+    pub fn set_parent(&mut self, new_parent: u32) {
+        self.parent = new_parent;
+    }
+}
+impl Default for TransformComponent {
+    fn default() -> Self {
         return Self {
             transform: cgmath::Decomposed {
                 scale: 1.0,
@@ -226,10 +227,6 @@ impl TransformComponent {
             parent: 0,
             children: vec![0],
         };
-    }
-
-    pub fn set_parent(&mut self, new_parent: u32) {
-        self.parent = new_parent;
     }
 }
 impl Component for TransformComponent {
@@ -251,6 +248,11 @@ pub struct CameraComponent {
 }
 impl CameraComponent {
     fn new() -> Self {
+        return Self::default();
+    }
+}
+impl Default for CameraComponent {
+    fn default() -> Self {
         return Self {
             fov_vert: cgmath::Deg(80.0),
             near: 10.0,
