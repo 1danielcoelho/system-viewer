@@ -17,6 +17,9 @@ mod constants;
 mod gl_setup;
 mod materials;
 mod shaders;
+mod object;
+mod traits;
+mod mesh;
 
 #[macro_export]
 macro_rules! glc {

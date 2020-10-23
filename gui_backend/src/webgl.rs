@@ -294,7 +294,6 @@ impl Painter {
         let gl = &self.gl;
 
         gl.disable(Gl::CULL_FACE);
-
         gl.enable(Gl::SCISSOR_TEST);
         gl.enable(Gl::BLEND);
         gl.blend_func(Gl::ONE, Gl::ONE_MINUS_SRC_ALPHA); // premultiplied alpha
