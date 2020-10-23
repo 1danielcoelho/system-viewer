@@ -1,10 +1,6 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
-use crate::{
-    components::{Component, NUM_COMPONENTS},
-    materials::SimpleMaterial,
-    mesh::Mesh,
-};
+use crate::components::{Component, NUM_COMPONENTS};
 
 pub static EntityManagerInstance: EntityManager = EntityManager::new();
 
@@ -45,7 +41,7 @@ impl Entity {
     }
 
     pub fn add_component<T: Default + Component + Component<ComponentType = T> + 'static>(
-        &self,
+        &mut self,
     ) -> Option<&T> {
         let comp_id = self.component_ids[T::get_component_index() as usize];
         if comp_id != 0 {
@@ -63,10 +59,10 @@ impl Entity {
 
     // For builder pattern
     pub fn with_component<T: Default + Component + Component<ComponentType = T> + 'static>(
-        &self,
+        &mut self,
     ) -> &Self {
         self.add_component::<T>();
-        return &self;
+        return self;
     }
 }
 
@@ -83,7 +79,7 @@ impl EntityManager {
         }
     }
 
-    pub fn register(&self, entity: Entity) -> Option<&Entity> {
+    pub fn register(&mut self, mut entity: Entity) -> Option<&Entity> {
         entity.id = self.last_id;
         self.entities.insert(self.last_id, entity);
 
