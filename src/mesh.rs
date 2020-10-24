@@ -5,9 +5,7 @@ use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
 
-use crate::resources::ResourceManagerInstance;
-
-static cube_mesh: Option<Weak<Mesh>> = None;
+use crate::resources::ResourceManager;
 
 pub struct Mesh {
     pub id: u32,
@@ -20,14 +18,7 @@ pub struct Mesh {
 
 impl Mesh {
     // Generates a cube mesh on-demand and returns an Rc to it
-    pub fn cube(ctx: &WebGlRenderingContext) -> Rc<Mesh> {
-        // We already made a cube, just return it
-        if let Some(mesh) = cube_mesh {
-            if let Some(cube_mesh_rc) = mesh.upgrade() {
-                return cube_mesh_rc;
-            }
-        }
-
+    pub fn cube(res_man: &mut ResourceManager, ctx: &WebGlRenderingContext) -> Rc<Mesh> {
         let vertices_cube: [f32; 24] = [
             -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0,
             1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0,
@@ -101,7 +92,7 @@ impl Mesh {
             indices_buffer: buffer_indices,
             index_count: indices_array.length() as i32,
         };
-        return ResourceManagerInstance.register(new_cube_mesh);
+        return res_man.register(new_cube_mesh);
     }
 
     pub fn draw(&self, ctx: &WebGlRenderingContext) {

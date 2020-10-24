@@ -1,8 +1,9 @@
-use std::rc::Rc;
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 
-use crate::{materials::SimpleMaterial, mesh::Mesh};
-
-pub static ComponentManagerInstance: ComponentManager = ComponentManager::new();
+use crate::{entity::Entity, materials::SimpleMaterial, mesh::Mesh, world::World};
 
 pub enum ComponentIndex {
     Transform = 0,
@@ -15,10 +16,12 @@ pub const NUM_COMPONENTS: usize = 4;
 pub trait Component: Default {
     type ComponentType;
     fn get_component_index() -> ComponentIndex;
-    fn get_components_vector() -> &'static mut Vec<Self::ComponentType>;
+    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<Self::ComponentType>;
 }
 
 pub struct ComponentManager {
+    world: Option<Weak<RefCell<World>>>,
+
     physics: Vec<PhysicsComponent>,
     mesh: Vec<MeshComponent>,
     transform: Vec<TransformComponent>,
@@ -27,11 +30,48 @@ pub struct ComponentManager {
 impl ComponentManager {
     pub fn new() -> Self {
         return Self {
+            world: None,
             physics: vec![],
             mesh: vec![],
             transform: vec![],
             camera: vec![],
         };
+    }
+
+    // A bit awkward but we need this when initializing
+    pub fn set_world(&mut self, world: Weak<RefCell<World>>) {
+        self.world = Some(world);
+    }
+
+    pub fn get_component<T>(&mut self, entity: &Entity) -> Option<&T>
+    where
+        T: Default + Component + Component<ComponentType = T>,
+    {
+        let entity_comp_ids: &[u32; NUM_COMPONENTS] = &entity.component_ids;
+        let comp_index: usize = T::get_component_index() as usize;
+        let comp_vec = T::get_components_vector(self);
+        return comp_vec.get(entity_comp_ids[comp_index] as usize);
+    }
+
+    pub fn add_component<T>(&mut self, entity: &mut Entity) -> Option<&T>
+    where
+        T: Default + Component + Component<ComponentType = T>,
+    {
+        let entity_comp_ids: &mut [u32; NUM_COMPONENTS] = &mut entity.component_ids;
+        let comp_index: usize = T::get_component_index() as usize;
+
+        let comp_id = entity_comp_ids[comp_index];
+        if comp_id != 0 {
+            log::info!("Tried to add a repeated component");
+            return self.get_component::<T>(entity);
+        };
+
+        let comp_vec = T::get_components_vector(self);
+        comp_vec.push(T::default());
+
+        entity_comp_ids[comp_index] = (comp_vec.len() - 1) as u32;
+
+        return comp_vec.last();
     }
 }
 
@@ -65,8 +105,8 @@ impl Component for PhysicsComponent {
         return ComponentIndex::Physics;
     }
 
-    fn get_components_vector() -> &'static mut Vec<PhysicsComponent> {
-        return &mut ComponentManagerInstance.physics;
+    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<PhysicsComponent> {
+        return &mut w.physics;
     }
 }
 
@@ -104,8 +144,8 @@ impl Component for MeshComponent {
         return ComponentIndex::Mesh;
     }
 
-    fn get_components_vector() -> &'static mut Vec<MeshComponent> {
-        return &mut ComponentManagerInstance.mesh;
+    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<MeshComponent> {
+        return &mut w.mesh;
     }
 }
 
@@ -145,8 +185,8 @@ impl Component for TransformComponent {
         return ComponentIndex::Transform;
     }
 
-    fn get_components_vector() -> &'static mut Vec<TransformComponent> {
-        return &mut ComponentManagerInstance.transform;
+    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<TransformComponent> {
+        return &mut w.transform;
     }
 }
 
@@ -178,7 +218,7 @@ impl Component for CameraComponent {
         return ComponentIndex::Camera;
     }
 
-    fn get_components_vector() -> &'static mut Vec<CameraComponent> {
-        return &mut ComponentManagerInstance.camera;
+    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<CameraComponent> {
+        return &mut w.camera;
     }
 }

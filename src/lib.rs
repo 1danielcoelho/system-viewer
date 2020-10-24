@@ -1,12 +1,15 @@
 extern crate wasm_bindgen;
 
+use components::TransformComponent;
 use egui::Pos2;
+use entity::Entity;
 use gui_backend::WebInput;
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
 use winit::{event::WindowEvent, window::WindowBuilder};
 use winit::{event_loop::EventLoop, platform::web::WindowBuilderExtWebSys};
+use world::World;
 
 #[macro_use]
 extern crate lazy_static;
@@ -22,6 +25,7 @@ mod entity;
 mod components;
 mod resources;
 mod texture;
+mod world;
 mod mesh;
 
 #[macro_export]
@@ -97,6 +101,14 @@ pub fn initialize() {
     let cube = materials::SimpleMaterial::new(&context);
 
     let start_millis = js_sys::Date::now();
+
+    let world = World::new();
+    {
+        let mut mut_world = world.borrow_mut();
+        mut_world.ent_man.new_entity("cube");    
+    }
+
+    //let trans_comp = mut_world.comp_man.add_component::<TransformComponent>().unwrap();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
