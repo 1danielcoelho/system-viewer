@@ -283,7 +283,7 @@ impl Painter {
 
     pub fn paint_jobs(
         &mut self,
-        bg_color: Srgba,
+        _bg_color: Srgba,
         jobs: PaintJobs,
         egui_texture: &Texture,
         pixels_per_point: f32,

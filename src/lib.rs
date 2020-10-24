@@ -1,8 +1,7 @@
 extern crate wasm_bindgen;
 
-use components::TransformComponent;
+use components::{MeshComponent, PhysicsComponent, TransformComponent};
 use egui::Pos2;
-use entity::Entity;
 use gui_backend::WebInput;
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
@@ -100,13 +99,18 @@ pub fn initialize() {
 
     let cube = materials::SimpleMaterial::new(&context);
 
+    
     let start_millis = js_sys::Date::now();
-
+    
     let world = World::new();
-    {
-        let mut mut_world = world.borrow_mut();
-        mut_world.ent_man.new_entity("cube");    
-    }
+    let w: &mut World = &mut world.borrow_mut();
+    
+    let cube_mesh = w.res_man.generate_mesh("cube", &context);
+
+    let entity = w.ent_man.new_entity("cube");    
+    let trans_comp = w.comp_man.add_component::<TransformComponent>(entity).unwrap();    
+    let mesh_comp: &mut MeshComponent = w.comp_man.add_component::<MeshComponent>(entity).unwrap();
+    mesh_comp.mesh = cube_mesh;    
 
     //let trans_comp = mut_world.comp_man.add_component::<TransformComponent>().unwrap();
 
@@ -204,11 +208,11 @@ pub fn initialize() {
                     ui.add(egui::Slider::f32(&mut value, 0.0..=1.0).text("float"));
                 });
 
-                let (output, paint_jobs) = backend.end_frame().unwrap();
+                let (_, paint_jobs) = backend.end_frame().unwrap();
                 backend.paint(paint_jobs).expect("Failed to paint!");
             }
 
-            event => {
+            _ => {
                 // TODO: Handle input events
             }
         }

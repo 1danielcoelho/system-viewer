@@ -16,12 +16,9 @@ impl World {
             comp_man: ComponentManager::new(),
         }));
 
-        new_world.borrow_mut().ent_man.set_world(Rc::downgrade(&new_world));
-
         return new_world;
     }
 }
-
 
 // let world = self.world.unwrap().upgrade().unwrap().borrow_mut();
 //         let entity = world.ent_man.get_entity(entity_id);

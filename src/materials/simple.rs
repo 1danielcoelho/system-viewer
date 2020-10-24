@@ -1,7 +1,4 @@
 use super::super::common_funcs as cf;
-use js_sys::WebAssembly;
-use wasm_bindgen::JsCast;
-use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
 pub struct SimpleMaterial {

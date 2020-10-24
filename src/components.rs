@@ -53,7 +53,7 @@ impl ComponentManager {
         return comp_vec.get(entity_comp_ids[comp_index] as usize);
     }
 
-    pub fn add_component<T>(&mut self, entity: &mut Entity) -> Option<&T>
+    pub fn add_component<'a, T>(&'a mut self, entity: &mut Entity) -> Option<&'a T>
     where
         T: Default + Component + Component<ComponentType = T>,
     {
