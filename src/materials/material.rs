@@ -32,7 +32,7 @@ impl SimpleMaterial {
     }
 
     pub fn bind_for_drawing(&self, state: &AppState, transform: &TransformType) {
-        let gl = &state.gl.unwrap();
+        let gl = state.gl.as_ref().unwrap();
 
         gl.use_program(Some(&self.program));
 

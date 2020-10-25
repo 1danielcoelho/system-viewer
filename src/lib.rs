@@ -78,18 +78,19 @@ pub fn initialize() {
     let start_ms = js_sys::Date::now();
     let mut last_frame_ms = start_ms;
 
-    let world = World::new();
-    let w: &mut World = &mut world.borrow_mut();
-
-    let cube_mesh = w.res_man.generate_mesh("cube", &context);
+    let mut world = World::new();
+    let cube_mesh = world.res_man.generate_mesh("cube", &context);
 
     // TODO: System manager
-    let entity = w.ent_man.new_entity("cube");
-    let trans_comp = w
+    let entity = world.ent_man.new_entity("cube");
+    let trans_comp = world
         .comp_man
         .add_component::<TransformComponent>(entity)
         .unwrap();
-    let mesh_comp = w.comp_man.add_component::<MeshComponent>(entity).unwrap();
+    let mesh_comp = world
+        .comp_man
+        .add_component::<MeshComponent>(entity)
+        .unwrap();
     mesh_comp.mesh = cube_mesh;
 
     let mut app_state = AppState::new();
@@ -135,7 +136,7 @@ pub fn initialize() {
                         .expect("Failed to set height!");
 
                     log::info!(
-                        "Resized to w: {}, h: {}",
+                        "Resized to world: {}, h: {}",
                         canvas_width_on_screen,
                         canvas_height_on_screen
                     );
@@ -151,7 +152,7 @@ pub fn initialize() {
 
                 last_frame_ms = now_ms;
 
-                w.sys_man.run(&app_state, &mut w.comp_man);
+                world.sys_man.run(&app_state, &mut world.comp_man);
 
                 // Dispatch events
             }

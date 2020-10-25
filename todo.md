@@ -7,7 +7,8 @@
     - Message queue that is pumped each frame
     - Maybe allow closures somehow to ease inter-system communication? -->
 <!-- - Add widgets to UIComponents -->
-- Nothing is really resizing/creating the components yet
+<!-- - Do materials -->
+<!-- - Nothing is really resizing/creating the components yet -->
 - Nothing checks if the components are valid before actually doing stuff with them
 # Setup keyboard and mouse controls to have a basic look around
 - Fixup mouse events (once its back to rendering)

@@ -38,7 +38,7 @@ impl SystemManager {
     }
 
     // TODO: Make some "context" object that has mut refs to everything and is created every frame
-    pub fn run(&self, state: &AppState, cm: &mut ComponentManager) {
+    pub fn run(&mut self, state: &AppState, cm: &mut ComponentManager) {
         self.render.run(state, &cm.transform, &cm.mesh);
         self.interface.run(state, &cm);
     }
@@ -61,7 +61,7 @@ impl RenderingSystem {
     }
 
     fn pre_draw(state: &AppState) {
-        let gl: &WebGlRenderingContext = &state.gl.unwrap();
+        let gl: &WebGlRenderingContext = (state.gl.as_ref()).unwrap();
 
         // Egui needs this disabled for now
         glc!(gl, gl.enable(GL::CULL_FACE));
@@ -90,11 +90,11 @@ impl RenderingSystem {
 
     fn draw_one(state: &AppState, tc: &TransformComponent, mc: &MeshComponent) -> Option<bool> {
         let trans = &tc.transform;
-        let mesh = mc.mesh?;
-        let material = mc.material?;
+        let mesh = mc.mesh.as_ref()?;
+        let material = mc.material.as_ref()?;
 
         material.bind_for_drawing(state, trans);
-        mesh.draw(&state.gl.unwrap());
+        mesh.draw(state.gl.as_ref().unwrap());
 
         return Some(true);
     }
@@ -115,14 +115,13 @@ impl InterfaceSystem {
         };
     }
 
-    pub fn run(&self, state: &AppState, comp_man: &ComponentManager) {
+    pub fn run(&mut self, state: &AppState, comp_man: &ComponentManager) {
         self.pre_draw(state);
         self.draw(state, comp_man);
     }
 
-    fn pre_draw(&self, state: &AppState) {
+    fn pre_draw(&mut self, state: &AppState) {
         let mut raw_input = self.web_input.new_frame(1.0);
-        self.ui = Some(self.backend.begin_frame(raw_input));
 
         // TODO: Combine these or get rid of one of them?
         raw_input.mouse_pos = Some(Pos2 {
@@ -130,15 +129,17 @@ impl InterfaceSystem {
             y: state.mouse_y,
         });
         raw_input.mouse_down = state.mouse_down;
+
+        self.ui = Some(self.backend.begin_frame(raw_input));
     }
 
-    fn draw(&self, state: &AppState, comp_man: &ComponentManager) {
+    fn draw(&mut self, state: &AppState, comp_man: &ComponentManager) {
         if self.ui.is_none() {
             return;
         }
 
         for entity in 0..comp_man.interface.len() {
-            InterfaceSystem::draw_widget(&self.ui.unwrap(), state, entity as u32, comp_man);
+            InterfaceSystem::draw_widget(self.ui.as_ref().unwrap(), state, entity as u32, comp_man);
         }
 
         let (_, paint_jobs) = self.backend.end_frame().unwrap();
@@ -146,7 +147,7 @@ impl InterfaceSystem {
     }
 
     fn draw_widget(ui: &Ui, state: &AppState, entity: u32, comp_man: &ComponentManager) {
-        let ui_comp = comp_man.interface[entity as usize];
+        let ui_comp = &comp_man.interface[entity as usize];
         match ui_comp.widget_type {
             WidgetType::None => {}
             WidgetType::TestWidget => {
