@@ -1,4 +1,4 @@
-<!-- # Plan -->
+# Bootstrapping
 <!-- - Remove entity component index redirection thing or else it bungs up the systems
     - Create a systems manager and hard-code rendering system 
         - Run function that receives references to transform and mesh components
@@ -6,6 +6,7 @@
 <!-- - Message/event system using rust enums to pass additional arguments for each event type
     - Message queue that is pumped each frame
     - Maybe allow closures somehow to ease inter-system communication? -->
+- Add widgets to UIComponents
 
 # Setup keyboard and mouse controls to have a basic look around
 - Maybe have some UI widget to control camera parameters like FOV, near/far planes, etc.

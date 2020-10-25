@@ -1,5 +1,6 @@
 extern crate wasm_bindgen;
 
+use app_state::AppState;
 use components::{MeshComponent, PhysicsComponent, TransformComponent};
 use egui::Pos2;
 use gui_backend::WebInput;
@@ -15,19 +16,19 @@ extern crate lazy_static;
 
 mod app_state;
 mod common_funcs;
+mod components;
 mod constants;
+mod entity;
+mod events;
 mod gl_setup;
 mod materials;
-mod shaders;
+mod mesh;
 mod object;
-mod entity;
-mod components;
 mod resources;
+mod shaders;
+mod systems;
 mod texture;
 mod world;
-mod mesh;
-mod systems;
-mod events;
 
 #[macro_export]
 macro_rules! glc {
@@ -101,18 +102,24 @@ pub fn initialize() {
 
     let cube = materials::SimpleMaterial::new(&context);
 
-    
-    let start_millis = js_sys::Date::now();
-    
+    let start_ms = js_sys::Date::now();
+    let mut last_frame_ms = start_ms;
+
     let world = World::new();
     let w: &mut World = &mut world.borrow_mut();
-    
+
     let cube_mesh = w.res_man.generate_mesh("cube", &context);
 
-    let entity = w.ent_man.new_entity("cube");    
-    let trans_comp = w.comp_man.add_component::<TransformComponent>(entity).unwrap();    
+    let entity = w.ent_man.new_entity("cube");
+    let trans_comp = w
+        .comp_man
+        .add_component::<TransformComponent>(entity)
+        .unwrap();
     let mesh_comp = w.comp_man.add_component::<MeshComponent>(entity).unwrap();
-    mesh_comp.mesh = cube_mesh;    
+    mesh_comp.mesh = cube_mesh;
+
+    let app_state = AppState::new();
+    app_state.gl = Some(context);
 
     //let trans_comp = mut_world.comp_man.add_component::<TransformComponent>().unwrap();
 
@@ -160,48 +167,28 @@ pub fn initialize() {
                     );
                 }
 
-                app_state::update_dynamic_data(
-                    0.0,
-                    canvas_height_on_screen as f32,
-                    canvas_width_on_screen as f32,
-                );
-                let curr_state = app_state::get_curr_state();
-
-                let ctx = &context;
-
-                // Egui needs this disabled for now
-                ctx.enable(GL::CULL_FACE);
-                ctx.disable(GL::SCISSOR_TEST);
-
-                ctx.viewport(
-                    0,
-                    0,
-                    canvas_width_on_screen as i32,
-                    canvas_height_on_screen as i32,
-                );
-
-                glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
-                glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT));
-
-                cube.render(
-                    &context,
-                    (js_sys::Date::now() - start_millis) as f32,
-                    curr_state.canvas_width,
-                    curr_state.canvas_height,
-                );
-
+                let now_ms = js_sys::Date::now();
                 let mut raw_input = web_input.new_frame(1.0);
-                raw_input.mouse_pos = Some(Pos2 {
-                    x: curr_state.mouse_x,
-                    y: curr_state.mouse_y,
-                });
-                raw_input.mouse_down = curr_state.mouse_down;
 
-                let ui = backend.begin_frame(raw_input);
+                let app_state_mut = &mut app_state;
+                app_state_mut.canvas_height = canvas_height_on_screen;
+                app_state_mut.canvas_width = canvas_width_on_screen;
+                app_state.time_ms = now_ms - start_ms;
+                app_state.delta_time_ms = now_ms - last_frame_ms;
+                app_state.ui = Some(backend.begin_frame(raw_input));
+
+                last_frame_ms = now_ms;
+
+                // TODO: Combine these or get rid of one of them?
+                raw_input.mouse_pos = Some(Pos2 {
+                    x: app_state.mouse_x,
+                    y: app_state.mouse_y,
+                });
+                raw_input.mouse_down = app_state.mouse_down;
 
                 let mut s = String::from("test");
                 let mut value = 0.0;
-                egui::Window::new("Debug").show(&ui.ctx(), |ui| {
+                egui::Window::new("Debug").show(&app_state.ui.unwrap().ctx(), |ui| {
                     ui.label(format!("Hello, world {}", 123));
                     if ui.button("Save").clicked {
                         log::info!("Save!");
