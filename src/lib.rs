@@ -1,18 +1,12 @@
 extern crate wasm_bindgen;
 
 use app_state::AppState;
-use components::{MeshComponent, PhysicsComponent, TransformComponent};
-use egui::Pos2;
-use gui_backend::WebInput;
+use components::{MeshComponent, TransformComponent};
 use wasm_bindgen::prelude::*;
-use web_sys::WebGlRenderingContext as GL;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
 use winit::{event::WindowEvent, window::WindowBuilder};
 use winit::{event_loop::EventLoop, platform::web::WindowBuilderExtWebSys};
 use world::World;
-
-#[macro_use]
-extern crate lazy_static;
 
 mod app_state;
 mod common_funcs;
@@ -29,23 +23,6 @@ mod shaders;
 mod systems;
 mod texture;
 mod world;
-
-#[macro_export]
-macro_rules! glc {
-    ($ctx:expr, $any:expr) => {
-        #[cfg(debug_assertions)]
-        while $ctx.get_error() != 0 {} // Not sure why he did this
-        $any;
-        #[cfg(debug_assertions)]
-        while match $ctx.get_error() {
-            0 => false,
-            err => {
-                log::error!("[OpenGL Error] {}", err);
-                true
-            }
-        } {}
-    };
-}
 
 #[wasm_bindgen(start)]
 pub fn main() {
@@ -96,10 +73,6 @@ pub fn initialize() {
             ",
     )));
 
-    let mut backend =
-        gui_backend::WebBackend::new("rustCanvas").expect("Failed to make a web backend for egui");
-    let mut web_input: WebInput = Default::default();
-
     let cube = materials::SimpleMaterial::new(&context);
 
     let start_ms = js_sys::Date::now();
@@ -110,6 +83,7 @@ pub fn initialize() {
 
     let cube_mesh = w.res_man.generate_mesh("cube", &context);
 
+    // TODO: System manager
     let entity = w.ent_man.new_entity("cube");
     let trans_comp = w
         .comp_man
@@ -118,7 +92,7 @@ pub fn initialize() {
     let mesh_comp = w.comp_man.add_component::<MeshComponent>(entity).unwrap();
     mesh_comp.mesh = cube_mesh;
 
-    let app_state = AppState::new();
+    let mut app_state = AppState::new();
     app_state.gl = Some(context);
 
     //let trans_comp = mut_world.comp_man.add_component::<TransformComponent>().unwrap();
@@ -168,37 +142,18 @@ pub fn initialize() {
                 }
 
                 let now_ms = js_sys::Date::now();
-                let mut raw_input = web_input.new_frame(1.0);
 
                 let app_state_mut = &mut app_state;
                 app_state_mut.canvas_height = canvas_height_on_screen;
                 app_state_mut.canvas_width = canvas_width_on_screen;
                 app_state.time_ms = now_ms - start_ms;
                 app_state.delta_time_ms = now_ms - last_frame_ms;
-                app_state.ui = Some(backend.begin_frame(raw_input));
 
                 last_frame_ms = now_ms;
 
-                // TODO: Combine these or get rid of one of them?
-                raw_input.mouse_pos = Some(Pos2 {
-                    x: app_state.mouse_x,
-                    y: app_state.mouse_y,
-                });
-                raw_input.mouse_down = app_state.mouse_down;
+                w.sys_man.run(&app_state, &mut w.comp_man);
 
-                let mut s = String::from("test");
-                let mut value = 0.0;
-                egui::Window::new("Debug").show(&app_state.ui.unwrap().ctx(), |ui| {
-                    ui.label(format!("Hello, world {}", 123));
-                    if ui.button("Save").clicked {
-                        log::info!("Save!");
-                    }
-                    ui.text_edit(&mut s);
-                    ui.add(egui::Slider::f32(&mut value, 0.0..=1.0).text("float"));
-                });
-
-                let (_, paint_jobs) = backend.end_frame().unwrap();
-                backend.paint(paint_jobs).expect("Failed to paint!");
+                // Dispatch events
             }
 
             _ => {

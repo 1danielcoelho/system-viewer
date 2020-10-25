@@ -5,6 +5,8 @@ use std::{
 
 use crate::{entity::Entity, events::EventReceiver, materials::SimpleMaterial, mesh::Mesh, world::World};
 
+pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
+
 pub enum ComponentIndex {
     Transform = 0,
     Mesh = 1,
@@ -172,7 +174,7 @@ impl Component for MeshComponent {
 pub struct TransformComponent {
     enabled: bool,
 
-    pub transform: cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>,
+    pub transform: TransformType,
     pub parent: u32,
     pub children: Vec<u32>,
 }
@@ -263,8 +265,14 @@ impl Component for CameraComponent {
     }
 }
 
+pub enum WidgetType {
+    None,
+    TestWidget,
+}
+
 pub struct UIComponent {
     enabled: bool,
+    pub widget_type: WidgetType,
 }
 impl UIComponent {
     fn new() -> Self {
@@ -275,6 +283,7 @@ impl Default for UIComponent {
     fn default() -> Self {
         return Self {
             enabled: true,
+            widget_type: WidgetType::None,
         }
     }
 }

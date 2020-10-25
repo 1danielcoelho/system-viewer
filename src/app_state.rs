@@ -9,9 +9,9 @@ pub struct AppState {
     pub mouse_y: f32,
     pub time_ms: f64,
     pub delta_time_ms: f64,
+    // TODO: Camera data somehow?
 
     pub gl: Option<WebGlRenderingContext>,
-    pub ui: Option<Ui>,
 }
 impl AppState {
     pub fn new() -> Self {
@@ -24,7 +24,6 @@ impl AppState {
             time_ms: 0.,
             delta_time_ms: 0.,
             gl: None,
-            ui: None,
         }
     }
 }

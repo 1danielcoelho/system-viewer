@@ -1,11 +1,15 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{components::ComponentManager, entity::EntityManager, resources::ResourceManager};
+use crate::{
+    components::ComponentManager, entity::EntityManager, resources::ResourceManager,
+    systems::SystemManager,
+};
 
 pub struct World {
     pub ent_man: EntityManager,
     pub res_man: ResourceManager,
     pub comp_man: ComponentManager,
+    pub sys_man: SystemManager,
     //pub scene_man: SceneManager,
 }
 impl World {
@@ -14,6 +18,7 @@ impl World {
             ent_man: EntityManager::new(),
             res_man: ResourceManager::new(),
             comp_man: ComponentManager::new(),
+            sys_man: SystemManager::new(),
         }));
 
         return new_world;

@@ -1,7 +1,29 @@
-use egui::Ui;
+use egui::{Pos2, Ui};
+use gui_backend::WebInput;
 use web_sys::WebGlRenderingContext;
+use web_sys::WebGlRenderingContext as GL;
 
-use crate::components::{ComponentManager, MeshComponent, TransformComponent, UIComponent};
+use crate::{
+    app_state::AppState,
+    components::{ComponentManager, MeshComponent, TransformComponent, WidgetType},
+};
+
+#[macro_export]
+macro_rules! glc {
+    ($ctx:expr, $any:expr) => {
+        #[cfg(debug_assertions)]
+        while $ctx.get_error() != 0 {} // Not sure why he did this
+        $any;
+        #[cfg(debug_assertions)]
+        while match $ctx.get_error() {
+            0 => false,
+            err => {
+                log::error!("[OpenGL Error] {}", err);
+                true
+            }
+        } {}
+    };
+}
 
 pub struct SystemManager {
     render: RenderingSystem,
@@ -11,15 +33,14 @@ impl SystemManager {
     pub fn new() -> Self {
         return Self {
             render: RenderingSystem {},
-            interface: InterfaceSystem {},
+            interface: InterfaceSystem::new(),
         };
     }
 
     // TODO: Make some "context" object that has mut refs to everything and is created every frame
-    pub fn run(&self, ui: &egui::Ui, ctx: &WebGlRenderingContext, comp_man: &mut ComponentManager) {
-        self.render.run(ctx, &comp_man.transform, &comp_man.mesh);
-        self.interface
-            .run(ui, &comp_man.transform, &comp_man.interface);
+    pub fn run(&self, state: &AppState, cm: &mut ComponentManager) {
+        self.render.run(state, &cm.transform, &cm.mesh);
+        self.interface.run(state, &cm);
     }
 }
 
@@ -27,35 +48,123 @@ pub struct RenderingSystem {}
 impl RenderingSystem {
     pub fn run(
         &self,
-        ctx: &WebGlRenderingContext,
+        state: &AppState,
         transforms: &Vec<TransformComponent>,
         meshes: &Vec<MeshComponent>,
     ) {
-        self.pre_render(ctx);
+        if state.gl.is_none() {
+            return;
+        }
 
-        
+        RenderingSystem::pre_draw(state);
+        RenderingSystem::draw(state, transforms, meshes);
     }
 
-    fn pre_render(&self, ctx: &WebGlRenderingContext) {
-        // Egui needs this disabled for now
-        ctx.enable(GL::CULL_FACE);
-        ctx.disable(GL::SCISSOR_TEST);
+    fn pre_draw(state: &AppState) {
+        let gl: &WebGlRenderingContext = &state.gl.unwrap();
 
-        ctx.viewport(
-            0,
-            0,
-            canvas_width_on_screen as i32,
-            canvas_height_on_screen as i32,
+        // Egui needs this disabled for now
+        glc!(gl, gl.enable(GL::CULL_FACE));
+        glc!(gl, gl.disable(GL::SCISSOR_TEST));
+
+        glc!(
+            gl,
+            gl.viewport(0, 0, state.canvas_width as i32, state.canvas_height as i32,)
         );
 
-        glc!(ctx, ctx.clear_color(0.1, 0.1, 0.2, 1.0));
-        glc!(ctx, ctx.clear(GL::COLOR_BUFFER_BIT));
+        glc!(gl, gl.clear_color(0.1, 0.1, 0.2, 1.0));
+        glc!(gl, gl.clear(GL::COLOR_BUFFER_BIT));
+    }
+
+    fn draw(state: &AppState, transforms: &Vec<TransformComponent>, meshes: &Vec<MeshComponent>) {
+        assert_eq!(
+            transforms.len(),
+            meshes.len(),
+            "RenderingSystem::draw: Different number of trans and meshes"
+        );
+
+        for (t, m) in transforms.iter().zip(meshes.iter()) {
+            RenderingSystem::draw_one(state, t, m);
+        }
+    }
+
+    fn draw_one(state: &AppState, tc: &TransformComponent, mc: &MeshComponent) -> Option<bool> {
+        let trans = &tc.transform;
+        let mesh = mc.mesh?;
+        let material = mc.material?;
+
+        material.bind_for_drawing(state, trans);
+        mesh.draw(&state.gl.unwrap());
+
+        return Some(true);
     }
 }
 
-pub struct InterfaceSystem {}
+pub struct InterfaceSystem {
+    backend: gui_backend::WebBackend,
+    web_input: WebInput,
+    ui: Option<egui::Ui>,
+}
 impl InterfaceSystem {
-    pub fn run(&self, ui: &Ui, transforms: &Vec<TransformComponent>, uis: &Vec<UIComponent>) {
-        // do the UI drawing
+    pub fn new() -> Self {
+        return Self {
+            backend: gui_backend::WebBackend::new("rustCanvas")
+                .expect("Failed to make a web backend for egui"),
+            web_input: Default::default(),
+            ui: None,
+        };
+    }
+
+    pub fn run(&self, state: &AppState, comp_man: &ComponentManager) {
+        self.pre_draw(state);
+        self.draw(state, comp_man);
+    }
+
+    fn pre_draw(&self, state: &AppState) {
+        let mut raw_input = self.web_input.new_frame(1.0);
+        self.ui = Some(self.backend.begin_frame(raw_input));
+
+        // TODO: Combine these or get rid of one of them?
+        raw_input.mouse_pos = Some(Pos2 {
+            x: state.mouse_x,
+            y: state.mouse_y,
+        });
+        raw_input.mouse_down = state.mouse_down;
+    }
+
+    fn draw(&self, state: &AppState, comp_man: &ComponentManager) {
+        if self.ui.is_none() {
+            return;
+        }
+
+        for entity in 0..comp_man.interface.len() {
+            InterfaceSystem::draw_widget(&self.ui.unwrap(), state, entity as u32, comp_man);
+        }
+
+        let (_, paint_jobs) = self.backend.end_frame().unwrap();
+        self.backend.paint(paint_jobs).expect("Failed to paint!");
+    }
+
+    fn draw_widget(ui: &Ui, state: &AppState, entity: u32, comp_man: &ComponentManager) {
+        let ui_comp = comp_man.interface[entity as usize];
+        match ui_comp.widget_type {
+            WidgetType::None => {}
+            WidgetType::TestWidget => {
+                InterfaceSystem::draw_test_widget(ui, state, entity, comp_man)
+            }
+        }
+    }
+
+    fn draw_test_widget(ui: &Ui, state: &AppState, entity: u32, comp_man: &ComponentManager) {
+        let mut s = String::from("test");
+        let mut value = 0.0;
+        egui::Window::new("Debug").show(&ui.ctx(), |ui| {
+            ui.label(format!("Hello, world {}", 123));
+            if ui.button("Save").clicked {
+                log::info!("Save!");
+            }
+            ui.text_edit(&mut s);
+            ui.add(egui::Slider::f32(&mut value, 0.0..=1.0).text("float"));
+        });
     }
 }

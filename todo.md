@@ -6,19 +6,21 @@
 <!-- - Message/event system using rust enums to pass additional arguments for each event type
     - Message queue that is pumped each frame
     - Maybe allow closures somehow to ease inter-system communication? -->
-- Add widgets to UIComponents
-
+<!-- - Add widgets to UIComponents -->
+- Nothing is really resizing/creating the components yet
+- Nothing checks if the components are valid before actually doing stuff with them
 # Setup keyboard and mouse controls to have a basic look around
-- Maybe have some UI widget to control camera parameters like FOV, near/far planes, etc.
+- Fixup mouse events (once its back to rendering)
+# How to deal with object hierarchies?
+# Finish up event system
+# UI widget to control camera parameters like FOV, near/far planes, etc.
 # Setup basic objects for grid and coordinate axes
 # Get some better models and obj/gltf parsing
 - Show coordinates on screen
-# I think I'll need wasm-bindgen-futures
+# I think I'll need wasm-bindgen-futures at some point for something?
 <!-- # Setup a time variable and animate a material rotation -->
 <!-- # Why is the cube rendering at the bottom left?
 - Missing viewport -->
-
-
 
 
 # Cool sources
