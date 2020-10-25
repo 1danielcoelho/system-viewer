@@ -1,10 +1,7 @@
-use std::{collections::HashMap};
-
-use crate::{components::NUM_COMPONENTS};
+use std::collections::HashMap;
 
 pub struct Entity {
     pub id: u32,
-    pub component_ids: [u32; NUM_COMPONENTS],
     pub name: String,
 }
 
@@ -28,7 +25,6 @@ impl EntityManager {
             self.last_id,
             Entity {
                 id: self.last_id,
-                component_ids: [0; NUM_COMPONENTS],
                 name: String::from(name),
             },
         );

@@ -26,6 +26,8 @@ mod resources;
 mod texture;
 mod world;
 mod mesh;
+mod systems;
+mod events;
 
 #[macro_export]
 macro_rules! glc {
@@ -109,7 +111,7 @@ pub fn initialize() {
 
     let entity = w.ent_man.new_entity("cube");    
     let trans_comp = w.comp_man.add_component::<TransformComponent>(entity).unwrap();    
-    let mesh_comp: &mut MeshComponent = w.comp_man.add_component::<MeshComponent>(entity).unwrap();
+    let mesh_comp = w.comp_man.add_component::<MeshComponent>(entity).unwrap();
     mesh_comp.mesh = cube_mesh;    
 
     //let trans_comp = mut_world.comp_man.add_component::<TransformComponent>().unwrap();
