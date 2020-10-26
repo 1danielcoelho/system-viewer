@@ -156,7 +156,7 @@ impl ResourceManager {
             return Some(mesh.clone());
         }
 
-        if name == "Cube" {
+        if name == "cube" {
             let mesh = Rc::new(generate_cube(ctx));
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
@@ -174,6 +174,7 @@ impl ResourceManager {
         .unwrap();
 
         let simple_material = Rc::new( Material {
+            name: "material".to_string(),
             u_opacity: ctx.get_uniform_location(&program, "uOpacity").unwrap(),
             u_transform: ctx.get_uniform_location(&program, "uTransform").unwrap(),
             a_position: ctx.get_attrib_location(&program, "aPosition"),

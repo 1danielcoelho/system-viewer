@@ -3,6 +3,8 @@ use crate::{app_state::AppState, components::TransformType};
 use web_sys::*;
 
 pub struct Material {
+    pub name: String,
+
     pub program: WebGlProgram,
 
     pub u_opacity: WebGlUniformLocation,

@@ -13,7 +13,7 @@ pub struct EntityManager {
 impl EntityManager {
     pub fn new() -> Self {
         Self {
-            last_id: 1,
+            last_id: 0,
             entities: HashMap::new(),
         }
     }
@@ -28,12 +28,13 @@ impl EntityManager {
                 name: String::from(name),
             },
         );
+
         return self
-            .get_entity(&(self.last_id - 1))
+            .get_entity(self.last_id)
             .expect("Weirdness in new_entity");
     }
 
-    pub fn get_entity(&mut self, id: &u32) -> Option<&mut Entity> {
-        return self.entities.get_mut(id);
+    pub fn get_entity(&mut self, id: u32) -> Option<&mut Entity> {
+        return self.entities.get_mut(&id);
     }
 }

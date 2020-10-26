@@ -88,15 +88,16 @@ impl RenderingSystem {
         }
     }
 
-    fn draw_one(state: &AppState, tc: &TransformComponent, mc: &MeshComponent) -> Option<bool> {
+    fn draw_one(state: &AppState, tc: &TransformComponent, mc: &MeshComponent) {
         let trans = &tc.transform;
-        let mesh = mc.mesh.as_ref()?;
-        let material = mc.material.as_ref()?;
+        let mesh = mc.mesh.as_ref();
+        let material = mc.material.as_ref();
+        if mesh.is_none() || material.is_none() {
+            return;
+        }
 
-        material.bind_for_drawing(state, trans);
-        mesh.draw(state.gl.as_ref().unwrap());
-
-        return Some(true);
+        material.unwrap().bind_for_drawing(state, trans);
+        mesh.unwrap().draw(state.gl.as_ref().unwrap());
     }
 }
 
