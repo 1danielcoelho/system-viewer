@@ -9,9 +9,7 @@ use winit::{event_loop::EventLoop, platform::web::WindowBuilderExtWebSys};
 use world::World;
 
 mod app_state;
-mod common_funcs;
 mod components;
-mod constants;
 mod entity;
 mod events;
 mod gl_setup;
@@ -73,13 +71,13 @@ pub fn initialize() {
             ",
     )));
 
-    let cube = materials::SimpleMaterial::new(&context);
+    let mut world = World::new();
+
+    let mat = materials::Material::new(&context);
+    let cube_mesh = world.res_man.generate_mesh("cube", &context);
 
     let start_ms = js_sys::Date::now();
     let mut last_frame_ms = start_ms;
-
-    let mut world = World::new();
-    let cube_mesh = world.res_man.generate_mesh("cube", &context);
 
     // TODO: System manager
     let entity = world.ent_man.new_entity("cube");
@@ -92,6 +90,7 @@ pub fn initialize() {
         .add_component::<MeshComponent>(entity)
         .unwrap();
     mesh_comp.mesh = cube_mesh;
+    mesh_comp.material = mat;
 
     let mut app_state = AppState::new();
     app_state.gl = Some(context);

@@ -1,4 +1,3 @@
-use egui::Ui;
 use web_sys::WebGlRenderingContext;
 
 pub struct AppState {
@@ -10,13 +9,12 @@ pub struct AppState {
     pub time_ms: f64,
     pub delta_time_ms: f64,
     // TODO: Camera data somehow?
-
     pub gl: Option<WebGlRenderingContext>,
 }
 impl AppState {
     pub fn new() -> Self {
         Self {
-            canvas_height: 0, 
+            canvas_height: 0,
             canvas_width: 0,
             mouse_down: false,
             mouse_x: -1.,

@@ -1,11 +1,6 @@
-use std::{
-    cell::RefCell,
-    rc::{Rc, Weak},
-};
+use std::rc::Rc;
 
-use crate::{
-    entity::Entity, events::EventReceiver, materials::SimpleMaterial, mesh::Mesh, world::World,
-};
+use crate::{entity::Entity, events::EventReceiver, materials::Material, mesh::Mesh};
 
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 
@@ -14,9 +9,8 @@ pub enum ComponentIndex {
     Mesh = 1,
     Physics = 2,
     Camera = 3,
-    UI = 4,
+    Ui = 4,
 }
-pub const NUM_COMPONENTS: usize = 4;
 
 pub trait Component: Default {
     type ComponentType;
@@ -63,7 +57,7 @@ impl ComponentManager {
 
         let comp_vec = T::get_components_vector(self);
         comp_vec[entity.id as usize].set_enabled(true);
-        
+
         return Some(&mut comp_vec[entity.id as usize]);
     }
 
@@ -104,7 +98,7 @@ impl Default for PhysicsComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
-            collision_enabled: true,
+            collision_enabled: false,
             position: cgmath::Vector3::new(0.0, 0.0, 0.0),
             velocity: cgmath::Vector3::new(0.0, 0.0, 0.0),
             mass: 1.0,
@@ -141,7 +135,7 @@ pub struct MeshComponent {
     pub raycasting_visible: bool,
     pub visible: bool,
     pub mesh: Option<Rc<Mesh>>,
-    pub material: Option<Rc<SimpleMaterial>>,
+    pub material: Option<Rc<Material>>,
 }
 impl MeshComponent {
     fn new() -> Self {
@@ -294,7 +288,7 @@ impl UIComponent {
 impl Default for UIComponent {
     fn default() -> Self {
         return Self {
-            enabled: true,
+            enabled: false,
             widget_type: WidgetType::None,
         };
     }
@@ -311,7 +305,7 @@ impl Component for UIComponent {
     }
 
     fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::UI;
+        return ComponentIndex::Ui;
     }
 
     fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<Self::ComponentType> {

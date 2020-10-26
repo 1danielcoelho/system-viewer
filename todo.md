@@ -9,7 +9,11 @@
 <!-- - Add widgets to UIComponents -->
 <!-- - Do materials -->
 <!-- - Nothing is really resizing/creating the components yet -->
-- Nothing checks if the components are valid before actually doing stuff with them
+<!-- - Nothing checks if the components are valid before actually doing stuff with them -->
+- Materials should be managed by res_man
+- Wire up event manager so that it at least exists and lifetimes are OK and stuff
+
+# Put camera info on app state, make some sort of "main camera" thing
 # Setup keyboard and mouse controls to have a basic look around
 - Fixup mouse events (once its back to rendering)
 # How to deal with object hierarchies?

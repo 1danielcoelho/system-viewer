@@ -4,7 +4,7 @@ use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::WebGlRenderingContext;
 
-use crate::{mesh::Mesh, texture::Texture};
+use crate::{materials::Material, mesh::Mesh, texture::Texture};
 
 fn generate_cube(ctx: &WebGlRenderingContext) -> Mesh {
     let vertices_cube: [f32; 24] = [
@@ -107,6 +107,10 @@ impl ResourceManager {
         };
 
         return None;
+    }
+
+    pub fn get_material(&self, name: &str) -> Option<Rc<Material>> {
+        
     }
     
     pub fn get_mesh(&self, name: &str) -> Option<Rc<Mesh>> {

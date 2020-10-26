@@ -1,10 +1,11 @@
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
-use wasm_bindgen::prelude::*;
-use web_sys::*;
 use web_sys::WebGlRenderingContext as GL;
+use web_sys::*;
 
-pub fn initialize_webgl_context() -> Result<(WebGlRenderingContext, web_sys::HtmlCanvasElement), JsValue> {
+pub fn initialize_webgl_context(
+) -> Result<(WebGlRenderingContext, web_sys::HtmlCanvasElement), JsValue> {
     let window = window().unwrap();
     let document = window.document().unwrap();
     let canvas = document.get_element_by_id("rustCanvas").unwrap();
@@ -17,7 +18,7 @@ pub fn initialize_webgl_context() -> Result<(WebGlRenderingContext, web_sys::Htm
 
     gl.enable(GL::BLEND);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
-    
+
     gl.enable(GL::CULL_FACE);
     gl.cull_face(GL::BACK);
 
