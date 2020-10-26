@@ -10,8 +10,9 @@
 <!-- - Do materials -->
 <!-- - Nothing is really resizing/creating the components yet -->
 <!-- - Nothing checks if the components are valid before actually doing stuff with them -->
-- Materials should be managed by res_man
+<!-- - Materials should be managed by res_man -->
 - Wire up event manager so that it at least exists and lifetimes are OK and stuff
+<!-- - I think there is an OBOB on the component/entity count... one too many for what I should have now -->
 
 # Put camera info on app state, make some sort of "main camera" thing
 # Setup keyboard and mouse controls to have a basic look around

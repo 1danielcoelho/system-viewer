@@ -92,6 +92,8 @@ pub fn initialize() {
     mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
     mesh_comp.material = world.res_man.get_material("material");
 
+    log::info!("num comps: {}", world.comp_man.mesh.len());
+
     let mut app_state = AppState::new();
     app_state.gl = Some(context);
 

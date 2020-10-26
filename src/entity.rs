@@ -19,8 +19,8 @@ impl EntityManager {
     }
 
     pub fn new_entity(&mut self, name: &str) -> &mut Entity {
-        self.last_id += 1;
-
+        log::info!("new_entity with name '{}' and id {}", name, self.last_id);
+        
         self.entities.insert(
             self.last_id,
             Entity {
@@ -28,9 +28,10 @@ impl EntityManager {
                 name: String::from(name),
             },
         );
-
+        self.last_id += 1;
+        
         return self
-            .get_entity(self.last_id)
+            .get_entity(self.last_id - 1)
             .expect("Weirdness in new_entity");
     }
 
