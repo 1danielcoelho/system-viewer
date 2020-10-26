@@ -1,7 +1,7 @@
 extern crate wasm_bindgen;
 
 use app_state::AppState;
-use components::{MeshComponent, TransformComponent};
+use components::{MeshComponent, TransformComponent, UIComponent, WidgetType};
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
 use winit::{event::WindowEvent, window::WindowBuilder};
@@ -73,24 +73,32 @@ pub fn initialize() {
 
     let mut world = World::new();
     world.res_man.compile_materials(&context);
-    
-    
+
     let start_ms = js_sys::Date::now();
     let mut last_frame_ms = start_ms;
-    
+
     // Setup scene
     let entity = world.ent_man.new_entity("cube");
     let trans_comp = world
-    .comp_man
-    .add_component::<TransformComponent>(entity)
-    .unwrap();
+        .comp_man
+        .add_component::<TransformComponent>(entity)
+        .unwrap();
     let mesh_comp = world
-    .comp_man
-    .add_component::<MeshComponent>(entity)
-    .unwrap();
-    
+        .comp_man
+        .add_component::<MeshComponent>(entity)
+        .unwrap();
     mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
     mesh_comp.material = world.res_man.get_material("material");
+
+    let ui_entity = world.ent_man.new_entity("test_ui");
+    world
+        .comp_man
+        .add_component::<TransformComponent>(ui_entity);
+    let ui_comp = world
+        .comp_man
+        .add_component::<UIComponent>(ui_entity)
+        .unwrap();
+    ui_comp.widget_type = WidgetType::TestWidget;
 
     log::info!("num comps: {}", world.comp_man.mesh.len());
 

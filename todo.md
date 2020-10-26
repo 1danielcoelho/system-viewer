@@ -11,6 +11,7 @@
 <!-- - Nothing is really resizing/creating the components yet -->
 <!-- - Nothing checks if the components are valid before actually doing stuff with them -->
 <!-- - Materials should be managed by res_man -->
+<!-- - Restore UI so I can check keyboard events -->
 - Wire up event manager so that it at least exists and lifetimes are OK and stuff
 <!-- - I think there is an OBOB on the component/entity count... one too many for what I should have now -->
 
@@ -24,6 +25,7 @@
 # Get some better models and obj/gltf parsing
 - Show coordinates on screen
 # I think I'll need wasm-bindgen-futures at some point for something?
+# I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 <!-- # Setup a time variable and animate a material rotation -->
 <!-- # Why is the cube rendering at the bottom left?
 - Missing viewport -->
