@@ -72,30 +72,28 @@ pub fn initialize() {
     )));
 
     let mut world = World::new();
-
-    let mat = materials::Material::new(&context);
-    let cube_mesh = world.res_man.generate_mesh("cube", &context);
-
+    world.res_man.compile_materials(&context);
+    
+    
     let start_ms = js_sys::Date::now();
     let mut last_frame_ms = start_ms;
-
-    // TODO: System manager
+    
+    // Setup scene
     let entity = world.ent_man.new_entity("cube");
     let trans_comp = world
-        .comp_man
-        .add_component::<TransformComponent>(entity)
-        .unwrap();
+    .comp_man
+    .add_component::<TransformComponent>(entity)
+    .unwrap();
     let mesh_comp = world
-        .comp_man
-        .add_component::<MeshComponent>(entity)
-        .unwrap();
-    mesh_comp.mesh = cube_mesh;
-    mesh_comp.material = mat;
+    .comp_man
+    .add_component::<MeshComponent>(entity)
+    .unwrap();
+    
+    mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
+    mesh_comp.material = world.res_man.get_material("material");
 
     let mut app_state = AppState::new();
     app_state.gl = Some(context);
-
-    //let trans_comp = mut_world.comp_man.add_component::<TransformComponent>().unwrap();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
