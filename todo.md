@@ -16,12 +16,17 @@
 <!-- - I think there is an OBOB on the component/entity count... one too many for what I should have now -->
 <!-- - Setup basic mouse and keyboard events -->
 <!-- - Fixup mouse events (once its back to rendering) -->
+
 # I want to move around and see camera data on the UI
-- Put camera info on app state
-- Make some sort of "main camera" thing on app state
+<!-- - Put camera info on app state -->
+<!-- - Make some sort of "main camera" thing on app state
     - Maybe I shouldn't make cameras into "components" as I'm not going to have more than one, ever
-    - If they're outside the ECS, maybe the app state can just own it. It would also be easier to fetch its transform to render meshes
-- Setup keyboard events to move main camera around
+    - If they're outside the ECS, maybe the app state can just own it. It would also be easier to fetch its transform to render meshes -->
+<!-- - Setup keyboard events to move main camera around -->
+- Actually figure out what 3d space this even is and get a non-trial-and-error rotation setup
+- Limit vertical rotation to 90 degrees somehow
+- Show camera and input parameters on debug widget
+- Hide and lock mouse cursor whenever m1 is down
 
 # Setup basic objects for grid and coordinate axes
 # Get some better models and obj/gltf parsing

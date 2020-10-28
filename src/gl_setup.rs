@@ -36,7 +36,7 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
             match event.button() as i16 {
                 0 => app_state_mut.input.m0_down = true,
-                1 => app_state_mut.input.m1_down = true,
+                2 => app_state_mut.input.m1_down = true, // 1 is the mouse wheel click
                 _ => {}
             };
         };
@@ -71,7 +71,7 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
             match event.button() as i16 {
                 0 => app_state_mut.input.m0_down = false,
-                1 => app_state_mut.input.m1_down = false,
+                2 => app_state_mut.input.m1_down = false, // 1 is the mouse wheel click
                 _ => {}
             };
         };

@@ -14,6 +14,8 @@ pub struct Camera {
 pub struct Input {
     pub mouse_x: i32,
     pub mouse_y: i32,
+    pub delta_x: i32, // since last frame
+    pub delta_y: i32, // since last frame
     pub m0_down: bool,
     pub m1_down: bool,
     pub forward_down: bool,
@@ -28,6 +30,7 @@ pub struct AppState {
     pub time_ms: f64,
     pub delta_time_ms: f64,
     pub move_speed: f32,
+    pub rotate_speed: f32,
     pub input: Input,
     pub camera: Camera,
     pub gl: Option<WebGlRenderingContext>,
@@ -40,9 +43,12 @@ impl AppState {
             time_ms: 0.,
             delta_time_ms: 0.,
             move_speed: 1.0 / 100.0,
+            rotate_speed: 1.0 / 3.0,
             input: Input {
                 mouse_x: 0,
                 mouse_y: 0,
+                delta_x: 0,
+                delta_y: 0,
                 m0_down: false,
                 m1_down: false,
                 forward_down: false,
@@ -51,7 +57,7 @@ impl AppState {
                 back_down: false,
             },
             camera: Camera {
-                pos: cgmath::Point3::new(1.5, -5.0, 3.0),
+                pos: cgmath::Point3::new(0.0, -5.0, 0.0),
                 up: cgmath::Vector3::new(0.0, 0.0, -1.0),
                 target: cgmath::Point3::new(0.0, 0.0, 0.0),
                 fov_v: cgmath::Deg(80.0),

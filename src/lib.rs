@@ -3,7 +3,10 @@ extern crate wasm_bindgen;
 use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
-use cgmath::{InnerSpace, Vector3};
+use cgmath::{
+    num_traits::abs, Basis3, Deg, EuclideanSpace, InnerSpace, MetricSpace, Rotation, Rotation3,
+    Vector3,
+};
 use components::{MeshComponent, TransformComponent, UIComponent, WidgetType};
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
@@ -78,6 +81,9 @@ pub fn initialize() {
 
     let start_ms = js_sys::Date::now();
     let mut last_frame_ms = start_ms;
+
+    let mut last_mouse_x = 0;
+    let mut last_mouse_y = 0;
 
     // Setup scene
     let entity = world.ent_man.new_entity("cube");
@@ -157,8 +163,12 @@ pub fn initialize() {
                 app_state_mut.canvas_width = canvas_width_on_screen;
                 app_state_mut.time_ms = now_ms - start_ms;
                 app_state_mut.delta_time_ms = now_ms - last_frame_ms;
+                app_state_mut.input.delta_x = app_state_mut.input.mouse_x - last_mouse_x;
+                app_state_mut.input.delta_y = app_state_mut.input.mouse_y - last_mouse_y;
 
                 last_frame_ms = now_ms;
+                last_mouse_x = app_state_mut.input.mouse_x;
+                last_mouse_y = app_state_mut.input.mouse_y;
 
                 let cam_forward = ((app_state_mut.camera.target - app_state_mut.camera.pos)
                     as Vector3<f32>)
@@ -184,6 +194,27 @@ pub fn initialize() {
                 if app_state_mut.input.right_down {
                     incr +=
                         cam_right * (app_state_mut.delta_time_ms as f32) * app_state_mut.move_speed;
+                }
+
+                if app_state_mut.input.m1_down
+                    && (app_state_mut.input.delta_y.abs() > 0
+                        || app_state_mut.input.delta_x.abs() > 0)
+                {
+                    let rot_z: Basis3<f32> = Rotation3::from_angle_z(Deg(
+                        app_state_mut.input.delta_x as f32 * app_state_mut.rotate_speed,
+                    ));
+
+                    let rot_x: Basis3<f32> = Rotation3::from_angle_x(Deg(
+                        app_state_mut.input.delta_y as f32 * app_state_mut.rotate_speed,
+                    ));
+
+                    let new_cam_forward = (rot_x * rot_z).rotate_vector(cam_forward);
+                    let prev_targ_dist: f32 = app_state_mut
+                        .camera
+                        .target
+                        .distance(app_state_mut.camera.pos);
+                    let new_targ = app_state_mut.camera.pos + new_cam_forward * prev_targ_dist;
+                    app_state_mut.camera.target = new_targ;
                 }
 
                 app_state_mut.camera.pos += incr;
