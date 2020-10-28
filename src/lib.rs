@@ -1,5 +1,7 @@
 extern crate wasm_bindgen;
 
+use std::sync::{Arc, Mutex};
+
 use app_state::AppState;
 use components::{MeshComponent, TransformComponent, UIComponent, WidgetType};
 use wasm_bindgen::prelude::*;
@@ -51,7 +53,6 @@ pub fn initialize() {
         .with_canvas(Some(canvas))
         .build(&event_loop)
         .expect("Failed to find window!");
-
     let canvas = window.canvas();
 
     // Restore the canvas to be 100% because the window builder will attempt to set it to some size, and we want it to be driven by layout
@@ -100,16 +101,15 @@ pub fn initialize() {
         .unwrap();
     ui_comp.widget_type = WidgetType::TestWidget;
 
-    log::info!("num comps: {}", world.comp_man.mesh.len());
+    let app_state: Arc<Mutex<AppState>> = AppState::new();
+    app_state.lock().unwrap().gl = Some(context);
 
-    let mut app_state = AppState::new();
-    app_state.gl = Some(context);
+    gl_setup::setup_event_handlers(&canvas, app_state.clone());
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
 
         match event {
-            //Event::NewEvents(_) => imgui.io_mut().update_delta_time(Duration::from_millis(1)),
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 window_id,
@@ -151,22 +151,29 @@ pub fn initialize() {
 
                 let now_ms = js_sys::Date::now();
 
-                let app_state_mut = &mut app_state;
+                let app_state_mut = &mut *app_state.lock().unwrap();
                 app_state_mut.canvas_height = canvas_height_on_screen;
                 app_state_mut.canvas_width = canvas_width_on_screen;
-                app_state.time_ms = now_ms - start_ms;
-                app_state.delta_time_ms = now_ms - last_frame_ms;
+                app_state_mut.time_ms = now_ms - start_ms;
+                app_state_mut.delta_time_ms = now_ms - last_frame_ms;
 
                 last_frame_ms = now_ms;
 
-                world.sys_man.run(&app_state, &mut world.comp_man);
+                world.sys_man.run(&app_state_mut, &mut world.comp_man);
 
                 // Dispatch events
             }
 
-            _ => {
-                // TODO: Handle input events
-            }
+            Event::NewEvents(_) => {}
+            Event::DeviceEvent { device_id, event } => {}
+            Event::UserEvent(_) => {}
+            Event::Suspended => {}
+            Event::Resumed => {}
+            Event::RedrawEventsCleared => {}
+            Event::LoopDestroyed => {}
+            
+            // In case the window id doesn't match
+            _ => {}
         }
     });
 }

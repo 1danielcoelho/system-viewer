@@ -126,8 +126,8 @@ impl InterfaceSystem {
 
         // TODO: Combine these or get rid of one of them?
         raw_input.mouse_pos = Some(Pos2 {
-            x: state.mouse_x,
-            y: state.mouse_y,
+            x: state.mouse_x as f32,
+            y: state.mouse_y as f32,
         });
         raw_input.mouse_down = state.mouse_down;
 

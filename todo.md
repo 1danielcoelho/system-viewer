@@ -14,6 +14,7 @@
 <!-- - Restore UI so I can check keyboard events -->
 - Wire up event manager so that it at least exists and lifetimes are OK and stuff
 <!-- - I think there is an OBOB on the component/entity count... one too many for what I should have now -->
+<!-- - Setup basic mouse and keyboard events -->
 
 # Put camera info on app state, make some sort of "main camera" thing
 # Setup keyboard and mouse controls to have a basic look around

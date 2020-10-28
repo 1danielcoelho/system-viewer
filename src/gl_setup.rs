@@ -1,8 +1,12 @@
+use std::sync::{Arc, Mutex};
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
+
+use crate::app_state::AppState;
 
 pub fn initialize_webgl_context(
 ) -> Result<(WebGlRenderingContext, web_sys::HtmlCanvasElement), JsValue> {
@@ -11,10 +15,6 @@ pub fn initialize_webgl_context(
     let canvas = document.get_element_by_id("rustCanvas").unwrap();
     let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
     let gl: WebGlRenderingContext = canvas.get_context("webgl")?.unwrap().dyn_into()?;
-
-    // attach_mouse_down_handler(&canvas)?;
-    // attach_mouse_up_handler(&canvas)?;
-    // attach_mouse_move_handler(&canvas)?;
 
     gl.enable(GL::BLEND);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
@@ -28,38 +28,44 @@ pub fn initialize_webgl_context(
     Ok((gl, canvas))
 }
 
-// fn attach_mouse_down_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
-//     let handler = move |event: web_sys::MouseEvent| {
-//         super::app_state::update_mouse_down(event.client_x() as f32, event.client_y() as f32, true);
-//     };
+pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<AppState>>) {
+    // mousedown
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::MouseEvent| {
+            let app_state_mut = &mut *app_state_clone.lock().unwrap();
+            app_state_mut.mouse_down = true;
+        };
+    
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas.add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref()).expect("Failed to set mousedown event handler");
+        handler.forget();
+    }
 
-//     let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-//     canvas.add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref())?;
-//     handler.forget();
+    // mousemove
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::MouseEvent| {
+            let app_state_mut = &mut *app_state_clone.lock().unwrap();
+            app_state_mut.mouse_x = event.client_x();
+            app_state_mut.mouse_y = event.client_y();
+        };
+    
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas.add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref()).expect("Failed to set mousemove event handler");
+        handler.forget();
+    }
 
-//     Ok(())
-// }
-
-// fn attach_mouse_up_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
-//     let handler = move |event: web_sys::MouseEvent| {
-//         super::app_state::update_mouse_down(event.client_x() as f32, event.client_y() as f32, false);
-//     };
-
-//     let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-//     canvas.add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref())?;
-//     handler.forget();
-
-//     Ok(())
-// }
-
-// fn attach_mouse_move_handler(canvas: &HtmlCanvasElement) -> Result<(), JsValue> {
-//     let handler = move |event: web_sys::MouseEvent| {
-//         super::app_state::update_mouse_position(event.client_x() as f32, event.client_y() as f32);
-//     };
-
-//     let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-//     canvas.add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref())?;
-//     handler.forget();
-
-//     Ok(())
-// }
+    // mouseup
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::MouseEvent| {
+            let app_state_mut = &mut *app_state_clone.lock().unwrap();
+            app_state_mut.mouse_down = false;
+        };
+    
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas.add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref()).expect("Failed to set mouseup event handler");
+        handler.forget();
+    }
+}
