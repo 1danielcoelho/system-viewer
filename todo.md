@@ -12,7 +12,7 @@
 <!-- - Nothing checks if the components are valid before actually doing stuff with them -->
 <!-- - Materials should be managed by res_man -->
 <!-- - Restore UI so I can check keyboard events -->
-- Wire up event manager so that it at least exists and lifetimes are OK and stuff
+<!-- - Wire up event manager so that it at least exists and lifetimes are OK and stuff -->
 <!-- - I think there is an OBOB on the component/entity count... one too many for what I should have now -->
 <!-- - Setup basic mouse and keyboard events -->
 

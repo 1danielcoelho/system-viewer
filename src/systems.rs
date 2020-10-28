@@ -3,10 +3,7 @@ use gui_backend::WebInput;
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 
-use crate::{
-    app_state::AppState,
-    components::{ComponentManager, MeshComponent, TransformComponent, WidgetType},
-};
+use crate::{app_state::AppState, events::EventManager, components::{ComponentManager, MeshComponent, TransformComponent, WidgetType}};
 
 #[macro_export]
 macro_rules! glc {
@@ -38,7 +35,7 @@ impl SystemManager {
     }
 
     // TODO: Make some "context" object that has mut refs to everything and is created every frame
-    pub fn run(&mut self, state: &AppState, cm: &mut ComponentManager) {
+    pub fn run(&mut self, state: &AppState, cm: &mut ComponentManager, em: &mut EventManager) {
         self.render.run(state, &cm.transform, &cm.mesh);
         self.interface.run(state, &cm);
     }

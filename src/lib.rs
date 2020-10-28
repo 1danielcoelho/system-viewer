@@ -159,7 +159,7 @@ pub fn initialize() {
 
                 last_frame_ms = now_ms;
 
-                world.sys_man.run(&app_state_mut, &mut world.comp_man);
+                world.sys_man.run(&app_state_mut, &mut world.comp_man, &mut world.event_man);
 
                 // Dispatch events
             }

@@ -32,6 +32,12 @@ pub struct EventManager {
     queue: VecDeque<Event>,
 }
 impl EventManager {
+    pub fn new() -> EventManager {
+        Self {
+            queue: VecDeque::new(),
+        }
+    }
+
     pub fn push_event(&mut self, event: Event) {
         self.queue.push_front(event);
     }
