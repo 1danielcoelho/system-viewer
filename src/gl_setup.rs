@@ -34,11 +34,17 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
         let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::MouseEvent| {
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
-            app_state_mut.mouse_down = true;
+            match event.button() as i16 {
+                0 => app_state_mut.input.m0_down = true,
+                1 => app_state_mut.input.m1_down = true,
+                _ => {}
+            };
         };
-    
+
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-        canvas.add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref()).expect("Failed to set mousedown event handler");
+        canvas
+            .add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mousedown event handler");
         handler.forget();
     }
 
@@ -47,12 +53,14 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
         let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::MouseEvent| {
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
-            app_state_mut.mouse_x = event.client_x();
-            app_state_mut.mouse_y = event.client_y();
+            app_state_mut.input.mouse_x = event.client_x();
+            app_state_mut.input.mouse_y = event.client_y();
         };
-    
+
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-        canvas.add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref()).expect("Failed to set mousemove event handler");
+        canvas
+            .add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mousemove event handler");
         handler.forget();
     }
 
@@ -61,11 +69,75 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
         let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::MouseEvent| {
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
-            app_state_mut.mouse_down = false;
+            match event.button() as i16 {
+                0 => app_state_mut.input.m0_down = false,
+                1 => app_state_mut.input.m1_down = false,
+                _ => {}
+            };
         };
-    
+
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-        canvas.add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref()).expect("Failed to set mouseup event handler");
+        canvas
+            .add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mouseup event handler");
+        handler.forget();
+    }
+
+    // keydown
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::KeyboardEvent| {
+            let app_state_mut = &mut *app_state_clone.lock().unwrap();
+            match (event.code() as String).as_str() {
+                "KeyW" | "ArrowUp" => {
+                    app_state_mut.input.forward_down = true;
+                }
+                "KeyA" | "ArrowLeft" => {
+                    app_state_mut.input.left_down = true;
+                }
+                "KeyS" | "ArrowDown" => {
+                    app_state_mut.input.back_down = true;
+                }
+                "KeyD" | "ArrowRight" => {
+                    app_state_mut.input.right_down = true;
+                }
+                _ => {}
+            };
+        };
+
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("keydown", handler.as_ref().unchecked_ref())
+            .expect("Failed to set keydown event handler");
+        handler.forget();
+    }
+
+    // keyup
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::KeyboardEvent| {
+            let app_state_mut = &mut *app_state_clone.lock().unwrap();
+            match (event.code() as String).as_str() {
+                "KeyW" | "ArrowUp" => {
+                    app_state_mut.input.forward_down = false;
+                }
+                "KeyA" | "ArrowLeft" => {
+                    app_state_mut.input.left_down = false;
+                }
+                "KeyS" | "ArrowDown" => {
+                    app_state_mut.input.back_down = false;
+                }
+                "KeyD" | "ArrowRight" => {
+                    app_state_mut.input.right_down = false;
+                }
+                _ => {}
+            };
+        };
+
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("keyup", handler.as_ref().unchecked_ref())
+            .expect("Failed to set keyup event handler");
         handler.forget();
     }
 }

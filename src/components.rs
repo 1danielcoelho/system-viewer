@@ -8,8 +8,7 @@ pub enum ComponentIndex {
     Transform = 0,
     Mesh = 1,
     Physics = 2,
-    Camera = 3,
-    Ui = 4,
+    Ui = 3,
 }
 
 pub trait Component: Default {
@@ -26,7 +25,6 @@ pub struct ComponentManager {
     pub physics: Vec<PhysicsComponent>,
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
-    pub camera: Vec<CameraComponent>,
     pub interface: Vec<UIComponent>,
 }
 impl ComponentManager {
@@ -35,7 +33,6 @@ impl ComponentManager {
             physics: vec![],
             mesh: vec![],
             transform: vec![],
-            camera: vec![],
             interface: vec![],
         };
     }
@@ -69,7 +66,6 @@ impl ComponentManager {
         self.physics.resize_with(min_length, Default::default);
         self.mesh.resize_with(min_length, Default::default);
         self.transform.resize_with(min_length, Default::default);
-        self.camera.resize_with(min_length, Default::default);
         self.interface.resize_with(min_length, Default::default);
     }
 }
@@ -228,48 +224,6 @@ impl Component for TransformComponent {
 }
 
 //=============================================================================
-
-pub struct CameraComponent {
-    enabled: bool,
-
-    pub fov_vert: cgmath::Deg<f32>,
-    pub near: f32,
-    pub far: f32,
-}
-impl CameraComponent {
-    fn new() -> Self {
-        return Self::default();
-    }
-}
-impl Default for CameraComponent {
-    fn default() -> Self {
-        return Self {
-            enabled: false,
-            fov_vert: cgmath::Deg(80.0),
-            near: 10.0,
-            far: 1000.0,
-        };
-    }
-}
-impl Component for CameraComponent {
-    type ComponentType = CameraComponent;
-
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Camera;
-    }
-
-    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<CameraComponent> {
-        return &mut w.camera;
-    }
-
-    fn set_enabled(&mut self, enabled: bool) {
-        self.enabled = enabled;
-    }
-
-    fn get_enabled(&mut self) -> bool {
-        return self.enabled;
-    }
-}
 
 pub enum WidgetType {
     None,

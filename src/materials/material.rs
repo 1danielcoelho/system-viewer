@@ -32,16 +32,16 @@ impl Material {
 
         // TODO: Fetch framebuffer dimensions here instead of assuming canvas_dims are it
         let p = cgmath::perspective(
-            cgmath::Deg(65.0),
+            state.camera.fov_v,
             state.canvas_width as f32 / state.canvas_height as f32,
-            1.0,
-            200.0,
+            state.camera.near,
+            state.camera.far,
         );
 
         let v = cgmath::Matrix4::look_at(
-            cgmath::Point3::new(1.5, -5.0, 3.0),
-            cgmath::Point3::new(0.0, 0.0, 0.0),
-            -cgmath::Vector3::unit_z(),
+            state.camera.pos,
+            state.camera.target,
+            state.camera.up,
         );
 
         let proj = p * v * w;

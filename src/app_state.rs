@@ -2,27 +2,62 @@ use std::sync::{Arc, Mutex};
 
 use web_sys::WebGlRenderingContext;
 
+pub struct Camera {
+    pub pos: cgmath::Point3<f32>,
+    pub up: cgmath::Vector3<f32>,
+    pub target: cgmath::Point3<f32>,
+    pub fov_v: cgmath::Deg<f32>,
+    pub near: f32,
+    pub far: f32,
+}
+
+pub struct Input {
+    pub mouse_x: i32,
+    pub mouse_y: i32,
+    pub m0_down: bool,
+    pub m1_down: bool,
+    pub forward_down: bool,
+    pub left_down: bool,
+    pub right_down: bool,
+    pub back_down: bool,
+}
+
 pub struct AppState {
     pub canvas_height: u32,
     pub canvas_width: u32,
-    pub mouse_down: bool,
-    pub mouse_x: i32,
-    pub mouse_y: i32,
     pub time_ms: f64,
     pub delta_time_ms: f64,
-    // TODO: Camera data somehow?
+    pub move_speed: f32,
+    pub input: Input,
+    pub camera: Camera,
     pub gl: Option<WebGlRenderingContext>,
 }
 impl AppState {
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(Self {
             canvas_height: 0,
-            canvas_width: 0,
-            mouse_down: false,
-            mouse_x: 0,
-            mouse_y: 0,
+            canvas_width: 0,            
             time_ms: 0.,
             delta_time_ms: 0.,
+            move_speed: 1.0 / 100.0,
+            input: Input {
+                mouse_x: 0,
+                mouse_y: 0,
+                m0_down: false,
+                m1_down: false,
+                forward_down: false,
+                left_down: false,
+                right_down: false,
+                back_down: false,
+            },
+            camera: Camera {
+                pos: cgmath::Point3::new(1.5, -5.0, 3.0),
+                up: cgmath::Vector3::new(0.0, 0.0, -1.0),
+                target: cgmath::Point3::new(0.0, 0.0, 0.0),
+                fov_v: cgmath::Deg(80.0),
+                near: 1.0,
+                far: 1000.0,
+            },
             gl: None,
         }))
     }

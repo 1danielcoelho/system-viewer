@@ -1,4 +1,4 @@
-# Bootstrapping
+<!-- # Bootstrapping -->
 <!-- - Remove entity component index redirection thing or else it bungs up the systems
     - Create a systems manager and hard-code rendering system 
         - Run function that receives references to transform and mesh components
@@ -15,16 +15,16 @@
 <!-- - Wire up event manager so that it at least exists and lifetimes are OK and stuff -->
 <!-- - I think there is an OBOB on the component/entity count... one too many for what I should have now -->
 <!-- - Setup basic mouse and keyboard events -->
+<!-- - Fixup mouse events (once its back to rendering) -->
+# I want to move around and see camera data on the UI
+- Put camera info on app state
+- Make some sort of "main camera" thing on app state
+    - Maybe I shouldn't make cameras into "components" as I'm not going to have more than one, ever
+    - If they're outside the ECS, maybe the app state can just own it. It would also be easier to fetch its transform to render meshes
+- Setup keyboard events to move main camera around
 
-# Put camera info on app state, make some sort of "main camera" thing
-# Setup keyboard and mouse controls to have a basic look around
-- Fixup mouse events (once its back to rendering)
-# How to deal with object hierarchies?
-# Finish up event system
-# UI widget to control camera parameters like FOV, near/far planes, etc.
 # Setup basic objects for grid and coordinate axes
 # Get some better models and obj/gltf parsing
-- Show coordinates on screen
 # I think I'll need wasm-bindgen-futures at some point for something?
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 <!-- # Setup a time variable and animate a material rotation -->

@@ -3,6 +3,7 @@ extern crate wasm_bindgen;
 use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
+use cgmath::{InnerSpace, Vector3};
 use components::{MeshComponent, TransformComponent, UIComponent, WidgetType};
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
@@ -159,7 +160,38 @@ pub fn initialize() {
 
                 last_frame_ms = now_ms;
 
-                world.sys_man.run(&app_state_mut, &mut world.comp_man, &mut world.event_man);
+                let cam_forward = ((app_state_mut.camera.target - app_state_mut.camera.pos)
+                    as Vector3<f32>)
+                    .normalize();
+                let cam_right: Vector3<f32> = cam_forward.cross(app_state_mut.camera.up);
+                let cam_up: Vector3<f32> = cam_right.cross(cam_forward);
+
+                let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
+                if app_state_mut.input.forward_down {
+                    incr += cam_forward
+                        * (app_state_mut.delta_time_ms as f32)
+                        * app_state_mut.move_speed;
+                }
+                if app_state_mut.input.back_down {
+                    incr -= cam_forward
+                        * (app_state_mut.delta_time_ms as f32)
+                        * app_state_mut.move_speed;
+                }
+                if app_state_mut.input.left_down {
+                    incr -=
+                        cam_right * (app_state_mut.delta_time_ms as f32) * app_state_mut.move_speed;
+                }
+                if app_state_mut.input.right_down {
+                    incr +=
+                        cam_right * (app_state_mut.delta_time_ms as f32) * app_state_mut.move_speed;
+                }
+
+                app_state_mut.camera.pos += incr;
+                app_state_mut.camera.target += incr;
+
+                world
+                    .sys_man
+                    .run(&app_state_mut, &mut world.comp_man, &mut world.event_man);
 
                 // Dispatch events
             }
@@ -171,7 +203,7 @@ pub fn initialize() {
             Event::Resumed => {}
             Event::RedrawEventsCleared => {}
             Event::LoopDestroyed => {}
-            
+
             // In case the window id doesn't match
             _ => {}
         }
