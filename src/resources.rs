@@ -1,8 +1,8 @@
 use js_sys::WebAssembly;
 use std::{collections::HashMap, rc::Rc};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 use web_sys::WebGlRenderingContext;
+use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
 use crate::{materials::Material, mesh::Mesh, texture::Texture};
 
@@ -79,6 +79,182 @@ fn generate_cube(ctx: &WebGlRenderingContext) -> Mesh {
         color_buffer: buffer_colors,
         indices_buffer: buffer_indices,
         index_count: indices_array.length() as i32,
+        element_type: GL::TRIANGLES,
+    };
+}
+
+fn generate_plane(ctx: &WebGlRenderingContext) -> Mesh {
+    let vertices: [f32; 12] = [
+        1.0, 1.0, 0.0, //
+        1.0, -1.0, 0.0, //
+        -1.0, 1.0, 0.0, //
+        -1.0, -1.0, 0.0, //
+    ];
+
+    let colors: [f32; 12] = [
+        0.0, 0.0, 0.0, //
+        1.0, 0.0, 0.0, //
+        0.0, 1.0, 0.0, //
+        1.0, 1.0, 0.0, //
+    ];
+
+    let indices: [u16; 6] = [
+        0, 1, 3, //
+        0, 3, 2, //
+    ];
+
+    // Vertex positions
+    let memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let vertices_location = vertices.as_ptr() as u32 / 4;
+    let vert_array = js_sys::Float32Array::new(&memory_buffer)
+        .subarray(vertices_location, vertices_location + vertices.len() as u32);
+    let buffer_position = ctx
+        .create_buffer()
+        .ok_or("failed to create buffer")
+        .unwrap();
+    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_position));
+    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
+
+    // Vertex colors
+    let color_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let colors_location = colors.as_ptr() as u32 / 4;
+    let color_array = js_sys::Float32Array::new(&color_buffer)
+        .subarray(colors_location, colors_location + colors.len() as u32);
+    let buffer_colors = ctx
+        .create_buffer()
+        .ok_or("failed to create buffer")
+        .unwrap();
+    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_colors));
+    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::STATIC_DRAW);
+
+    // Vertex indices
+    let indices_memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let indices_location = indices.as_ptr() as u32 / 2;
+    let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer)
+        .subarray(indices_location, indices_location + indices.len() as u32);
+    let buffer_indices = ctx.create_buffer().unwrap();
+    ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
+    ctx.buffer_data_with_array_buffer_view(
+        GL::ELEMENT_ARRAY_BUFFER,
+        &indices_array,
+        GL::STATIC_DRAW,
+    );
+
+    return Mesh {
+        id: 0,
+        name: String::from("plane"),
+        position_buffer: buffer_position,
+        color_buffer: buffer_colors,
+        indices_buffer: buffer_indices,
+        index_count: indices_array.length() as i32,
+        element_type: GL::TRIANGLES,
+    };
+}
+
+fn generate_grid(ctx: &WebGlRenderingContext, num_lines: u32) -> Mesh {
+    assert!(num_lines > 2);
+
+    let incr = 1.0 / (num_lines - 1) as f32;
+    let num_verts = num_lines * num_lines;
+
+    let mut vertices: Vec<f32> = Vec::new();
+    vertices.resize((num_verts * 3) as usize, 0.0);
+
+    let mut colors: Vec<f32> = Vec::new();
+    colors.resize((num_verts * 3) as usize, 0.0);
+
+    for y_ind in 0..num_lines {
+        for x_ind in 0..num_lines {
+            let vert_ind = (x_ind + y_ind * num_lines) * 3;
+
+            vertices[(vert_ind + 0) as usize] = x_ind as f32 * incr - 0.5;
+            vertices[(vert_ind + 1) as usize] = y_ind as f32 * incr - 0.5;
+            vertices[(vert_ind + 2) as usize] = 0.0;
+            colors[(vert_ind + 0) as usize] = 1.0;
+            colors[(vert_ind + 1) as usize] = 1.0;
+            colors[(vert_ind + 2) as usize] = 1.0;
+        }
+    }
+
+    let mut indices: Vec<u16> = Vec::new();
+    indices.resize((num_lines * 4) as usize, 0);
+    for col_ind in 0..num_lines {
+        let ind = col_ind * 2;
+        
+        indices[(ind + 0) as usize] = col_ind as u16;
+        indices[(ind + 1) as usize] = (num_lines * num_lines - (num_lines - col_ind)) as u16;
+    }
+    
+    for row_ind in 0..num_lines {
+        let ind = (row_ind * 2) + num_lines * 2;
+        
+        indices[(ind + 0) as usize] = (row_ind * num_lines) as u16;
+        indices[(ind + 1) as usize] = ((row_ind+1) * num_lines - 1) as u16;
+    }
+
+    // Vertex positions
+    let memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let vertices_location = vertices.as_ptr() as u32 / 4;
+    let vert_array = js_sys::Float32Array::new(&memory_buffer)
+        .subarray(vertices_location, vertices_location + vertices.len() as u32);
+    let buffer_position = ctx
+        .create_buffer()
+        .ok_or("failed to create buffer")
+        .unwrap();
+    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_position));
+    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
+
+    // Vertex colors
+    let color_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let colors_location = colors.as_ptr() as u32 / 4;
+    let color_array = js_sys::Float32Array::new(&color_buffer)
+        .subarray(colors_location, colors_location + colors.len() as u32);
+    let buffer_colors = ctx
+        .create_buffer()
+        .ok_or("failed to create buffer")
+        .unwrap();
+    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_colors));
+    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::STATIC_DRAW);
+
+    // Vertex indices
+    let indices_memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let indices_location = indices.as_ptr() as u32 / 2;
+    let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer)
+        .subarray(indices_location, indices_location + indices.len() as u32);
+    let buffer_indices = ctx.create_buffer().unwrap();
+    ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
+    ctx.buffer_data_with_array_buffer_view(
+        GL::ELEMENT_ARRAY_BUFFER,
+        &indices_array,
+        GL::STATIC_DRAW,
+    );
+
+    return Mesh {
+        id: 0,
+        name: String::from("plane"),
+        position_buffer: buffer_position,
+        color_buffer: buffer_colors,
+        indices_buffer: buffer_indices,
+        index_count: indices_array.length() as i32,
+        element_type: GL::LINES,
     };
 }
 
@@ -162,6 +338,18 @@ impl ResourceManager {
             return Some(mesh);
         };
 
+        if name == "plane" {
+            let mesh = Rc::new(generate_plane(ctx));
+            self.meshes.insert(name.to_string(), mesh.clone());
+            return Some(mesh);
+        };
+
+        if name == "grid" {
+            let mesh = Rc::new(generate_grid(ctx, 199));
+            self.meshes.insert(name.to_string(), mesh.clone());
+            return Some(mesh);
+        };
+
         return None;
     }
 
@@ -173,7 +361,7 @@ impl ResourceManager {
         )
         .unwrap();
 
-        let simple_material = Rc::new( Material {
+        let simple_material = Rc::new(Material {
             name: "material".to_string(),
             u_opacity: ctx.get_uniform_location(&program, "uOpacity").unwrap(),
             u_transform: ctx.get_uniform_location(&program, "uTransform").unwrap(),
@@ -182,13 +370,14 @@ impl ResourceManager {
             program: program,
         });
 
-        self.materials.insert("material".to_string(), simple_material);
+        self.materials
+            .insert("material".to_string(), simple_material);
     }
 
     pub fn get_material(&self, name: &str) -> Option<Rc<Material>> {
         return Some(self.materials.get(name).unwrap().clone());
     }
-    
+
     pub fn get_mesh(&self, name: &str) -> Option<Rc<Mesh>> {
         return Some(self.meshes.get(&name.to_string()).unwrap().clone());
     }

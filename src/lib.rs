@@ -98,6 +98,32 @@ pub fn initialize() {
     mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
     mesh_comp.material = world.res_man.get_material("material");
 
+    let plane = world.ent_man.new_entity("plane");
+    let trans_comp = world
+        .comp_man
+        .add_component::<TransformComponent>(plane)
+        .unwrap();
+    trans_comp.transform.scale = 3.0;
+    let mesh_comp = world
+        .comp_man
+        .add_component::<MeshComponent>(plane)
+        .unwrap();
+    mesh_comp.mesh = world.res_man.generate_mesh("plane", &context);
+    mesh_comp.material = world.res_man.get_material("material");
+
+    let grid = world.ent_man.new_entity("grid");
+    let trans_comp = world
+        .comp_man
+        .add_component::<TransformComponent>(grid)
+        .unwrap();
+    trans_comp.transform.scale = 1000.0;
+    let mesh_comp = world
+        .comp_man
+        .add_component::<MeshComponent>(grid)
+        .unwrap();
+    mesh_comp.mesh = world.res_man.generate_mesh("grid", &context);
+    mesh_comp.material = world.res_man.get_material("material");
+
     let ui_entity = world.ent_man.new_entity("test_ui");
     world
         .comp_man

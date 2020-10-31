@@ -1,5 +1,7 @@
 use crate::{app_state::AppState, components::TransformType};
 
+use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
+
 use web_sys::*;
 
 pub struct Material {
@@ -26,9 +28,10 @@ impl Material {
         // TODO: Actually use the transform
 
         // Get uniforms
-        let w = cgmath::Matrix4::from_angle_x(cgmath::Deg(state.time_ms as f32 / 10.0))
-            * cgmath::Matrix4::from_angle_y(cgmath::Deg(state.time_ms as f32 / 13.0))
-            * cgmath::Matrix4::from_angle_z(cgmath::Deg(state.time_ms as f32 / 17.0));
+        // let w = cgmath::Matrix4::from_angle_x(cgmath::Deg(state.time_ms as f32 / 10.0))
+        //     * cgmath::Matrix4::from_angle_y(cgmath::Deg(state.time_ms as f32 / 13.0))
+        //     * cgmath::Matrix4::from_angle_z(cgmath::Deg(state.time_ms as f32 / 17.0));
+        let w: Matrix4<f32> = transform.clone().into();
 
         // TODO: Fetch framebuffer dimensions here instead of assuming canvas_dims are it
         let p = cgmath::perspective(

@@ -14,6 +14,7 @@ pub struct Mesh {
     pub color_buffer: WebGlBuffer,
     pub indices_buffer: WebGlBuffer,
     pub index_count: i32,
+    pub element_type: u32,
 }
 
 impl Mesh {
@@ -30,6 +31,6 @@ impl Mesh {
         ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.indices_buffer));
 
         // Draw
-        ctx.draw_elements_with_i32(GL::TRIANGLES, self.index_count, GL::UNSIGNED_SHORT, 0);
+        ctx.draw_elements_with_i32(self.element_type, self.index_count, GL::UNSIGNED_SHORT, 0);
     }
 }
