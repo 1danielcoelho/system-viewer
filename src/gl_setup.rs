@@ -105,6 +105,26 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
         handler.forget();
     }
 
+    // wheel
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::WheelEvent| {
+            let app_state_mut = &mut *app_state_clone.lock().unwrap();
+
+            if event.delta_y() < 0.0 {
+                app_state_mut.move_speed *= 1.1;
+            } else {
+                app_state_mut.move_speed *= 0.9;
+            }
+        };
+
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("wheel", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mouseup event handler");
+        handler.forget();
+    }
+
     // keydown
     {
         let app_state_clone = app_state.clone();

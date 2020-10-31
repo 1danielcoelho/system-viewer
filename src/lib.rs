@@ -214,24 +214,21 @@ pub fn initialize() {
 
                 let lock_pitch = true;
 
+                let move_speed = app_state_mut.move_speed * 0.005;
+                let rotate_speed = app_state_mut.rotate_speed * 0.5;
+
                 let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
                 if app_state_mut.input.forward_down {
-                    incr += cam_forward
-                        * (app_state_mut.delta_time_ms as f32)
-                        * app_state_mut.move_speed;
+                    incr += cam_forward * (app_state_mut.delta_time_ms as f32) * move_speed;
                 }
                 if app_state_mut.input.back_down {
-                    incr -= cam_forward
-                        * (app_state_mut.delta_time_ms as f32)
-                        * app_state_mut.move_speed;
+                    incr -= cam_forward * (app_state_mut.delta_time_ms as f32) * move_speed;
                 }
                 if app_state_mut.input.left_down {
-                    incr -=
-                        cam_right * (app_state_mut.delta_time_ms as f32) * app_state_mut.move_speed;
+                    incr -= cam_right * (app_state_mut.delta_time_ms as f32) * move_speed;
                 }
                 if app_state_mut.input.right_down {
-                    incr +=
-                        cam_right * (app_state_mut.delta_time_ms as f32) * app_state_mut.move_speed;
+                    incr += cam_right * (app_state_mut.delta_time_ms as f32) * move_speed;
                 }
 
                 if app_state_mut.input.m1_down
@@ -253,8 +250,8 @@ pub fn initialize() {
                         cgmath::Angle::atan(delta_x_world / app_state_mut.camera.near);
                     let mut y_angle: Deg<f32> =
                         cgmath::Angle::atan(delta_y_world / app_state_mut.camera.near);
-                    x_angle *= app_state_mut.rotate_speed;
-                    y_angle *= app_state_mut.rotate_speed;
+                    x_angle *= rotate_speed;
+                    y_angle *= rotate_speed;
 
                     let curr_pitch_angle: Deg<f32> = cgmath::Angle::atan2(
                         cam_forward.cross(app_state_mut.camera.up).magnitude(),

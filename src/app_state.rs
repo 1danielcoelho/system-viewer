@@ -39,11 +39,11 @@ impl AppState {
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(Self {
             canvas_height: 0,
-            canvas_width: 0,            
+            canvas_width: 0,
             time_ms: 0.,
             delta_time_ms: 0.,
-            move_speed: 1.0 / 100.0,
-            rotate_speed: 3.0,
+            move_speed: 5.0,
+            rotate_speed: 5.0,
             input: Input {
                 mouse_x: 0,
                 mouse_y: 0,

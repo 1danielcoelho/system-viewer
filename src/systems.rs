@@ -169,26 +169,53 @@ impl InterfaceSystem {
 
     fn draw_test_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
-            ui.columns(4, |cols| {
-                cols[0].label(format!("Vertical FOV (deg):"));
-                cols[1].add(egui::DragValue::f32(&mut state.camera.fov_v.0).range(0.1..=120.0));
+            // TODO: Can't use ui.columns due to some bug where everything in column 0 responds at once
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::f32(&mut state.camera.fov_v.0)
+                        .range(0.1..=120.0)
+                        .speed(0.5),
+                );
+                ui.label(format!("Vertical FOV (deg)"));
             });
 
-            ui.columns(4, |cols| {
-                cols[0].label(format!("Near:"));
-                cols[1].add(egui::DragValue::f32(&mut state.camera.near).range(1.0..=20.0));
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::f32(&mut state.camera.near)
+                        .range(0.1..=19.9)
+                        .speed(0.1),
+                );
+                ui.label(format!("Near"));
             });
 
-            ui.columns(4, |cols| {
-                cols[0].label(format!("Far:"));
-                cols[1].add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
+            ui.horizontal(|ui| {
+                ui.add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
+                ui.label(format!("Far"));
             });
 
-            ui.columns(4, |cols| {
-                cols[0].label(format!("Camera pos:"));
-                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
-                cols[2].add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
-                cols[3].add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::f32(&mut state.move_speed)
+                        .range(1.0..=1000.0)
+                        .speed(0.1),
+                );
+                ui.label(format!("Move speed"));
+            });
+
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::f32(&mut state.rotate_speed)
+                        .range(1.0..=10.0)
+                        .speed(0.1),
+                );
+                ui.label(format!("Rotate speed speed"));
+            });
+
+            ui.horizontal(|ui| {
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+                ui.label(format!("Camera pos"));
             });
         });
     }
