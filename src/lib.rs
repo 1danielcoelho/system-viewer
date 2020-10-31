@@ -210,7 +210,9 @@ pub fn initialize() {
                     .normalize();
                 let cam_right: Vector3<f32> =
                     cam_forward.cross(app_state_mut.camera.up).normalize();
-                let cam_up: Vector3<f32> = cam_right.cross(cam_forward);
+                let cam_up: Vector3<f32> = cam_right.cross(cam_forward).normalize();
+
+                let lock_pitch = true;
 
                 let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
                 if app_state_mut.input.forward_down {
@@ -247,17 +249,31 @@ pub fn initialize() {
                         * (app_state_mut.input.delta_y as f32
                             / (app_state_mut.canvas_height as f32 / 2.0));
 
-                    let x_angle: Deg<f32> =
+                    let mut x_angle: Deg<f32> =
                         cgmath::Angle::atan(delta_x_world / app_state_mut.camera.near);
-                    let y_angle: Deg<f32> =
+                    let mut y_angle: Deg<f32> =
                         cgmath::Angle::atan(delta_y_world / app_state_mut.camera.near);
+                    x_angle *= app_state_mut.rotate_speed;
+                    y_angle *= app_state_mut.rotate_speed;
+
+                    let curr_pitch_angle: Deg<f32> = cgmath::Angle::atan2(
+                        cam_forward.cross(app_state_mut.camera.up).magnitude(),
+                        cam_forward.dot(app_state_mut.camera.up),
+                    );
+
+                    if lock_pitch {
+                        if curr_pitch_angle - y_angle < Deg(0.001) {
+                            y_angle = curr_pitch_angle - Deg(0.001);
+                        } else if curr_pitch_angle - y_angle > Deg(179.999) {
+                            y_angle = -Deg(179.999) + curr_pitch_angle;
+                        };
+                    }
 
                     let rot_z: Basis3<f32> =
-                        Rotation3::from_axis_angle(cam_up, x_angle * app_state_mut.rotate_speed);
-                    let rot_x: Basis3<f32> =
-                        Rotation3::from_axis_angle(cam_right, y_angle * app_state_mut.rotate_speed);
+                        Rotation3::from_axis_angle(app_state_mut.camera.up, x_angle);
+                    let rot_x: Basis3<f32> = Rotation3::from_axis_angle(cam_right, y_angle);
 
-                    let new_cam_forward = (rot_z * rot_x).rotate_vector(cam_forward);
+                    let new_cam_forward = rot_z.rotate_vector(rot_x.rotate_vector(cam_forward));
                     let prev_targ_dist: f32 = app_state_mut
                         .camera
                         .target
@@ -268,7 +284,10 @@ pub fn initialize() {
 
                 app_state_mut.camera.pos += incr;
                 app_state_mut.camera.target += incr;
-                app_state_mut.camera.up = cam_up;
+
+                if !lock_pitch {
+                    app_state_mut.camera.up = cam_up;
+                }
 
                 world
                     .sys_man
