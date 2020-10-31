@@ -1,6 +1,8 @@
 const webpack = require('webpack');
 const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const WriteFilePlugin = require('write-file-webpack-plugin');
 const path = require('path');
 
 module.exports = (env, args) => {
@@ -13,6 +15,12 @@ module.exports = (env, args) => {
             filename: isProductionMode ? '[name].[contenthash].js' : '[name].[hash].js',
         },
         plugins: [
+            new WriteFilePlugin(),
+            new CopyWebpackPlugin({
+                patterns: [
+                  { from: 'public', to: 'public' },
+                ],
+            }),
             new HtmlWebpackPlugin({
                 template: 'index.html'
             }),
