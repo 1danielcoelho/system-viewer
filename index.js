@@ -9,10 +9,10 @@ rust.then(m => {
     }
 
     let req = new XMLHttpRequest();
-    req.open("GET", "./public/Duck.gltf", true);
-    req.responseType = "text";
+    req.open("GET", "./public/Duck.glb", true);
+    req.responseType = "arraybuffer";
     req.onload = function (ev) {
-        console.log('loaded', req.response);
+        m.load_gltf(new Uint8Array(req.response));
     }
     req.send();
     

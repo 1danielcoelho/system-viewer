@@ -8,6 +8,7 @@ use cgmath::{
     Rotation3, Vector3,
 };
 use components::{MeshComponent, TransformComponent, UIComponent, WidgetType};
+use gltf::Gltf;
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
 use winit::{event::WindowEvent, window::WindowBuilder};
@@ -43,6 +44,14 @@ pub fn native_pixels_per_point() -> f32 {
     } else {
         1.0
     }
+}
+
+#[wasm_bindgen]
+pub fn load_gltf(data: &mut [u8]) {
+    log::info!("received {} bytes", data.len());
+
+    let gltf = Gltf::from_slice(data).expect("Failed to load gltf...");
+    log::info!("Num meshes: {}", gltf.meshes().len());
 }
 
 #[wasm_bindgen]
