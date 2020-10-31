@@ -191,7 +191,7 @@ pub fn initialize() {
 
                 let now_ms = js_sys::Date::now();
 
-                let app_state_mut = &mut *app_state.lock().unwrap();
+                let mut app_state_mut = &mut *app_state.lock().unwrap();
                 app_state_mut.canvas_height = canvas_height_on_screen;
                 app_state_mut.canvas_width = canvas_width_on_screen;
                 app_state_mut.time_ms = now_ms - start_ms;
@@ -289,9 +289,11 @@ pub fn initialize() {
                     app_state_mut.camera.up = cam_up;
                 }
 
-                world
-                    .sys_man
-                    .run(&app_state_mut, &mut world.comp_man, &mut world.event_man);
+                world.sys_man.run(
+                    &mut app_state_mut,
+                    &mut world.comp_man,
+                    &mut world.event_man,
+                );
 
                 // Dispatch events
             }

@@ -1,9 +1,13 @@
-use egui::{Pos2, Ui};
+use egui::{Align, Pos2, Ui};
 use gui_backend::WebInput;
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 
-use crate::{app_state::AppState, events::EventManager, components::{ComponentManager, MeshComponent, TransformComponent, WidgetType}};
+use crate::{
+    app_state::AppState,
+    components::{ComponentManager, MeshComponent, TransformComponent, WidgetType},
+    events::EventManager,
+};
 
 #[macro_export]
 macro_rules! glc {
@@ -35,7 +39,7 @@ impl SystemManager {
     }
 
     // TODO: Make some "context" object that has mut refs to everything and is created every frame
-    pub fn run(&mut self, state: &AppState, cm: &mut ComponentManager, em: &mut EventManager) {
+    pub fn run(&mut self, state: &mut AppState, cm: &mut ComponentManager, em: &mut EventManager) {
         self.render.run(state, &cm.transform, &cm.mesh);
         self.interface.run(state, &cm);
     }
@@ -122,7 +126,7 @@ impl InterfaceSystem {
         };
     }
 
-    pub fn run(&mut self, state: &AppState, comp_man: &ComponentManager) {
+    pub fn run(&mut self, state: &mut AppState, comp_man: &ComponentManager) {
         self.pre_draw(state);
         self.draw(state, comp_man);
     }
@@ -140,7 +144,7 @@ impl InterfaceSystem {
         self.ui = Some(self.backend.begin_frame(raw_input));
     }
 
-    fn draw(&mut self, state: &AppState, comp_man: &ComponentManager) {
+    fn draw(&mut self, state: &mut AppState, comp_man: &ComponentManager) {
         if self.ui.is_none() {
             return;
         }
@@ -153,7 +157,7 @@ impl InterfaceSystem {
         self.backend.paint(paint_jobs).expect("Failed to paint!");
     }
 
-    fn draw_widget(ui: &Ui, state: &AppState, entity: u32, comp_man: &ComponentManager) {
+    fn draw_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
         let ui_comp = &comp_man.interface[entity as usize];
         match ui_comp.widget_type {
             WidgetType::None => {}
@@ -163,16 +167,29 @@ impl InterfaceSystem {
         }
     }
 
-    fn draw_test_widget(ui: &Ui, state: &AppState, entity: u32, comp_man: &ComponentManager) {
-        let mut s = String::from("test");
-        let mut value = 0.0;
+    fn draw_test_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
-            ui.label(format!("Hello, world {}", 123));
-            if ui.button("Save").clicked {
-                log::info!("Save!");
-            }
-            ui.text_edit(&mut s);
-            ui.add(egui::Slider::f32(&mut value, 0.0..=1.0).text("float"));
+            ui.columns(4, |cols| {
+                cols[0].label(format!("Vertical FOV (deg):"));
+                cols[1].add(egui::DragValue::f32(&mut state.camera.fov_v.0).range(0.1..=120.0));
+            });
+
+            ui.columns(4, |cols| {
+                cols[0].label(format!("Near:"));
+                cols[1].add(egui::DragValue::f32(&mut state.camera.near).range(1.0..=20.0));
+            });
+
+            ui.columns(4, |cols| {
+                cols[0].label(format!("Far:"));
+                cols[1].add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
+            });
+
+            ui.columns(4, |cols| {
+                cols[0].label(format!("Camera pos:"));
+                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
+                cols[2].add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
+                cols[3].add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+            });
         });
     }
 }

@@ -23,12 +23,12 @@
     - Maybe I shouldn't make cameras into "components" as I'm not going to have more than one, ever
     - If they're outside the ECS, maybe the app state can just own it. It would also be easier to fetch its transform to render meshes -->
 <!-- - Setup keyboard events to move main camera around -->
-- Actually figure out what 3d space this even is and get a non-trial-and-error rotation setup
-- Limit vertical rotation to 90 degrees somehow
+<!-- - Actually figure out what 3d space this even is and get a non-trial-and-error rotation setup -->
+<!-- - Limit vertical rotation to 90 degrees somehow -->
 - Show camera and input parameters on debug widget
-- Hide and lock mouse cursor whenever m1 is down
+<!-- - Hide and lock mouse cursor whenever m1 is down -->
 
-# Setup basic objects for grid and coordinate axes
+<!-- # Setup basic objects for grid and coordinate axes -->
 # Get some better models and obj/gltf parsing
 # I think I'll need wasm-bindgen-futures at some point for something?
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
