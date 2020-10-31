@@ -4,8 +4,8 @@ use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
 use cgmath::{
-    num_traits::abs, Basis3, Deg, EuclideanSpace, InnerSpace, MetricSpace, Rotation, Rotation3,
-    Vector3,
+    num_traits::abs, Basis3, Deg, EuclideanSpace, InnerSpace, MetricSpace, Rad, Rotation,
+    Rotation3, Vector3,
 };
 use components::{MeshComponent, TransformComponent, UIComponent, WidgetType};
 use wasm_bindgen::prelude::*;
@@ -170,10 +170,13 @@ pub fn initialize() {
                 last_mouse_x = app_state_mut.input.mouse_x;
                 last_mouse_y = app_state_mut.input.mouse_y;
 
+                let aspect = app_state_mut.canvas_width as f32 / app_state_mut.canvas_height as f32;
+
                 let cam_forward = ((app_state_mut.camera.target - app_state_mut.camera.pos)
                     as Vector3<f32>)
                     .normalize();
-                let cam_right: Vector3<f32> = cam_forward.cross(app_state_mut.camera.up);
+                let cam_right: Vector3<f32> =
+                    cam_forward.cross(app_state_mut.camera.up).normalize();
                 let cam_up: Vector3<f32> = cam_right.cross(cam_forward);
 
                 let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
@@ -200,13 +203,26 @@ pub fn initialize() {
                     && (app_state_mut.input.delta_y.abs() > 0
                         || app_state_mut.input.delta_x.abs() > 0)
                 {
-                    let rot_z: Basis3<f32> = Rotation3::from_angle_z(Deg(
-                        app_state_mut.input.delta_x as f32 * app_state_mut.rotate_speed,
-                    ));
+                    let half_canvas_height_world = app_state_mut.camera.near
+                        * cgmath::Angle::tan(app_state_mut.camera.fov_v / 2.0);
+                    let half_canvas_width_world = aspect * half_canvas_height_world;
 
-                    let rot_x: Basis3<f32> = Rotation3::from_angle_x(Deg(
-                        app_state_mut.input.delta_y as f32 * app_state_mut.rotate_speed,
-                    ));
+                    let delta_x_world = half_canvas_width_world
+                        * (app_state_mut.input.delta_x as f32
+                            / (app_state_mut.canvas_width as f32 / 2.0));
+                    let delta_y_world = half_canvas_height_world
+                        * (app_state_mut.input.delta_y as f32
+                            / (app_state_mut.canvas_height as f32 / 2.0));
+
+                    let x_angle: Deg<f32> =
+                        cgmath::Angle::atan(delta_x_world / app_state_mut.camera.near);
+                    let y_angle: Deg<f32> =
+                        cgmath::Angle::atan(delta_y_world / app_state_mut.camera.near);
+
+                    let rot_z: Basis3<f32> =
+                        Rotation3::from_angle_z(x_angle * app_state_mut.rotate_speed);
+                    let rot_x: Basis3<f32> =
+                        Rotation3::from_angle_x(y_angle * app_state_mut.rotate_speed);
 
                     let new_cam_forward = (rot_x * rot_z).rotate_vector(cam_forward);
                     let prev_targ_dist: f32 = app_state_mut

@@ -32,11 +32,17 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
     // mousedown
     {
         let app_state_clone = app_state.clone();
+        let canvas_clone = canvas.clone();
         let handler = move |event: web_sys::MouseEvent| {
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
             match event.button() as i16 {
                 0 => app_state_mut.input.m0_down = true,
-                2 => app_state_mut.input.m1_down = true, // 1 is the mouse wheel click
+
+                // 1 is the mouse wheel click
+                2 => {
+                    app_state_mut.input.m1_down = true;
+                    canvas_clone.request_pointer_lock();
+                }
                 _ => {}
             };
         };
@@ -53,8 +59,15 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
         let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::MouseEvent| {
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
-            app_state_mut.input.mouse_x = event.client_x();
-            app_state_mut.input.mouse_y = event.client_y();
+
+            // With pointer lock client_x and client_y don't actually change, so we need movement_*
+            if app_state_mut.input.m1_down {
+                app_state_mut.input.mouse_x += event.movement_x();
+                app_state_mut.input.mouse_y += event.movement_y();
+            } else {
+                app_state_mut.input.mouse_x = event.client_x();
+                app_state_mut.input.mouse_y = event.client_y();
+            }
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
@@ -71,7 +84,16 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
             let app_state_mut = &mut *app_state_clone.lock().unwrap();
             match event.button() as i16 {
                 0 => app_state_mut.input.m0_down = false,
-                2 => app_state_mut.input.m1_down = false, // 1 is the mouse wheel click
+
+                // 1 is the mouse wheel click
+                2 => {
+                    app_state_mut.input.m1_down = false;
+
+                    // Release pointer lock
+                    let window = window().unwrap();
+                    let doc = window.document().unwrap();
+                    doc.exit_pointer_lock();
+                }
                 _ => {}
             };
         };

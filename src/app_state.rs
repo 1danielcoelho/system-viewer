@@ -43,7 +43,7 @@ impl AppState {
             time_ms: 0.,
             delta_time_ms: 0.,
             move_speed: 1.0 / 100.0,
-            rotate_speed: 1.0 / 3.0,
+            rotate_speed: 3.0,
             input: Input {
                 mouse_x: 0,
                 mouse_y: 0,
