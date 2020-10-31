@@ -189,17 +189,95 @@ fn generate_grid(ctx: &WebGlRenderingContext, num_lines: u32) -> Mesh {
     indices.resize((num_lines * 4) as usize, 0);
     for col_ind in 0..num_lines {
         let ind = col_ind * 2;
-        
+
         indices[(ind + 0) as usize] = col_ind as u16;
         indices[(ind + 1) as usize] = (num_lines * num_lines - (num_lines - col_ind)) as u16;
     }
-    
+
     for row_ind in 0..num_lines {
         let ind = (row_ind * 2) + num_lines * 2;
-        
+
         indices[(ind + 0) as usize] = (row_ind * num_lines) as u16;
-        indices[(ind + 1) as usize] = ((row_ind+1) * num_lines - 1) as u16;
+        indices[(ind + 1) as usize] = ((row_ind + 1) * num_lines - 1) as u16;
     }
+
+    // Vertex positions
+    let memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let vertices_location = vertices.as_ptr() as u32 / 4;
+    let vert_array = js_sys::Float32Array::new(&memory_buffer)
+        .subarray(vertices_location, vertices_location + vertices.len() as u32);
+    let buffer_position = ctx
+        .create_buffer()
+        .ok_or("failed to create buffer")
+        .unwrap();
+    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_position));
+    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
+
+    // Vertex colors
+    let color_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let colors_location = colors.as_ptr() as u32 / 4;
+    let color_array = js_sys::Float32Array::new(&color_buffer)
+        .subarray(colors_location, colors_location + colors.len() as u32);
+    let buffer_colors = ctx
+        .create_buffer()
+        .ok_or("failed to create buffer")
+        .unwrap();
+    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer_colors));
+    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_array, GL::STATIC_DRAW);
+
+    // Vertex indices
+    let indices_memory_buffer = wasm_bindgen::memory()
+        .dyn_into::<WebAssembly::Memory>()
+        .unwrap()
+        .buffer();
+    let indices_location = indices.as_ptr() as u32 / 2;
+    let indices_array = js_sys::Uint16Array::new(&indices_memory_buffer)
+        .subarray(indices_location, indices_location + indices.len() as u32);
+    let buffer_indices = ctx.create_buffer().unwrap();
+    ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&buffer_indices));
+    ctx.buffer_data_with_array_buffer_view(
+        GL::ELEMENT_ARRAY_BUFFER,
+        &indices_array,
+        GL::STATIC_DRAW,
+    );
+
+    return Mesh {
+        id: 0,
+        name: String::from("plane"),
+        position_buffer: buffer_position,
+        color_buffer: buffer_colors,
+        indices_buffer: buffer_indices,
+        index_count: indices_array.length() as i32,
+        element_type: GL::LINES,
+    };
+}
+
+fn generate_axes(ctx: &WebGlRenderingContext) -> Mesh {
+    let vertices: [f32; 12] = [
+        0.0, 0.0, 0.0, //
+        1.0, 0.0, 0.0, //
+        0.0, 1.0, 0.0, //
+        0.0, 0.0, 1.0, //
+    ];
+
+    let colors: [f32; 12] = [
+        0.0, 0.0, 0.0, //
+        1.0, 0.0, 0.0, //
+        0.0, 1.0, 0.0, //
+        0.0, 0.0, 1.0, //
+    ];
+
+    let indices: [u16; 6] = [
+        0, 1,
+        0, 2,
+        0, 3,
+    ];
 
     // Vertex positions
     let memory_buffer = wasm_bindgen::memory()
@@ -345,7 +423,13 @@ impl ResourceManager {
         };
 
         if name == "grid" {
-            let mesh = Rc::new(generate_grid(ctx, 199));
+            let mesh = Rc::new(generate_grid(ctx, 200));
+            self.meshes.insert(name.to_string(), mesh.clone());
+            return Some(mesh);
+        };
+
+        if name == "axes" {
+            let mesh = Rc::new(generate_axes(ctx));
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };

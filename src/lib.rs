@@ -98,18 +98,18 @@ pub fn initialize() {
     mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
     mesh_comp.material = world.res_man.get_material("material");
 
-    let plane = world.ent_man.new_entity("plane");
-    let trans_comp = world
-        .comp_man
-        .add_component::<TransformComponent>(plane)
-        .unwrap();
-    trans_comp.transform.scale = 3.0;
-    let mesh_comp = world
-        .comp_man
-        .add_component::<MeshComponent>(plane)
-        .unwrap();
-    mesh_comp.mesh = world.res_man.generate_mesh("plane", &context);
-    mesh_comp.material = world.res_man.get_material("material");
+    // let plane = world.ent_man.new_entity("plane");
+    // let trans_comp = world
+    //     .comp_man
+    //     .add_component::<TransformComponent>(plane)
+    //     .unwrap();
+    // trans_comp.transform.scale = 3.0;
+    // let mesh_comp = world
+    //     .comp_man
+    //     .add_component::<MeshComponent>(plane)
+    //     .unwrap();
+    // mesh_comp.mesh = world.res_man.generate_mesh("plane", &context);
+    // mesh_comp.material = world.res_man.get_material("material");
 
     let grid = world.ent_man.new_entity("grid");
     let trans_comp = world
@@ -117,11 +117,18 @@ pub fn initialize() {
         .add_component::<TransformComponent>(grid)
         .unwrap();
     trans_comp.transform.scale = 1000.0;
-    let mesh_comp = world
-        .comp_man
-        .add_component::<MeshComponent>(grid)
-        .unwrap();
+    let mesh_comp = world.comp_man.add_component::<MeshComponent>(grid).unwrap();
     mesh_comp.mesh = world.res_man.generate_mesh("grid", &context);
+    mesh_comp.material = world.res_man.get_material("material");
+
+    let axes = world.ent_man.new_entity("axes");
+    let trans_comp = world
+        .comp_man
+        .add_component::<TransformComponent>(axes)
+        .unwrap();
+    trans_comp.transform.scale = 3.0;
+    let mesh_comp = world.comp_man.add_component::<MeshComponent>(axes).unwrap();
+    mesh_comp.mesh = world.res_man.generate_mesh("axes", &context);
     mesh_comp.material = world.res_man.get_material("material");
 
     let ui_entity = world.ent_man.new_entity("test_ui");
@@ -233,10 +240,10 @@ pub fn initialize() {
                         * cgmath::Angle::tan(app_state_mut.camera.fov_v / 2.0);
                     let half_canvas_width_world = aspect * half_canvas_height_world;
 
-                    let delta_x_world = half_canvas_width_world
+                    let delta_x_world = - half_canvas_width_world
                         * (app_state_mut.input.delta_x as f32
                             / (app_state_mut.canvas_width as f32 / 2.0));
-                    let delta_y_world = half_canvas_height_world
+                    let delta_y_world = - half_canvas_height_world
                         * (app_state_mut.input.delta_y as f32
                             / (app_state_mut.canvas_height as f32 / 2.0));
 
