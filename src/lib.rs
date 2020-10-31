@@ -240,10 +240,10 @@ pub fn initialize() {
                         * cgmath::Angle::tan(app_state_mut.camera.fov_v / 2.0);
                     let half_canvas_width_world = aspect * half_canvas_height_world;
 
-                    let delta_x_world = - half_canvas_width_world
+                    let delta_x_world = -half_canvas_width_world
                         * (app_state_mut.input.delta_x as f32
                             / (app_state_mut.canvas_width as f32 / 2.0));
-                    let delta_y_world = - half_canvas_height_world
+                    let delta_y_world = -half_canvas_height_world
                         * (app_state_mut.input.delta_y as f32
                             / (app_state_mut.canvas_height as f32 / 2.0));
 
@@ -253,11 +253,11 @@ pub fn initialize() {
                         cgmath::Angle::atan(delta_y_world / app_state_mut.camera.near);
 
                     let rot_z: Basis3<f32> =
-                        Rotation3::from_angle_z(x_angle * app_state_mut.rotate_speed);
+                        Rotation3::from_axis_angle(cam_up, x_angle * app_state_mut.rotate_speed);
                     let rot_x: Basis3<f32> =
-                        Rotation3::from_angle_x(y_angle * app_state_mut.rotate_speed);
+                        Rotation3::from_axis_angle(cam_right, y_angle * app_state_mut.rotate_speed);
 
-                    let new_cam_forward = (rot_x * rot_z).rotate_vector(cam_forward);
+                    let new_cam_forward = (rot_z * rot_x).rotate_vector(cam_forward);
                     let prev_targ_dist: f32 = app_state_mut
                         .camera
                         .target
@@ -268,6 +268,7 @@ pub fn initialize() {
 
                 app_state_mut.camera.pos += incr;
                 app_state_mut.camera.target += incr;
+                app_state_mut.camera.up = cam_up;
 
                 world
                     .sys_man
