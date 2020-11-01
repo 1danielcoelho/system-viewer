@@ -1,11 +1,5 @@
-use std::rc::Rc;
-
-use js_sys::WebAssembly;
-use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
-
-use crate::resources::ResourceManager;
 
 pub struct Mesh {
     pub id: u32,

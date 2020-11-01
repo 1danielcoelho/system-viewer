@@ -34,13 +34,22 @@
 # I want to import a GLTF object
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
-- Parse gltf bin files
 - Get object transform hierarchies working
-- Get textures working
+    - Setup physics system to be able to set an object rotating
+- Find a way of injecting the read files into the app asynchronously 
+- Parse gltf bin files into webgl mesh data
 - Get simple PBR materials working 
+- Get textures working
 
+# Show some statistics on the debug thing
+- Framerate counter
+- Number of entities
+- Component array size
+- Loaded assets, etc.
 # Move input stuff somewhere else
 # Generated sphere mesh
+# Setup a scene manager 
+# Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
 
 # I think I'll need wasm-bindgen-futures at some point for something?
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...

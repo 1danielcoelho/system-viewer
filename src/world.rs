@@ -1,4 +1,6 @@
-use crate::{components::ComponentManager, entity::EntityManager, events::EventManager, resources::ResourceManager, systems::SystemManager};
+use crate::managers::{
+    ComponentManager, EntityManager, EventManager, ResourceManager, SystemManager,
+};
 
 pub struct World {
     pub ent_man: EntityManager,

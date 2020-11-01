@@ -17,13 +17,10 @@ use world::World;
 
 mod app_state;
 mod components;
-mod entity;
-mod events;
+mod managers;
 mod gl_setup;
 mod materials;
 mod mesh;
-mod object;
-mod resources;
 mod shaders;
 mod systems;
 mod texture;

@@ -440,8 +440,8 @@ impl ResourceManager {
     pub fn compile_materials(&mut self, ctx: &WebGlRenderingContext) {
         let program = link_program(
             &ctx,
-            &super::shaders::vertex::pos_vertcolor::SHADER,
-            &super::shaders::fragment::vertcolor::SHADER,
+            &crate::shaders::vertex::pos_vertcolor::SHADER,
+            &crate::shaders::fragment::vertcolor::SHADER,
         )
         .unwrap();
 
