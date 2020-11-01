@@ -22,6 +22,8 @@ pub struct Input {
     pub left_down: bool,
     pub right_down: bool,
     pub back_down: bool,
+    pub up_down: bool,
+    pub down_down: bool, // ugh
 }
 
 pub struct AppState {
@@ -61,6 +63,8 @@ impl AppState {
                 left_down: false,
                 right_down: false,
                 back_down: false,
+                up_down: false,
+                down_down: false,
             },
             camera: Camera {
                 pos: cgmath::Point3::new(0.0, -5.0, 0.0),

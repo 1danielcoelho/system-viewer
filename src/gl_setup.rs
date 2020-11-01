@@ -143,6 +143,12 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
                 "KeyD" | "ArrowRight" => {
                     app_state_mut.input.right_down = true;
                 }
+                "KeyE" => {
+                    app_state_mut.input.up_down = true;
+                }
+                "KeyQ" => {
+                    app_state_mut.input.down_down = true;
+                }
                 _ => {}
             };
         };
@@ -171,6 +177,12 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
                 }
                 "KeyD" | "ArrowRight" => {
                     app_state_mut.input.right_down = false;
+                }
+                "KeyE" => {
+                    app_state_mut.input.up_down = false;
+                }
+                "KeyQ" => {
+                    app_state_mut.input.down_down = false;
                 }
                 _ => {}
             };

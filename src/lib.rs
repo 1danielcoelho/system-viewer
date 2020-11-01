@@ -247,6 +247,12 @@ pub fn initialize() {
                 if app_state_mut.input.right_down {
                     incr += cam_right * (app_state_mut.real_delta_time_ms as f32) * move_speed;
                 }
+                if app_state_mut.input.up_down {
+                    incr += cam_up * (app_state_mut.real_delta_time_ms as f32) * move_speed;
+                }
+                if app_state_mut.input.down_down {
+                    incr -= cam_up * (app_state_mut.real_delta_time_ms as f32) * move_speed;
+                }
 
                 if app_state_mut.input.m1_down
                     && (app_state_mut.input.delta_y.abs() > 0
