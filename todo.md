@@ -30,18 +30,17 @@
 <!-- # Setup a time variable and animate a material rotation -->
 <!-- # Why is the cube rendering at the bottom left?
 - Missing viewport -->
+<!-- # Q and E to go up or down -->
 
 # I want to import a GLTF object
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
 - Get object transform hierarchies working
-    - Setup physics system to be able to set an object rotating
+    <!-- - Setup physics system to be able to set an object rotating -->
 - Find a way of injecting the read files into the app asynchronously 
 - Parse gltf bin files into webgl mesh data
 - Get simple PBR materials working 
 - Get textures working
-
-# Q and E to go up or down
 
 <!-- # Show some statistics on the debug thing -->
 <!-- - Framerate counter -->

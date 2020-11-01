@@ -76,7 +76,10 @@ impl InterfaceSystem {
             });
 
             ui.horizontal(|ui| {
-                ui.label(format!("{:.2} Frames per second", 1000.0 / state.real_delta_time_ms));
+                ui.label(format!(
+                    "{:.2} Frames per second",
+                    1000.0 / state.real_delta_time_ms
+                ));
             });
 
             ui.horizontal(|ui| {

@@ -97,7 +97,7 @@ pub fn initialize() {
         .add_component::<PhysicsComponent>(entity)
         .unwrap();
     phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
-    phys_comp.lin_mom = Vector3::new(0.0, 0.0, 1.0);
+    // phys_comp.lin_mom = Vector3::new(0.0, 0.0, 1.0);
     let mesh_comp = world
         .comp_man
         .add_component::<MeshComponent>(entity)
