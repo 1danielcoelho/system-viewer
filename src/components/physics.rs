@@ -1,26 +1,28 @@
+use cgmath::{Matrix3, Matrix4, Vector3};
+
 use crate::managers::ComponentManager;
 
 use super::{Component, component::ComponentIndex};
 
 pub struct PhysicsComponent {
     enabled: bool,
-
     pub collision_enabled: bool,
-    pub lin_vel: cgmath::Vector3<f32>,
-    pub ang_vel: cgmath::Vector3<f32>,
-    pub mass: f32,
+
+    // Constants
+    pub inv_mass: f32, // kg
+    pub inv_inertia: Matrix3<f32>, // Local space
+
+    // Inputs/computed
+    pub force_sum: Vector3<f32>, // Sum of forces being applied to center of mass
+    pub torque_sum: Vector3<f32>, // Sum of torque being applied to center of mass
+
+    // State 
+    pub lin_mom: Vector3<f32>, // kg * m/s
+    pub ang_mom: Vector3<f32>, // length is kg * m2 * rad/s, right-hand rule
 }
 impl PhysicsComponent {
     fn new() -> Self {
         return Self::default();
-    }
-
-    fn set_lin_vel(&mut self, new_lin_vel: &cgmath::Vector3<f32>) {
-        self.lin_vel = *new_lin_vel;
-    }
-
-    fn set_ang_vel(&mut self, new_ang_vel: &cgmath::Vector3<f32>) {
-        self.ang_vel = *new_ang_vel;
     }
 }
 impl Default for PhysicsComponent {
@@ -28,9 +30,12 @@ impl Default for PhysicsComponent {
         return Self {
             enabled: false,
             collision_enabled: false,
-            lin_vel: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            ang_vel: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            mass: 1.0,
+            inv_mass: 1.0,
+            inv_inertia: cgmath::One::one(),
+            force_sum: cgmath::Vector3::new(0.0, 0.0, 0.0),
+            torque_sum: cgmath::Vector3::new(0.0, 0.0, 0.0),
+            lin_mom: cgmath::Vector3::new(0.0, 0.0, 0.0),
+            ang_mom: cgmath::Vector3::new(0.0, 0.0, 0.0),
         };
     }
 }

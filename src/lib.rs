@@ -4,7 +4,9 @@ use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
 use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Rotation, Rotation3, Vector3};
-use components::{MeshComponent, TransformComponent, UIComponent, ui::WidgetType};
+use components::{
+    ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
+};
 use gltf::Gltf;
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
@@ -90,6 +92,12 @@ pub fn initialize() {
         .comp_man
         .add_component::<TransformComponent>(entity)
         .unwrap();
+    let phys_comp = world
+        .comp_man
+        .add_component::<PhysicsComponent>(entity)
+        .unwrap();
+    phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
+    phys_comp.lin_mom = Vector3::new(0.0, 0.0, 1.0);
     let mesh_comp = world
         .comp_man
         .add_component::<MeshComponent>(entity)

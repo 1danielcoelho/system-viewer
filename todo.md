@@ -61,3 +61,20 @@
 - https://github.com/ggez/ggez
 - https://github.com/mrDIMAS/rg3d
 - https://github.com/PistonDevelopers/piston
+
+# Physics
+- https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics
+- https://gafferongames.com/post/physics_in_3d/
+- https://github.com/DanielChappuis/reactphysics3d
+- https://gafferongames.com/post/integration_basics/
+    - It looks like semi-implicit Euler integration should be fine for now, and should be pretty easy to implement. Later on I can switch to RK4 if I need to 
+- https://github.com/dimforge/nphysics/blob/fcb91b27dd5cf8a5ce9684e3b99e1788a39d3619/src/object/rigid_body.rs#L599
+    - Gyroscopic forces sample
+- https://github.com/idmillington/cyclone-physics/blob/fd0cf4956fd83ebf9e2e75421dfbf9f5cdac49fa/src/body.cpp#L154
+    - Rigid body integration sample
+- Use "simulation islands" to sleep large areas at a time
+- Concept of using "energy" to detect when an object should sleep (e.g. too little kinetic energy)
+    - Use an enum to store the current status of the object: Asleep or active (with x energy)
+- Decouple simulation timestep from the actual passage of time so that it can be controlled
+- https://github.com/RandyGaul/qu3e/blob/a9dc0f37f58ccf1c65d74503deeb2bdfe0713ee0/src/dynamics/q3Island.cpp#L38
+    - Another sample of semi-implicit Euler
