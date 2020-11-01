@@ -87,20 +87,44 @@ pub fn initialize() {
     let mut last_mouse_y = 0;
 
     // Setup scene
-    let entity = world.ent_man.new_entity("cube");
+    let mut parent_id = 0; // Temporary hack because new_entity returns a mut ref on ent_man...
+    {
+        let parent = world.ent_man.new_entity("cube");
+        let trans_comp = world
+            .comp_man
+            .add_component::<TransformComponent>(parent)
+            .unwrap();
+        let phys_comp = world
+            .comp_man
+            .add_component::<PhysicsComponent>(parent)
+            .unwrap();
+        phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
+        let mesh_comp = world
+            .comp_man
+            .add_component::<MeshComponent>(parent)
+            .unwrap();
+        mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
+        mesh_comp.material = world.res_man.get_material("material");
+
+        parent_id = parent.id;
+    }
+
+    let child = world.ent_man.new_entity("child_cube");
     let trans_comp = world
         .comp_man
-        .add_component::<TransformComponent>(entity)
+        .add_component::<TransformComponent>(child)
         .unwrap();
+    trans_comp.transform.disp = Vector3::new(4.0, 0.0, 0.0);
+    trans_comp.transform.scale = 0.5;
+    trans_comp.set_parent(parent_id);
     let phys_comp = world
         .comp_man
-        .add_component::<PhysicsComponent>(entity)
+        .add_component::<PhysicsComponent>(child)
         .unwrap();
-    phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
-    // phys_comp.lin_mom = Vector3::new(0.0, 0.0, 1.0);
+    phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0);
     let mesh_comp = world
         .comp_man
-        .add_component::<MeshComponent>(entity)
+        .add_component::<MeshComponent>(child)
         .unwrap();
     mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
     mesh_comp.material = world.res_man.get_material("material");
