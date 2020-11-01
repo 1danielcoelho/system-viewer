@@ -81,7 +81,7 @@ pub fn initialize() {
     world.res_man.compile_materials(&context);
 
     let start_ms = js_sys::Date::now();
-    let mut last_frame_ms = start_ms;
+    let mut last_frame_ms = 0.0;
 
     let mut last_mouse_x = 0;
     let mut last_mouse_y = 0;
@@ -149,7 +149,11 @@ pub fn initialize() {
     ui_comp.widget_type = WidgetType::TestWidget;
 
     let app_state: Arc<Mutex<AppState>> = AppState::new();
-    app_state.lock().unwrap().gl = Some(context);
+    {
+        let mut app_state_mut = &mut *app_state.lock().unwrap();
+        app_state_mut.gl = Some(context);
+        app_state_mut.time_ms = start_ms;
+    }
 
     gl_setup::setup_event_handlers(&canvas, app_state.clone());
 
@@ -196,17 +200,21 @@ pub fn initialize() {
                     );
                 }
 
-                let now_ms = js_sys::Date::now();
-
                 let mut app_state_mut = &mut *app_state.lock().unwrap();
+
+                let now_ms = js_sys::Date::now() - start_ms;
+                let real_delta_ms = now_ms - last_frame_ms;
+                let phys_delta_ms = real_delta_ms * app_state_mut.simulation_speed;
+                last_frame_ms = now_ms;
+
                 app_state_mut.canvas_height = canvas_height_on_screen;
                 app_state_mut.canvas_width = canvas_width_on_screen;
-                app_state_mut.time_ms = now_ms - start_ms;
-                app_state_mut.delta_time_ms = now_ms - last_frame_ms;
+                app_state_mut.time_ms += phys_delta_ms;
+                app_state_mut.phys_delta_time_ms = phys_delta_ms;
+                app_state_mut.real_delta_time_ms = real_delta_ms;
                 app_state_mut.input.delta_x = app_state_mut.input.mouse_x - last_mouse_x;
                 app_state_mut.input.delta_y = app_state_mut.input.mouse_y - last_mouse_y;
 
-                last_frame_ms = now_ms;
                 last_mouse_x = app_state_mut.input.mouse_x;
                 last_mouse_y = app_state_mut.input.mouse_y;
 
@@ -226,16 +234,16 @@ pub fn initialize() {
 
                 let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
                 if app_state_mut.input.forward_down {
-                    incr += cam_forward * (app_state_mut.delta_time_ms as f32) * move_speed;
+                    incr += cam_forward * (app_state_mut.real_delta_time_ms as f32) * move_speed;
                 }
                 if app_state_mut.input.back_down {
-                    incr -= cam_forward * (app_state_mut.delta_time_ms as f32) * move_speed;
+                    incr -= cam_forward * (app_state_mut.real_delta_time_ms as f32) * move_speed;
                 }
                 if app_state_mut.input.left_down {
-                    incr -= cam_right * (app_state_mut.delta_time_ms as f32) * move_speed;
+                    incr -= cam_right * (app_state_mut.real_delta_time_ms as f32) * move_speed;
                 }
                 if app_state_mut.input.right_down {
-                    incr += cam_right * (app_state_mut.delta_time_ms as f32) * move_speed;
+                    incr += cam_right * (app_state_mut.real_delta_time_ms as f32) * move_speed;
                 }
 
                 if app_state_mut.input.m1_down

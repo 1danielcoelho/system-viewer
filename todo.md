@@ -41,11 +41,14 @@
 - Get simple PBR materials working 
 - Get textures working
 
+# Q and E to go up or down
+
 # Show some statistics on the debug thing
 - Framerate counter
 - Number of entities
 - Component array size
 - Loaded assets, etc.
+<!-- - Control simulation speed -->
 # Move input stuff somewhere else
 # Generated sphere mesh
 # Setup a scene manager 

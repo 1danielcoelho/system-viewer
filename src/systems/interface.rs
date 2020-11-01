@@ -61,6 +61,17 @@ impl InterfaceSystem {
 
     fn draw_test_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::f64(&mut state.simulation_speed)
+                        .range(-100.0..=100.0)
+                        .speed(0.01),
+                );
+                ui.label(format!("Simulation speed"));
+            });
+
+            ui.separator();
+
             // TODO: Can't use ui.columns due to some bug where everything in column 0 responds at once
             ui.horizontal(|ui| {
                 ui.add(
@@ -100,7 +111,7 @@ impl InterfaceSystem {
                         .range(1.0..=10.0)
                         .speed(0.1),
                 );
-                ui.label(format!("Rotate speed speed"));
+                ui.label(format!("Rotation speed"));
             });
 
             ui.horizontal(|ui| {

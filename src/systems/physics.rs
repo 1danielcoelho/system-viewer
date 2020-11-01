@@ -24,7 +24,7 @@ impl PhysicsSystem {
         trans_comp: &mut TransformComponent,
         phys_comp: &mut PhysicsComponent,
     ) {       
-        let dt = (state.delta_time_ms * 0.001) as f32;
+        let dt = (state.phys_delta_time_ms * 0.001) as f32;
 
         // TODO: What if the object is scaled? Should that affect its linear/rotational motion?
 

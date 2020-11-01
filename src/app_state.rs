@@ -28,7 +28,9 @@ pub struct AppState {
     pub canvas_height: u32,
     pub canvas_width: u32,
     pub time_ms: f64,
-    pub delta_time_ms: f64,
+    pub phys_delta_time_ms: f64, // Affected by simulation speed
+    pub real_delta_time_ms: f64, // Not affected by simulation speed
+    pub simulation_speed: f64,
     pub move_speed: f32,
     pub rotate_speed: f32,
     pub input: Input,
@@ -41,7 +43,9 @@ impl AppState {
             canvas_height: 0,
             canvas_width: 0,
             time_ms: 0.,
-            delta_time_ms: 0.,
+            phys_delta_time_ms: 0.,
+            real_delta_time_ms: 0.,
+            simulation_speed: 1.,
             move_speed: 5.0,
             rotate_speed: 5.0,
             input: Input {
