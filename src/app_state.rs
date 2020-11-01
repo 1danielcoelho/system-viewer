@@ -27,7 +27,8 @@ pub struct Input {
 pub struct AppState {
     pub canvas_height: u32,
     pub canvas_width: u32,
-    pub time_ms: f64,
+    pub phys_time_ms: f64,
+    pub real_time_ms: f64,
     pub phys_delta_time_ms: f64, // Affected by simulation speed
     pub real_delta_time_ms: f64, // Not affected by simulation speed
     pub simulation_speed: f64,
@@ -42,7 +43,8 @@ impl AppState {
         Arc::new(Mutex::new(Self {
             canvas_height: 0,
             canvas_width: 0,
-            time_ms: 0.,
+            phys_time_ms: 0.,
+            real_time_ms: 0.,
             phys_delta_time_ms: 0.,
             real_delta_time_ms: 0.,
             simulation_speed: 1.,

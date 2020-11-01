@@ -43,11 +43,8 @@
 
 # Q and E to go up or down
 
-# Show some statistics on the debug thing
-- Framerate counter
-- Number of entities
-- Component array size
-- Loaded assets, etc.
+<!-- # Show some statistics on the debug thing -->
+<!-- - Framerate counter -->
 <!-- - Control simulation speed -->
 # Move input stuff somewhere else
 # Generated sphere mesh

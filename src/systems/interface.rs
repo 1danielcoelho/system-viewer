@@ -62,6 +62,24 @@ impl InterfaceSystem {
     fn draw_test_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
             ui.horizontal(|ui| {
+                ui.label(format!(
+                    "{:.2} Simulated seconds since start",
+                    state.phys_time_ms / 1000.0
+                ));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label(format!(
+                    "{:.2} Real seconds since start",
+                    state.real_time_ms / 1000.0
+                ));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label(format!("{:.2} Frames per second", 1000.0 / state.real_delta_time_ms));
+            });
+
+            ui.horizontal(|ui| {
                 ui.add(
                     egui::DragValue::f64(&mut state.simulation_speed)
                         .range(-100.0..=100.0)

@@ -152,7 +152,8 @@ pub fn initialize() {
     {
         let mut app_state_mut = &mut *app_state.lock().unwrap();
         app_state_mut.gl = Some(context);
-        app_state_mut.time_ms = start_ms;
+        app_state_mut.phys_time_ms = last_frame_ms;
+        app_state_mut.real_time_ms = last_frame_ms;
     }
 
     gl_setup::setup_event_handlers(&canvas, app_state.clone());
@@ -209,7 +210,8 @@ pub fn initialize() {
 
                 app_state_mut.canvas_height = canvas_height_on_screen;
                 app_state_mut.canvas_width = canvas_width_on_screen;
-                app_state_mut.time_ms += phys_delta_ms;
+                app_state_mut.phys_time_ms += phys_delta_ms;
+                app_state_mut.real_time_ms += real_delta_ms;
                 app_state_mut.phys_delta_time_ms = phys_delta_ms;
                 app_state_mut.real_delta_time_ms = real_delta_ms;
                 app_state_mut.input.delta_x = app_state_mut.input.mouse_x - last_mouse_x;
