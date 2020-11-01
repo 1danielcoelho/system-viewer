@@ -1,11 +1,11 @@
-mod component;
-mod mesh;
-mod physics;
-mod transform;
-mod ui;
+pub mod component;
+pub mod mesh;
+pub mod physics;
+pub mod transform;
+pub mod ui;
 
-pub use component::*;
-pub use mesh::*;
-pub use physics::*;
-pub use transform::*;
-pub use ui::*;
+pub use component::Component;
+pub use mesh::MeshComponent;
+pub use physics::PhysicsComponent;
+pub use transform::TransformComponent;
+pub use ui::UIComponent;

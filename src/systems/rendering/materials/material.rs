@@ -1,6 +1,6 @@
-use crate::{app_state::AppState, components::TransformType};
+use crate::{app_state::AppState, components::transform::TransformType};
 
-use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
+use cgmath::Matrix4;
 
 use web_sys::*;
 
@@ -41,11 +41,7 @@ impl Material {
             state.camera.far,
         );
 
-        let v = cgmath::Matrix4::look_at(
-            state.camera.pos,
-            state.camera.target,
-            state.camera.up,
-        );
+        let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
 
         let proj = p * v * w;
         let proj_floats: &[f32; 16] = proj.as_ref();

@@ -1,7 +1,7 @@
 use egui::{Pos2, Ui};
 use gui_backend::WebInput;
 
-use crate::{app_state::AppState, managers::ComponentManager, components::WidgetType};
+use crate::{app_state::AppState, components::ui::WidgetType, managers::ComponentManager};
 
 pub struct InterfaceSystem {
     backend: gui_backend::WebBackend,

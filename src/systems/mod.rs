@@ -1,7 +1,7 @@
 mod interface;
 mod physics;
-mod rendering;
+pub mod rendering;
 
 pub use interface::*;
 pub use physics::*;
-pub use rendering::*;
+pub use rendering::RenderingSystem;

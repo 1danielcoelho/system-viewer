@@ -1,6 +1,6 @@
 use crate::managers::ComponentManager;
 
-use super::{Component, ComponentIndex};
+use super::{Component, component::ComponentIndex};
 
 pub enum WidgetType {
     None,

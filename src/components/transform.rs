@@ -1,6 +1,6 @@
 use crate::managers::ComponentManager;
 
-use super::{Component, ComponentIndex};
+use super::{Component, component::ComponentIndex};
 
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 

@@ -1,5 +1,5 @@
+use crate::{components::component::ComponentIndex, world::World};
 use std::collections::VecDeque;
-use crate::{components::ComponentIndex, world::World};
 
 pub enum EventTransmitter {
     ComponentManager(ComponentIndex),
@@ -24,7 +24,7 @@ pub struct Event {
     data: EventData,
 }
 
-pub trait EventReceiver {    
+pub trait EventReceiver {
     fn receive_event(&mut self, event: Event); // Can even add a response here if I wanted!
 }
 

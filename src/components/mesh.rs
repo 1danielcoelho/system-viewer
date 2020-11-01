@@ -1,8 +1,11 @@
 use std::rc::Rc;
 
-use crate::{managers::ComponentManager, materials::Material, mesh::Mesh};
+use crate::{
+    managers::ComponentManager,
+    systems::rendering::{Material, Mesh},
+};
 
-use super::{Component, ComponentIndex};
+use super::{Component, component::ComponentIndex};
 
 pub struct MeshComponent {
     enabled: bool,

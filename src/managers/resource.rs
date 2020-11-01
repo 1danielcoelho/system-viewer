@@ -4,7 +4,7 @@ use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
-use crate::{materials::Material, mesh::Mesh, texture::Texture};
+use crate::systems::rendering::{Material, Mesh, Texture};
 
 fn generate_cube(ctx: &WebGlRenderingContext) -> Mesh {
     let vertices_cube: [f32; 24] = [
@@ -273,11 +273,7 @@ fn generate_axes(ctx: &WebGlRenderingContext) -> Mesh {
         0.0, 0.0, 1.0, //
     ];
 
-    let indices: [u16; 6] = [
-        0, 1,
-        0, 2,
-        0, 3,
-    ];
+    let indices: [u16; 6] = [0, 1, 0, 2, 0, 3];
 
     // Vertex positions
     let memory_buffer = wasm_bindgen::memory()
@@ -440,8 +436,8 @@ impl ResourceManager {
     pub fn compile_materials(&mut self, ctx: &WebGlRenderingContext) {
         let program = link_program(
             &ctx,
-            &crate::shaders::vertex::pos_vertcolor::SHADER,
-            &crate::shaders::fragment::vertcolor::SHADER,
+            &crate::systems::rendering::vertex::pos_vertcolor::SHADER,
+            &crate::systems::rendering::fragment::vertcolor::SHADER,
         )
         .unwrap();
 
