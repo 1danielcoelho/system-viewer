@@ -6,13 +6,15 @@ pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quater
 
 pub struct TransformComponent {
     enabled: bool,
-
+    
     pub transform: TransformType,
+    
+    pub id: u32, // Awkward but we need the corresponding entity id here 
     pub parent: u32,
     pub children: Vec<u32>,
 }
 impl TransformComponent {
-    pub fn new() -> Self {
+    pub fn new(id: u32) -> Self {
         return Self::default();
     }
 

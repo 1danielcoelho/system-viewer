@@ -31,21 +31,33 @@
 <!-- # Why is the cube rendering at the bottom left?
 - Missing viewport -->
 <!-- # Q and E to go up or down -->
+<!-- - Setup physics system to be able to set an object rotating -->
+<!-- # Show some statistics on the debug thing -->
+<!-- - Framerate counter -->
+<!-- - Control simulation speed -->
 
 # I want to import a GLTF object
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
 - Get object transform hierarchies working
-    <!-- - Setup physics system to be able to set an object rotating -->
+    - How to reconcyle physics system with transform hierarchies?
+        - Constraints? Probably way too much for now. Likely just skip linear movement if child
+        - When computing the physics stuff for the parent, we'd have to factor in the mass/momenta of the children too, then rip cache coherence       
+        - I think for now children should be completely frozen wrt parent. Later on we can add some fancy pass to propagate stuff upward if needed or something like that 
+        - Will probably have to make sure that parents always come before children in the entity array
+        - Does entity order even matter if entities can't have moving sub-parts?
+            - It should be simple and quick to make sure parents come first
+            - Maybe use a depth index on the transform component?
+        - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it
+    - Disable physics component for sleeping stuff, like the grid or axes entities
+    - Convert entities to actually just an id; Make a component for entity metadata
 - Find a way of injecting the read files into the app asynchronously 
 - Parse gltf bin files into webgl mesh data
 - Get simple PBR materials working 
 - Get textures working
 
-<!-- # Show some statistics on the debug thing -->
-<!-- - Framerate counter -->
-<!-- - Control simulation speed -->
 # Move input stuff somewhere else
+# Move camera `v` and `p` computation away from material. Probably all transform computation
 # Generated sphere mesh
 # Setup a scene manager 
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
