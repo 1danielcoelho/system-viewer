@@ -87,7 +87,7 @@ impl RenderingSystem {
     }
 
     fn draw_one(state: &AppState, tc: &TransformComponent, mc: &MeshComponent) {
-        let trans = &tc.transform;
+        let trans = &tc.get_world_transform();
         let mesh = mc.mesh.as_ref();
         let material = mc.material.as_ref();
         if mesh.is_none() || material.is_none() {

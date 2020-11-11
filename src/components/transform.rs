@@ -1,38 +1,68 @@
-use crate::managers::ComponentManager;
+use crate::managers::{ComponentManager, Entity};
 
-use super::{Component, component::ComponentIndex};
+use cgmath::Transform;
+
+use super::{component::ComponentIndex, Component};
 
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 
 pub struct TransformComponent {
-    enabled: bool,
-    
-    pub transform: TransformType,
-    
-    pub id: u32, // Awkward but we need the corresponding entity id here 
-    pub parent: u32,
-    pub children: Vec<u32>,
+    pub enabled: bool,
+    pub dirty: bool, // Whether our children need to update their transforms
+
+    // These should only be updated by the component manager
+    // TODO: Find a way of restricting that somehow
+    pub parent: Option<Entity>,
+    pub children: Vec<Entity>,
+
+    local_transform: TransformType,
+    world_transform: TransformType,
 }
 impl TransformComponent {
-    pub fn new(id: u32) -> Self {
+    pub fn new() -> Self {
         return Self::default();
     }
 
-    pub fn set_parent(&mut self, new_parent: u32) {
+    pub fn set_parent(&mut self, new_parent: Option<Entity>) {
         self.parent = new_parent;
+    }
+
+    pub fn get_local_transform(&self) -> &TransformType {
+        return &self.local_transform;
+    }
+
+    pub fn get_local_transform_mut(&mut self) -> &mut TransformType {
+        self.dirty = true; // TODO: Find better way of doing this?
+        return &mut self.local_transform;
+    }
+
+    pub fn update_world_transform(&mut self, parent_local_transform: &TransformType) {
+        self.world_transform = parent_local_transform.concat(&self.local_transform);
+    }
+
+    pub fn get_world_transform(&self) -> &TransformType {
+        return &self.world_transform;
     }
 }
 impl Default for TransformComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
-            transform: cgmath::Decomposed {
+            dirty: false,
+
+            parent: None,
+            children: Vec::new(),
+
+            local_transform: cgmath::Decomposed {
                 scale: 1.0,
                 disp: cgmath::Vector3::new(0.0, 0.0, 0.0),
                 rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
             },
-            parent: 0,
-            children: vec![0],
+            world_transform: cgmath::Decomposed {
+                scale: 1.0,
+                disp: cgmath::Vector3::new(0.0, 0.0, 0.0),
+                rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+            },
         };
     }
 }

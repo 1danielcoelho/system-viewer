@@ -39,8 +39,26 @@
 # I want to import a GLTF object
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
+
+<!-- - Generational entity indices
+    - Index, generation and uuid
+    - uuid is monotonically incremented and never changes for an entity, even if reordered
+    - block direct access to component arrays when fetching other entities
+        - It's fine for systems though, they'd still go through them continuously 
+        - Check target index, if generations don't match search for uuid
+            - Map from uuid to current index
+    - When an entity is dropped mark it as dead, forget its uuid so that search fails
+    - Have to iterate through entities when executing a system, to know if the owner entity is live -->
+
 - Get object transform hierarchies working
-    - How to reconcyle physics system with transform hierarchies?
+    - Keep world_transform and local_transform on components
+        - Maybe keep local_transform inside an optional? I guess it makes no difference
+    - When reparenting a transform to another, sort entities so that parents come before children
+    - Separate system to propagate transforms that runs after physics system updates
+        - This may be a problem later when computing collision and using child BB but let's ignore it for now
+        - Physics system should completely ignore component if it has a parent
+    - Rendering system should read off world_transform
+    <!-- - How to reconcyle physics system with transform hierarchies?
         - Constraints? Probably way too much for now. Likely just skip linear movement if child
         - When computing the physics stuff for the parent, we'd have to factor in the mass/momenta of the children too, then rip cache coherence       
         - I think for now children should be completely frozen wrt parent. Later on we can add some fancy pass to propagate stuff upward if needed or something like that 
@@ -48,11 +66,22 @@
         - Does entity order even matter if entities can't have moving sub-parts?
             - It should be simple and quick to make sure parents come first
             - Maybe use a depth index on the transform component?
-        - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it
-    - Disable physics component for sleeping stuff, like the grid or axes entities
-    - Convert entities to actually just an id; Make a component for entity metadata
-- Find a way of injecting the read files into the app asynchronously 
+        - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it -->
+    <!-- - Disable physics component for sleeping stuff, like the grid or axes entities -->
+
+- I don't resize the components array when doing new_entity... if I use the new entity to swap with another, we may lose our components
+
+- Tons of indirection when scanning through transform components
+
+- Have a component for entity metadata maybe
+    - Sparse component arrays?
+    
+- Will need some type of info as to which entities have which components, so we can skip those on the arrays
+    - Maybe remove that stupid "enabled" stuff on every component
+
 - Parse gltf bin files into webgl mesh data
+    - Can create new entities and hierarchies and stuff now
+- Find a way of injecting the read files into the app asynchronously 
 - Get simple PBR materials working 
 - Get textures working
 

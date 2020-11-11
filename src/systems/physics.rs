@@ -1,4 +1,7 @@
-use cgmath::{EuclideanSpace, InnerSpace, Matrix, Matrix3, Point3, Quaternion, Rad, Rotation3, Transform, Vector3};
+use cgmath::{
+    EuclideanSpace, InnerSpace, Matrix, Matrix3, Point3, Quaternion, Rad, Rotation3, Transform,
+    Vector3,
+};
 
 use crate::{
     app_state::AppState, components::PhysicsComponent, components::TransformComponent,
@@ -23,7 +26,12 @@ impl PhysicsSystem {
         state: &AppState,
         trans_comp: &mut TransformComponent,
         phys_comp: &mut PhysicsComponent,
-    ) {       
+    ) {
+        // Only parent entities are subject to physics for now
+        if !phys_comp.physics_enabled || trans_comp.parent.is_some() {
+            return;
+        }
+
         let dt = (state.phys_delta_time_ms * 0.001) as f32;
 
         // TODO: What if the object is scaled? Should that affect its linear/rotational motion?
@@ -37,7 +45,8 @@ impl PhysicsSystem {
         phys_comp.ang_mom += phys_comp.torque_sum * dt;
 
         // Compute world-space inverse inertia tensor
-        let rot_mat = Matrix3::from(trans_comp.transform.rot); // Assumes rot is normalized
+        let trans = trans_comp.get_local_transform_mut();
+        let rot_mat = Matrix3::from(trans.rot); // Assumes rot is normalized
         let inv_inertia_world: Matrix3<f32> = rot_mat * phys_comp.inv_inertia * rot_mat.transpose();
 
         // Update velocities
@@ -46,16 +55,16 @@ impl PhysicsSystem {
         let ang_vel_q: Quaternion<f32> = cgmath::Quaternion::from_sv(0.0, ang_vel);
 
         // Update position and rotation
-        trans_comp.transform.disp += lin_vel * dt;
-        trans_comp.transform.rot += 0.5 * ang_vel_q * trans_comp.transform.rot * dt; // todo
-        trans_comp.transform.rot = trans_comp.transform.rot.normalize();
+        trans.disp += lin_vel * dt;
+        trans.rot += 0.5 * ang_vel_q * trans.rot * dt; // todo
+        trans.rot = trans.rot.normalize();
 
         // Clear accumulators?
 
         // Detect collision
 
-        // Solve constraints       
-        
+        // Solve constraints
+
         // events?
     }
 }

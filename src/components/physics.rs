@@ -7,6 +7,7 @@ use super::{Component, component::ComponentIndex};
 pub struct PhysicsComponent {
     enabled: bool,
     pub collision_enabled: bool,
+    pub physics_enabled: bool,
 
     // Constants
     pub inv_mass: f32, // kg
@@ -30,6 +31,7 @@ impl Default for PhysicsComponent {
         return Self {
             enabled: false,
             collision_enabled: false,
+            physics_enabled: false,
             inv_mass: 1.0,
             inv_inertia: cgmath::One::one(),
             force_sum: cgmath::Vector3::new(0.0, 0.0, 0.0),

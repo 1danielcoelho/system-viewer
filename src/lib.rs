@@ -71,10 +71,7 @@ pub fn initialize() {
 
     canvas.set_oncontextmenu(Some(&js_sys::Function::new_with_args(
         "ev",
-        r"
-                ev.preventDefault();
-                return false;
-            ",
+        r"ev.preventDefault();return false;",
     )));
 
     let mut world = World::new();
@@ -87,44 +84,43 @@ pub fn initialize() {
     let mut last_mouse_y = 0;
 
     // Setup scene
-    let mut parent_id = 0; // Temporary hack because new_entity returns a mut ref on ent_man...
-    {
-        let parent = world.ent_man.new_entity("cube");
-        let trans_comp = world
-            .comp_man
-            .add_component::<TransformComponent>(parent)
-            .unwrap();
-        let phys_comp = world
-            .comp_man
-            .add_component::<PhysicsComponent>(parent)
-            .unwrap();
-        phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
-        let mesh_comp = world
-            .comp_man
-            .add_component::<MeshComponent>(parent)
-            .unwrap();
-        mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
-        mesh_comp.material = world.res_man.get_material("material");
+    let parent = world.ent_man.new_entity();
+    let parent_id = world.ent_man.get_entity_index(&parent).unwrap();
 
-        parent_id = parent.id;
-    }
-
-    let child = world.ent_man.new_entity("child_cube");
     let trans_comp = world
         .comp_man
-        .add_component::<TransformComponent>(child)
+        .add_component::<TransformComponent>(parent_id)
         .unwrap();
-    trans_comp.transform.disp = Vector3::new(4.0, 0.0, 0.0);
-    trans_comp.transform.scale = 0.5;
-    trans_comp.set_parent(parent_id);
     let phys_comp = world
         .comp_man
-        .add_component::<PhysicsComponent>(child)
+        .add_component::<PhysicsComponent>(parent_id)
+        .unwrap();
+    phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
+    let mesh_comp = world
+        .comp_man
+        .add_component::<MeshComponent>(parent_id)
+        .unwrap();
+    mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
+    mesh_comp.material = world.res_man.get_material("material");
+
+    let child = world.ent_man.new_entity();
+    let child_id = world.ent_man.get_entity_index(&child).unwrap();
+
+    let trans_comp = world
+        .comp_man
+        .add_component::<TransformComponent>(child_id)
+        .unwrap();
+    trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
+    trans_comp.get_local_transform_mut().scale = 0.5;
+    trans_comp.set_parent(Some(parent));
+    let phys_comp = world
+        .comp_man
+        .add_component::<PhysicsComponent>(child_id)
         .unwrap();
     phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0);
     let mesh_comp = world
         .comp_man
-        .add_component::<MeshComponent>(child)
+        .add_component::<MeshComponent>(child_id)
         .unwrap();
     mesh_comp.mesh = world.res_man.generate_mesh("cube", &context);
     mesh_comp.material = world.res_man.get_material("material");
@@ -142,33 +138,42 @@ pub fn initialize() {
     // mesh_comp.mesh = world.res_man.generate_mesh("plane", &context);
     // mesh_comp.material = world.res_man.get_material("material");
 
-    let grid = world.ent_man.new_entity("grid");
+    let grid = world.ent_man.new_entity();
+    let grid_id = world.ent_man.get_entity_index(&grid).unwrap();
     let trans_comp = world
         .comp_man
-        .add_component::<TransformComponent>(grid)
+        .add_component::<TransformComponent>(grid_id)
         .unwrap();
-    trans_comp.transform.scale = 1000.0;
-    let mesh_comp = world.comp_man.add_component::<MeshComponent>(grid).unwrap();
+    trans_comp.get_local_transform_mut().scale = 1000.0;
+    let mesh_comp = world
+        .comp_man
+        .add_component::<MeshComponent>(grid_id)
+        .unwrap();
     mesh_comp.mesh = world.res_man.generate_mesh("grid", &context);
     mesh_comp.material = world.res_man.get_material("material");
 
-    let axes = world.ent_man.new_entity("axes");
+    let axes = world.ent_man.new_entity();
+    let axes_id = world.ent_man.get_entity_index(&axes).unwrap();
     let trans_comp = world
         .comp_man
-        .add_component::<TransformComponent>(axes)
+        .add_component::<TransformComponent>(axes_id)
         .unwrap();
-    trans_comp.transform.scale = 3.0;
-    let mesh_comp = world.comp_man.add_component::<MeshComponent>(axes).unwrap();
+    trans_comp.get_local_transform_mut().scale = 3.0;
+    let mesh_comp = world
+        .comp_man
+        .add_component::<MeshComponent>(axes_id)
+        .unwrap();
     mesh_comp.mesh = world.res_man.generate_mesh("axes", &context);
     mesh_comp.material = world.res_man.get_material("material");
 
-    let ui_entity = world.ent_man.new_entity("test_ui");
+    let ui_entity = world.ent_man.new_entity();
+    let ui_id = world.ent_man.get_entity_index(&ui_entity).unwrap();
     world
         .comp_man
-        .add_component::<TransformComponent>(ui_entity);
+        .add_component::<TransformComponent>(ui_id);
     let ui_comp = world
         .comp_man
-        .add_component::<UIComponent>(ui_entity)
+        .add_component::<UIComponent>(ui_id)
         .unwrap();
     ui_comp.widget_type = WidgetType::TestWidget;
 
