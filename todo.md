@@ -52,8 +52,7 @@
 <!-- - Keep some state on ent man about resorting entities after a reparent?
     - Remember to update free indices and uuid to index
     - entman -> compman event? Maybe have the event trigger a variable in comp_man, and have it update them before running for a frame -->
-
-- Delete entity should remove it from its parent and delete it's children as well
+<!-- - Delete entity should remove it from its parent and delete it's children as well -->
 
 - Scalings aren't working, I think I messed up the transforms
 

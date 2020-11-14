@@ -154,11 +154,28 @@ impl EntityManager {
 
     pub fn delete_entity(&mut self, e: &Entity) -> bool {
         match self.get_entity_index(e) {
-            Some(index) => {
-                self.entity_storage[index as usize].live = false;
-                self.entity_storage[index as usize].uuid.0 = 0;
+            Some(index) => {                
+                let stored_clone = self.entity_storage[index as usize].clone();
+
+                // Remove ourselves from our parent
+                if let Some(parent) = self.entity_storage[index as usize].parent {
+                    let parent_entry = self.get_entity_entry_mut(&parent).unwrap();
+                    let child_index = parent_entry.children.iter().position(|&c| c.uuid == stored_clone.uuid).unwrap();
+                    parent_entry.children.remove(child_index);                    
+                }
+                
+                // Delete our children with us
+                for child_entity in stored_clone.children.iter() {
+                    self.delete_entity(child_entity);
+                }
+                
+                let stored_entity = &mut self.entity_storage[index as usize];
+                stored_entity.live = false;
+                stored_entity.uuid.0 = 0;
+
                 self.free_indices.push(Reverse(index));
                 self.uuid_to_index.remove(&e.uuid);
+
                 return true;
             }
             None => return false,
