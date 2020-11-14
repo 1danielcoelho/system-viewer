@@ -15,7 +15,6 @@ impl PartialEq for EntityID {
 #[derive(Debug, Copy, Clone, Eq)]
 pub struct Entity {
     index: u32, // Actual component index in the component arrays. Not pub so user has to go through manager
-    gen: u32,   // TODO: Do I need this here if I just check via uuid?
     uuid: EntityID, // Unique index for this entity, follows entities when they're sorted
 }
 impl PartialEq for Entity {
@@ -29,7 +28,6 @@ impl PartialEq for Entity {
 #[derive(Clone)]
 pub struct EntityEntry {
     live: bool,
-    gen: u32,
     uuid: EntityID,
 
     parent: Option<Entity>,
@@ -74,7 +72,6 @@ impl EntityManager {
                 (entity_storage_index + 1) as usize,
                 EntityEntry {
                     live: false,
-                    gen: 0,
                     uuid: EntityID(0),
                     parent: None,
                     children: Vec::new(),
@@ -93,7 +90,6 @@ impl EntityManager {
 
         return Entity {
             index: entity_storage_index,
-            gen: new_entity.gen,
             uuid: new_entity.uuid,
         };
     }
@@ -102,14 +98,10 @@ impl EntityManager {
     // reallocation. Repeatedly calling this always returns entities with increasing indices
     pub fn new_entity(&mut self) -> Entity {
         let target_index = match self.free_indices.pop() {
-            Some(Reverse { 0: vacant_index }) => {
-                self.entity_storage[vacant_index as usize].gen += 1;
-                vacant_index
-            }
+            Some(Reverse { 0: vacant_index }) => vacant_index,
             None => {
                 self.entity_storage.push(EntityEntry {
                     live: true,
-                    gen: 0,
                     uuid: EntityID(0),
                     parent: None,
                     children: Vec::new(),
@@ -154,21 +146,25 @@ impl EntityManager {
 
     pub fn delete_entity(&mut self, e: &Entity) -> bool {
         match self.get_entity_index(e) {
-            Some(index) => {                
+            Some(index) => {
                 let stored_clone = self.entity_storage[index as usize].clone();
 
                 // Remove ourselves from our parent
                 if let Some(parent) = self.entity_storage[index as usize].parent {
                     let parent_entry = self.get_entity_entry_mut(&parent).unwrap();
-                    let child_index = parent_entry.children.iter().position(|&c| c.uuid == stored_clone.uuid).unwrap();
-                    parent_entry.children.remove(child_index);                    
+                    let child_index = parent_entry
+                        .children
+                        .iter()
+                        .position(|&c| c.uuid == stored_clone.uuid)
+                        .unwrap();
+                    parent_entry.children.remove(child_index);
                 }
-                
+
                 // Delete our children with us
                 for child_entity in stored_clone.children.iter() {
                     self.delete_entity(child_entity);
                 }
-                
+
                 let stored_entity = &mut self.entity_storage[index as usize];
                 stored_entity.live = false;
                 stored_entity.uuid.0 = 0;
@@ -222,7 +218,6 @@ impl EntityManager {
             Some(entry) => {
                 return Some(Entity {
                     index,
-                    gen: entry.gen,
                     uuid: entry.uuid,
                 });
             }
@@ -289,8 +284,6 @@ impl EntityManager {
         }
 
         self.entity_storage.swap(index_a as usize, index_b as usize);
-        self.entity_storage[index_a as usize].gen += 1;
-        self.entity_storage[index_b as usize].gen += 1;
 
         comp_man.swap_components(index_a, index_b);
     }
