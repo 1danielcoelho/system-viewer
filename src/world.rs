@@ -28,14 +28,16 @@ impl World {
         return new_world;
     }
 
-    pub fn init(&mut self) {
-        
-    }
+    pub fn init(&mut self) {}
 
     pub fn update(&mut self, state: &mut AppState) {
         self.in_man.run(state);
-        self.sys_man
-            .run(state, &mut self.comp_man, &mut self.event_man);
+        self.sys_man.run(
+            state,
+            &mut self.comp_man,
+            &mut self.event_man,
+            &mut self.ent_man,
+        );
     }
 }
 

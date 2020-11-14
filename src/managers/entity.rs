@@ -212,18 +212,32 @@ impl EntityManager {
         return self.entity_storage.get_mut(index.unwrap() as usize);
     }
 
-    // Not pub to prevent users from thinking that their index is necessarily valid. It may contain another entity
     fn get_entity_from_index(&self, index: u32) -> Option<Entity> {
         match self.entity_storage.get(index as usize) {
             Some(entry) => {
-                return Some(Entity {
-                    index,
-                    uuid: entry.uuid,
-                });
+                if entry.live {
+                    return Some(Entity {
+                        index,
+                        uuid: entry.uuid,
+                    });
+                } else {
+                    return None;
+                }
             }
             None => {
                 return None;
             }
+        };
+    }
+
+    // Weird hacky function to quickly get the parent index for TransformUpdateSystem
+    pub fn get_parent_index_from_index(&self, entity_index: u32) -> Option<u32> {
+        match self.entity_storage.get(entity_index as usize) {
+            Some(entry) => match entry.parent {
+                Some(parent) => return self.get_entity_index(&parent),
+                None => return None,
+            },
+            None => return None,
         };
     }
 

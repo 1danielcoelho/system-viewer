@@ -3,7 +3,7 @@ extern crate wasm_bindgen;
 use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
-use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Rotation, Rotation3, Vector3};
+use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Quaternion, Rotation, Rotation3, Vector3};
 use components::{
     ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
 };
@@ -236,6 +236,30 @@ pub fn initialize() {
                 app_state_mut.real_time_ms += real_delta_ms;
                 app_state_mut.phys_delta_time_ms = phys_delta_ms;
                 app_state_mut.real_delta_time_ms = real_delta_ms;
+
+                let parent_index = world.ent_man.get_entity_index(&parent);
+                let parent_trans_comp: &mut TransformComponent = world
+                    .comp_man
+                    .get_component::<TransformComponent>(parent_index.unwrap())
+                    .unwrap();
+                parent_trans_comp.get_local_transform_mut().disp.x += 0.01;
+                parent_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
+                    Vector3::new(0.0 as f32, 0.0 as f32, 1.0 as f32),
+                    cgmath::Deg((app_state_mut.real_time_ms / 100.0) as f32),
+                )
+                .normalize();
+
+                let child_index = world.ent_man.get_entity_index(&parent);
+                let child_trans_comp: &mut TransformComponent = world
+                    .comp_man
+                    .get_component::<TransformComponent>(parent_index.unwrap())
+                    .unwrap();
+                child_trans_comp.get_local_transform_mut().disp.x += 0.01;
+                child_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
+                    Vector3::new(1.0 as f32, 0.0 as f32, 0.0 as f32),
+                    cgmath::Deg((app_state_mut.real_time_ms / 100.0) as f32),
+                )
+                .normalize();
 
                 world.update(app_state_mut);
             }

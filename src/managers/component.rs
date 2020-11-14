@@ -20,12 +20,12 @@ impl ComponentManager {
         };
     }
 
-    pub fn get_component<T>(&mut self, entity: u32) -> Option<&T>
+    pub fn get_component<T>(&mut self, entity: u32) -> Option<&mut T>
     where
         T: Default + Component + Component<ComponentType = T>,
     {
         let comp_vec = T::get_components_vector(self);
-        return comp_vec.get(entity as usize);
+        return comp_vec.get_mut(entity as usize);
     }
 
     pub fn add_component<'a, T>(&'a mut self, entity: u32) -> Option<&'a mut T>
