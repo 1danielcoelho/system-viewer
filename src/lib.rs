@@ -3,6 +3,7 @@ extern crate wasm_bindgen;
 use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
+use app_update_context::AppUpdateContext;
 use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Rotation, Rotation3, Vector3};
 use components::{
     ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
@@ -15,6 +16,7 @@ use winit::{event_loop::EventLoop, platform::web::WindowBuilderExtWebSys};
 use world::World;
 
 mod app_state;
+mod app_update_context;
 mod components;
 mod gl_setup;
 mod managers;
@@ -334,13 +336,8 @@ pub fn initialize() {
                     app_state_mut.camera.up = cam_up;
                 }
 
-                world.sys_man.run(
-                    &mut app_state_mut,
-                    &mut world.comp_man,
-                    &mut world.event_man,
-                );
-
-                // Dispatch events
+                let mut context = AppUpdateContext::new(&mut world);
+                context.update(app_state_mut);
             }
 
             Event::NewEvents(_) => {}

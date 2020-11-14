@@ -54,6 +54,8 @@
     - entman -> compman event? Maybe have the event trigger a variable in comp_man, and have it update them before running for a frame -->
 <!-- - Delete entity should remove it from its parent and delete it's children as well -->
 
+- Honestly I may not even need the entity index inside Entity and always use just the uuid
+
 - Scalings aren't working, I think I messed up the transforms
 
 - Get object transform hierarchies working
