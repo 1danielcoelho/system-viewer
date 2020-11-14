@@ -78,7 +78,7 @@
     <!-- - Disable physics component for sleeping stuff, like the grid or axes entities -->
 <!-- - I don't resize the components array when doing new_entity... if I use the new entity to swap with another, we may lose our components -->
 
-- I don't think I need the generational entity thing if I'm using uuids...
+<!-- - I don't think I need the generational entity thing if I'm using uuids... -->
 
 - Tons of indirection when scanning through transform components
 

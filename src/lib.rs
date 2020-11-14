@@ -3,12 +3,12 @@ extern crate wasm_bindgen;
 use std::sync::{Arc, Mutex};
 
 use app_state::AppState;
-use app_update_context::AppUpdateContext;
 use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Rotation, Rotation3, Vector3};
 use components::{
     ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
 };
 use gltf::Gltf;
+use managers::InputManager;
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
 use winit::{event::WindowEvent, window::WindowBuilder};
@@ -16,7 +16,6 @@ use winit::{event_loop::EventLoop, platform::web::WindowBuilderExtWebSys};
 use world::World;
 
 mod app_state;
-mod app_update_context;
 mod components;
 mod gl_setup;
 mod managers;
@@ -56,7 +55,6 @@ pub fn initialize() {
 
     let window = WindowBuilder::new()
         .with_title("Title")
-        //.with_inner_size(winit::dpi::LogicalSize::new(canvas.client_width(), canvas.client_height()))
         .with_canvas(Some(canvas))
         .build(&event_loop)
         .expect("Failed to find window!");
@@ -81,9 +79,6 @@ pub fn initialize() {
 
     let start_ms = js_sys::Date::now();
     let mut last_frame_ms = 0.0;
-
-    let mut last_mouse_x = 0;
-    let mut last_mouse_y = 0;
 
     // Setup scene
     let parent = world.ent_man.new_entity();
@@ -183,7 +178,7 @@ pub fn initialize() {
         app_state_mut.real_time_ms = last_frame_ms;
     }
 
-    gl_setup::setup_event_handlers(&canvas, app_state.clone());
+    InputManager::setup_event_handlers(&canvas, app_state.clone());
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
@@ -241,103 +236,8 @@ pub fn initialize() {
                 app_state_mut.real_time_ms += real_delta_ms;
                 app_state_mut.phys_delta_time_ms = phys_delta_ms;
                 app_state_mut.real_delta_time_ms = real_delta_ms;
-                app_state_mut.input.delta_x = app_state_mut.input.mouse_x - last_mouse_x;
-                app_state_mut.input.delta_y = app_state_mut.input.mouse_y - last_mouse_y;
 
-                last_mouse_x = app_state_mut.input.mouse_x;
-                last_mouse_y = app_state_mut.input.mouse_y;
-
-                let aspect = app_state_mut.canvas_width as f32 / app_state_mut.canvas_height as f32;
-
-                let cam_forward = ((app_state_mut.camera.target - app_state_mut.camera.pos)
-                    as Vector3<f32>)
-                    .normalize();
-                let cam_right: Vector3<f32> =
-                    cam_forward.cross(app_state_mut.camera.up).normalize();
-                let cam_up: Vector3<f32> = cam_right.cross(cam_forward).normalize();
-
-                let lock_pitch = true;
-
-                let move_speed = app_state_mut.move_speed * 0.005;
-                let rotate_speed = app_state_mut.rotate_speed * 0.5;
-
-                let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
-                if app_state_mut.input.forward_down {
-                    incr += cam_forward * (app_state_mut.real_delta_time_ms as f32) * move_speed;
-                }
-                if app_state_mut.input.back_down {
-                    incr -= cam_forward * (app_state_mut.real_delta_time_ms as f32) * move_speed;
-                }
-                if app_state_mut.input.left_down {
-                    incr -= cam_right * (app_state_mut.real_delta_time_ms as f32) * move_speed;
-                }
-                if app_state_mut.input.right_down {
-                    incr += cam_right * (app_state_mut.real_delta_time_ms as f32) * move_speed;
-                }
-                if app_state_mut.input.up_down {
-                    incr += cam_up * (app_state_mut.real_delta_time_ms as f32) * move_speed;
-                }
-                if app_state_mut.input.down_down {
-                    incr -= cam_up * (app_state_mut.real_delta_time_ms as f32) * move_speed;
-                }
-
-                if app_state_mut.input.m1_down
-                    && (app_state_mut.input.delta_y.abs() > 0
-                        || app_state_mut.input.delta_x.abs() > 0)
-                {
-                    let half_canvas_height_world = app_state_mut.camera.near
-                        * cgmath::Angle::tan(app_state_mut.camera.fov_v / 2.0);
-                    let half_canvas_width_world = aspect * half_canvas_height_world;
-
-                    let delta_x_world = -half_canvas_width_world
-                        * (app_state_mut.input.delta_x as f32
-                            / (app_state_mut.canvas_width as f32 / 2.0));
-                    let delta_y_world = -half_canvas_height_world
-                        * (app_state_mut.input.delta_y as f32
-                            / (app_state_mut.canvas_height as f32 / 2.0));
-
-                    let mut x_angle: Deg<f32> =
-                        cgmath::Angle::atan(delta_x_world / app_state_mut.camera.near);
-                    let mut y_angle: Deg<f32> =
-                        cgmath::Angle::atan(delta_y_world / app_state_mut.camera.near);
-                    x_angle *= rotate_speed;
-                    y_angle *= rotate_speed;
-
-                    let curr_pitch_angle: Deg<f32> = cgmath::Angle::atan2(
-                        cam_forward.cross(app_state_mut.camera.up).magnitude(),
-                        cam_forward.dot(app_state_mut.camera.up),
-                    );
-
-                    if lock_pitch {
-                        if curr_pitch_angle - y_angle < Deg(0.001) {
-                            y_angle = curr_pitch_angle - Deg(0.001);
-                        } else if curr_pitch_angle - y_angle > Deg(179.999) {
-                            y_angle = -Deg(179.999) + curr_pitch_angle;
-                        };
-                    }
-
-                    let rot_z: Basis3<f32> =
-                        Rotation3::from_axis_angle(app_state_mut.camera.up, x_angle);
-                    let rot_x: Basis3<f32> = Rotation3::from_axis_angle(cam_right, y_angle);
-
-                    let new_cam_forward = rot_z.rotate_vector(rot_x.rotate_vector(cam_forward));
-                    let prev_targ_dist: f32 = app_state_mut
-                        .camera
-                        .target
-                        .distance(app_state_mut.camera.pos);
-                    let new_targ = app_state_mut.camera.pos + new_cam_forward * prev_targ_dist;
-                    app_state_mut.camera.target = new_targ;
-                }
-
-                app_state_mut.camera.pos += incr;
-                app_state_mut.camera.target += incr;
-
-                if !lock_pitch {
-                    app_state_mut.camera.up = cam_up;
-                }
-
-                let mut context = AppUpdateContext::new(&mut world);
-                context.update(app_state_mut);
+                world.update(app_state_mut);
             }
 
             Event::NewEvents(_) => {}
