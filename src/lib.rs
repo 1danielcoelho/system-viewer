@@ -105,14 +105,15 @@ pub fn initialize() {
 
     let child = world.ent_man.new_entity();
     let child_id = world.ent_man.get_entity_index(&child).unwrap();
-
+    world
+        .ent_man
+        .set_entity_parent(&parent, &child, &mut world.comp_man);
     let trans_comp = world
         .comp_man
         .add_component::<TransformComponent>(child_id)
         .unwrap();
     trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
     trans_comp.get_local_transform_mut().scale = 0.5;
-    trans_comp.set_parent(Some(parent));
     let phys_comp = world
         .comp_man
         .add_component::<PhysicsComponent>(child_id)
@@ -168,13 +169,8 @@ pub fn initialize() {
 
     let ui_entity = world.ent_man.new_entity();
     let ui_id = world.ent_man.get_entity_index(&ui_entity).unwrap();
-    world
-        .comp_man
-        .add_component::<TransformComponent>(ui_id);
-    let ui_comp = world
-        .comp_man
-        .add_component::<UIComponent>(ui_id)
-        .unwrap();
+    world.comp_man.add_component::<TransformComponent>(ui_id);
+    let ui_comp = world.comp_man.add_component::<UIComponent>(ui_id).unwrap();
     ui_comp.widget_type = WidgetType::TestWidget;
 
     let app_state: Arc<Mutex<AppState>> = AppState::new();

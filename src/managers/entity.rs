@@ -1,13 +1,22 @@
-use std::cmp::Reverse;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::iter::FromIterator;
+use std::{cmp::Reverse, hash::Hash};
 
 use super::ComponentManager;
 
+#[derive(Debug, Copy, Clone, Eq, Hash)]
+pub struct EntityID(u32);
+impl PartialEq for EntityID {
+    fn eq(&self, other: &Self) -> bool {
+        return self.0 == other.0;
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq)]
 pub struct Entity {
-    id: u32, // Actual component index in the component arrays. Not pub so user has to go through manager
-    gen: u32, // Generation of the currently live entity
-    uuid: u32, // Unique index for this entity, follows entities when they're sorted
+    index: u32, // Actual component index in the component arrays. Not pub so user has to go through manager
+    gen: u32,   // TODO: Do I need this here if I just check via uuid?
+    uuid: EntityID, // Unique index for this entity, follows entities when they're sorted
 }
 impl PartialEq for Entity {
     // Completely ignore id and gen, as we may be comparing an old reference to this entity
@@ -17,10 +26,14 @@ impl PartialEq for Entity {
     }
 }
 
+#[derive(Clone)]
 pub struct EntityEntry {
     live: bool,
     gen: u32,
-    uuid: u32,
+    uuid: EntityID,
+
+    parent: Option<Entity>,
+    children: Vec<Entity>,
 }
 
 pub struct EntityManager {
@@ -31,8 +44,8 @@ pub struct EntityManager {
     free_indices: BinaryHeap<Reverse<u32>>,
 
     // Maps from an entity uuid to it's current index in entity_storage
-    uuid_to_index: HashMap<u32, u32>,
-    last_used_uuid: u32,
+    uuid_to_index: HashMap<EntityID, u32>,
+    last_used_uuid: EntityID,
 }
 
 impl EntityManager {
@@ -41,8 +54,48 @@ impl EntityManager {
             entity_storage: Vec::new(),
             free_indices: BinaryHeap::new(),
             uuid_to_index: HashMap::new(),
-            last_used_uuid: 0,
+            last_used_uuid: EntityID(0),
         }
+    }
+
+    pub fn reserve_space_for_entities(&mut self, num_new_spaces_to_reserve: u32) {
+        self.entity_storage
+            .reserve(num_new_spaces_to_reserve as usize);
+    }
+
+    fn new_entity_at_index(&mut self, entity_storage_index: u32) -> Entity {
+        if entity_storage_index >= self.entity_storage.len() as u32 {
+            assert!(
+                entity_storage_index < 2 * self.entity_storage.len() as u32,
+                "Trying to create new entity at an unreasonable index!"
+            );
+
+            self.entity_storage.resize(
+                (entity_storage_index + 1) as usize,
+                EntityEntry {
+                    live: false,
+                    gen: 0,
+                    uuid: EntityID(0),
+                    parent: None,
+                    children: Vec::new(),
+                },
+            );
+        }
+
+        self.last_used_uuid.0 += 1;
+
+        let new_entity: &mut EntityEntry = &mut self.entity_storage[entity_storage_index as usize];
+        new_entity.uuid = self.last_used_uuid;
+        new_entity.live = true;
+
+        self.uuid_to_index
+            .insert(self.last_used_uuid, entity_storage_index);
+
+        return Entity {
+            index: entity_storage_index,
+            gen: new_entity.gen,
+            uuid: new_entity.uuid,
+        };
     }
 
     // Returns a new Entity. It may occupy an existing, vacant spot or be a brand new
@@ -57,29 +110,53 @@ impl EntityManager {
                 self.entity_storage.push(EntityEntry {
                     live: true,
                     gen: 0,
-                    uuid: 0,
+                    uuid: EntityID(0),
+                    parent: None,
+                    children: Vec::new(),
                 });
                 (self.entity_storage.len() - 1) as u32
             }
         };
 
-        let new_entity: &mut EntityEntry = &mut self.entity_storage[target_index as usize];
+        return self.new_entity_at_index(target_index);
+    }
 
-        self.last_used_uuid += 1;
-        new_entity.uuid = self.last_used_uuid;
-        self.uuid_to_index.insert(self.last_used_uuid, target_index);
+    // Returns a new Entity guaranteed to occupy a spot larger than 'reference'
+    fn new_entity_larger_than(&mut self, reference: u32) -> Entity {
+        let mut target_index: Option<u32> = None;
 
-        return Entity {
-            id: target_index,
-            gen: new_entity.gen,
-            uuid: new_entity.uuid,
+        // Checking free indices may be faster
+        if (self.entity_storage.len() as u32) - reference > self.free_indices.len() as u32 {
+            for i in self.free_indices.iter() {
+                if i.0 > reference {
+                    target_index = Some(i.0);
+                    break;
+                }
+            }
+        }
+        // Checking storage directly may be faster
+        else {
+            for i in reference..(self.entity_storage.len() as u32) {
+                if i > reference {
+                    target_index = Some(i);
+                    break;
+                }
+            }
+        }
+
+        // No vacant spots, signal that we should resize to fit it
+        if target_index.is_none() {
+            target_index = Some(self.entity_storage.len() as u32);
         };
+
+        return self.new_entity_at_index(target_index.unwrap());
     }
 
     pub fn delete_entity(&mut self, e: &Entity) -> bool {
         match self.get_entity_index(e) {
             Some(index) => {
                 self.entity_storage[index as usize].live = false;
+                self.entity_storage[index as usize].uuid.0 = 0;
                 self.free_indices.push(Reverse(index));
                 self.uuid_to_index.remove(&e.uuid);
                 return true;
@@ -88,40 +165,57 @@ impl EntityManager {
         };
     }
 
+    pub fn is_live(&self, e: &Entity) -> bool {
+        match self.get_entity_entry(e) {
+            Some(entry) => entry.live,
+            None => false,
+        }
+    }
+
     pub fn get_entity_index(&self, e: &Entity) -> Option<u32> {
-        let mut stored_entity = self.entity_storage.get(e.id as usize);
-        match stored_entity {
-            Some(se) => {
-                if se.gen == e.gen {
-                    return Some(e.id);
-                } else {
-                    stored_entity = None;
-                }
+        return self.get_entity_index_by_uuid(e.uuid);
+    }
+
+    // Checks via uuid, returns None if it's not live anymore
+    fn get_entity_entry(&self, e: &Entity) -> Option<&EntityEntry> {
+        // Find the actual index as this may be a stale entity reference
+        let index = self.get_entity_index(e);
+        if index.is_none() {
+            return None;
+        }
+
+        // Fetch the guaranteed current entry for this entity
+        return self.entity_storage.get(index.unwrap() as usize);
+    }
+
+    fn get_entity_entry_mut(&mut self, e: &Entity) -> Option<&mut EntityEntry> {
+        // Find the actual index as this may be a stale entity reference
+        let index = self.get_entity_index(e);
+        if index.is_none() {
+            return None;
+        }
+
+        // Fetch the guaranteed current entry for this entity
+        return self.entity_storage.get_mut(index.unwrap() as usize);
+    }
+
+    // Not pub to prevent users from thinking that their index is necessarily valid. It may contain another entity
+    fn get_entity_from_index(&self, index: u32) -> Option<Entity> {
+        match self.entity_storage.get(index as usize) {
+            Some(entry) => {
+                return Some(Entity {
+                    index,
+                    gen: entry.gen,
+                    uuid: entry.uuid,
+                });
             }
-            None => {}
-        }
-
-        // Stale reference, try searching the right entity via uuid
-        if stored_entity.is_none() || stored_entity.unwrap().gen != e.gen {
-            return self.get_entity_index_by_uuid(e.uuid);
+            None => {
+                return None;
+            }
         };
-
-        return None;
     }
 
-    // Also updates Entity reference so that it doesn't have to re-check by uuid every time
-    pub fn get_entity_index_update_ref(&self, e: &mut Entity) -> Option<u32> {
-        let index_op = self.get_entity_index(e);
-
-        if let Some(index) = index_op {
-            e.id = index;
-            e.gen = self.entity_storage[index as usize].gen;
-        }
-
-        return index_op;
-    }
-
-    pub fn get_entity_index_by_uuid(&self, uuid: u32) -> Option<u32> {
+    pub fn get_entity_index_by_uuid(&self, uuid: EntityID) -> Option<u32> {
         match self.uuid_to_index.get(&uuid) {
             Some(index) => {
                 let ent = &self.entity_storage[(*index) as usize];
@@ -135,10 +229,34 @@ impl EntityManager {
         }
     }
 
-    pub fn is_live(&self, id: u32) -> bool {
-        match self.entity_storage.get(id as usize) {
-            Some(entry) => entry.live,
-            None => false,
+    pub fn get_entity_parent(&self, e: &Entity) -> Option<Entity> {
+        match self.get_entity_entry(e) {
+            Some(entry) => entry.parent,
+            None => None,
+        }
+    }
+
+    // Topmost parent of the entity's hierarchy. May be the same entity if `e` has no parents
+    pub fn get_entity_ancestor(&self, e: &Entity) -> Entity {
+        let mut parent = self.get_entity_parent(&e);
+
+        while parent.is_some() {
+            let parent_parent = self.get_entity_parent(parent.as_ref().unwrap());
+
+            if parent_parent.is_none() {
+                return parent.unwrap();
+            }
+
+            parent = parent_parent;
+        }
+
+        return e.clone();
+    }
+
+    pub fn get_entity_children(&self, e: &Entity) -> Option<&Vec<Entity>> {
+        match self.get_entity_entry(e) {
+            Some(entry) => Some(&entry.children),
+            None => None,
         }
     }
 
@@ -159,26 +277,125 @@ impl EntityManager {
 
         comp_man.swap_components(index_a, index_b);
     }
-    
-    // Moves `a` into `stomped`'s location in the storage, effectively deleting `stomped` and vacating `a`'s previous location
-    fn stomp_entity(&mut self, a: &Entity, stomped: &Entity) {
-        todo!();
 
-        // Don't forget to clear uuid and its entry in the map. Maybe call delete entity
+    pub fn set_entity_parent(
+        &mut self,
+        parent: &Entity,
+        child: &Entity,
+        comp_man: &mut ComponentManager,
+    ) {
+        let parent_index = self.get_entity_index(parent);
+        let child_index = self.get_entity_index(child);
+        if parent_index.is_none() || child_index.is_none() {
+            return;
+        }
+
+        // Update old parent
+        if let Some(old_parent) = self.get_entity_parent(child) {
+            if old_parent == *parent {
+                return;
+            }
+
+            if let Some(entry) = self.get_entity_entry_mut(&old_parent) {
+                let old_child_index = entry.children.iter().position(|&c| c == *child).unwrap();
+                entry.children.remove(old_child_index);
+            };
+        }
+
+        // Update new parent
+        if let Some(entry) = self.entity_storage.get_mut(parent_index.unwrap() as usize) {
+            let old_child_index = entry.children.iter().position(|&c| c == *child);
+            assert!(
+                old_child_index.is_none(),
+                format!("Entity {:#?} was already child of {:#?}!", child, parent)
+            );
+
+            entry.children.push(*child);
+        };
+
+        // Update child
+        if let Some(entry) = self.entity_storage.get_mut(child_index.unwrap() as usize) {
+            entry.parent = Some(*parent);
+        }
+
+        // Need to always guarantee parent > child so that when we compute transforms every frame we
+        // can compute them all in one pass with minimal referencing
+        self.ensure_parent_child_order(parent_index.unwrap(), child_index.unwrap(), comp_man);
     }
 
-    // Temp solution to make sure that all parent transforms come before child transforms
-    // I think the final solution to this will involve using events, but I'm not sure how that
-    // will work until I have some more use cases
-    fn sort_entities(&mut self, comp_man: &mut ComponentManager) {
+    // Will make sure that `e` comes after it's parent in the entity and component arrays, also acting recursively
+    fn ensure_parent_child_order(
+        &mut self,
+        parent_index: u32,
+        child_index: u32,
+        comp_man: &mut ComponentManager,
+    ) {
+        if child_index > parent_index {
+            return;
+        }
 
-        // Collect hierarchy parents that need to be relocated
-        
-        // Breadth first traversal on each hierarchy parent to store their indices
+        // Create a new dummy entity in a position where child would be valid (i.e. after parent)
+        let dummy_child = self.new_entity_larger_than(parent_index);
 
-        // Reserve size for entities at once
+        // Swap current child with dummy, along with components (this will resize components if needed too)
+        let new_child_index = dummy_child.index; // Since we just made this entity we know the index is OK
+        self.swap_entities(new_child_index, child_index);
+        comp_man.swap_components(new_child_index, child_index);
 
-        // For each hierarchy's sorted indices
-            // Repeatedly call new_entity and stomp_entity in order 
+        // Get rid of dummy (just mark it as vacant, really)
+        self.delete_entity(self.get_entity_from_index(child_index).as_ref().unwrap());
+
+        // Propagate for all children in the hierarchy
+        let grand_child_indices: Vec<u32> = self.entity_storage[new_child_index as usize]
+            .children
+            .iter()
+            .map(|e| self.get_entity_index(e).unwrap())
+            .collect();
+        for grand_child_index in grand_child_indices.iter() {
+            self.ensure_parent_child_order(new_child_index, *grand_child_index, comp_man);
+        }
+    }
+
+    // WARNING: Will obviously not swap the components along with it
+    fn swap_entities(&mut self, source_index: u32, target_index: u32) {
+        if source_index == target_index {
+            return;
+        }
+
+        // Update free indices (ugh)
+        let mut free_indices_set: HashSet<Reverse<u32>> = HashSet::new();
+        free_indices_set.reserve(self.free_indices.len());
+        for item in self.free_indices.iter() {
+            free_indices_set.insert(*item);
+        }
+        let had_src = free_indices_set.contains(&Reverse(source_index));
+        let had_tar = free_indices_set.contains(&Reverse(target_index));
+        free_indices_set.remove(&Reverse(source_index));
+        free_indices_set.remove(&Reverse(target_index));
+        if had_src {
+            free_indices_set.insert(Reverse(target_index));
+        }
+        if had_tar {
+            free_indices_set.insert(Reverse(source_index));
+        }
+        self.free_indices.clear();
+        self.free_indices.reserve(free_indices_set.len());
+        for item in free_indices_set.iter() {
+            self.free_indices.push(*item);
+        }
+
+        // Update uuid map
+        self.uuid_to_index.insert(
+            self.entity_storage[source_index as usize].uuid,
+            target_index,
+        );
+        self.uuid_to_index.insert(
+            self.entity_storage[target_index as usize].uuid,
+            source_index,
+        );
+
+        // Actually swap the entries
+        self.entity_storage
+            .swap(source_index as usize, target_index as usize);
     }
 }

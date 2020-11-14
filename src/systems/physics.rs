@@ -27,8 +27,8 @@ impl PhysicsSystem {
         trans_comp: &mut TransformComponent,
         phys_comp: &mut PhysicsComponent,
     ) {
-        // Only parent entities are subject to physics for now
-        if !phys_comp.physics_enabled || trans_comp.parent.is_some() {
+        // TODO: Only parent entities are subject to physics for now
+        if !phys_comp.physics_enabled {
             return;
         }
 

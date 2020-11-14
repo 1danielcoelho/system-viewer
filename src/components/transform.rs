@@ -10,21 +10,12 @@ pub struct TransformComponent {
     pub enabled: bool,
     pub dirty: bool, // Whether our children need to update their transforms
 
-    // These should only be updated by the component manager
-    // TODO: Find a way of restricting that somehow
-    pub parent: Option<Entity>,
-    pub children: Vec<Entity>,
-
     local_transform: TransformType,
     world_transform: TransformType,
 }
 impl TransformComponent {
     pub fn new() -> Self {
         return Self::default();
-    }
-
-    pub fn set_parent(&mut self, new_parent: Option<Entity>) {
-        self.parent = new_parent;
     }
 
     pub fn get_local_transform(&self) -> &TransformType {
@@ -49,9 +40,6 @@ impl Default for TransformComponent {
         return Self {
             enabled: false,
             dirty: false,
-
-            parent: None,
-            children: Vec::new(),
 
             local_transform: cgmath::Decomposed {
                 scale: 1.0,

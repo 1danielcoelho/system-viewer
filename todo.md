@@ -39,7 +39,6 @@
 # I want to import a GLTF object
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
-
 <!-- - Generational entity indices
     - Index, generation and uuid
     - uuid is monotonically incremented and never changes for an entity, even if reordered
@@ -49,6 +48,14 @@
             - Map from uuid to current index
     - When an entity is dropped mark it as dead, forget its uuid so that search fails
     - Have to iterate through entities when executing a system, to know if the owner entity is live -->
+<!-- - Entity references should just be UUIDs. What's the point of using generational lookup for them? -->
+<!-- - Keep some state on ent man about resorting entities after a reparent?
+    - Remember to update free indices and uuid to index
+    - entman -> compman event? Maybe have the event trigger a variable in comp_man, and have it update them before running for a frame -->
+
+- Delete entity should remove it from its parent and delete it's children as well
+
+- Scalings aren't working, I think I messed up the transforms
 
 - Get object transform hierarchies working
     - Keep world_transform and local_transform on components
@@ -68,8 +75,9 @@
             - Maybe use a depth index on the transform component?
         - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it -->
     <!-- - Disable physics component for sleeping stuff, like the grid or axes entities -->
+<!-- - I don't resize the components array when doing new_entity... if I use the new entity to swap with another, we may lose our components -->
 
-- I don't resize the components array when doing new_entity... if I use the new entity to swap with another, we may lose our components
+- I don't think I need the generational entity thing if I'm using uuids...
 
 - Tons of indirection when scanning through transform components
 

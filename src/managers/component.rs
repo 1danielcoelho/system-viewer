@@ -55,51 +55,6 @@ impl ComponentManager {
         self.interface.swap(index_a as usize, index_b as usize);
     }
 
-    fn parent_entity(&mut self, parent: Entity, child: Entity, ent_man: &EntityManager) {
-        let parent_id = ent_man.get_entity_index(&parent).unwrap();
-        let child_id = ent_man.get_entity_index(&child).unwrap();
-
-        // Update old parent
-        if let Some(old_parent) = &self.transform[child_id as usize].parent {
-            if *old_parent == parent {
-                return;
-            }
-
-            let old_parent_id = ent_man.get_entity_index(&old_parent).unwrap();
-
-            let old_parent_comp = &mut self.transform[old_parent_id as usize];
-
-            let old_child_index = old_parent_comp
-                .children
-                .iter()
-                .position(|&c| c == child)
-                .unwrap();
-            old_parent_comp.children.remove(old_child_index);
-        }
-
-        // Update new parent
-        {
-            let new_parent_comp = &mut self.transform[parent_id as usize];
-
-            // Make sure we don't double-add an entity somehow
-            let old_child_index = new_parent_comp.children.iter().position(|&c| c == child);
-            assert!(
-                old_child_index.is_none(),
-                format!("Entity {:#?} was already child of {:#?}!", child, parent)
-            );
-
-            new_parent_comp.children.push(child);
-        }
-
-        // Update child
-        {
-            let new_child_comp = &mut self.transform[child_id as usize];
-            new_child_comp.parent = Some(parent);
-        }
-
-        // TODO: Maybe send an event to ourselves here to remember to notify_transforms_reparented?
-    }
-
     fn resize_components(&mut self, min_length: usize) {
         if min_length <= self.physics.len() {
             return;
