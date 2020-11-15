@@ -93,6 +93,7 @@ pub fn initialize() {
         .add_component::<PhysicsComponent>(parent_id)
         .unwrap();
     phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
+    // phys_comp.lin_mom = Vector3::new(10.0, 0.0, 0.0);
     let mesh_comp = world
         .comp_man
         .add_component::<MeshComponent>(parent_id)
@@ -115,7 +116,7 @@ pub fn initialize() {
         .comp_man
         .add_component::<PhysicsComponent>(child_id)
         .unwrap();
-    phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0);
+    phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
     let mesh_comp = world
         .comp_man
         .add_component::<MeshComponent>(child_id)
@@ -237,43 +238,31 @@ pub fn initialize() {
                 app_state_mut.phys_delta_time_ms = phys_delta_ms;
                 app_state_mut.real_delta_time_ms = real_delta_ms;
 
-                let parent_index = world.ent_man.get_entity_index(&parent);
-                let parent_trans_comp: &mut TransformComponent = world
-                    .comp_man
-                    .get_component::<TransformComponent>(parent_index.unwrap())
-                    .unwrap();
-                parent_trans_comp.get_local_transform_mut().disp.x +=
-                    (app_state_mut.phys_delta_time_ms * 0.001) as f32;
-                parent_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
-                    Vector3::new(0.0 as f32, 0.0 as f32, 1.0 as f32),
-                    cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
-                )
-                .normalize();
+                // let parent_index = world.ent_man.get_entity_index(&parent);
+                // let parent_trans_comp: &mut TransformComponent = world
+                //     .comp_man
+                //     .get_component::<TransformComponent>(parent_index.unwrap())
+                //     .unwrap();
+                // parent_trans_comp.get_local_transform_mut().disp.x +=
+                //     (app_state_mut.phys_delta_time_ms * 0.001) as f32;
+                // parent_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
+                //     Vector3::new(0.0 as f32, 0.0 as f32, 1.0 as f32),
+                //     cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
+                // )
+                // .normalize();
 
-                log::info!(
-                    "Parent {}: {:#?}",
-                    parent_index.unwrap(),
-                    parent_trans_comp.get_local_transform().clone()
-                );
-
-                let child_index = world.ent_man.get_entity_index(&child);
-                let child_trans_comp: &mut TransformComponent = world
-                    .comp_man
-                    .get_component::<TransformComponent>(child_index.unwrap())
-                    .unwrap();
-                child_trans_comp.get_local_transform_mut().disp.x +=
-                    (app_state_mut.phys_delta_time_ms * 0.001) as f32;
-                child_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
-                    Vector3::new(1.0 as f32, 0.0 as f32, 0.0 as f32),
-                    cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
-                )
-                .normalize();
-
-                log::info!(
-                    "Child {}: {:#?}",
-                    child_index.unwrap(),
-                    child_trans_comp.get_local_transform().clone()
-                );
+                // let child_index = world.ent_man.get_entity_index(&child);
+                // let child_trans_comp: &mut TransformComponent = world
+                //     .comp_man
+                //     .get_component::<TransformComponent>(child_index.unwrap())
+                //     .unwrap();
+                // child_trans_comp.get_local_transform_mut().disp.x +=
+                //     (app_state_mut.phys_delta_time_ms * 0.001) as f32;
+                // child_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
+                //     Vector3::new(1.0 as f32, 0.0 as f32, 0.0 as f32),
+                //     cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
+                // )
+                // .normalize();
 
                 world.update(app_state_mut);
             }

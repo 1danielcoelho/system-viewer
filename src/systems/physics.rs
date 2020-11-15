@@ -4,7 +4,10 @@ use cgmath::{
 };
 
 use crate::{
-    app_state::AppState, components::PhysicsComponent, components::TransformComponent,
+    app_state::AppState,
+    components::PhysicsComponent,
+    components::{Component, TransformComponent},
+    managers::EntityManager,
     managers::EventReceiver,
 };
 
@@ -15,9 +18,22 @@ impl PhysicsSystem {
         state: &AppState,
         transforms: &mut Vec<TransformComponent>,
         physics: &mut Vec<PhysicsComponent>,
+        ent_man: &EntityManager,
     ) {
-        for entity in 0..transforms.len() {
-            PhysicsSystem::update(state, &mut transforms[entity], &mut physics[entity]);
+        for entity_index in 0..transforms.len() {
+            // TODO: Indirection on the hot path...
+            if ent_man
+                .get_parent_index_from_index(entity_index as u32)
+                .is_some()
+            {
+                continue;
+            }
+
+            PhysicsSystem::update(
+                state,
+                &mut transforms[entity_index],
+                &mut physics[entity_index],
+            );
         }
     }
 
@@ -27,8 +43,7 @@ impl PhysicsSystem {
         trans_comp: &mut TransformComponent,
         phys_comp: &mut PhysicsComponent,
     ) {
-        // TODO: Only parent entities are subject to physics for now
-        if !phys_comp.physics_enabled {
+        if !phys_comp.get_enabled() {
             return;
         }
 

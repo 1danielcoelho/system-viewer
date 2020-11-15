@@ -7,8 +7,7 @@ use super::{component::ComponentIndex, Component};
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 
 pub struct TransformComponent {
-    pub enabled: bool,
-    pub dirty: bool, // Whether our children need to update their transforms
+    enabled: bool,
 
     local_transform: TransformType,
     world_transform: TransformType,
@@ -23,7 +22,6 @@ impl TransformComponent {
     }
 
     pub fn get_local_transform_mut(&mut self) -> &mut TransformType {
-        self.dirty = true; // TODO: Find better way of doing this?
         return &mut self.local_transform;
     }
 
@@ -39,7 +37,6 @@ impl Default for TransformComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
-            dirty: false,
 
             local_transform: cgmath::Decomposed {
                 scale: 1.0,

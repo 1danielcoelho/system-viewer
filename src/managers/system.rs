@@ -29,7 +29,8 @@ impl SystemManager {
         em: &mut EventManager,
         ent_man: &mut EntityManager,
     ) {
-        self.physics.run(state, &mut cm.transform, &mut cm.physics);
+        self.physics
+            .run(state, &mut cm.transform, &mut cm.physics, ent_man);
         self.trans.run(state, &mut cm.transform, ent_man);
         self.render.run(state, &cm.transform, &cm.mesh);
         self.interface.run(state, &cm);

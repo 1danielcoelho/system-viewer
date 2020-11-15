@@ -56,37 +56,34 @@
 
 - Honestly I may not even need the entity index inside Entity and always use just the uuid
 
-- Scalings aren't working, I think I messed up the transforms
+<!-- - Scalings aren't working, I think I messed up the transforms -->
 
-- Get object transform hierarchies working
+<!-- - Get object transform hierarchies working
     - Keep world_transform and local_transform on components
         - Maybe keep local_transform inside an optional? I guess it makes no difference
     - When reparenting a transform to another, sort entities so that parents come before children
     - Separate system to propagate transforms that runs after physics system updates
         - This may be a problem later when computing collision and using child BB but let's ignore it for now
-        - Physics system should completely ignore component if it has a parent
-    - Rendering system should read off world_transform
-    <!-- - How to reconcyle physics system with transform hierarchies?
-        - Constraints? Probably way too much for now. Likely just skip linear movement if child
-        - When computing the physics stuff for the parent, we'd have to factor in the mass/momenta of the children too, then rip cache coherence       
-        - I think for now children should be completely frozen wrt parent. Later on we can add some fancy pass to propagate stuff upward if needed or something like that 
-        - Will probably have to make sure that parents always come before children in the entity array
-        - Does entity order even matter if entities can't have moving sub-parts?
-            - It should be simple and quick to make sure parents come first
-            - Maybe use a depth index on the transform component?
-        - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it -->
-    <!-- - Disable physics component for sleeping stuff, like the grid or axes entities -->
+        - Physics system should completely ignore component if it has a parent -->
+<!-- - Rendering system should read off world_transform -->
+<!-- - How to reconcyle physics system with transform hierarchies?
+    - Constraints? Probably way too much for now. Likely just skip linear movement if child
+    - When computing the physics stuff for the parent, we'd have to factor in the mass/momenta of the children too, then rip cache coherence       
+    - I think for now children should be completely frozen wrt parent. Later on we can add some fancy pass to propagate stuff upward if needed or something like that 
+    - Will probably have to make sure that parents always come before children in the entity array
+    - Does entity order even matter if entities can't have moving sub-parts?
+        - It should be simple and quick to make sure parents come first
+        - Maybe use a depth index on the transform component?
+    - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it -->
+<!-- - Disable physics component for sleeping stuff, like the grid or axes entities -->
 <!-- - I don't resize the components array when doing new_entity... if I use the new entity to swap with another, we may lose our components -->
 
 <!-- - I don't think I need the generational entity thing if I'm using uuids... -->
 
-- Tons of indirection when scanning through transform components
+<!-- - Tons of indirection when scanning through transform components -->
 
 - Have a component for entity metadata maybe
     - Sparse component arrays?
-    
-- Will need some type of info as to which entities have which components, so we can skip those on the arrays
-    - Maybe remove that stupid "enabled" stuff on every component
 
 - Parse gltf bin files into webgl mesh data
     - Can create new entities and hierarchies and stuff now
@@ -94,8 +91,8 @@
 - Get simple PBR materials working 
 - Get textures working
 
-# Move input stuff somewhere else
-# Move camera `v` and `p` computation away from material. Probably all transform computation
+<!-- # Move input stuff somewhere else -->
+# Move camera `v` and `p` computation away from material. Probably all transform computation?
 # Generated sphere mesh
 # Setup a scene manager 
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap

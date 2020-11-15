@@ -2,22 +2,21 @@ use cgmath::{Matrix3, Matrix4, Vector3};
 
 use crate::managers::ComponentManager;
 
-use super::{Component, component::ComponentIndex};
+use super::{component::ComponentIndex, Component};
 
 pub struct PhysicsComponent {
     enabled: bool,
     pub collision_enabled: bool,
-    pub physics_enabled: bool,
 
     // Constants
-    pub inv_mass: f32, // kg
+    pub inv_mass: f32,             // kg
     pub inv_inertia: Matrix3<f32>, // Local space
 
     // Inputs/computed
     pub force_sum: Vector3<f32>, // Sum of forces being applied to center of mass
     pub torque_sum: Vector3<f32>, // Sum of torque being applied to center of mass
 
-    // State 
+    // State
     pub lin_mom: Vector3<f32>, // kg * m/s
     pub ang_mom: Vector3<f32>, // length is kg * m2 * rad/s, right-hand rule
 }
@@ -31,7 +30,6 @@ impl Default for PhysicsComponent {
         return Self {
             enabled: false,
             collision_enabled: false,
-            physics_enabled: false,
             inv_mass: 1.0,
             inv_inertia: cgmath::One::one(),
             force_sum: cgmath::Vector3::new(0.0, 0.0, 0.0),
