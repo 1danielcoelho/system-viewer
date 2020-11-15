@@ -1,34 +1,23 @@
-use std::{
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use crate::wasm_bindgen::JsCast;
 use crate::{
-    app_state::AppState,
-    components::ui::WidgetType,
-    components::MeshComponent,
-    components::PhysicsComponent,
-    components::TransformComponent,
-    components::UIComponent,
-    engine::Engine,
-    managers::{
-        ComponentManager, EntityManager, EventManager, InputManager, ResourceManager, SystemManager,
-    },
+    app_state::AppState, components::ui::WidgetType, components::MeshComponent,
+    components::PhysicsComponent, components::TransformComponent, components::UIComponent,
+    engine::Engine, managers::InputManager,
 };
 use cgmath::Vector3;
-use lazy_static::lazy_static;
+use gltf::Gltf;
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
-use web_sys::*;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 use winit::{
     event::Event,
     event::WindowEvent,
-    event_loop::{ControlFlow, EventLoop, EventLoopProxy},
+    event_loop::{ControlFlow, EventLoop},
     platform::web::WindowBuilderExtWebSys,
     platform::web::WindowExtWebSys,
-    window::{self, WindowBuilder},
+    window::WindowBuilder,
 };
 
 /** Main interface between javascript and the inner Engine object */
@@ -195,9 +184,15 @@ impl EngineInterface {
     }
 
     #[wasm_bindgen]
-    pub fn begin_loop(mut self) {
-        let window = window().unwrap();
+    pub fn load_gltf(data: &mut [u8]) {
+        log::info!("received {} bytes", data.len());
 
+        let gltf = Gltf::from_slice(data).expect("Failed to load gltf...");
+        log::info!("Num meshes: {}", gltf.meshes().len());
+    }
+
+    #[wasm_bindgen]
+    pub fn begin_loop(mut self) {
         let event_loop = EventLoop::new();
 
         let window = WindowBuilder::new()

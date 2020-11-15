@@ -28,8 +28,6 @@ impl Engine {
         return new_world;
     }
 
-    pub fn init(&mut self) {}
-
     pub fn update(&mut self, state: &mut AppState) {
         self.in_man.run(state);
         self.sys_man.run(
@@ -40,6 +38,3 @@ impl Engine {
         );
     }
 }
-
-// let world = self.world.unwrap().upgrade().unwrap().borrow_mut();
-//         let entity = world.ent_man.get_entity(entity_id);
