@@ -37,6 +37,8 @@ pub struct EngineInterface {
 impl EngineInterface {
     #[wasm_bindgen(constructor)]
     pub fn new(canvas: HtmlCanvasElement) -> Self {
+        log::info!("Initializing...");
+
         let gl: WebGlRenderingContext = canvas
             .get_context("webgl")
             .unwrap()
@@ -184,8 +186,8 @@ impl EngineInterface {
     }
 
     #[wasm_bindgen]
-    pub fn load_gltf(data: &mut [u8]) {
-        log::info!("received {} bytes", data.len());
+    pub fn load_gltf(&mut self, data: &mut [u8]) {
+        log::info!("Load_gltf: received {} bytes", data.len());
 
         let gltf = Gltf::from_slice(data).expect("Failed to load gltf...");
         log::info!("Num meshes: {}", gltf.meshes().len());
@@ -193,6 +195,8 @@ impl EngineInterface {
 
     #[wasm_bindgen]
     pub fn begin_loop(mut self) {
+        log::info!("Beginning engine loop...");
+
         let event_loop = EventLoop::new();
 
         let window = WindowBuilder::new()
