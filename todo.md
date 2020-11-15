@@ -56,6 +56,10 @@
 
 - Honestly I may not even need the entity index inside Entity and always use just the uuid
 
+- Move canvas event stuff into engine_interface
+
+- Scene manager
+
 <!-- - Scalings aren't working, I think I messed up the transforms -->
 
 <!-- - Get object transform hierarchies working

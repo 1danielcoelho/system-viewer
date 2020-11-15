@@ -7,20 +7,21 @@ use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Quaternion, Rotation, Rotatio
 use components::{
     ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
 };
+use engine::Engine;
 use gltf::Gltf;
 use managers::InputManager;
 use wasm_bindgen::prelude::*;
 use winit::{event::Event, event_loop::ControlFlow, platform::web::WindowExtWebSys};
 use winit::{event::WindowEvent, window::WindowBuilder};
 use winit::{event_loop::EventLoop, platform::web::WindowBuilderExtWebSys};
-use world::World;
 
 mod app_state;
 mod components;
+mod engine;
+mod engine_interface;
 mod gl_setup;
 mod managers;
 mod systems;
-mod world;
 
 #[wasm_bindgen(start)]
 pub fn main() {
@@ -74,7 +75,7 @@ pub fn initialize() {
         r"ev.preventDefault();return false;",
     )));
 
-    let mut world = World::new();
+    let mut world = Engine::new();
     world.res_man.compile_materials(&context);
 
     let start_ms = js_sys::Date::now();

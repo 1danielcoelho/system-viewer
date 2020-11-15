@@ -1,4 +1,4 @@
-use crate::{components::component::ComponentIndex, world::World};
+use crate::{components::component::ComponentIndex, engine::Engine};
 use std::collections::VecDeque;
 
 pub enum EventTransmitter {
@@ -42,17 +42,17 @@ impl EventManager {
         self.queue.push_front(event);
     }
 
-    pub fn pump_events(&mut self, world: &mut World) {
+    pub fn pump_events(&mut self, engine: &mut Engine) {
         while !self.queue.is_empty() {
             if let Some(event) = self.queue.pop_back() {
-                EventManager::deliver_event(event, world);
+                EventManager::deliver_event(event, engine);
             }
         }
     }
 
-    fn deliver_event(event: Event, world: &mut World) {
+    fn deliver_event(event: Event, engine: &mut Engine) {
         match event.dest {
-            EventTransmitter::ComponentManager(_) => world.comp_man.receive_event(event),
+            EventTransmitter::ComponentManager(_) => engine.comp_man.receive_event(event),
             EventTransmitter::EntityManager => {}
             EventTransmitter::ResourceManager => {}
             EventTransmitter::SceneManager => {}

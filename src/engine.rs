@@ -5,7 +5,7 @@ use crate::{
     },
 };
 
-pub struct World {
+pub struct Engine {
     pub ent_man: EntityManager,
     pub res_man: ResourceManager,
     pub comp_man: ComponentManager,
@@ -14,7 +14,7 @@ pub struct World {
     pub in_man: InputManager,
     //pub scene_man: SceneManager,
 }
-impl World {
+impl Engine {
     pub fn new() -> Self {
         let new_world = Self {
             ent_man: EntityManager::new(),
