@@ -1,6 +1,6 @@
 <!-- # Bootstrapping -->
 <!-- - Remove entity component index redirection thing or else it bungs up the systems
-    - Create a systems manager and hard-code rendering system 
+    - Create a systems manager and hard-code rendering system
         - Run function that receives references to transform and mesh components
         - systems manager is in charge of providing those each frame -->
 <!-- - Message/event system using rust enums to pass additional arguments for each event type
@@ -37,13 +37,14 @@
 <!-- - Control simulation speed -->
 
 # I want to import a GLTF object
+
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
 <!-- - Generational entity indices
     - Index, generation and uuid
     - uuid is monotonically incremented and never changes for an entity, even if reordered
     - block direct access to component arrays when fetching other entities
-        - It's fine for systems though, they'd still go through them continuously 
+        - It's fine for systems though, they'd still go through them continuously
         - Check target index, if generations don't match search for uuid
             - Map from uuid to current index
     - When an entity is dropped mark it as dead, forget its uuid so that search fails
@@ -56,7 +57,7 @@
 
 - Honestly I may not even need the entity index inside Entity and always use just the uuid
 
-- Move canvas event stuff into engine_interface
+<!-- - Move canvas event stuff into engine_interface -->
 
 - Scene manager
 
@@ -72,8 +73,8 @@
 <!-- - Rendering system should read off world_transform -->
 <!-- - How to reconcyle physics system with transform hierarchies?
     - Constraints? Probably way too much for now. Likely just skip linear movement if child
-    - When computing the physics stuff for the parent, we'd have to factor in the mass/momenta of the children too, then rip cache coherence       
-    - I think for now children should be completely frozen wrt parent. Later on we can add some fancy pass to propagate stuff upward if needed or something like that 
+    - When computing the physics stuff for the parent, we'd have to factor in the mass/momenta of the children too, then rip cache coherence
+    - I think for now children should be completely frozen wrt parent. Later on we can add some fancy pass to propagate stuff upward if needed or something like that
     - Will probably have to make sure that parents always come before children in the entity array
     - Does entity order even matter if entities can't have moving sub-parts?
         - It should be simple and quick to make sure parents come first
@@ -87,25 +88,33 @@
 <!-- - Tons of indirection when scanning through transform components -->
 
 - Have a component for entity metadata maybe
-    - Sparse component arrays?
+
+  - Sparse component arrays?
 
 - Parse gltf bin files into webgl mesh data
-    - Can create new entities and hierarchies and stuff now
-- Find a way of injecting the read files into the app asynchronously 
-- Get simple PBR materials working 
+  - Can create new entities and hierarchies and stuff now
+- Find a way of injecting the read files into the app asynchronously
+- Get simple PBR materials working
 - Get textures working
 
 <!-- # Move input stuff somewhere else -->
+
 # Move camera `v` and `p` computation away from material. Probably all transform computation?
+
 # Generated sphere mesh
-# Setup a scene manager 
+
+# Setup a scene manager
+
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
 
 # I think I'll need wasm-bindgen-futures at some point for something?
+
     - https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs
+
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 
 # Cool sources
+
 - https://github.com/bevyengine/bevy
 - https://github.com/not-fl3/macroquad
 - https://github.com/hecrj/coffee
@@ -114,18 +123,19 @@
 - https://github.com/PistonDevelopers/piston
 
 # Physics
+
 - https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics
 - https://gafferongames.com/post/physics_in_3d/
 - https://github.com/DanielChappuis/reactphysics3d
 - https://gafferongames.com/post/integration_basics/
-    - It looks like semi-implicit Euler integration should be fine for now, and should be pretty easy to implement. Later on I can switch to RK4 if I need to 
+  - It looks like semi-implicit Euler integration should be fine for now, and should be pretty easy to implement. Later on I can switch to RK4 if I need to
 - https://github.com/dimforge/nphysics/blob/fcb91b27dd5cf8a5ce9684e3b99e1788a39d3619/src/object/rigid_body.rs#L599
-    - Gyroscopic forces sample
+  - Gyroscopic forces sample
 - https://github.com/idmillington/cyclone-physics/blob/fd0cf4956fd83ebf9e2e75421dfbf9f5cdac49fa/src/body.cpp#L154
-    - Rigid body integration sample
+  - Rigid body integration sample
 - Use "simulation islands" to sleep large areas at a time
 - Concept of using "energy" to detect when an object should sleep (e.g. too little kinetic energy)
-    - Use an enum to store the current status of the object: Asleep or active (with x energy)
+  - Use an enum to store the current status of the object: Asleep or active (with x energy)
 - Decouple simulation timestep from the actual passage of time so that it can be controlled
 - https://github.com/RandyGaul/qu3e/blob/a9dc0f37f58ccf1c65d74503deeb2bdfe0713ee0/src/dynamics/q3Island.cpp#L38
-    - Another sample of semi-implicit Euler
+  - Another sample of semi-implicit Euler
