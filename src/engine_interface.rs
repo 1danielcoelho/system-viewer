@@ -28,14 +28,12 @@ use winit::{
     event_loop::{ControlFlow, EventLoop, EventLoopProxy},
     platform::web::WindowBuilderExtWebSys,
     platform::web::WindowExtWebSys,
-    window::{self, Window, WindowBuilder},
+    window::{self, WindowBuilder},
 };
 
 /** Main interface between javascript and the inner Engine object */
 #[wasm_bindgen]
 pub struct EngineInterface {
-    window: Window,
-    event_loop: EventLoop<()>,
     canvas: HtmlCanvasElement,
 
     // TODO: This doesn't look like it belongs here
@@ -50,17 +48,6 @@ pub struct EngineInterface {
 impl EngineInterface {
     #[wasm_bindgen(constructor)]
     pub fn new(canvas: HtmlCanvasElement) -> Self {
-        let event_loop = EventLoop::new();
-
-        let window = WindowBuilder::new()
-            .with_title("Title")
-            .with_canvas(Some(canvas))
-            .build(&event_loop)
-            .expect("Failed to find window!");
-
-        // Get a new one as we need to move it into the window builder for some reason
-        let canvas = window.canvas();
-
         let gl: WebGlRenderingContext = canvas
             .get_context("webgl")
             .unwrap()
@@ -199,41 +186,60 @@ impl EngineInterface {
         let last_frame_ms = 0.0;
 
         return EngineInterface {
-            window,
             canvas,
             engine,
             app_state,
-            event_loop,
             start_ms,
             last_frame_ms,
         };
     }
 
     #[wasm_bindgen]
-    pub fn begin_loop(&mut self) {
-        self.event_loop.run(move |event, _, control_flow| {
+    pub fn begin_loop(mut self) {
+        let window = window().unwrap();
+
+        let event_loop = EventLoop::new();
+
+        let window = WindowBuilder::new()
+            .with_title("Title")
+            .with_canvas(Some(self.canvas))
+            .build(&event_loop)
+            .expect("Failed to find window!");
+
+        // Get a new one as we need to move it into the window builder for some reason
+        self.canvas = window.canvas();
+
+        let style = self.canvas.style();
+        style
+            .set_property_with_priority("width", "100%", "")
+            .expect("Failed to set width!");
+        style
+            .set_property_with_priority("height", "100%", "")
+            .expect("Failed to set height!");
+
+        event_loop.run(move |event, _, control_flow| {
             *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
 
             match event {
                 Event::WindowEvent {
                     event: WindowEvent::CloseRequested,
                     window_id,
-                } if window_id == self.window.id() => *control_flow = ControlFlow::Exit,
+                } if window_id == window.id() => *control_flow = ControlFlow::Exit,
 
                 Event::MainEventsCleared => {
-                    self.window.request_redraw();
+                    window.request_redraw();
                 }
 
-                Event::RedrawRequested(window_id) if window_id == self.window.id() => {
+                Event::RedrawRequested(window_id) if window_id == window.id() => {
                     let canvas_width_on_screen = self.canvas.client_width() as u32;
                     let canvas_height_on_screen = self.canvas.client_height() as u32;
 
                     // Check if we need to resize
-                    if self.window.inner_size().width != canvas_width_on_screen
-                        || self.window.inner_size().height != canvas_height_on_screen
+                    if window.inner_size().width != canvas_width_on_screen
+                        || window.inner_size().height != canvas_height_on_screen
                     {
                         // Sets canvas height and width, unfortunately also setting its style height and width
-                        self.window.set_inner_size(winit::dpi::LogicalSize::new(
+                        window.set_inner_size(winit::dpi::LogicalSize::new(
                             canvas_width_on_screen,
                             canvas_height_on_screen,
                         ));

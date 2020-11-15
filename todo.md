@@ -102,6 +102,7 @@
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
 
 # I think I'll need wasm-bindgen-futures at some point for something?
+    - https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 
 # Cool sources
