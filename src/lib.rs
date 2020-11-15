@@ -242,24 +242,38 @@ pub fn initialize() {
                     .comp_man
                     .get_component::<TransformComponent>(parent_index.unwrap())
                     .unwrap();
-                parent_trans_comp.get_local_transform_mut().disp.x += 0.01;
+                parent_trans_comp.get_local_transform_mut().disp.x +=
+                    (app_state_mut.phys_delta_time_ms * 0.001) as f32;
                 parent_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
                     Vector3::new(0.0 as f32, 0.0 as f32, 1.0 as f32),
-                    cgmath::Deg((app_state_mut.real_time_ms / 100.0) as f32),
+                    cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
                 )
                 .normalize();
 
-                let child_index = world.ent_man.get_entity_index(&parent);
+                log::info!(
+                    "Parent {}: {:#?}",
+                    parent_index.unwrap(),
+                    parent_trans_comp.get_local_transform().clone()
+                );
+
+                let child_index = world.ent_man.get_entity_index(&child);
                 let child_trans_comp: &mut TransformComponent = world
                     .comp_man
-                    .get_component::<TransformComponent>(parent_index.unwrap())
+                    .get_component::<TransformComponent>(child_index.unwrap())
                     .unwrap();
-                child_trans_comp.get_local_transform_mut().disp.x += 0.01;
+                child_trans_comp.get_local_transform_mut().disp.x +=
+                    (app_state_mut.phys_delta_time_ms * 0.001) as f32;
                 child_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
                     Vector3::new(1.0 as f32, 0.0 as f32, 0.0 as f32),
-                    cgmath::Deg((app_state_mut.real_time_ms / 100.0) as f32),
+                    cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
                 )
                 .normalize();
+
+                log::info!(
+                    "Child {}: {:#?}",
+                    child_index.unwrap(),
+                    child_trans_comp.get_local_transform().clone()
+                );
 
                 world.update(app_state_mut);
             }
