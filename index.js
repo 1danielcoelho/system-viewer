@@ -1,25 +1,25 @@
-const rust = import('./pkg/index');
-const canvas = document.getElementById('rustCanvas');
+const rust = import("./pkg/index");
+const canvas = document.getElementById("rustCanvas");
 const gl = canvas.getContext("webgl", { antialias: true });
 
-rust.then(m => {
-    if (!gl) {
-        alert('Failed to initialize WebGL');
-        return;
-    }
+function load_gltf(url, engine) {
+  return fetch(url).then((response) =>
+    response
+      .arrayBuffer()
+      .then((buffer) => engine.load_gltf(new Uint8Array(buffer)))
+  );
+}
 
-    let canvas = document.getElementById('rustCanvas');
+rust.then(async (m) => {
+  if (!gl) {
+    alert("Failed to initialize WebGL");
+    return;
+  }
 
-    let engine = new m.EngineInterface(canvas);
+  let engine = new m.EngineInterface(document.getElementById("rustCanvas"));
 
-    // TODO: This will crash, as it will complete after engine.begin_loop() is called, which consumes the engine
-    // let req = new XMLHttpRequest();
-    // req.open("GET", "./public/Duck.glb", true);
-    // req.responseType = "arraybuffer";
-    // req.onload = function (ev) {
-    //     engine.load_gltf(new Uint8Array(req.response));
-    // }
-    // req.send();
+  // Sync loading of all assets for now
+  await Promise.all([load_gltf("./public/Duck.glb", engine)]);
 
-    engine.begin_loop();
+  engine.begin_loop();
 });
