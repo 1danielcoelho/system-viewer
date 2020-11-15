@@ -35,9 +35,6 @@
 <!-- # Show some statistics on the debug thing -->
 <!-- - Framerate counter -->
 <!-- - Control simulation speed -->
-
-# I want to import a GLTF object
-
 <!-- - Read files from a public folder into the wasm module -->
 <!-- - Read gltf bin files into the module -->
 <!-- - Generational entity indices
@@ -54,15 +51,8 @@
     - Remember to update free indices and uuid to index
     - entman -> compman event? Maybe have the event trigger a variable in comp_man, and have it update them before running for a frame -->
 <!-- - Delete entity should remove it from its parent and delete it's children as well -->
-
-- Honestly I may not even need the entity index inside Entity and always use just the uuid
-
 <!-- - Move canvas event stuff into engine_interface -->
-
-- Scene manager
-
 <!-- - Scalings aren't working, I think I messed up the transforms -->
-
 <!-- - Get object transform hierarchies working
     - Keep world_transform and local_transform on components
         - Maybe keep local_transform inside an optional? I guess it makes no difference
@@ -82,39 +72,43 @@
     - I may need total transform for other systems at some point, so they may need to be stored inside the transform component, and propagated to children on physics component that runs after it -->
 <!-- - Disable physics component for sleeping stuff, like the grid or axes entities -->
 <!-- - I don't resize the components array when doing new_entity... if I use the new entity to swap with another, we may lose our components -->
-
 <!-- - I don't think I need the generational entity thing if I'm using uuids... -->
-
 <!-- - Tons of indirection when scanning through transform components -->
+<!-- # Move input stuff somewhere else -->
 
-- Have a component for entity metadata maybe
-
-  - Sparse component arrays?
-
+# I want to import a GLTF object
+- Maybe create like a small slice of the components array, like a mini component manager and entity manager to store the imported gltf scene "prefab". Whenever want to spawn one we just copy it into the main one?
+    - Maybe it could be an actual "scene"? 
+    - This way our scenes could actually store our meshes directly in glb format, which could be handy
+    - This is likely too complicated though: I could just import directly into entity/components/resources and if I want to "spawn another one" I just duplicate it
 - Parse gltf bin files into webgl mesh data
   - Can create new entities and hierarchies and stuff now
 - Find a way of injecting the read files into the app asynchronously
 - Get simple PBR materials working
 - Get textures working
-
-<!-- # Move input stuff somewhere else -->
-
+# Scene manager
+- Likely use Serde
+- Describe objects in json/TOML, and serialize each component instance with each entity. When importing, we just dump them into our component arrays
+# Testing
+- npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
+- Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe
+# Honestly I may not even need the entity index inside Entity and always use just the uuid
+# Have a component for entity metadata maybe
+# Sparse component arrays?
+- Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities
+- Hash map from entity to component
 # Move camera `v` and `p` computation away from material. Probably all transform computation?
-
+- Camera class somehow (probably not worth it being a component)
 # Generated sphere mesh
-
-# Setup a scene manager
-
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
-
 # I think I'll need wasm-bindgen-futures at some point for something?
-
-    - https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs
-
+- https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 
-# Cool sources
+# Docs link:
+- file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
 
+# Cool sources
 - https://github.com/bevyengine/bevy
 - https://github.com/not-fl3/macroquad
 - https://github.com/hecrj/coffee
@@ -123,7 +117,6 @@
 - https://github.com/PistonDevelopers/piston
 
 # Physics
-
 - https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics
 - https://gafferongames.com/post/physics_in_3d/
 - https://github.com/DanielChappuis/reactphysics3d
