@@ -270,7 +270,11 @@ impl EngineInterface {
         log::info!("Load_gltf: received {} bytes", data.len());
 
         let gltf = Gltf::from_slice(data).expect("Failed to load gltf...");
-        log::info!("Num meshes: {}", gltf.meshes().len());
+
+        self.engine.res_man.load_textures_from_gltf(gltf.textures());
+        self.engine.res_man.load_materials_from_gltf(gltf.materials());
+        self.engine.res_man.load_meshes_from_gltf(gltf.meshes());
+        self.engine.scene_man.load_scenes_from_gltf(gltf.scenes(), &self.engine.res_man);
     }
 
     #[wasm_bindgen]

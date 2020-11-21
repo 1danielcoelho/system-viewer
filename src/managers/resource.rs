@@ -464,7 +464,38 @@ impl ResourceManager {
         return Some(self.materials.get(name).unwrap().clone());
     }
 
+    pub fn load_materials_from_gltf(&mut self, materials: gltf::iter::Materials) {}
+
     pub fn get_mesh(&self, name: &str) -> Option<Rc<Mesh>> {
         return Some(self.meshes.get(&name.to_string()).unwrap().clone());
     }
+
+    fn load_mesh_from_gltf(mesh: &gltf::Mesh) -> Option<Rc<Mesh>> {
+        let vertex_buffer: Vec<f32> = Vec::new();
+        return None;
+    }
+
+    pub fn load_meshes_from_gltf(&mut self, meshes: gltf::iter::Meshes) {
+        let mut num_loaded = 0;
+        let mut num_failed = 0;
+        for mesh in meshes {
+            match ResourceManager::load_mesh_from_gltf(&mesh) {
+                Some(new_mesh) => {
+                    self.meshes.insert(new_mesh.name.clone(), new_mesh);
+                    num_loaded += 1;
+                }
+                None => {
+                    num_failed += 1;
+                }
+            }
+        }
+
+        log::info!("Loaded {} meshes from gltf. {} failed", num_loaded, num_failed);
+    }
+
+    pub fn get_texture(&self, name: &str) -> Option<Rc<Texture>> {
+        return None;
+    }
+
+    pub fn load_textures_from_gltf(&mut self, textures: gltf::iter::Textures) {}
 }

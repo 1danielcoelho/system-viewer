@@ -62,10 +62,9 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    pub fn load_gltf_scene(
+    pub fn load_scenes_from_gltf(
         &mut self,
-        gltf: &gltf::Scene,
-        identifier: &str,
+        gltf: gltf::iter::Scenes,
         resources: &ResourceManager,
     ) {
     }
