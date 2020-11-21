@@ -390,42 +390,45 @@ pub struct ResourceManager {
     meshes: HashMap<String, Rc<Mesh>>,
     textures: HashMap<String, Rc<Texture>>,
     materials: HashMap<String, Rc<Material>>,
+
+    gl: WebGlRenderingContext,
 }
 impl ResourceManager {
-    pub fn new() -> Self {
+    pub fn new(gl: WebGlRenderingContext) -> Self {
         return Self {
             meshes: HashMap::new(),
             textures: HashMap::new(),
             materials: HashMap::new(),
+            gl,
         };
     }
 
     // TODO: Add options, like num_segments, sizes, etc.
-    pub fn generate_mesh(&mut self, name: &str, ctx: &WebGlRenderingContext) -> Option<Rc<Mesh>> {
+    pub fn generate_mesh(&mut self, name: &str) -> Option<Rc<Mesh>> {
         if let Some(mesh) = self.meshes.get(name) {
             return Some(mesh.clone());
         }
 
         if name == "cube" {
-            let mesh = Rc::new(generate_cube(ctx));
+            let mesh = Rc::new(generate_cube(&self.gl));
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
 
         if name == "plane" {
-            let mesh = Rc::new(generate_plane(ctx));
+            let mesh = Rc::new(generate_plane(&self.gl));
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
 
         if name == "grid" {
-            let mesh = Rc::new(generate_grid(ctx, 200));
+            let mesh = Rc::new(generate_grid(&self.gl, 200));
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
 
         if name == "axes" {
-            let mesh = Rc::new(generate_axes(ctx));
+            let mesh = Rc::new(generate_axes(&self.gl));
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
@@ -433,9 +436,9 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn compile_materials(&mut self, ctx: &WebGlRenderingContext) {
+    pub fn compile_materials(&mut self) {
         let program = link_program(
-            &ctx,
+            &self.gl,
             &crate::systems::rendering::vertex::pos_vertcolor::SHADER,
             &crate::systems::rendering::fragment::vertcolor::SHADER,
         )
@@ -443,10 +446,13 @@ impl ResourceManager {
 
         let simple_material = Rc::new(Material {
             name: "material".to_string(),
-            u_opacity: ctx.get_uniform_location(&program, "uOpacity").unwrap(),
-            u_transform: ctx.get_uniform_location(&program, "uTransform").unwrap(),
-            a_position: ctx.get_attrib_location(&program, "aPosition"),
-            a_color: ctx.get_attrib_location(&program, "aColor"),
+            u_opacity: self.gl.get_uniform_location(&program, "uOpacity").unwrap(),
+            u_transform: self
+                .gl
+                .get_uniform_location(&program, "uTransform")
+                .unwrap(),
+            a_position: self.gl.get_attrib_location(&program, "aPosition"),
+            a_color: self.gl.get_attrib_location(&program, "aColor"),
             program: program,
         });
 

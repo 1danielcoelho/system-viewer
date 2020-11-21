@@ -66,102 +66,14 @@ impl EngineInterface {
             r"ev.preventDefault();return false;",
         )));
 
-        let mut engine = Engine::new();
-        engine.res_man.compile_materials(&gl);
+        let mut engine = Engine::new(gl.clone());
+        engine.res_man.compile_materials();
+        
+        engine.scene_man.load_test_scene("test", &mut engine.res_man);
+        engine.scene_man.set_scene("test");
 
         let start_ms = js_sys::Date::now();
         let mut last_frame_ms = 0.0;
-
-        // Setup scene
-        let parent = engine.ent_man.new_entity();
-        let parent_id = engine.ent_man.get_entity_index(&parent).unwrap();
-
-        let trans_comp = engine
-            .comp_man
-            .add_component::<TransformComponent>(parent_id)
-            .unwrap();
-        let phys_comp = engine
-            .comp_man
-            .add_component::<PhysicsComponent>(parent_id)
-            .unwrap();
-        phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
-        // phys_comp.lin_mom = Vector3::new(10.0, 0.0, 0.0);
-        let mesh_comp = engine
-            .comp_man
-            .add_component::<MeshComponent>(parent_id)
-            .unwrap();
-        mesh_comp.mesh = engine.res_man.generate_mesh("cube", &gl);
-        mesh_comp.material = engine.res_man.get_material("material");
-
-        let child = engine.ent_man.new_entity();
-        let child_id = engine.ent_man.get_entity_index(&child).unwrap();
-        engine
-            .ent_man
-            .set_entity_parent(&parent, &child, &mut engine.comp_man);
-        let trans_comp = engine
-            .comp_man
-            .add_component::<TransformComponent>(child_id)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 0.5;
-        let phys_comp = engine
-            .comp_man
-            .add_component::<PhysicsComponent>(child_id)
-            .unwrap();
-        phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
-        let mesh_comp = engine
-            .comp_man
-            .add_component::<MeshComponent>(child_id)
-            .unwrap();
-        mesh_comp.mesh = engine.res_man.generate_mesh("cube", &gl);
-        mesh_comp.material = engine.res_man.get_material("material");
-
-        // let plane = engine.ent_man.new_entity("plane");
-        // let trans_comp = engine
-        //     .comp_man
-        //     .add_component::<TransformComponent>(plane)
-        //     .unwrap();
-        // trans_comp.transform.scale = 3.0;
-        // let mesh_comp = engine
-        //     .comp_man
-        //     .add_component::<MeshComponent>(plane)
-        //     .unwrap();
-        // mesh_comp.mesh = engine.res_man.generate_mesh("plane", &gl);
-        // mesh_comp.material = engine.res_man.get_material("material");
-
-        let grid = engine.ent_man.new_entity();
-        let grid_id = engine.ent_man.get_entity_index(&grid).unwrap();
-        let trans_comp = engine
-            .comp_man
-            .add_component::<TransformComponent>(grid_id)
-            .unwrap();
-        trans_comp.get_local_transform_mut().scale = 1000.0;
-        let mesh_comp = engine
-            .comp_man
-            .add_component::<MeshComponent>(grid_id)
-            .unwrap();
-        mesh_comp.mesh = engine.res_man.generate_mesh("grid", &gl);
-        mesh_comp.material = engine.res_man.get_material("material");
-
-        let axes = engine.ent_man.new_entity();
-        let axes_id = engine.ent_man.get_entity_index(&axes).unwrap();
-        let trans_comp = engine
-            .comp_man
-            .add_component::<TransformComponent>(axes_id)
-            .unwrap();
-        trans_comp.get_local_transform_mut().scale = 3.0;
-        let mesh_comp = engine
-            .comp_man
-            .add_component::<MeshComponent>(axes_id)
-            .unwrap();
-        mesh_comp.mesh = engine.res_man.generate_mesh("axes", &gl);
-        mesh_comp.material = engine.res_man.get_material("material");
-
-        let ui_entity = engine.ent_man.new_entity();
-        let ui_id = engine.ent_man.get_entity_index(&ui_entity).unwrap();
-        engine.comp_man.add_component::<TransformComponent>(ui_id);
-        let ui_comp = engine.comp_man.add_component::<UIComponent>(ui_id).unwrap();
-        ui_comp.widget_type = WidgetType::TestWidget;
 
         let app_state: Arc<Mutex<AppState>> = AppState::new();
         {
@@ -440,32 +352,6 @@ impl EngineInterface {
                     app_state_mut.real_time_ms += real_delta_ms;
                     app_state_mut.phys_delta_time_ms = phys_delta_ms;
                     app_state_mut.real_delta_time_ms = real_delta_ms;
-
-                    // let parent_index = engine.ent_man.get_entity_index(&parent);
-                    // let parent_trans_comp: &mut TransformComponent = engine
-                    //     .comp_man
-                    //     .get_component::<TransformComponent>(parent_index.unwrap())
-                    //     .unwrap();
-                    // parent_trans_comp.get_local_transform_mut().disp.x +=
-                    //     (app_state_mut.phys_delta_time_ms * 0.001) as f32;
-                    // parent_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
-                    //     Vector3::new(0.0 as f32, 0.0 as f32, 1.0 as f32),
-                    //     cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
-                    // )
-                    // .normalize();
-
-                    // let child_index = engine.ent_man.get_entity_index(&child);
-                    // let child_trans_comp: &mut TransformComponent = engine
-                    //     .comp_man
-                    //     .get_component::<TransformComponent>(child_index.unwrap())
-                    //     .unwrap();
-                    // child_trans_comp.get_local_transform_mut().disp.x +=
-                    //     (app_state_mut.phys_delta_time_ms * 0.001) as f32;
-                    // child_trans_comp.get_local_transform_mut().rot = Quaternion::from_axis_angle(
-                    //     Vector3::new(1.0 as f32, 0.0 as f32, 0.0 as f32),
-                    //     cgmath::Deg((app_state_mut.phys_time_ms / 100.0) as f32),
-                    // )
-                    // .normalize();
 
                     self.engine.update(app_state_mut);
                 }

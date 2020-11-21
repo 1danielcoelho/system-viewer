@@ -77,18 +77,17 @@
 <!-- # Move input stuff somewhere else -->
 
 # I want to import a GLTF object
-- Maybe create like a small slice of the components array, like a mini component manager and entity manager to store the imported gltf scene "prefab". Whenever want to spawn one we just copy it into the main one?
-    - Maybe it could be an actual "scene"? 
-    - This way our scenes could actually store our meshes directly in glb format, which could be handy
-    - This is likely too complicated though: I could just import directly into entity/components/resources and if I want to "spawn another one" I just duplicate it
+- Maybe create like a small slice of the components array, like a mini component manager and entity manager to store the imported gltf scene "prefab". Whenever want to spawn one we just copy it into the main one
+    - This could be a "scene" as well
+    - Sources (meshes/materials/textures) would be stored on the resource manager and shared
 - Parse gltf bin files into webgl mesh data
   - Can create new entities and hierarchies and stuff now
-- Find a way of injecting the read files into the app asynchronously
 - Get simple PBR materials working
 - Get textures working
 # Scene manager
 - Likely use Serde
-- Describe objects in json/TOML, and serialize each component instance with each entity. When importing, we just dump them into our component arrays
+- Serialize the entity and component arrays in one go as byte buffers for now
+    - Maybe ASCII too to help debugging
 # Testing
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
 - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe

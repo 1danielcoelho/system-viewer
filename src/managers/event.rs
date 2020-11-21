@@ -51,13 +51,13 @@ impl EventManager {
     }
 
     fn deliver_event(event: Event, engine: &mut Engine) {
-        match event.dest {
-            EventTransmitter::ComponentManager(_) => engine.comp_man.receive_event(event),
-            EventTransmitter::EntityManager => {}
-            EventTransmitter::ResourceManager => {}
-            EventTransmitter::SceneManager => {}
-            EventTransmitter::EventManager => {}
-            EventTransmitter::SystemsEtc => {}
-        }
+        // match event.dest {
+        //     EventTransmitter::ComponentManager(_) => engine.comp_man.receive_event(event),
+        //     EventTransmitter::EntityManager => {}
+        //     EventTransmitter::ResourceManager => {}
+        //     EventTransmitter::SceneManager => {}
+        //     EventTransmitter::EventManager => {}
+        //     EventTransmitter::SystemsEtc => {}
+        // }
     }
 }

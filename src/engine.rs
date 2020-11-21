@@ -1,25 +1,25 @@
+use web_sys::WebGlRenderingContext;
+
 use crate::{
     app_state::AppState,
     managers::{
-        ComponentManager, EntityManager, EventManager, InputManager, ResourceManager, SystemManager,
+        ComponentManager, EntityManager, EventManager, InputManager, ResourceManager, SceneManager,
+        SystemManager,
     },
 };
 
 pub struct Engine {
-    pub ent_man: EntityManager,
     pub res_man: ResourceManager,
-    pub comp_man: ComponentManager,
     pub sys_man: SystemManager,
     pub event_man: EventManager,
     pub in_man: InputManager,
-    //pub scene_man: SceneManager,
+    pub scene_man: SceneManager,
 }
 impl Engine {
-    pub fn new() -> Self {
+    pub fn new(gl: WebGlRenderingContext) -> Self {
         let new_world = Self {
-            ent_man: EntityManager::new(),
-            res_man: ResourceManager::new(),
-            comp_man: ComponentManager::new(),
+            scene_man: SceneManager::new(),
+            res_man: ResourceManager::new(gl),
             sys_man: SystemManager::new(),
             event_man: EventManager::new(),
             in_man: InputManager::new(),
@@ -30,11 +30,14 @@ impl Engine {
 
     pub fn update(&mut self, state: &mut AppState) {
         self.in_man.run(state);
-        self.sys_man.run(
-            state,
-            &mut self.comp_man,
-            &mut self.event_man,
-            &mut self.ent_man,
-        );
+
+        if let Some(scene_mut) = self.scene_man.get_main_scene_mut() {
+            self.sys_man.run(
+                state,
+                &mut scene_mut.comp_man,
+                &mut self.event_man,
+                &mut scene_mut.ent_man,
+            );
+        }
     }
 }
