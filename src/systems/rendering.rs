@@ -1,16 +1,6 @@
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 
-mod materials;
-mod mesh;
-mod shaders;
-mod texture;
-
-pub use materials::*;
-pub use mesh::*;
-pub use shaders::*;
-pub use texture::*;
-
 use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},

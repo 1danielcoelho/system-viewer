@@ -17,7 +17,7 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     platform::web::WindowBuilderExtWebSys,
     platform::web::WindowExtWebSys,
-    window::{self, WindowBuilder},
+    window::WindowBuilder,
 };
 
 /** Main interface between javascript and the inner Engine object */
@@ -67,12 +67,11 @@ impl EngineInterface {
         )));
 
         let mut engine = Engine::new(gl.clone());
-        
-        engine.scene_man.load_test_scene("test", &mut engine.res_man);
-        engine.scene_man.set_scene("test");
 
-        let start_ms = js_sys::Date::now();
-        let mut last_frame_ms = 0.0;
+        engine
+            .scene_man
+            .load_test_scene("test", &mut engine.res_man);
+        engine.scene_man.set_scene("test");
 
         let app_state: Arc<Mutex<AppState>> = AppState::new();
         {
@@ -84,15 +83,12 @@ impl EngineInterface {
 
         EngineInterface::setup_event_handlers(&canvas, app_state.clone());
 
-        let start_ms = js_sys::Date::now();
-        let last_frame_ms = 0.0;
-
         return EngineInterface {
             canvas,
             engine,
             app_state,
-            start_ms,
-            last_frame_ms,
+            start_ms: js_sys::Date::now(),
+            last_frame_ms: 0.0,
         };
     }
 
@@ -271,9 +267,13 @@ impl EngineInterface {
         let gltf = Gltf::from_slice(data).expect("Failed to load gltf...");
 
         self.engine.res_man.load_textures_from_gltf(gltf.textures());
-        self.engine.res_man.load_materials_from_gltf(gltf.materials());
+        self.engine
+            .res_man
+            .load_materials_from_gltf(gltf.materials());
         self.engine.res_man.load_meshes_from_gltf(gltf.meshes());
-        self.engine.scene_man.load_scenes_from_gltf(gltf.scenes(), &self.engine.res_man);
+        self.engine
+            .scene_man
+            .load_scenes_from_gltf(gltf.scenes(), &self.engine.res_man);
     }
 
     #[wasm_bindgen]

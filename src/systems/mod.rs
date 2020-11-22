@@ -6,4 +6,4 @@ pub mod rendering;
 pub use interface::*;
 pub use physics::*;
 pub use transform_update::*;
-pub use rendering::RenderingSystem;
+pub use rendering::*;

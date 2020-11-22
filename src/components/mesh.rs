@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
-use crate::{
-    managers::ComponentManager,
-    systems::rendering::{Material, Mesh},
+use crate::managers::{
+    resource::{Material, Mesh},
+    ComponentManager,
 };
 
 use super::{component::ComponentIndex, Component};
