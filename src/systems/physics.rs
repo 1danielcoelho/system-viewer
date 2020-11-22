@@ -1,7 +1,4 @@
-use cgmath::{
-    EuclideanSpace, InnerSpace, Matrix, Matrix3, Point3, Quaternion, Rad, Rotation3, Transform,
-    Vector3,
-};
+use cgmath::{InnerSpace, Matrix, Matrix3, Quaternion, Vector3};
 
 use crate::{
     app_state::AppState,
@@ -84,7 +81,7 @@ impl PhysicsSystem {
     }
 }
 impl EventReceiver for PhysicsSystem {
-    fn receive_event(&mut self, event: crate::managers::Event) {
+    fn receive_event(&mut self, _event: crate::managers::Event) {
         todo!()
     }
 }

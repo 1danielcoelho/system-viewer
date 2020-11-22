@@ -1,6 +1,6 @@
-use js_sys::WebAssembly;
+
 use std::{collections::HashMap, rc::Rc};
-use wasm_bindgen::JsCast;
+
 use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
@@ -160,15 +160,15 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn load_materials_from_gltf(&mut self, materials: gltf::iter::Materials) {}
+    pub fn load_materials_from_gltf(&mut self, _materials: gltf::iter::Materials) {}
 
-    fn load_mesh_from_gltf(mesh: &gltf::Mesh) -> Option<Rc<Mesh>> {
-        let vertex_buffer: Vec<f32> = Vec::new();
-        let indices_buffer: Vec<u16> = Vec::new();
-        let normals_buffer: Vec<f32> = Vec::new();
-        let color_buffer: Vec<f32> = Vec::new();
-        let uv0_buffer: Vec<f32> = Vec::new();
-        let uv1_buffer: Vec<f32> = Vec::new();
+    fn load_mesh_from_gltf(_mesh: &gltf::Mesh) -> Option<Rc<Mesh>> {
+        let _vertex_buffer: Vec<f32> = Vec::new();
+        let _indices_buffer: Vec<u16> = Vec::new();
+        let _normals_buffer: Vec<f32> = Vec::new();
+        let _color_buffer: Vec<f32> = Vec::new();
+        let _uv0_buffer: Vec<f32> = Vec::new();
+        let _uv1_buffer: Vec<f32> = Vec::new();
 
         return None;
     }
@@ -195,9 +195,9 @@ impl ResourceManager {
         );
     }
 
-    pub fn get_texture(&self, name: &str) -> Option<Rc<Texture>> {
+    pub fn get_texture(&self, _name: &str) -> Option<Rc<Texture>> {
         return None;
     }
 
-    pub fn load_textures_from_gltf(&mut self, textures: gltf::iter::Textures) {}
+    pub fn load_textures_from_gltf(&mut self, _textures: gltf::iter::Textures) {}
 }

@@ -7,7 +7,7 @@ pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
     pub fn run(
         &self,
-        state: &AppState,
+        _state: &AppState,
         transforms: &mut Vec<TransformComponent>,
         em: &mut EntityManager,
     ) {

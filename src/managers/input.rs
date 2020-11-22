@@ -1,12 +1,12 @@
-use std::sync::{Arc, Mutex};
+
 
 use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Rotation, Rotation3, Vector3};
-use wasm_bindgen::{prelude::Closure, JsCast};
-use web_sys::{window, HtmlCanvasElement};
+
+
 
 use crate::app_state::AppState;
 
-use super::{ComponentManager, EventManager};
+
 
 pub struct InputManager {
     last_mouse_x: i32,

@@ -3,7 +3,7 @@ use web_sys::WebGlRenderingContext;
 use crate::{
     app_state::AppState,
     managers::{
-        ComponentManager, EntityManager, EventManager, InputManager, ResourceManager, SceneManager,
+        EventManager, InputManager, ResourceManager, SceneManager,
         SystemManager,
     },
 };

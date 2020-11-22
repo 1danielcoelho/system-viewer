@@ -1,5 +1,5 @@
 use std::collections::{BinaryHeap, HashMap, HashSet};
-use std::iter::FromIterator;
+
 use std::{cmp::Reverse, hash::Hash};
 
 use super::ComponentManager;

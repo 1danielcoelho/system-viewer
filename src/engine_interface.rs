@@ -1,12 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use crate::wasm_bindgen::JsCast;
-use crate::{
-    app_state::AppState, components::ui::WidgetType, components::MeshComponent,
-    components::PhysicsComponent, components::TransformComponent, components::UIComponent,
-    engine::Engine, managers::InputManager,
-};
-use cgmath::Vector3;
+use crate::{app_state::AppState, engine::Engine};
+
 use gltf::Gltf;
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
@@ -360,7 +356,10 @@ impl EngineInterface {
                 }
 
                 Event::NewEvents(_) => {}
-                Event::DeviceEvent { device_id, event } => {}
+                Event::DeviceEvent {
+                    device_id: _,
+                    event: _,
+                } => {}
                 Event::UserEvent(_) => {}
                 Event::Suspended => {}
                 Event::Resumed => {}

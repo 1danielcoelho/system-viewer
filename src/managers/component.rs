@@ -2,7 +2,7 @@ use crate::components::{
     Component, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
 };
 
-use super::{Entity, EntityManager, Event, EventReceiver};
+use super::{Event, EventReceiver};
 
 pub struct ComponentManager {
     pub physics: Vec<PhysicsComponent>,
@@ -67,7 +67,7 @@ impl ComponentManager {
     }
 }
 impl EventReceiver for ComponentManager {
-    fn receive_event(&mut self, event: Event) {
+    fn receive_event(&mut self, _event: Event) {
         //
     }
 }

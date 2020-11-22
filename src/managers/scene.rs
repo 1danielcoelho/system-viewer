@@ -1,14 +1,10 @@
-use std::{
-    collections::HashMap,
-    rc::{Rc, Weak},
-};
+use std::collections::HashMap;
 
 use cgmath::Vector3;
-use gltf::Gltf;
 
-use super::{ComponentManager, Entity, EntityManager, Event, EventReceiver, ResourceManager};
+use super::{ComponentManager, EntityManager, ResourceManager};
 use crate::components::{
-    ui::WidgetType, Component, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
+    ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
 };
 
 pub struct Scene {
@@ -62,7 +58,11 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    pub fn load_scenes_from_gltf(&mut self, gltf: gltf::iter::Scenes, resources: &ResourceManager) {
+    pub fn load_scenes_from_gltf(
+        &mut self,
+        _gltf: gltf::iter::Scenes,
+        _resources: &ResourceManager,
+    ) {
     }
 
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
@@ -72,7 +72,7 @@ impl SceneManager {
         let parent = scene.ent_man.new_entity();
         let parent_id = scene.ent_man.get_entity_index(&parent).unwrap();
 
-        let trans_comp = scene
+        let _trans_comp = scene
             .comp_man
             .add_component::<TransformComponent>(parent_id)
             .unwrap();
@@ -165,7 +165,7 @@ impl SceneManager {
             }
         };
 
-        if let Some(found_scene) = self.get_scene(identifier) {
+        if let Some(_found_scene) = self.get_scene(identifier) {
             self.main = Some(identifier.to_string());
         } else {
             log::warn!("Scene with identifier {} not found!", identifier);

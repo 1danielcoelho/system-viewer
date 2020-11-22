@@ -26,7 +26,7 @@ impl SystemManager {
         &mut self,
         state: &mut AppState,
         cm: &mut ComponentManager,
-        em: &mut EventManager,
+        _em: &mut EventManager,
         ent_man: &mut EntityManager,
     ) {
         self.physics

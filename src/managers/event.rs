@@ -50,7 +50,7 @@ impl EventManager {
         }
     }
 
-    fn deliver_event(event: Event, engine: &mut Engine) {
+    fn deliver_event(_event: Event, _engine: &mut Engine) {
         // match event.dest {
         //     EventTransmitter::ComponentManager(_) => engine.comp_man.receive_event(event),
         //     EventTransmitter::EntityManager => {}

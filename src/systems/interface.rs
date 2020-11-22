@@ -59,7 +59,7 @@ impl InterfaceSystem {
         }
     }
 
-    fn draw_test_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
+    fn draw_test_widget(ui: &Ui, state: &mut AppState, _entity: u32, _comp_man: &ComponentManager) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
             ui.horizontal(|ui| {
                 ui.label(format!(

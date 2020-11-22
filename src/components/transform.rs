@@ -1,4 +1,4 @@
-use crate::managers::{ComponentManager, Entity};
+use crate::managers::{ComponentManager};
 
 use cgmath::Transform;
 
