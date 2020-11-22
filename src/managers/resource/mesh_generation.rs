@@ -27,13 +27,13 @@ pub struct IntermediatePrimitive {
     //pub bb:
 }
 
-pub fn fill_float_buffer(
+pub fn fill_float_attribute_buffer(
     ctx: &WebGlRenderingContext,
     location: u32,
     num_elements: u32,
     out_buffer: &mut WebGlBuffer,
 ) {
-    if num_elements == 0 || location == 0 {
+    if num_elements == 0 {
         return;
     }
 
@@ -47,13 +47,13 @@ pub fn fill_float_buffer(
     ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &buffer_array, GL::STATIC_DRAW);
 }
 
-pub fn fill_short_buffer(
+pub fn fill_short_element_buffer(
     ctx: &WebGlRenderingContext,
     location: u32,
     num_elements: u32,
     out_buffer: &mut WebGlBuffer,
 ) {
-    if num_elements == 0 || location == 0 {
+    if num_elements == 0 {
         return;
     }
 
@@ -78,25 +78,25 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
     for prim in inter.primitives {
         // Indices
         let mut index_buffer = ctx.create_buffer().unwrap();
-        fill_short_buffer(
+        fill_short_element_buffer(
             &ctx,
-            prim.indices.as_ptr() as u32 / 2,
-            prim.indices.len() as u32,
+            prim.indices.as_ptr() as u32 / 2, // Divided by 2 because the wasm_bindgen memory will be interpreted as a short array, so the position of indices needs to be divided by 2 bytes to get to the correct element
+            prim.indices.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
             &mut index_buffer,
         );
 
         // Positions
         let mut position_buffer = ctx.create_buffer().unwrap();
-        fill_float_buffer(
+        fill_float_attribute_buffer(
             &ctx,
-            prim.positions.as_ptr() as u32 / 4,
-            prim.positions.len() as u32 * 3,
+            prim.positions.as_ptr() as u32 / 4, // Divided by 4 because the wasm_bindgen memory buffer will be interpreted as an array of floats, so the prim.positions' array pointer target address (u8* basically) needs to be divided by 4 to get the correct starting element
+            prim.positions.len() as u32 * 3, // Multiplying by 3 because this will be moved into an f32 buffer, and we have len * 3 f32s
             &mut position_buffer,
         );
 
         // Normals
         let mut normal_buffer = ctx.create_buffer().unwrap();
-        fill_float_buffer(
+        fill_float_attribute_buffer(
             &ctx,
             prim.normals.as_ptr() as u32 / 4,
             prim.normals.len() as u32 * 3,
@@ -105,7 +105,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
 
         // Colors
         let mut color_buffer = ctx.create_buffer().unwrap();
-        fill_float_buffer(
+        fill_float_attribute_buffer(
             &ctx,
             prim.colors.as_ptr() as u32 / 4,
             prim.colors.len() as u32 * 4,
@@ -114,7 +114,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
 
         // UV0
         let mut uv0_buffer = ctx.create_buffer().unwrap();
-        fill_float_buffer(
+        fill_float_attribute_buffer(
             &ctx,
             prim.uv0.as_ptr() as u32 / 4,
             prim.uv0.len() as u32 * 2,
@@ -123,7 +123,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
 
         // UV1
         let mut uv1_buffer = ctx.create_buffer().unwrap();
-        fill_float_buffer(
+        fill_float_attribute_buffer(
             &ctx,
             prim.uv0.as_ptr() as u32 / 4,
             prim.uv0.len() as u32 * 2,
