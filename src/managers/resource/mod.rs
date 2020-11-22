@@ -1,9 +1,14 @@
 use std::{collections::HashMap, rc::Rc};
 
+use cgmath::{Vector2, Vector3, Vector4};
+use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
 use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
-use self::mesh_generation::{generate_axes, generate_cube, generate_grid, generate_plane};
+use self::mesh_generation::{
+    generate_axes, generate_cube, generate_grid, generate_plane, intermediate_to_mesh,
+    IntermediateMesh, IntermediatePrimitive,
+};
 
 pub use materials::*;
 pub use mesh::*;
@@ -129,6 +134,7 @@ impl ResourceManager {
             return Some(mesh);
         };
 
+        log::warn!("Failed to find mesh with name '{}'", name);
         return None;
     }
 
@@ -164,27 +170,239 @@ impl ResourceManager {
 
     pub fn load_materials_from_gltf(&mut self, _materials: gltf::iter::Materials) {}
 
-    fn load_mesh_from_gltf(_mesh: &gltf::Mesh) -> Option<Rc<Mesh>> {
-        let _vertex_buffer: Vec<f32> = Vec::new();
-        let _indices_buffer: Vec<u16> = Vec::new();
-        let _normals_buffer: Vec<f32> = Vec::new();
-        let _color_buffer: Vec<f32> = Vec::new();
-        let _uv0_buffer: Vec<f32> = Vec::new();
-        let _uv1_buffer: Vec<f32> = Vec::new();
+    fn load_mesh_from_gltf(
+        mesh: &gltf::Mesh,
+        buffers: &Vec<gltf::buffer::Data>,
+        default_material: &Option<Rc<Material>>,
+        ctx: &WebGlRenderingContext,
+    ) -> Result<Rc<Mesh>, String> {
+        let mut name = mesh.index().to_string();
+        if let Some(mesh_name) = mesh.name() {
+            name = mesh_name.to_owned() + &name;
+        }
 
-        return None;
+        let mut inter_prims: Vec<IntermediatePrimitive> = Vec::new();
+        inter_prims.reserve(mesh.primitives().len());
+        for prim in mesh.primitives() {
+            let reader = prim.reader(|buffer| Some(&buffers[buffer.index()]));
+
+            // Name
+            let prim_name = prim.index().to_string();
+
+            // Indices
+            let mut indices_vec: Vec<u16> = Vec::new();
+            if let Some(indices) = reader.read_indices() {
+                match indices {
+                    ReadIndices::U8(iter) => {
+                        indices_vec = iter.map(|byte| byte as u16).collect();
+                    }
+                    ReadIndices::U16(iter) => {
+                        indices_vec = iter.collect();
+                    }
+                    ReadIndices::U32(_) => {
+                        log::warn!(
+                            "Skipping prim {} of mesh {} because it uses u32 vertex indices",
+                            prim.index(),
+                            name
+                        );
+                        continue;
+                    }
+                }
+            }
+
+            // Positions
+            let mut positions_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
+            if let Some(positions) = reader.read_positions() {
+                positions_vec = positions
+                    .map(|arr| Vector3::new(arr[0], arr[1], arr[2]))
+                    .collect();
+            }
+
+            // Normals
+            let mut normals_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
+            if let Some(normals) = reader.read_normals() {
+                normals_vec = normals
+                    .map(|arr| Vector3::new(arr[0], arr[1], arr[2]))
+                    .collect();
+            }
+
+            // Colors
+            let mut colors_vec: Vec<cgmath::Vector4<f32>> = Vec::new();
+            if let Some(colors) = reader.read_colors(0) {
+                // TODO: Set the proper webgl buffer values and don't do this conversion?
+                match colors {
+                    ReadColors::RgbU8(arr) => {
+                        colors_vec = arr
+                            .map(|c| {
+                                Vector4::new(
+                                    c[0] as f32 / std::u8::MAX as f32,
+                                    c[1] as f32 / std::u8::MAX as f32,
+                                    c[2] as f32 / std::u8::MAX as f32,
+                                    1.0,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadColors::RgbU16(arr) => {
+                        colors_vec = arr
+                            .map(|c| {
+                                Vector4::new(
+                                    c[0] as f32 / std::u16::MAX as f32,
+                                    c[1] as f32 / std::u16::MAX as f32,
+                                    c[2] as f32 / std::u16::MAX as f32,
+                                    1.0,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadColors::RgbF32(arr) => {
+                        colors_vec = arr.map(|c| Vector4::new(c[0], c[1], c[2], 1.0)).collect()
+                    }
+                    ReadColors::RgbaU8(arr) => {
+                        colors_vec = arr
+                            .map(|c| {
+                                Vector4::new(
+                                    c[0] as f32 / std::u8::MAX as f32,
+                                    c[1] as f32 / std::u8::MAX as f32,
+                                    c[2] as f32 / std::u8::MAX as f32,
+                                    c[3] as f32 / std::u8::MAX as f32,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadColors::RgbaU16(arr) => {
+                        colors_vec = arr
+                            .map(|c| {
+                                Vector4::new(
+                                    c[0] as f32 / std::u16::MAX as f32,
+                                    c[1] as f32 / std::u16::MAX as f32,
+                                    c[2] as f32 / std::u16::MAX as f32,
+                                    c[3] as f32 / std::u16::MAX as f32,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadColors::RgbaF32(arr) => {
+                        colors_vec = arr.map(|c| Vector4::new(c[0], c[1], c[2], c[3])).collect()
+                    }
+                }
+            }
+
+            // UV0
+            let mut uv0_vec: Vec<cgmath::Vector2<f32>> = Vec::new();
+            if let Some(uv0) = reader.read_tex_coords(0) {
+                match uv0 {
+                    ReadTexCoords::U8(arr) => {
+                        uv0_vec = arr
+                            .map(|c| {
+                                Vector2::new(
+                                    c[0] as f32 / std::u8::MAX as f32,
+                                    c[1] as f32 / std::u8::MAX as f32,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadTexCoords::U16(arr) => {
+                        uv0_vec = arr
+                            .map(|c| {
+                                Vector2::new(
+                                    c[0] as f32 / std::u16::MAX as f32,
+                                    c[1] as f32 / std::u16::MAX as f32,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadTexCoords::F32(arr) => {
+                        uv0_vec = arr.map(|c| Vector2::new(c[0], c[1])).collect()
+                    }
+                }
+            }
+
+            // UV1
+            let mut uv1_vec: Vec<cgmath::Vector2<f32>> = Vec::new();
+            if let Some(uv1) = reader.read_tex_coords(1) {
+                match uv1 {
+                    ReadTexCoords::U8(arr) => {
+                        uv1_vec = arr
+                            .map(|c| {
+                                Vector2::new(
+                                    c[0] as f32 / std::u8::MAX as f32,
+                                    c[1] as f32 / std::u8::MAX as f32,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadTexCoords::U16(arr) => {
+                        uv1_vec = arr
+                            .map(|c| {
+                                Vector2::new(
+                                    c[0] as f32 / std::u16::MAX as f32,
+                                    c[1] as f32 / std::u16::MAX as f32,
+                                )
+                            })
+                            .collect()
+                    }
+                    ReadTexCoords::F32(arr) => {
+                        uv1_vec = arr.map(|c| Vector2::new(c[0], c[1])).collect()
+                    }
+                }
+            }
+
+            log::info!(
+                "Loaded gltf prim {}, num_indices: {}, num_positions: {}, num_colors: {}, mat: {}",
+                prim_name,
+                indices_vec.len(),
+                positions_vec.len(),
+                colors_vec.len(),
+                default_material.as_ref().unwrap().name,
+            );
+
+            inter_prims.push(IntermediatePrimitive {
+                name: prim_name,
+                indices: indices_vec,
+                positions: positions_vec,
+                normals: normals_vec,
+                colors: colors_vec,
+                uv0: uv0_vec,
+                uv1: uv1_vec,
+                mode: prim.mode().as_gl_enum(),
+                mat: Some(default_material.as_ref().unwrap().clone()),
+            });
+        }
+
+        log::info!(
+            "Loaded gltf mesh {}, num_prims: {}",
+            name,
+            inter_prims.len()
+        );
+
+        return Ok(intermediate_to_mesh(
+            IntermediateMesh {
+                name,
+                primitives: inter_prims,
+            },
+            ctx,
+        ));
     }
 
-    pub fn load_meshes_from_gltf(&mut self, meshes: gltf::iter::Meshes) {
+    pub fn load_meshes_from_gltf(
+        &mut self,
+        meshes: gltf::iter::Meshes,
+        buffers: &Vec<gltf::buffer::Data>,
+    ) {
+        let default_mat = self.get_or_create_material("default");
+
         let mut num_loaded = 0;
         let mut num_failed = 0;
         for mesh in meshes {
-            match ResourceManager::load_mesh_from_gltf(&mesh) {
-                Some(new_mesh) => {
+            match ResourceManager::load_mesh_from_gltf(&mesh, &buffers, &default_mat, &self.gl) {
+                Ok(new_mesh) => {
+                    log::info!("Loaded gltf mesh: {}", new_mesh.name);
                     self.meshes.insert(new_mesh.name.clone(), new_mesh);
                     num_loaded += 1;
                 }
-                None => {
+                Err(msg) => {
+                    log::error!("Failed to load gltf mesh: {}", msg);
                     num_failed += 1;
                 }
             }

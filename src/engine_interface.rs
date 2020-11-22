@@ -64,11 +64,6 @@ impl EngineInterface {
 
         let mut engine = Engine::new(gl.clone());
 
-        engine
-            .scene_man
-            .load_test_scene("test", &mut engine.res_man);
-        engine.scene_man.set_scene("test");
-
         let app_state: Arc<Mutex<AppState>> = AppState::new();
         {
             let mut app_state_mut = &mut *app_state.lock().unwrap();
@@ -260,21 +255,31 @@ impl EngineInterface {
     pub fn load_gltf(&mut self, data: &mut [u8]) {
         log::info!("Load_gltf: received {} bytes", data.len());
 
-        let gltf = Gltf::from_slice(data).expect("Failed to load gltf...");
-
-        self.engine.res_man.load_textures_from_gltf(gltf.textures());
-        self.engine
-            .res_man
-            .load_materials_from_gltf(gltf.materials());
-        self.engine.res_man.load_meshes_from_gltf(gltf.meshes());
-        self.engine
-            .scene_man
-            .load_scenes_from_gltf(gltf.scenes(), &self.engine.res_man);
+        if let Ok((gltf_doc, gltf_buffers, gltf_images)) = gltf::import_slice(data) {
+            self.engine
+                .res_man
+                .load_textures_from_gltf(gltf_doc.textures());
+            self.engine
+                .res_man
+                .load_materials_from_gltf(gltf_doc.materials());
+            self.engine
+                .res_man
+                .load_meshes_from_gltf(gltf_doc.meshes(), &gltf_buffers);
+            self.engine
+                .scene_man
+                .load_scenes_from_gltf(gltf_doc.scenes(), &self.engine.res_man);
+        }
     }
 
     #[wasm_bindgen]
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
+
+        // Temporarily delay loading the test scene here as we are using GLTF meshes that are loaded in after EngineInterface::new
+        self.engine
+            .scene_man
+            .load_test_scene("test", &mut self.engine.res_man);
+        self.engine.scene_man.set_scene("test");
 
         let event_loop = EventLoop::new();
 

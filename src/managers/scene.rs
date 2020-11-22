@@ -71,10 +71,11 @@ impl SceneManager {
         // Setup scene
         let parent = scene.ent_man.new_entity();
         let parent_id = scene.ent_man.get_entity_index(&parent).unwrap();
-        let _trans_comp = scene
+        let trans_comp = scene
             .comp_man
             .add_component::<TransformComponent>(parent_id)
             .unwrap();
+        trans_comp.get_local_transform_mut().scale = 0.05;
         let phys_comp = scene
             .comp_man
             .add_component::<PhysicsComponent>(parent_id)
@@ -85,7 +86,7 @@ impl SceneManager {
             .comp_man
             .add_component::<MeshComponent>(parent_id)
             .unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("LOD3spShape0"));
 
         let child = scene.ent_man.new_entity();
         let child_id = scene.ent_man.get_entity_index(&child).unwrap();
