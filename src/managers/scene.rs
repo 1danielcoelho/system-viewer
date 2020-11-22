@@ -71,7 +71,6 @@ impl SceneManager {
         // Setup scene
         let parent = scene.ent_man.new_entity();
         let parent_id = scene.ent_man.get_entity_index(&parent).unwrap();
-
         let _trans_comp = scene
             .comp_man
             .add_component::<TransformComponent>(parent_id)

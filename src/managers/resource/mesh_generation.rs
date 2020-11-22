@@ -89,8 +89,8 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
         let mut position_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
-            prim.positions.as_ptr() as u32 / (size_of::<Vector3<f32>>() as u32),
-            prim.positions.len() as u32,
+            prim.positions.as_ptr() as u32 / 4,
+            prim.positions.len() as u32 * 3,
             &mut position_buffer,
         );
 
@@ -98,8 +98,8 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
         let mut normal_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
-            prim.normals.as_ptr() as u32 / (size_of::<Vector3<f32>>() as u32),
-            prim.normals.len() as u32,
+            prim.normals.as_ptr() as u32 / 4,
+            prim.normals.len() as u32 * 3,
             &mut normal_buffer,
         );
 
@@ -107,8 +107,8 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
         let mut color_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
-            prim.colors.as_ptr() as u32 / (size_of::<Vector4<f32>>() as u32),
-            prim.colors.len() as u32,
+            prim.colors.as_ptr() as u32 / 4,
+            prim.colors.len() as u32 * 4,
             &mut color_buffer,
         );
 
@@ -116,8 +116,8 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
         let mut uv0_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
-            prim.uv0.as_ptr() as u32 / (size_of::<Vector2<f32>>() as u32),
-            prim.uv0.len() as u32,
+            prim.uv0.as_ptr() as u32 / 4,
+            prim.uv0.len() as u32 * 2,
             &mut uv0_buffer,
         );
 
@@ -125,8 +125,8 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
         let mut uv1_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
-            prim.uv0.as_ptr() as u32 / (size_of::<Vector2<f32>>() as u32),
-            prim.uv0.len() as u32,
+            prim.uv0.as_ptr() as u32 / 4,
+            prim.uv0.len() as u32 * 2,
             &mut uv1_buffer,
         );
 
@@ -139,7 +139,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
             color_buffer,
             uv0_buffer,
             uv1_buffer,
-            mode: GL::TRIANGLES,
+            mode: prim.mode,
             default_material: prim.mat,
         });
     }
