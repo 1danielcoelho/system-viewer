@@ -77,11 +77,11 @@
 <!-- # Move input stuff somewhere else -->
 
 # I want to import a GLTF object
-- Maybe create like a small slice of the components array, like a mini component manager and entity manager to store the imported gltf scene "prefab". Whenever want to spawn one we just copy it into the main one
+<!-- - Maybe create like a small slice of the components array, like a mini component manager and entity manager to store the imported gltf scene "prefab". Whenever want to spawn one we just copy it into the main one
     - This could be a "scene" as well
     - Sources (meshes/materials/textures) would be stored on the resource manager and shared
 - Parse gltf bin files into webgl mesh data
-  - Can create new entities and hierarchies and stuff now
+  - Can create new entities and hierarchies and stuff now -->
 - Get simple PBR materials working
 - Get textures working
 # Scene manager
