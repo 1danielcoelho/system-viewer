@@ -82,10 +82,14 @@
     - Sources (meshes/materials/textures) would be stored on the resource manager and shared
 - Parse gltf bin files into webgl mesh data
   - Can create new entities and hierarchies and stuff now -->
-- Get simple PBR materials working
-    <!-- - Add another local_normals material and a world_normals material to use for the duck for now -->
-- Get textures working
+<!-- - Add another local_normals material and a world_normals material to use for the duck for now -->
 <!-- - I think I may need some coordinate conversion from GLTF, at least the up axes -->
+- Implement splicing a scene into the current scene, to add the node hierarchy as it is in the GLTF file
+- Get simple PBR materials working
+    - Make material/mesh names unique in some way
+    - Fetch imported GLTF materials when parsing GLTF meshes
+- Get textures working
+
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now
@@ -93,6 +97,7 @@
 # Testing
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
 - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe
+# Update egui
 # Honestly I may not even need the entity index inside Entity and always use just the uuid
 # Have a component for entity metadata maybe
 # Sparse component arrays?
