@@ -83,7 +83,9 @@
 - Parse gltf bin files into webgl mesh data
   - Can create new entities and hierarchies and stuff now -->
 - Get simple PBR materials working
+    - Add another local_normals material and a world_normals material to use for the duck for now
 - Get textures working
+<!-- - I think I may need some coordinate conversion from GLTF, at least the up axes -->
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now

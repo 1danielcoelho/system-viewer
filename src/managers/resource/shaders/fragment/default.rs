@@ -4,6 +4,6 @@ pub const SHADER: &str = r#"
     varying lowp vec4 vColor;
 
     void main() {
-        gl_FragColor = vColor + vec4(1.0, 0.0, 0.0, 0.0);
+        gl_FragColor = vColor;
     }
 "#;

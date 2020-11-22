@@ -214,7 +214,7 @@ impl ResourceManager {
             let mut positions_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
             if let Some(positions) = reader.read_positions() {
                 positions_vec = positions
-                    .map(|arr| Vector3::new(arr[0], arr[1], arr[2]))
+                    .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
                     .collect();
             }
 
@@ -222,7 +222,7 @@ impl ResourceManager {
             let mut normals_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
             if let Some(normals) = reader.read_normals() {
                 normals_vec = normals
-                    .map(|arr| Vector3::new(arr[0], arr[1], arr[2]))
+                    .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
                     .collect();
             }
 
