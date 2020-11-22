@@ -146,8 +146,8 @@ impl ResourceManager {
         if name == "default" {
             let program = link_program(
                 &self.gl,
-                &crate::managers::resource::shaders::vertex::default::SHADER,
-                &crate::managers::resource::shaders::fragment::default::SHADER,
+                &crate::managers::resource::shaders::vertex::relay_color::SHADER,
+                &crate::managers::resource::shaders::fragment::color::SHADER,
             )
             .expect(format!("Failed to compile material '{}'!", name).as_str());
 
@@ -163,7 +163,28 @@ impl ResourceManager {
             log::info!("Generated material '{}'", name);
             self.materials.insert(name.to_string(), default.clone());
             return Some(default);
-        };
+        } else if name == "local_normal" {
+            let program = link_program(
+                &self.gl,
+                &crate::managers::resource::shaders::vertex::relay_all::SHADER,
+                &crate::managers::resource::shaders::fragment::local_normal::SHADER,
+            )
+            .expect(format!("Failed to compile material '{}'!", name).as_str());
+
+            let local_normal = Rc::new(Material {
+                name: name.to_string(),
+                u_transform: self
+                    .gl
+                    .get_uniform_location(&program, "uTransform")
+                    .unwrap(),
+                program: program,
+            });
+
+            log::info!("Generated material '{}'", name);
+            self.materials
+                .insert(name.to_string(), local_normal.clone());
+            return Some(local_normal);
+        }
 
         return None;
     }

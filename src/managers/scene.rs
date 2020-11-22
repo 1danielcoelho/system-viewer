@@ -87,6 +87,7 @@ impl SceneManager {
             .add_component::<MeshComponent>(parent_id)
             .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("LOD3spShape0"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("local_normal"), 0);
 
         let child = scene.ent_man.new_entity();
         let child_id = scene.ent_man.get_entity_index(&child).unwrap();
