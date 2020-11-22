@@ -4,9 +4,9 @@ use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
-use crate::systems::rendering::{Material, Mesh, Texture};
+use crate::systems::rendering::{Material, Mesh, Primitive, Texture};
 
-fn generate_cube(ctx: &WebGlRenderingContext) -> Mesh {
+fn generate_cube(ctx: &WebGlRenderingContext, default_material: Option<Rc<Material>>) -> Rc<Mesh> {
     let vertices_cube: [f32; 24] = [
         -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,
         -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0,
@@ -72,18 +72,22 @@ fn generate_cube(ctx: &WebGlRenderingContext) -> Mesh {
         GL::STATIC_DRAW,
     );
 
-    return Mesh {
+    return Rc::new(Mesh {
         id: 0,
         name: String::from("cube"),
-        position_buffer: buffer_position,
-        color_buffer: buffer_colors,
-        indices_buffer: buffer_indices,
-        index_count: indices_array.length() as i32,
-        element_type: GL::TRIANGLES,
-    };
+        primitives: vec![Primitive {
+            position_buffer: buffer_position,
+            color_buffer: buffer_colors,
+            indices_buffer: buffer_indices,
+            index_count: indices_array.length() as i32,
+            element_type: GL::TRIANGLES,
+            name: String::from("0"),
+            default_material: default_material,
+        }],
+    });
 }
 
-fn generate_plane(ctx: &WebGlRenderingContext) -> Mesh {
+fn generate_plane(ctx: &WebGlRenderingContext, default_material: Option<Rc<Material>>) -> Rc<Mesh> {
     let vertices: [f32; 12] = [
         1.0, 1.0, 0.0, //
         1.0, -1.0, 0.0, //
@@ -149,18 +153,26 @@ fn generate_plane(ctx: &WebGlRenderingContext) -> Mesh {
         GL::STATIC_DRAW,
     );
 
-    return Mesh {
+    return Rc::new(Mesh {
         id: 0,
         name: String::from("plane"),
-        position_buffer: buffer_position,
-        color_buffer: buffer_colors,
-        indices_buffer: buffer_indices,
-        index_count: indices_array.length() as i32,
-        element_type: GL::TRIANGLES,
-    };
+        primitives: vec![Primitive {
+            position_buffer: buffer_position,
+            color_buffer: buffer_colors,
+            indices_buffer: buffer_indices,
+            index_count: indices_array.length() as i32,
+            element_type: GL::TRIANGLES,
+            name: String::from("0"),
+            default_material: default_material,
+        }],
+    });
 }
 
-fn generate_grid(ctx: &WebGlRenderingContext, num_lines: u32) -> Mesh {
+fn generate_grid(
+    ctx: &WebGlRenderingContext,
+    num_lines: u32,
+    default_material: Option<Rc<Material>>,
+) -> Rc<Mesh> {
     assert!(num_lines > 2);
 
     let incr = 1.0 / (num_lines - 1) as f32;
@@ -247,18 +259,22 @@ fn generate_grid(ctx: &WebGlRenderingContext, num_lines: u32) -> Mesh {
         GL::STATIC_DRAW,
     );
 
-    return Mesh {
+    return Rc::new(Mesh {
         id: 0,
-        name: String::from("plane"),
-        position_buffer: buffer_position,
-        color_buffer: buffer_colors,
-        indices_buffer: buffer_indices,
-        index_count: indices_array.length() as i32,
-        element_type: GL::LINES,
-    };
+        name: String::from("grid"),
+        primitives: vec![Primitive {
+            position_buffer: buffer_position,
+            color_buffer: buffer_colors,
+            indices_buffer: buffer_indices,
+            index_count: indices_array.length() as i32,
+            element_type: GL::LINES,
+            name: String::from("0"),
+            default_material: default_material,
+        }],
+    });
 }
 
-fn generate_axes(ctx: &WebGlRenderingContext) -> Mesh {
+fn generate_axes(ctx: &WebGlRenderingContext, default_material: Option<Rc<Material>>) -> Rc<Mesh> {
     let vertices: [f32; 12] = [
         0.0, 0.0, 0.0, //
         1.0, 0.0, 0.0, //
@@ -321,15 +337,19 @@ fn generate_axes(ctx: &WebGlRenderingContext) -> Mesh {
         GL::STATIC_DRAW,
     );
 
-    return Mesh {
+    return Rc::new(Mesh {
         id: 0,
-        name: String::from("plane"),
-        position_buffer: buffer_position,
-        color_buffer: buffer_colors,
-        indices_buffer: buffer_indices,
-        index_count: indices_array.length() as i32,
-        element_type: GL::LINES,
-    };
+        name: String::from("axes"),
+        primitives: vec![Primitive {
+            position_buffer: buffer_position,
+            color_buffer: buffer_colors,
+            indices_buffer: buffer_indices,
+            index_count: indices_array.length() as i32,
+            element_type: GL::LINES,
+            name: String::from("0"),
+            default_material: default_material,
+        }],
+    });
 }
 
 fn link_program(
@@ -403,32 +423,37 @@ impl ResourceManager {
         };
     }
 
-    // TODO: Add options, like num_segments, sizes, etc.
-    pub fn generate_mesh(&mut self, name: &str) -> Option<Rc<Mesh>> {
+    pub fn get_or_create_mesh(&mut self, name: &str) -> Option<Rc<Mesh>> {
         if let Some(mesh) = self.meshes.get(name) {
             return Some(mesh.clone());
         }
 
+        let default_mat = self.get_or_create_material("default");
+
         if name == "cube" {
-            let mesh = Rc::new(generate_cube(&self.gl));
+            let mesh = generate_cube(&self.gl, default_mat);
+            log::info!("Generated mesh '{}'", name);
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
 
         if name == "plane" {
-            let mesh = Rc::new(generate_plane(&self.gl));
+            let mesh = generate_plane(&self.gl, default_mat);
+            log::info!("Generated mesh '{}'", name);
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
 
         if name == "grid" {
-            let mesh = Rc::new(generate_grid(&self.gl, 200));
+            let mesh = generate_grid(&self.gl, 200, default_mat);
+            log::info!("Generated mesh '{}'", name);
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
 
         if name == "axes" {
-            let mesh = Rc::new(generate_axes(&self.gl));
+            let mesh = generate_axes(&self.gl, default_mat);
+            log::info!("Generated mesh '{}'", name);
             self.meshes.insert(name.to_string(), mesh.clone());
             return Some(mesh);
         };
@@ -436,42 +461,49 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn compile_materials(&mut self) {
-        let program = link_program(
-            &self.gl,
-            &crate::systems::rendering::vertex::pos_vertcolor::SHADER,
-            &crate::systems::rendering::fragment::vertcolor::SHADER,
-        )
-        .unwrap();
+    pub fn get_or_create_material(&mut self, name: &str) -> Option<Rc<Material>> {
+        if let Some(mat) = self.materials.get(name) {
+            return Some(mat.clone());
+        }
 
-        let simple_material = Rc::new(Material {
-            name: "material".to_string(),
-            u_opacity: self.gl.get_uniform_location(&program, "uOpacity").unwrap(),
-            u_transform: self
-                .gl
-                .get_uniform_location(&program, "uTransform")
-                .unwrap(),
-            a_position: self.gl.get_attrib_location(&program, "aPosition"),
-            a_color: self.gl.get_attrib_location(&program, "aColor"),
-            program: program,
-        });
+        if name == "default" {
+            let program = link_program(
+                &self.gl,
+                &crate::systems::rendering::vertex::pos_vertcolor::SHADER,
+                &crate::systems::rendering::fragment::vertcolor::SHADER,
+            )
+            .expect(format!("Failed to compile material '{}'!", name).as_str());
 
-        self.materials
-            .insert("material".to_string(), simple_material);
-    }
+            let default = Rc::new(Material {
+                name: name.to_string(),
+                u_opacity: self.gl.get_uniform_location(&program, "uOpacity").unwrap(),
+                u_transform: self
+                    .gl
+                    .get_uniform_location(&program, "uTransform")
+                    .unwrap(),
+                a_position: self.gl.get_attrib_location(&program, "aPosition"),
+                a_color: self.gl.get_attrib_location(&program, "aColor"),
+                program: program,
+            });
 
-    pub fn get_material(&self, name: &str) -> Option<Rc<Material>> {
-        return Some(self.materials.get(name).unwrap().clone());
+            log::info!("Generated material '{}'", name);
+            self.materials.insert(name.to_string(), default.clone());
+            return Some(default);
+        };
+
+        return None;
     }
 
     pub fn load_materials_from_gltf(&mut self, materials: gltf::iter::Materials) {}
 
-    pub fn get_mesh(&self, name: &str) -> Option<Rc<Mesh>> {
-        return Some(self.meshes.get(&name.to_string()).unwrap().clone());
-    }
-
     fn load_mesh_from_gltf(mesh: &gltf::Mesh) -> Option<Rc<Mesh>> {
         let vertex_buffer: Vec<f32> = Vec::new();
+        let indices_buffer: Vec<u16> = Vec::new();
+        let normals_buffer: Vec<f32> = Vec::new();
+        let color_buffer: Vec<f32> = Vec::new();
+        let uv0_buffer: Vec<f32> = Vec::new();
+        let uv1_buffer: Vec<f32> = Vec::new();
+
         return None;
     }
 
@@ -490,7 +522,11 @@ impl ResourceManager {
             }
         }
 
-        log::info!("Loaded {} meshes from gltf. {} failed", num_loaded, num_failed);
+        log::info!(
+            "Loaded {} meshes from gltf. {} failed",
+            num_loaded,
+            num_failed
+        );
     }
 
     pub fn get_texture(&self, name: &str) -> Option<Rc<Texture>> {

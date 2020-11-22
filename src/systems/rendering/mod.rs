@@ -88,13 +88,14 @@ impl RenderingSystem {
 
     fn draw_one(state: &AppState, tc: &TransformComponent, mc: &MeshComponent) {
         let trans = &tc.get_world_transform();
-        let mesh = mc.mesh.as_ref();
-        let material = mc.material.as_ref();
-        if mesh.is_none() || material.is_none() {
-            return;
-        }
+        if let Some(mesh) = mc.get_mesh() {
+            for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
+                if let Some(mat) = mc.get_resolved_material(primitive_index) {
+                    mat.bind_for_drawing(state, trans);
+                }
 
-        material.unwrap().bind_for_drawing(state, trans);
-        mesh.unwrap().draw(state.gl.as_ref().unwrap());
+                primitive.draw(state.gl.as_ref().unwrap());
+            }
+        }
     }
 }

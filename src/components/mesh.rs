@@ -5,7 +5,7 @@ use crate::{
     systems::rendering::{Material, Mesh},
 };
 
-use super::{Component, component::ComponentIndex};
+use super::{component::ComponentIndex, Component};
 
 pub struct MeshComponent {
     enabled: bool,
@@ -14,12 +14,49 @@ pub struct MeshComponent {
     pub aabb_max: cgmath::Vector3<f32>,
     pub raycasting_visible: bool,
     pub visible: bool,
-    pub mesh: Option<Rc<Mesh>>,
-    pub material: Option<Rc<Material>>,
+    mesh: Option<Rc<Mesh>>,
+    material_overrides: Vec<Option<Rc<Material>>>,
 }
 impl MeshComponent {
     fn new() -> Self {
         return Self::default();
+    }
+
+    pub fn get_mesh(&self) -> Option<Rc<Mesh>> {
+        return self.mesh.clone();
+    }
+
+    pub fn set_mesh(&mut self, mesh: Option<Rc<Mesh>>) {
+        self.mesh = mesh;
+
+        if let Some(mesh) = &self.mesh {
+            self.material_overrides.resize(mesh.primitives.len(), None);
+        } else {
+            self.material_overrides.resize(0, None);
+        }
+    }
+
+    pub fn get_material_override(&self, index: usize) -> Option<Rc<Material>> {
+        if let Some(material_override) = self.material_overrides.get(index) {
+            return material_override.clone();
+        } else {
+            return None;
+        }
+    }
+
+    pub fn set_material_override(&mut self, material: Option<Rc<Material>>, index: usize) {
+        self.material_overrides[index] = material;
+    }
+
+    pub fn get_resolved_material(&self, index: usize) -> Option<Rc<Material>> {
+        if self.material_overrides.len() <= index {
+            return None;
+        } else if let Some(material_override) = self.get_material_override(index) {
+            return Some(material_override);
+        } else if let Some(mesh) = &self.mesh {
+            return mesh.primitives[index].default_material.clone();
+        }
+        return None;
     }
 }
 impl Default for MeshComponent {
@@ -31,7 +68,7 @@ impl Default for MeshComponent {
             raycasting_visible: true,
             visible: true,
             mesh: None,
-            material: None,
+            material_overrides: Vec::new(),
         };
     }
 }

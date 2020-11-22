@@ -62,11 +62,7 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    pub fn load_scenes_from_gltf(
-        &mut self,
-        gltf: gltf::iter::Scenes,
-        resources: &ResourceManager,
-    ) {
+    pub fn load_scenes_from_gltf(&mut self, gltf: gltf::iter::Scenes, resources: &ResourceManager) {
     }
 
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
@@ -90,8 +86,7 @@ impl SceneManager {
             .comp_man
             .add_component::<MeshComponent>(parent_id)
             .unwrap();
-        mesh_comp.mesh = res_man.generate_mesh("cube");
-        mesh_comp.material = res_man.get_material("material");
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
 
         let child = scene.ent_man.new_entity();
         let child_id = scene.ent_man.get_entity_index(&child).unwrap();
@@ -113,8 +108,7 @@ impl SceneManager {
             .comp_man
             .add_component::<MeshComponent>(child_id)
             .unwrap();
-        mesh_comp.mesh = res_man.generate_mesh("cube");
-        mesh_comp.material = res_man.get_material("material");
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
 
         // let plane = scene.ent_man.new_entity("plane");
         // let trans_comp = scene
@@ -140,8 +134,7 @@ impl SceneManager {
             .comp_man
             .add_component::<MeshComponent>(grid_id)
             .unwrap();
-        mesh_comp.mesh = res_man.generate_mesh("grid");
-        mesh_comp.material = res_man.get_material("material");
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
         let axes = scene.ent_man.new_entity();
         let axes_id = scene.ent_man.get_entity_index(&axes).unwrap();
@@ -154,8 +147,7 @@ impl SceneManager {
             .comp_man
             .add_component::<MeshComponent>(axes_id)
             .unwrap();
-        mesh_comp.mesh = res_man.generate_mesh("axes");
-        mesh_comp.material = res_man.get_material("material");
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
         let ui_entity = scene.ent_man.new_entity();
         let ui_id = scene.ent_man.get_entity_index(&ui_entity).unwrap();

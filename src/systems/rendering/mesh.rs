@@ -1,17 +1,27 @@
+use std::rc::Rc;
+
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
 
+use super::Material;
+
 pub struct Mesh {
     pub id: u32,
+    pub name: String,
+    pub primitives: Vec<Primitive>,
+}
+
+pub struct Primitive {
     pub name: String,
     pub position_buffer: WebGlBuffer,
     pub color_buffer: WebGlBuffer,
     pub indices_buffer: WebGlBuffer,
     pub index_count: i32,
     pub element_type: u32,
+    pub default_material: Option<Rc<Material>>,
 }
 
-impl Mesh {
+impl Primitive {
     pub fn draw(&self, ctx: &WebGlRenderingContext) {
         // Bind vertex buffer
         ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));

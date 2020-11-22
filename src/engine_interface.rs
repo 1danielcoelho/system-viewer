@@ -67,7 +67,6 @@ impl EngineInterface {
         )));
 
         let mut engine = Engine::new(gl.clone());
-        engine.res_man.compile_materials();
         
         engine.scene_man.load_test_scene("test", &mut engine.res_man);
         engine.scene_man.set_scene("test");
