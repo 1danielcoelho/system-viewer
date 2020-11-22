@@ -1,4 +1,3 @@
-
 use std::{collections::HashMap, rc::Rc};
 
 use web_sys::WebGlRenderingContext;
@@ -28,11 +27,17 @@ fn link_program(
         .ok_or_else(|| String::from("Error creating program"))?;
 
     let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, vert_source).unwrap();
-
     let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, frag_source).unwrap();
 
     gl.attach_shader(&program, &vert_shader);
     gl.attach_shader(&program, &frag_shader);
+
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Position as u32, "aPosition");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Normal as u32, "aNormal");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Color as u32, "aColor");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::UV0 as u32, "aUV0");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::UV1 as u32, "aUV1");
+
     gl.link_program(&program);
 
     if gl
@@ -135,20 +140,17 @@ impl ResourceManager {
         if name == "default" {
             let program = link_program(
                 &self.gl,
-                &crate::managers::resource::shaders::vertex::pos_vertcolor::SHADER,
-                &crate::managers::resource::shaders::fragment::vertcolor::SHADER,
+                &crate::managers::resource::shaders::vertex::default::SHADER,
+                &crate::managers::resource::shaders::fragment::default::SHADER,
             )
             .expect(format!("Failed to compile material '{}'!", name).as_str());
 
             let default = Rc::new(Material {
                 name: name.to_string(),
-                u_opacity: self.gl.get_uniform_location(&program, "uOpacity").unwrap(),
                 u_transform: self
                     .gl
                     .get_uniform_location(&program, "uTransform")
                     .unwrap(),
-                a_position: self.gl.get_attrib_location(&program, "aPosition"),
-                a_color: self.gl.get_attrib_location(&program, "aColor"),
                 program: program,
             });
 

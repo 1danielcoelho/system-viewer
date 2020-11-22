@@ -17,7 +17,7 @@ pub struct IntermediatePrimitive {
     pub name: String,
 
     pub indices: Vec<u16>,
-    pub vertices: Vec<cgmath::Vector3<f32>>,
+    pub positions: Vec<cgmath::Vector3<f32>>,
     pub normals: Vec<cgmath::Vector3<f32>>,
     pub colors: Vec<cgmath::Vector4<f32>>,
     pub uv0: Vec<cgmath::Vector2<f32>>,
@@ -76,7 +76,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
     primitives.reserve(inter.primitives.len());
 
     for prim in inter.primitives {
-        // Vertex indices
+        // Indices
         let mut index_buffer = ctx.create_buffer().unwrap();
         fill_short_buffer(
             &ctx,
@@ -85,16 +85,16 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
             &mut index_buffer,
         );
 
-        // Vertex positions
-        let mut vertex_buffer = ctx.create_buffer().unwrap();
+        // Positions
+        let mut position_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
-            prim.vertices.as_ptr() as u32 / (size_of::<Vector3<f32>>() as u32),
-            prim.vertices.len() as u32,
-            &mut vertex_buffer,
+            prim.positions.as_ptr() as u32 / (size_of::<Vector3<f32>>() as u32),
+            prim.positions.len() as u32,
+            &mut position_buffer,
         );
 
-        // Vertex normals
+        // Normals
         let mut normal_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
@@ -103,7 +103,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
             &mut normal_buffer,
         );
 
-        // Vertex colors
+        // Colors
         let mut color_buffer = ctx.create_buffer().unwrap();
         fill_float_buffer(
             &ctx,
@@ -134,7 +134,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
             name: String::from("0"),
             index_count: prim.indices.len() as i32,
             index_buffer,
-            vertex_buffer,
+            position_buffer,
             normal_buffer,
             color_buffer,
             uv0_buffer,
@@ -166,7 +166,7 @@ pub fn generate_cube(
                     0, 1, 3, 0, 3, 2, 1, 5, 3, 5, 7, 3, 5, 4, 6, 6, 7, 5, 0, 2, 4, 2, 6, 4, 2, 3,
                     7, 2, 7, 6, 0, 4, 5, 0, 5, 1,
                 ],
-                vertices: vec![
+                positions: vec![
                     Vector3::new(-1.0, -1.0, -1.0),
                     Vector3::new(-1.0, -1.0, 1.0),
                     Vector3::new(-1.0, 1.0, -1.0),
@@ -207,7 +207,7 @@ pub fn generate_plane(
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
                 indices: vec![0, 1, 3, 0, 3, 2],
-                vertices: vec![
+                positions: vec![
                     Vector3::new(1.0, 1.0, 0.0),
                     Vector3::new(1.0, -1.0, 0.0),
                     Vector3::new(-1.0, 1.0, 0.0),
@@ -240,8 +240,8 @@ pub fn generate_grid(
     let incr = 1.0 / (num_lines - 1) as f32;
     let num_verts = num_lines * num_lines;
 
-    let mut vertices: Vec<Vector3<f32>> = Vec::new();
-    vertices.resize((num_verts * 3) as usize, Vector3::new(0.0, 0.0, 0.0));
+    let mut positions: Vec<Vector3<f32>> = Vec::new();
+    positions.resize((num_verts * 3) as usize, Vector3::new(0.0, 0.0, 0.0));
 
     let mut colors: Vec<Vector4<f32>> = Vec::new();
     colors.resize((num_verts * 3) as usize, Vector4::new(1.0, 1.0, 1.0, 1.0));
@@ -250,8 +250,8 @@ pub fn generate_grid(
         for x_ind in 0..num_lines {
             let vert_ind = x_ind + y_ind * num_lines;
 
-            vertices[vert_ind as usize].x = x_ind as f32 * incr - 0.5;
-            vertices[vert_ind as usize].y = y_ind as f32 * incr - 0.5;
+            positions[vert_ind as usize].x = x_ind as f32 * incr - 0.5;
+            positions[vert_ind as usize].y = y_ind as f32 * incr - 0.5;
         }
     }
 
@@ -277,7 +277,7 @@ pub fn generate_grid(
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
                 indices,
-                vertices,
+                positions,
                 normals: vec![],
                 colors,
                 uv0: vec![],
@@ -300,7 +300,7 @@ pub fn generate_axes(
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
                 indices: vec![0, 1, 0, 2, 0, 3],
-                vertices: vec![
+                positions: vec![
                     Vector3::new(0.0, 0.0, 0.0),
                     Vector3::new(1.0, 0.0, 0.0),
                     Vector3::new(0.0, 1.0, 0.0),

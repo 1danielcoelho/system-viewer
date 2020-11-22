@@ -80,11 +80,16 @@ impl RenderingSystem {
         let trans = &tc.get_world_transform();
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
-                if let Some(mat) = mc.get_resolved_material(primitive_index) {
+                let resolved_mat = mc.get_resolved_material(primitive_index);
+                if let Some(mat) = &resolved_mat {
                     mat.bind_for_drawing(state, trans);
                 }
 
                 primitive.draw(state.gl.as_ref().unwrap());
+
+                if let Some(mat) = &resolved_mat {
+                    mat.unbind_from_drawing(state);
+                }
             }
         }
     }
