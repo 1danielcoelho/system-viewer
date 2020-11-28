@@ -92,15 +92,17 @@
 <!-- - Flipped Y when going from blender to sv 
 - Nested transforms are broken for the engine scene
     - They were both the same issue: I wasn't flipping the transforms from Y-up to Z-up -->
+<!-- - Make material/mesh names unique in some way -->    
 
-- Get simple PBR materials working
-    <!-- - Make material/mesh names unique in some way -->    
-    - Fetch imported GLTF materials when parsing GLTF meshes
-    - Have meshes use imported GLTF materials by identifier, like nodes use meshes
-- Get textures working
-
+# Compile all engine materials up front
+# Cleanup resource manager
 # Honestly I may not even need the entity index inside Entity and always use just the uuid
 # Find a better way of handling component updates when sorting after reparenting
+# Lights and simple phong material
+# Get simple PBR materials working
+    - Fetch imported GLTF materials when parsing GLTF meshes
+    - Have meshes use imported GLTF materials by identifier, like nodes use meshes
+# Get textures working
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now

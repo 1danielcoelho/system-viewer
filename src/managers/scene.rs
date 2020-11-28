@@ -123,22 +123,22 @@ impl SceneManager {
             }
         }
 
-        log::info!(
-            "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
-            indent,
-            node.get_identifier(&file_identifier),
-            pos[0],
-            pos[1],
-            pos[2],
-            quat[0],
-            quat[1],
-            quat[2],
-            quat[3],
-            scale[0],
-            scale[1],
-            scale[2],
-            mesh_str
-        );
+        // log::info!(
+        //     "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
+        //     indent,
+        //     node.get_identifier(&file_identifier),
+        //     pos[0],
+        //     pos[1],
+        //     pos[2],
+        //     quat[0],
+        //     quat[1],
+        //     quat[2],
+        //     quat[3],
+        //     scale[0],
+        //     scale[1],
+        //     scale[2],
+        //     mesh_str
+        // );
 
         // Children
         for child in node.children() {

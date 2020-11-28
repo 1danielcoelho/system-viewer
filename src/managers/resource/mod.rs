@@ -156,6 +156,7 @@ impl ResourceManager {
         }
 
         if name == "default" {
+            log::info!("Generating material '{}'", name);
             let program = link_program(
                 &self.gl,
                 &crate::managers::resource::shaders::vertex::relay_color::SHADER,
@@ -172,10 +173,10 @@ impl ResourceManager {
                 program: program,
             });
 
-            log::info!("Generated material '{}'", name);
             self.materials.insert(name.to_string(), default.clone());
             return Some(default);
         } else if name == "local_normal" {
+            log::info!("Generating material '{}'", name);
             let program = link_program(
                 &self.gl,
                 &crate::managers::resource::shaders::vertex::relay_all::SHADER,
@@ -192,7 +193,6 @@ impl ResourceManager {
                 program: program,
             });
 
-            log::info!("Generated material '{}'", name);
             self.materials
                 .insert(name.to_string(), local_normal.clone());
             return Some(local_normal);
@@ -203,9 +203,14 @@ impl ResourceManager {
 
     pub fn load_materials_from_gltf(
         &mut self,
-        scene_identifier: &str,
+        file_identifier: &str,
         materials: gltf::iter::Materials,
     ) {
+        log::info!(
+            "Loading {} materials from gltf file {}",
+            materials.len(),
+            file_identifier
+        );
     }
 
     fn load_mesh_from_gltf(
@@ -423,21 +428,21 @@ impl ResourceManager {
 
     pub fn load_meshes_from_gltf(
         &mut self,
-        scene_identifier: &str,
+        file_identifier: &str,
         meshes: gltf::iter::Meshes,
         buffers: &Vec<gltf::buffer::Data>,
     ) {
         let default_mat = self.get_or_create_material("local_normal");
 
         log::info!(
-            "Loading {} meshes from gltf scene {}",
+            "Loading {} meshes from gltf file {}",
             meshes.len(),
-            scene_identifier
+            file_identifier
         );
 
         for mesh in meshes {
             match ResourceManager::load_mesh_from_gltf(
-                scene_identifier,
+                file_identifier,
                 &mesh,
                 &buffers,
                 &default_mat,
@@ -457,5 +462,15 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn load_textures_from_gltf(&mut self, identifier: &str, textures: gltf::iter::Textures) {}
+    pub fn load_textures_from_gltf(
+        &mut self,
+        file_identifier: &str,
+        textures: gltf::iter::Textures,
+    ) {
+        log::info!(
+            "Loading {} textures from gltf file {}",
+            textures.len(),
+            file_identifier
+        );
+    }
 }
