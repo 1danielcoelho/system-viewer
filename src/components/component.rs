@@ -7,7 +7,7 @@ pub enum ComponentIndex {
     Ui = 3,
 }
 
-pub trait Component: Default {
+pub trait Component: Default + Clone {
     type ComponentType;
 
     fn set_enabled(&mut self, enabled: bool);

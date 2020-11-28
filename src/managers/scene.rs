@@ -9,6 +9,7 @@ use crate::components::{
 };
 use crate::managers::resource::gltf_resource::GltfResource;
 
+#[derive(Clone)]
 pub struct Scene {
     pub identifier: String,
     pub ent_man: EntityManager,
@@ -67,7 +68,7 @@ impl SceneManager {
         scene: &mut Scene,
         resources: &ResourceManager,
     ) -> Entity {
-        // let indent = "\t".repeat(indent_level as usize);
+        let indent = "\t".repeat(indent_level as usize);
 
         let ent: Entity = scene.ent_man.new_entity();
         let ent_index = scene.ent_man.get_entity_index(&ent).unwrap();
@@ -101,7 +102,7 @@ impl SceneManager {
         }
 
         // Mesh
-        // let mut mesh_str = String::new();
+        let mut mesh_str = String::new();
         if let Some(mesh) = node.mesh() {
             let mesh_comp = scene
                 .comp_man
@@ -109,7 +110,7 @@ impl SceneManager {
                 .unwrap();
 
             let mesh_identifier = mesh.get_identifier(&file_identifier);
-            // mesh_str = mesh_identifier.to_owned();
+            mesh_str = mesh_identifier.to_owned();
             if let Some(found_mesh) = resources.get_mesh(&mesh_identifier) {
                 mesh_comp.set_mesh(Some(found_mesh));
             } else {
@@ -122,22 +123,22 @@ impl SceneManager {
             }
         }
 
-        // log::info!(
-        //     "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
-        //     indent,
-        //     node.get_identifier(&file_identifier),
-        //     pos[0],
-        //     pos[1],
-        //     pos[2],
-        //     quat[0],
-        //     quat[1],
-        //     quat[2],
-        //     quat[3],
-        //     scale[0],
-        //     scale[1],
-        //     scale[2],
-        //     mesh_str
-        // );
+        log::info!(
+            "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
+            indent,
+            node.get_identifier(&file_identifier),
+            pos[0],
+            pos[1],
+            pos[2],
+            quat[0],
+            quat[1],
+            quat[2],
+            quat[3],
+            scale[0],
+            scale[1],
+            scale[2],
+            mesh_str
+        );
 
         // Children
         for child in node.children() {
@@ -176,6 +177,8 @@ impl SceneManager {
             let scene_identifier = gltf_scene.get_identifier(file_identifier);
             let mut scene = Scene::new(&scene_identifier);
 
+            log::info!("\tScene '{}': {} root nodes", scene_identifier, num_nodes);
+
             scene
                 .ent_man
                 .reserve_space_for_entities((num_nodes + 1) as u32);
@@ -195,12 +198,6 @@ impl SceneManager {
                     .ent_man
                     .set_entity_parent(&root_ent, &child_ent, &mut scene.comp_man);
             }
-
-            log::info!(
-                "\tScene '{}': {} total nodes",
-                scene_identifier,
-                scene.ent_man.get_num_entities()
-            );
 
             self.loaded_scenes
                 .insert(scene_identifier.to_string(), scene);
@@ -313,5 +310,49 @@ impl SceneManager {
         } else {
             log::warn!("Scene with identifier {} not found!", identifier);
         }
+    }
+
+    /** Injects the scene with identifier `str` into the current scene, setting its 0th node to transform `target_transform` */
+    pub fn inject_scene(
+        &mut self,
+        identifier: &str,
+        target_transform: Option<TransformType>,
+    ) -> Result<(), String> {
+        // Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
+        let mut injected_scene_copy = self
+            .get_scene(identifier)
+            .ok_or(format!("Failed to find scene to inject '{}'", identifier))?
+            .clone();
+
+        let current_scene = self
+            .get_main_scene_mut()
+            .ok_or("Can't inject if we don't have a main scene!")?;
+
+        log::info!(
+            "Injecting scene '{}' into current '{}' ({} entities)",
+            injected_scene_copy.identifier,
+            current_scene.identifier,
+            injected_scene_copy.ent_man.get_num_entities()
+        );
+
+        // Update the position of the root scene node to the target transform
+        if let Some(target_transform) = target_transform {
+            let scene_root_trans =
+                injected_scene_copy.comp_man.transform[0].get_local_transform_mut();
+            *scene_root_trans = target_transform;
+        }
+
+        // Inject entities into current_scene, and keep track of where they ended up
+        let remapped_indices = current_scene.ent_man.move_from_other(
+            injected_scene_copy.ent_man,
+            &mut injected_scene_copy.comp_man,
+        );
+
+        // Move components from injected_scene_copy according to the remapped indices
+        current_scene
+            .comp_man
+            .move_from_other(injected_scene_copy.comp_man, &remapped_indices);
+
+        return Ok(());
     }
 }

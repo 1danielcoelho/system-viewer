@@ -34,6 +34,7 @@ pub struct EntityEntry {
     children: Vec<Entity>,
 }
 
+#[derive(Clone)]
 pub struct EntityManager {
     // Current entities and spaces are available here
     entity_storage: Vec<EntityEntry>,
@@ -57,8 +58,10 @@ impl EntityManager {
     }
 
     pub fn reserve_space_for_entities(&mut self, num_new_spaces_to_reserve: u32) {
-        self.entity_storage
-            .reserve(num_new_spaces_to_reserve as usize);
+        let num_missing =
+            (num_new_spaces_to_reserve as i64 - self.free_indices.len() as i64).max(0);
+
+        self.entity_storage.reserve(num_missing as usize);
     }
 
     fn new_entity_at_index(&mut self, entity_storage_index: u32) -> Entity {
@@ -421,5 +424,43 @@ impl EntityManager {
         // Actually swap the entries
         self.entity_storage
             .swap(source_index as usize, target_index as usize);
+    }
+
+    /** Used when injecting scenes into eachother */
+    pub fn move_from_other(
+        &mut self,
+        other_man: Self,
+        comp_man: &mut ComponentManager,
+    ) -> Vec<u32> {
+        // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
+        // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
+        // packing
+
+        // Allocate new entities, keep an array of their newly allocated indices
+        let num_other_ents = other_man.get_num_entities();
+
+        let mut other_to_new_index: Vec<u32> = Vec::new();
+        other_to_new_index.resize(num_other_ents as usize, 0);
+
+        self.reserve_space_for_entities(num_other_ents);
+        for other_index in 0..num_other_ents {
+            let new_ent = self.new_entity();
+            other_to_new_index[other_index as usize] = new_ent.index;
+        }
+
+        // Replicate parent-child relationships
+        for other_index in 0..num_other_ents {
+            if let Some(other_parent_index) = other_man.get_parent_index_from_index(other_index) {
+                let new_index = other_to_new_index[other_index as usize];
+                let new_parent_index = other_to_new_index[other_parent_index as usize];
+
+                // This could be optimized
+                let child_ent = self.get_entity_from_index(new_index).unwrap();
+                let parent_ent = self.get_entity_from_index(new_parent_index).unwrap();
+                self.set_entity_parent(&parent_ent, &child_ent, comp_man);
+            }
+        }
+
+        return other_to_new_index;
     }
 }

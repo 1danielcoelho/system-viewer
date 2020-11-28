@@ -7,6 +7,7 @@ use crate::managers::{
 
 use super::{component::ComponentIndex, Component};
 
+#[derive(Clone)]
 pub struct MeshComponent {
     enabled: bool,
 

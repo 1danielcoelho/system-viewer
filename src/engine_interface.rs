@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
-use crate::wasm_bindgen::JsCast;
 use crate::{app_state::AppState, engine::Engine};
+use crate::{components::transform::TransformType, wasm_bindgen::JsCast};
 
 use gltf::Gltf;
 use wasm_bindgen::prelude::*;
@@ -73,6 +73,11 @@ impl EngineInterface {
         }
 
         EngineInterface::setup_event_handlers(&canvas, app_state.clone());
+
+        engine
+            .scene_man
+            .load_test_scene("test", &mut engine.res_man);
+        engine.scene_man.set_scene("test");
 
         return EngineInterface {
             canvas,
@@ -253,9 +258,16 @@ impl EngineInterface {
 
     #[wasm_bindgen]
     pub fn load_gltf(&mut self, identifier: &str, data: &mut [u8]) {
-        log::info!("Load_gltf: id: {}, received {} bytes", identifier, data.len());
+        log::info!(
+            "Load_gltf: id: {}, received {} bytes",
+            identifier,
+            data.len()
+        );
 
-        assert!(self.engine.scene_man.get_scene(identifier).is_none(), format!("Duplicate scene with identifier '{}'!", identifier));
+        assert!(
+            self.engine.scene_man.get_scene(identifier).is_none(),
+            format!("Duplicate scene with identifier '{}'!", identifier)
+        );
 
         if let Ok((gltf_doc, gltf_buffers, gltf_images)) = gltf::import_slice(data) {
             self.engine
@@ -267,9 +279,11 @@ impl EngineInterface {
             self.engine
                 .res_man
                 .load_meshes_from_gltf(identifier, gltf_doc.meshes(), &gltf_buffers);
-            self.engine
-                .scene_man
-                .load_scenes_from_gltf(identifier, gltf_doc.scenes(), &self.engine.res_man);
+            self.engine.scene_man.load_scenes_from_gltf(
+                identifier,
+                gltf_doc.scenes(),
+                &self.engine.res_man,
+            );
         }
     }
 
@@ -277,11 +291,41 @@ impl EngineInterface {
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
 
-        // Temporarily delay loading the test scene here as we are using GLTF meshes that are loaded in after EngineInterface::new
-        self.engine
-            .scene_man
-            .load_test_scene("test", &mut self.engine.res_man);
-        self.engine.scene_man.set_scene("test");
+        if let Err(error) = self.engine.scene_man.inject_scene(
+            "./public/Duck.glb_scene_0",
+            Some(TransformType {
+                scale: 1.0,
+                disp: cgmath::Vector3::new(0.0, 0.0, 1.0),
+                rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+            }),
+        ) {
+            log::error!("Failed to inject duck!: '{}'", error);
+        }
+
+        if let Err(error) = self.engine.scene_man.inject_scene(
+            "./public/Duck.glb_scene_0",
+            Some(TransformType {
+                scale: 1.0,
+                disp: cgmath::Vector3::new(0.0, 0.0, 5.0),
+                rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+            }),
+        ) {
+            log::error!("Failed to inject duck 2!: '{}'", error);
+        }
+
+        if let Err(error) = self.engine.scene_man.inject_scene(
+            "./public/Duck.glb_scene_0",
+            Some(TransformType {
+                scale: 3.0,
+                disp: cgmath::Vector3::new(0.0, 5.0, 5.0),
+                rot: cgmath::Rotation3::from_axis_angle(
+                    cgmath::Vector3::new(1.0, 0.0, 0.0),
+                    cgmath::Deg(45.0),
+                ),
+            }),
+        ) {
+            log::error!("Failed to inject duck 2!: '{}'", error);
+        }
 
         let event_loop = EventLoop::new();
 

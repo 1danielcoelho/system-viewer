@@ -20,7 +20,7 @@ rust.then(async (m) => {
 
   // Sync loading of all assets for now
   await Promise.all([load_gltf("./public/Duck.glb", engine)]);
-  await Promise.all([load_gltf("./public/2CylinderEngine.glb", engine)]);
+//   await Promise.all([load_gltf("./public/2CylinderEngine.glb", engine)]);
 
   engine.begin_loop();
 });

@@ -1,12 +1,14 @@
 use crate::managers::ComponentManager;
 
-use super::{Component, component::ComponentIndex};
+use super::{component::ComponentIndex, Component};
 
+#[derive(Clone)]
 pub enum WidgetType {
     None,
     TestWidget,
 }
 
+#[derive(Clone)]
 pub struct UIComponent {
     enabled: bool,
     pub widget_type: WidgetType,

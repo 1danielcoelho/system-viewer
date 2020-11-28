@@ -4,6 +4,7 @@ use crate::components::{
 
 use super::{Event, EventReceiver};
 
+#[derive(Clone)]
 pub struct ComponentManager {
     pub physics: Vec<PhysicsComponent>,
     pub mesh: Vec<MeshComponent>,
@@ -64,6 +65,18 @@ impl ComponentManager {
         self.mesh.resize_with(min_length, Default::default);
         self.transform.resize_with(min_length, Default::default);
         self.interface.resize_with(min_length, Default::default);
+    }
+
+    pub fn move_from_other(&mut self, mut other: Self, other_to_this_index: &Vec<u32>) {
+        let highest_new_index = other_to_this_index.iter().max().unwrap();
+        self.resize_components((highest_new_index + 1) as usize);
+
+        for this_index in other_to_this_index.iter().rev() {
+            self.physics[*this_index as usize] = other.physics.pop().unwrap();
+            self.mesh[*this_index as usize] = other.mesh.pop().unwrap();
+            self.transform[*this_index as usize] = other.transform.pop().unwrap();
+            self.interface[*this_index as usize] = other.interface.pop().unwrap();
+        }
     }
 }
 impl EventReceiver for ComponentManager {

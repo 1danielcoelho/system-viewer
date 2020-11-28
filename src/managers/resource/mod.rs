@@ -427,7 +427,7 @@ impl ResourceManager {
         meshes: gltf::iter::Meshes,
         buffers: &Vec<gltf::buffer::Data>,
     ) {
-        let default_mat = self.get_or_create_material("default");
+        let default_mat = self.get_or_create_material("local_normal");
 
         log::info!(
             "Loading {} meshes from gltf scene {}",

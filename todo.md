@@ -84,17 +84,19 @@
   - Can create new entities and hierarchies and stuff now -->
 <!-- - Add another local_normals material and a world_normals material to use for the duck for now -->
 <!-- - I think I may need some coordinate conversion from GLTF, at least the up axes -->
-- Implement splicing a scene into the current scene, to add the node hierarchy as it is in the GLTF file
-    <!-- - Need a parent node -->
-    <!-- - Actually parent one node to the other -->
-    <!-- - Construct unique identifiers for resources like meshes, materials and textures, because when parsing the nodes they'll be referred to directly -->
-    - Splice at transform x -> set tarnsform to scene root
+<!-- - Implement splicing a scene into the current scene, to add the node hierarchy as it is in the GLTF file -->
+<!-- - Need a parent node -->
+<!-- - Actually parent one node to the other -->
+<!-- - Construct unique identifiers for resources like meshes, materials and textures, because when parsing the nodes they'll be referred to directly -->
+<!-- - Splice at transform x -> set tarnsform to scene root -->
 - Get simple PBR materials working
     <!-- - Make material/mesh names unique in some way -->    
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
 - Get textures working
 
+# Honestly I may not even need the entity index inside Entity and always use just the uuid
+# Find a better way of handling component updates when sorting after reparenting
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now
@@ -103,7 +105,6 @@
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
 - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe
 # Update egui
-# Honestly I may not even need the entity index inside Entity and always use just the uuid
 # Have a component for entity metadata maybe
 # Sparse component arrays?
 - Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities

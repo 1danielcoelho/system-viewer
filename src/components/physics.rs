@@ -4,6 +4,7 @@ use crate::managers::ComponentManager;
 
 use super::{component::ComponentIndex, Component};
 
+#[derive(Clone)]
 pub struct PhysicsComponent {
     enabled: bool,
     pub collision_enabled: bool,

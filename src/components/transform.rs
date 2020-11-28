@@ -1,4 +1,4 @@
-use crate::managers::{ComponentManager};
+use crate::managers::ComponentManager;
 
 use cgmath::Transform;
 
@@ -6,6 +6,7 @@ use super::{component::ComponentIndex, Component};
 
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 
+#[derive(Clone)]
 pub struct TransformComponent {
     enabled: bool,
 
