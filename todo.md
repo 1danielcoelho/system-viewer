@@ -96,9 +96,10 @@
 
 <!-- # Compile all engine materials up front -->
 <!-- # Cleanup resource manager -->
-# Honestly I may not even need the entity index inside Entity and always use just the uuid
+<!-- # Honestly I may not even need the entity index inside Entity and always use just the uuid -->
 <!-- # Less dumb way of storing/reading shaders -->
 # Find a better way of handling component updates when sorting after reparenting
+- Make it so that entity 0 is the "invalid entity". It's going to have some components, but who cares
 # Lights and simple phong material
 # Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes

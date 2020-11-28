@@ -5,30 +5,17 @@ use std::{cmp::Reverse, hash::Hash};
 use super::ComponentManager;
 
 #[derive(Debug, Copy, Clone, Eq, Hash)]
-pub struct EntityID(u32);
-impl PartialEq for EntityID {
+pub struct Entity(u32);
+impl PartialEq for Entity {
     fn eq(&self, other: &Self) -> bool {
         return self.0 == other.0;
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq)]
-pub struct Entity {
-    index: u32, // Actual component index in the component arrays. Not pub so user has to go through manager
-    uuid: EntityID, // Unique index for this entity, follows entities when they're sorted
-}
-impl PartialEq for Entity {
-    // Completely ignore id and gen, as we may be comparing an old reference to this entity
-    // with a newer reference, even though both reference the same entity
-    fn eq(&self, other: &Self) -> bool {
-        return self.uuid == other.uuid;
     }
 }
 
 #[derive(Clone)]
 pub struct EntityEntry {
     live: bool,
-    uuid: EntityID,
+    current: Entity,
 
     parent: Option<Entity>,
     children: Vec<Entity>,
@@ -42,9 +29,9 @@ pub struct EntityManager {
     // Deallocated spaces of entity_storage: These will be reused first when allocating
     free_indices: BinaryHeap<Reverse<u32>>,
 
-    // Maps from an entity uuid to it's current index in entity_storage
-    uuid_to_index: HashMap<EntityID, u32>,
-    last_used_uuid: EntityID,
+    // Maps from an entity to it's current index in entity_storage
+    entity_to_index: HashMap<Entity, u32>,
+    last_used_entity: Entity,
 }
 
 impl EntityManager {
@@ -52,8 +39,8 @@ impl EntityManager {
         Self {
             entity_storage: Vec::new(),
             free_indices: BinaryHeap::new(),
-            uuid_to_index: HashMap::new(),
-            last_used_uuid: EntityID(0),
+            entity_to_index: HashMap::new(),
+            last_used_entity: Entity(0),
         }
     }
 
@@ -67,34 +54,31 @@ impl EntityManager {
     fn new_entity_at_index(&mut self, entity_storage_index: u32) -> Entity {
         if entity_storage_index >= self.entity_storage.len() as u32 {
             assert!(
-                entity_storage_index < 2 * self.entity_storage.len() as u32,
-                "Trying to create new entity at an unreasonable index!"
+                self.entity_storage.len() < 500 || entity_storage_index < (2 * self.entity_storage.len() as u32),
+                format!("Trying to create new entity at an unreasonable index {}! (we currently have {})", entity_storage_index, self.entity_storage.len())
             );
 
             self.entity_storage.resize(
                 (entity_storage_index + 1) as usize,
                 EntityEntry {
                     live: false,
-                    uuid: EntityID(0),
+                    current: Entity(0),
                     parent: None,
                     children: Vec::new(),
                 },
             );
         }
 
-        self.last_used_uuid.0 += 1;
+        self.last_used_entity.0 += 1;
 
-        let new_entity: &mut EntityEntry = &mut self.entity_storage[entity_storage_index as usize];
-        new_entity.uuid = self.last_used_uuid;
-        new_entity.live = true;
+        let new_entry: &mut EntityEntry = &mut self.entity_storage[entity_storage_index as usize];
+        new_entry.current = self.last_used_entity;
+        new_entry.live = true;
 
-        self.uuid_to_index
-            .insert(self.last_used_uuid, entity_storage_index);
+        self.entity_to_index
+            .insert(self.last_used_entity, entity_storage_index);
 
-        return Entity {
-            index: entity_storage_index,
-            uuid: new_entity.uuid,
-        };
+        return new_entry.current;
     }
 
     // Returns a new Entity. It may occupy an existing, vacant spot or be a brand new
@@ -102,21 +86,13 @@ impl EntityManager {
     pub fn new_entity(&mut self) -> Entity {
         let target_index = match self.free_indices.pop() {
             Some(Reverse { 0: vacant_index }) => vacant_index,
-            None => {
-                self.entity_storage.push(EntityEntry {
-                    live: true,
-                    uuid: EntityID(0),
-                    parent: None,
-                    children: Vec::new(),
-                });
-                (self.entity_storage.len() - 1) as u32
-            }
+            None => self.entity_storage.len() as u32,
         };
 
         return self.new_entity_at_index(target_index);
     }
 
-    // Returns a new Entity guaranteed to occupy a spot larger than 'reference'
+    // Returns a new Entity guaranteed to occupy an index than 'reference'
     fn new_entity_larger_than(&mut self, reference: u32) -> Entity {
         let mut target_index: Option<u32> = None;
 
@@ -131,8 +107,8 @@ impl EntityManager {
         }
         // Checking storage directly may be faster
         else {
-            for i in reference..(self.entity_storage.len() as u32) {
-                if i > reference {
+            for i in (reference + 1)..(self.entity_storage.len() as u32) {
+                if !self.entity_storage[i as usize].live {
                     target_index = Some(i);
                     break;
                 }
@@ -150,7 +126,7 @@ impl EntityManager {
     pub fn delete_entity(&mut self, e: &Entity) -> bool {
         match self.get_entity_index(e) {
             Some(index) => {
-                let stored_clone = self.entity_storage[index as usize].clone();
+                let cloned_entry = self.entity_storage[index as usize].clone();
 
                 // Remove ourselves from our parent
                 if let Some(parent) = self.entity_storage[index as usize].parent {
@@ -158,22 +134,22 @@ impl EntityManager {
                     let child_index = parent_entry
                         .children
                         .iter()
-                        .position(|&c| c.uuid == stored_clone.uuid)
+                        .position(|&c| c == cloned_entry.current)
                         .unwrap();
                     parent_entry.children.remove(child_index);
                 }
 
                 // Delete our children with us
-                for child_entity in stored_clone.children.iter() {
+                for child_entity in cloned_entry.children.iter() {
                     self.delete_entity(child_entity);
                 }
 
-                let stored_entity = &mut self.entity_storage[index as usize];
-                stored_entity.live = false;
-                stored_entity.uuid.0 = 0;
+                let entry_ref = &mut self.entity_storage[index as usize];
+                entry_ref.live = false;
+                entry_ref.current.0 = 0;
 
                 self.free_indices.push(Reverse(index));
-                self.uuid_to_index.remove(&e.uuid);
+                self.entity_to_index.remove(&e);
 
                 return true;
             }
@@ -189,10 +165,20 @@ impl EntityManager {
     }
 
     pub fn get_entity_index(&self, e: &Entity) -> Option<u32> {
-        return self.get_entity_index_by_uuid(e.uuid);
+        match self.entity_to_index.get(e) {
+            Some(index) => {
+                let ent = &self.entity_storage[(*index) as usize];
+                if ent.live {
+                    return Some(*index);
+                } else {
+                    return None;
+                }
+            }
+            None => return None,
+        }
     }
 
-    // Checks via uuid, returns None if it's not live anymore
+    // Returns None if it's not live anymore
     fn get_entity_entry(&self, e: &Entity) -> Option<&EntityEntry> {
         // Find the actual index as this may be a stale entity reference
         let index = self.get_entity_index(e);
@@ -219,10 +205,7 @@ impl EntityManager {
         match self.entity_storage.get(index as usize) {
             Some(entry) => {
                 if entry.live {
-                    return Some(Entity {
-                        index,
-                        uuid: entry.uuid,
-                    });
+                    return Some(entry.current);
                 } else {
                     return None;
                 }
@@ -242,20 +225,6 @@ impl EntityManager {
             },
             None => return None,
         };
-    }
-
-    pub fn get_entity_index_by_uuid(&self, uuid: EntityID) -> Option<u32> {
-        match self.uuid_to_index.get(&uuid) {
-            Some(index) => {
-                let ent = &self.entity_storage[(*index) as usize];
-                if ent.live {
-                    return Some(*index);
-                } else {
-                    return None;
-                }
-            }
-            None => return None,
-        }
     }
 
     pub fn get_entity_parent(&self, e: &Entity) -> Option<Entity> {
@@ -363,16 +332,16 @@ impl EntityManager {
 
         // Create a new dummy entity in a position where child would be valid (i.e. after parent)
         let dummy_child = self.new_entity_larger_than(parent_index);
+        let new_child_index = self.entity_to_index[&dummy_child];
 
         // Swap current child with dummy, along with components (this will resize components if needed too)
-        let new_child_index = dummy_child.index; // Since we just made this entity we know the index is OK
         self.swap_entities(new_child_index, child_index);
         comp_man.swap_components(new_child_index, child_index);
 
         // Get rid of dummy (just mark it as vacant, really)
         self.delete_entity(self.get_entity_from_index(child_index).as_ref().unwrap());
 
-        // Propagate for all children in the hierarchy
+        // Propagate for all grandchildren in the child hierarchy
         let grand_child_indices: Vec<u32> = self.entity_storage[new_child_index as usize]
             .children
             .iter()
@@ -407,17 +376,18 @@ impl EntityManager {
         }
         self.free_indices.clear();
         self.free_indices.reserve(free_indices_set.len());
+        // TODO: Very slow.. reconstructing heap when only two elements changed. We can't remove things from heap though
         for item in free_indices_set.iter() {
             self.free_indices.push(*item);
         }
 
-        // Update uuid map
-        self.uuid_to_index.insert(
-            self.entity_storage[source_index as usize].uuid,
+        // Update index map
+        self.entity_to_index.insert(
+            self.entity_storage[source_index as usize].current,
             target_index,
         );
-        self.uuid_to_index.insert(
-            self.entity_storage[target_index as usize].uuid,
+        self.entity_to_index.insert(
+            self.entity_storage[target_index as usize].current,
             source_index,
         );
 
@@ -445,7 +415,7 @@ impl EntityManager {
         self.reserve_space_for_entities(num_other_ents);
         for other_index in 0..num_other_ents {
             let new_ent = self.new_entity();
-            other_to_new_index[other_index as usize] = new_ent.index;
+            other_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
         }
 
         // Replicate parent-child relationships

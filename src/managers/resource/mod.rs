@@ -99,7 +99,7 @@ impl ResourceManager {
     /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
     pub fn initialize(&mut self) {
         self.get_or_create_material("default");
-        self.get_or_create_material("local_normals");
+        self.get_or_create_material("local_normal");
 
         self.get_or_create_mesh("cube");
         self.get_or_create_mesh("plane");
