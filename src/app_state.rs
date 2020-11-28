@@ -71,8 +71,8 @@ impl AppState {
                 up: cgmath::Vector3::new(0.0, 0.0, 1.0),
                 target: cgmath::Point3::new(0.0, 0.0, 0.0),
                 fov_v: cgmath::Deg(80.0),
-                near: 1.0,
-                far: 1000.0,
+                near: 0.1,
+                far: 100000.0,
             },
             gl: None,
         }))

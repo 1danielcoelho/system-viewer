@@ -291,41 +291,68 @@ impl EngineInterface {
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
 
-        if let Err(error) = self.engine.scene_man.inject_scene(
-            "./public/Duck.glb_scene_0",
-            Some(TransformType {
-                scale: 1.0,
-                disp: cgmath::Vector3::new(0.0, 0.0, 1.0),
-                rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-            }),
-        ) {
-            log::error!("Failed to inject duck!: '{}'", error);
-        }
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/Duck.glb_scene_0",
+                Some(TransformType {
+                    scale: 1.0,
+                    disp: cgmath::Vector3::new(0.0, 0.0, 1.0),
+                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                }),
+            )
+            .expect("Failed to inject scene!");
 
-        if let Err(error) = self.engine.scene_man.inject_scene(
-            "./public/Duck.glb_scene_0",
-            Some(TransformType {
-                scale: 1.0,
-                disp: cgmath::Vector3::new(0.0, 0.0, 5.0),
-                rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-            }),
-        ) {
-            log::error!("Failed to inject duck 2!: '{}'", error);
-        }
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/Duck.glb_scene_0",
+                Some(TransformType {
+                    scale: 1.0,
+                    disp: cgmath::Vector3::new(0.0, 0.0, 5.0),
+                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                }),
+            )
+            .expect("Failed to inject scene!");
 
-        if let Err(error) = self.engine.scene_man.inject_scene(
-            "./public/Duck.glb_scene_0",
-            Some(TransformType {
-                scale: 3.0,
-                disp: cgmath::Vector3::new(0.0, 5.0, 5.0),
-                rot: cgmath::Rotation3::from_axis_angle(
-                    cgmath::Vector3::new(1.0, 0.0, 0.0),
-                    cgmath::Deg(45.0),
-                ),
-            }),
-        ) {
-            log::error!("Failed to inject duck 2!: '{}'", error);
-        }
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/Duck.glb_scene_0",
+                Some(TransformType {
+                    scale: 3.0,
+                    disp: cgmath::Vector3::new(0.0, 5.0, 5.0),
+                    rot: cgmath::Rotation3::from_axis_angle(
+                        cgmath::Vector3::new(1.0, 0.0, 0.0),
+                        cgmath::Deg(45.0),
+                    ),
+                }),
+            )
+            .expect("Failed to inject scene!");
+
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/2CylinderEngine.glb_scene_0",
+                Some(TransformType {
+                    scale: 0.1,
+                    disp: cgmath::Vector3::new(0.0, -100.0, 0.0),
+                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                }),
+            )
+            .expect("Failed to inject scene!");
+
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/gltf_3_cubes.glb_scene_0",
+                Some(TransformType {
+                    scale: 0.1,
+                    disp: cgmath::Vector3::new(0.0, 5.0, 0.0),
+                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                }),
+            )
+            .expect("Failed to inject scene!");
 
         let event_loop = EventLoop::new();
 

@@ -81,9 +81,9 @@ impl SceneManager {
         let trans: &mut TransformType = trans_comp.get_local_transform_mut();
         let (pos, quat, scale) = node.transform().decomposed();
         trans.disp.x = pos[0];
-        trans.disp.y = pos[1];
-        trans.disp.z = pos[2];
-        trans.rot.v = cgmath::Vector3::new(quat[0], quat[1], quat[2]);
+        trans.disp.y = -pos[2];
+        trans.disp.z = pos[1];
+        trans.rot.v = cgmath::Vector3::new(quat[0], -quat[2], quat[1]);
         trans.rot.s = quat[3];
         trans.rot = trans.rot.normalize();
         trans.scale = scale[0];

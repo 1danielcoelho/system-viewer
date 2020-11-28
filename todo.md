@@ -89,6 +89,10 @@
 <!-- - Actually parent one node to the other -->
 <!-- - Construct unique identifiers for resources like meshes, materials and textures, because when parsing the nodes they'll be referred to directly -->
 <!-- - Splice at transform x -> set tarnsform to scene root -->
+<!-- - Flipped Y when going from blender to sv 
+- Nested transforms are broken for the engine scene
+    - They were both the same issue: I wasn't flipping the transforms from Y-up to Z-up -->
+
 - Get simple PBR materials working
     <!-- - Make material/mesh names unique in some way -->    
     - Fetch imported GLTF materials when parsing GLTF meshes
