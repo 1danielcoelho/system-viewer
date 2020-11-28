@@ -1,28 +1,21 @@
 use std::{collections::HashMap, rc::Rc};
 
-use cgmath::{Vector2, Vector3, Vector4};
-use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
 use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
-use self::{
-    gltf_resource::GltfResource,
-    mesh_generation::{
-        generate_axes, generate_cube, generate_grid, generate_plane, intermediate_to_mesh,
-        IntermediateMesh, IntermediatePrimitive,
-    },
-};
+use self::procedural_meshes::*;
 
-pub use gltf_resource::*;
+pub use gltf_resources::*;
 pub use materials::*;
 pub use mesh::*;
 pub use shaders::*;
 pub use texture::*;
 
-pub mod gltf_resource;
+pub mod gltf_resources;
+mod intermediate_mesh;
 mod materials;
 mod mesh;
-mod mesh_generation;
+mod procedural_meshes;
 mod shaders;
 mod texture;
 
@@ -103,89 +96,88 @@ impl ResourceManager {
         };
     }
 
-    pub fn get_mesh(&self, name: &str) -> Option<Rc<Mesh>> {
-        if let Some(mesh) = self.meshes.get(name) {
+    /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
+    pub fn initialize(&mut self) {
+        self.get_or_create_material("default");
+        self.get_or_create_material("local_normal");
+
+        self.get_or_create_mesh("cube");
+        self.get_or_create_mesh("plane");
+        self.get_or_create_mesh("grid");
+        self.get_or_create_mesh("axes");
+    }
+
+    pub fn get_mesh(&self, identifier: &str) -> Option<Rc<Mesh>> {
+        if let Some(mesh) = self.meshes.get(identifier) {
             return Some(mesh.clone());
         }
 
         return None;
     }
 
-    pub fn get_or_create_mesh(&mut self, name: &str) -> Option<Rc<Mesh>> {
-        if let Some(mesh) = self.meshes.get(name) {
-            return Some(mesh.clone());
+    pub fn get_or_create_mesh(&mut self, identifier: &str) -> Option<Rc<Mesh>> {
+        if let Some(mesh) = self.get_mesh(identifier) {
+            return Some(mesh);
         }
 
         let default_mat = self.get_or_create_material("default");
 
-        if name == "cube" {
+        if identifier == "cube" {
             let mesh = generate_cube(&self.gl, default_mat);
-            log::info!("Generated mesh '{}'", name);
-            self.meshes.insert(name.to_string(), mesh.clone());
+            log::info!("Generated mesh '{}'", identifier);
+            self.meshes.insert(identifier.to_string(), mesh.clone());
             return Some(mesh);
         };
 
-        if name == "plane" {
+        if identifier == "plane" {
             let mesh = generate_plane(&self.gl, default_mat);
-            log::info!("Generated mesh '{}'", name);
-            self.meshes.insert(name.to_string(), mesh.clone());
+            log::info!("Generated mesh '{}'", identifier);
+            self.meshes.insert(identifier.to_string(), mesh.clone());
             return Some(mesh);
         };
 
-        if name == "grid" {
+        if identifier == "grid" {
             let mesh = generate_grid(&self.gl, 200, default_mat);
-            log::info!("Generated mesh '{}'", name);
-            self.meshes.insert(name.to_string(), mesh.clone());
+            log::info!("Generated mesh '{}'", identifier);
+            self.meshes.insert(identifier.to_string(), mesh.clone());
             return Some(mesh);
         };
 
-        if name == "axes" {
+        if identifier == "axes" {
             let mesh = generate_axes(&self.gl, default_mat);
-            log::info!("Generated mesh '{}'", name);
-            self.meshes.insert(name.to_string(), mesh.clone());
+            log::info!("Generated mesh '{}'", identifier);
+            self.meshes.insert(identifier.to_string(), mesh.clone());
             return Some(mesh);
         };
 
-        log::warn!("Failed to find mesh with name '{}'", name);
+        log::warn!("Failed to find mesh with name '{}'", identifier);
         return None;
     }
 
-    pub fn get_or_create_material(&mut self, name: &str) -> Option<Rc<Material>> {
-        if let Some(mat) = self.materials.get(name) {
+    pub fn get_material(&self, identifier: &str) -> Option<Rc<Material>> {
+        if let Some(mat) = self.materials.get(identifier) {
             return Some(mat.clone());
         }
 
-        if name == "default" {
-            log::info!("Generating material '{}'", name);
+        return None;
+    }
+
+    pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<Material>> {
+        if let Some(mat) = self.get_material(identifier) {
+            return Some(mat);
+        }
+
+        if identifier == "default" {
+            log::info!("Generating material '{}'", identifier);
             let program = link_program(
                 &self.gl,
                 &crate::managers::resource::shaders::vertex::relay_color::SHADER,
                 &crate::managers::resource::shaders::fragment::color::SHADER,
             )
-            .expect(format!("Failed to compile material '{}'!", name).as_str());
+            .expect(format!("Failed to compile material '{}'!", identifier).as_str());
 
             let default = Rc::new(Material {
-                name: name.to_string(),
-                u_transform: self
-                    .gl
-                    .get_uniform_location(&program, "uTransform")
-                    .unwrap(),
-                program: program,
-            });
-
-            self.materials.insert(name.to_string(), default.clone());
-            return Some(default);
-        } else if name == "local_normal" {
-            log::info!("Generating material '{}'", name);
-            let program = link_program(
-                &self.gl,
-                &crate::managers::resource::shaders::vertex::relay_all::SHADER,
-                &crate::managers::resource::shaders::fragment::local_normal::SHADER,
-            )
-            .expect(format!("Failed to compile material '{}'!", name).as_str());
-
-            let local_normal = Rc::new(Material {
-                name: name.to_string(),
+                name: identifier.to_string(),
                 u_transform: self
                     .gl
                     .get_uniform_location(&program, "uTransform")
@@ -194,283 +186,35 @@ impl ResourceManager {
             });
 
             self.materials
-                .insert(name.to_string(), local_normal.clone());
+                .insert(identifier.to_string(), default.clone());
+            return Some(default);
+        } else if identifier == "local_normal" {
+            log::info!("Generating material '{}'", identifier);
+            let program = link_program(
+                &self.gl,
+                &crate::managers::resource::shaders::vertex::relay_all::SHADER,
+                &crate::managers::resource::shaders::fragment::local_normal::SHADER,
+            )
+            .expect(format!("Failed to compile material '{}'!", identifier).as_str());
+
+            let local_normal = Rc::new(Material {
+                name: identifier.to_string(),
+                u_transform: self
+                    .gl
+                    .get_uniform_location(&program, "uTransform")
+                    .unwrap(),
+                program: program,
+            });
+
+            self.materials
+                .insert(identifier.to_string(), local_normal.clone());
             return Some(local_normal);
         }
 
         return None;
     }
 
-    pub fn load_materials_from_gltf(
-        &mut self,
-        file_identifier: &str,
-        materials: gltf::iter::Materials,
-    ) {
-        log::info!(
-            "Loading {} materials from gltf file {}",
-            materials.len(),
-            file_identifier
-        );
-    }
-
-    fn load_mesh_from_gltf(
-        scene_identifier: &str,
-        mesh: &gltf::Mesh,
-        buffers: &Vec<gltf::buffer::Data>,
-        default_material: &Option<Rc<Material>>,
-        ctx: &WebGlRenderingContext,
-    ) -> Result<Rc<Mesh>, String> {
-        let name = mesh.get_identifier(scene_identifier);
-
-        log::info!("\tMesh {}, num_prims: {}", name, mesh.primitives().len());
-
-        let mut inter_prims: Vec<IntermediatePrimitive> = Vec::new();
-        inter_prims.reserve(mesh.primitives().len());
-        for prim in mesh.primitives() {
-            let reader = prim.reader(|buffer| Some(&buffers[buffer.index()]));
-
-            // Name
-            let prim_name = prim.index().to_string();
-
-            // Indices
-            let mut indices_vec: Vec<u16> = Vec::new();
-            if let Some(indices) = reader.read_indices() {
-                match indices {
-                    ReadIndices::U8(iter) => {
-                        indices_vec = iter.map(|byte| byte as u16).collect();
-                    }
-                    ReadIndices::U16(iter) => {
-                        indices_vec = iter.collect();
-                    }
-                    ReadIndices::U32(_) => {
-                        log::warn!(
-                            "Skipping prim {} of mesh {} because it uses u32 vertex indices",
-                            prim.index(),
-                            name
-                        );
-                        continue;
-                    }
-                }
-            }
-
-            // Positions
-            let mut positions_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
-            if let Some(positions) = reader.read_positions() {
-                positions_vec = positions
-                    .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
-                    .collect();
-            }
-
-            // Normals
-            let mut normals_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
-            if let Some(normals) = reader.read_normals() {
-                normals_vec = normals
-                    .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
-                    .collect();
-            }
-
-            // Colors
-            let mut colors_vec: Vec<cgmath::Vector4<f32>> = Vec::new();
-            if let Some(colors) = reader.read_colors(0) {
-                // TODO: Set the proper webgl buffer values and don't do this conversion?
-                match colors {
-                    ReadColors::RgbU8(arr) => {
-                        colors_vec = arr
-                            .map(|c| {
-                                Vector4::new(
-                                    c[0] as f32 / std::u8::MAX as f32,
-                                    c[1] as f32 / std::u8::MAX as f32,
-                                    c[2] as f32 / std::u8::MAX as f32,
-                                    1.0,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadColors::RgbU16(arr) => {
-                        colors_vec = arr
-                            .map(|c| {
-                                Vector4::new(
-                                    c[0] as f32 / std::u16::MAX as f32,
-                                    c[1] as f32 / std::u16::MAX as f32,
-                                    c[2] as f32 / std::u16::MAX as f32,
-                                    1.0,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadColors::RgbF32(arr) => {
-                        colors_vec = arr.map(|c| Vector4::new(c[0], c[1], c[2], 1.0)).collect()
-                    }
-                    ReadColors::RgbaU8(arr) => {
-                        colors_vec = arr
-                            .map(|c| {
-                                Vector4::new(
-                                    c[0] as f32 / std::u8::MAX as f32,
-                                    c[1] as f32 / std::u8::MAX as f32,
-                                    c[2] as f32 / std::u8::MAX as f32,
-                                    c[3] as f32 / std::u8::MAX as f32,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadColors::RgbaU16(arr) => {
-                        colors_vec = arr
-                            .map(|c| {
-                                Vector4::new(
-                                    c[0] as f32 / std::u16::MAX as f32,
-                                    c[1] as f32 / std::u16::MAX as f32,
-                                    c[2] as f32 / std::u16::MAX as f32,
-                                    c[3] as f32 / std::u16::MAX as f32,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadColors::RgbaF32(arr) => {
-                        colors_vec = arr.map(|c| Vector4::new(c[0], c[1], c[2], c[3])).collect()
-                    }
-                }
-            }
-
-            // UV0
-            let mut uv0_vec: Vec<cgmath::Vector2<f32>> = Vec::new();
-            if let Some(uv0) = reader.read_tex_coords(0) {
-                match uv0 {
-                    ReadTexCoords::U8(arr) => {
-                        uv0_vec = arr
-                            .map(|c| {
-                                Vector2::new(
-                                    c[0] as f32 / std::u8::MAX as f32,
-                                    c[1] as f32 / std::u8::MAX as f32,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadTexCoords::U16(arr) => {
-                        uv0_vec = arr
-                            .map(|c| {
-                                Vector2::new(
-                                    c[0] as f32 / std::u16::MAX as f32,
-                                    c[1] as f32 / std::u16::MAX as f32,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadTexCoords::F32(arr) => {
-                        uv0_vec = arr.map(|c| Vector2::new(c[0], c[1])).collect()
-                    }
-                }
-            }
-
-            // UV1
-            let mut uv1_vec: Vec<cgmath::Vector2<f32>> = Vec::new();
-            if let Some(uv1) = reader.read_tex_coords(1) {
-                match uv1 {
-                    ReadTexCoords::U8(arr) => {
-                        uv1_vec = arr
-                            .map(|c| {
-                                Vector2::new(
-                                    c[0] as f32 / std::u8::MAX as f32,
-                                    c[1] as f32 / std::u8::MAX as f32,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadTexCoords::U16(arr) => {
-                        uv1_vec = arr
-                            .map(|c| {
-                                Vector2::new(
-                                    c[0] as f32 / std::u16::MAX as f32,
-                                    c[1] as f32 / std::u16::MAX as f32,
-                                )
-                            })
-                            .collect()
-                    }
-                    ReadTexCoords::F32(arr) => {
-                        uv1_vec = arr.map(|c| Vector2::new(c[0], c[1])).collect()
-                    }
-                }
-            }
-
-            log::info!(
-                "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
-                prim_name,
-                indices_vec.len(),
-                positions_vec.len(),
-                normals_vec.len(),
-                colors_vec.len(),
-                uv0_vec.len(),
-                uv1_vec.len(),
-                prim.mode().as_gl_enum(),
-                default_material.as_ref().unwrap().name,
-            );
-
-            inter_prims.push(IntermediatePrimitive {
-                name: prim_name,
-                indices: indices_vec,
-                positions: positions_vec,
-                normals: normals_vec,
-                colors: colors_vec,
-                uv0: uv0_vec,
-                uv1: uv1_vec,
-                mode: prim.mode().as_gl_enum(),
-                mat: Some(default_material.as_ref().unwrap().clone()),
-            });
-        }
-
-        return Ok(intermediate_to_mesh(
-            IntermediateMesh {
-                name,
-                primitives: inter_prims,
-            },
-            ctx,
-        ));
-    }
-
-    pub fn load_meshes_from_gltf(
-        &mut self,
-        file_identifier: &str,
-        meshes: gltf::iter::Meshes,
-        buffers: &Vec<gltf::buffer::Data>,
-    ) {
-        let default_mat = self.get_or_create_material("local_normal");
-
-        log::info!(
-            "Loading {} meshes from gltf file {}",
-            meshes.len(),
-            file_identifier
-        );
-
-        for mesh in meshes {
-            match ResourceManager::load_mesh_from_gltf(
-                file_identifier,
-                &mesh,
-                &buffers,
-                &default_mat,
-                &self.gl,
-            ) {
-                Ok(new_mesh) => {
-                    self.meshes.insert(new_mesh.name.clone(), new_mesh);
-                }
-                Err(msg) => {
-                    log::error!("Failed to load gltf mesh: {}", msg);
-                }
-            }
-        }
-    }
-
     pub fn get_texture(&self, _name: &str) -> Option<Rc<Texture>> {
         return None;
-    }
-
-    pub fn load_textures_from_gltf(
-        &mut self,
-        file_identifier: &str,
-        textures: gltf::iter::Textures,
-    ) {
-        log::info!(
-            "Loading {} textures from gltf file {}",
-            textures.len(),
-            file_identifier
-        );
     }
 }

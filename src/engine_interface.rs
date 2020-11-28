@@ -74,6 +74,8 @@ impl EngineInterface {
 
         EngineInterface::setup_event_handlers(&canvas, app_state.clone());
 
+        engine.res_man.initialize();
+
         engine
             .scene_man
             .load_test_scene("test", &mut engine.res_man);

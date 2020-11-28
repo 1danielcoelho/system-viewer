@@ -2,12 +2,11 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{ComponentManager, Entity, EntityManager, ResourceManager};
+use super::{ComponentManager, Entity, EntityManager, resource::gltf_resources::GltfResource, ResourceManager};
 use crate::components::{
     transform::TransformType, ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent,
     UIComponent,
 };
-use crate::managers::resource::gltf_resource::GltfResource;
 
 #[derive(Clone)]
 pub struct Scene {

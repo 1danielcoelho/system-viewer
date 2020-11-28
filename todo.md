@@ -94,9 +94,10 @@
     - They were both the same issue: I wasn't flipping the transforms from Y-up to Z-up -->
 <!-- - Make material/mesh names unique in some way -->    
 
-# Compile all engine materials up front
-# Cleanup resource manager
+<!-- # Compile all engine materials up front -->
+<!-- # Cleanup resource manager -->
 # Honestly I may not even need the entity index inside Entity and always use just the uuid
+# Less dumb way of storing/reading shaders
 # Find a better way of handling component updates when sorting after reparenting
 # Lights and simple phong material
 # Get simple PBR materials working
