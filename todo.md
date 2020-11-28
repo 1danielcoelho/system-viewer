@@ -85,6 +85,7 @@
 <!-- - Add another local_normals material and a world_normals material to use for the duck for now -->
 <!-- - I think I may need some coordinate conversion from GLTF, at least the up axes -->
 - Implement splicing a scene into the current scene, to add the node hierarchy as it is in the GLTF file
+    <!-- - Construct unique identifiers for resources like meshes, materials and textures, because when parsing the nodes they'll be referred to directly -->
 - Get simple PBR materials working
     - Make material/mesh names unique in some way
     - Fetch imported GLTF materials when parsing GLTF meshes

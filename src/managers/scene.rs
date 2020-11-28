@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
-use cgmath::Vector3;
+use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{ComponentManager, EntityManager, ResourceManager};
+use super::{ComponentManager, Entity, EntityManager, ResourceManager};
 use crate::components::{
-    ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
+    transform::TransformType, ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent,
+    UIComponent,
 };
+use crate::managers::resource::gltf_resource::GltfResource;
 
 pub struct Scene {
     pub identifier: String,
@@ -58,11 +60,120 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
+    fn load_node(
+        node: &gltf::Node,
+        indent_level: u32,
+        file_identifier: &str,
+        scene: &mut Scene,
+        resources: &ResourceManager,
+    ) {
+        let indent = "\t".repeat(indent_level as usize);
+
+        let ent: Entity = scene.ent_man.new_entity();
+        let ent_index = scene.ent_man.get_entity_index(&ent).unwrap();
+
+        // Transform
+        let trans_comp = scene
+            .comp_man
+            .add_component::<TransformComponent>(ent_index)
+            .unwrap();
+        let trans: &mut TransformType = trans_comp.get_local_transform_mut();
+        let (pos, quat, scale) = node.transform().decomposed();
+        trans.disp.x = pos[0];
+        trans.disp.y = pos[1];
+        trans.disp.z = pos[2];
+        trans.rot.v = cgmath::Vector3::new(quat[0], quat[1], quat[2]);
+        trans.rot.s = quat[3];
+        trans.rot = trans.rot.normalize();
+        trans.scale = scale[0];
+
+        if !scale[0].ulps_eq(&scale[1], f32::EPSILON, f32::default_max_ulps())
+            || !scale[0].ulps_eq(&scale[2], f32::EPSILON, f32::default_max_ulps())
+        {
+            log::warn!(
+                "Ignoring non-uniform scale '[{}, {}, {}]' for node '{}' of scene '{}'",
+                scale[0],
+                scale[1],
+                scale[2],
+                node.index(),
+                scene.identifier
+            );
+        }
+
+        // Mesh
+        let mut mesh_str = String::new();
+        if let Some(mesh) = node.mesh() {
+            let mesh_comp = scene
+                .comp_man
+                .add_component::<MeshComponent>(ent_index)
+                .unwrap();
+
+            let mesh_identifier = mesh.get_identifier(&file_identifier);
+            mesh_str = mesh_identifier.to_owned();
+            if let Some(found_mesh) = resources.get_mesh(&mesh_identifier) {
+                mesh_comp.set_mesh(Some(found_mesh));
+            } else {
+                log::error!(
+                    "Failed to find mesh '{}' required by node '{}' of scene '{}'",
+                    mesh_identifier,
+                    node.index(),
+                    scene.identifier
+                );
+            }
+        }
+
+        log::info!(
+            "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
+            indent,
+            node.get_identifier(&file_identifier),
+            pos[0],
+            pos[1],
+            pos[2],
+            quat[0],
+            quat[1],
+            quat[2],
+            quat[3],
+            scale[0],
+            scale[1],
+            scale[2],
+            mesh_str
+        );
+
+        // Children
+        for child in node.children() {
+            SceneManager::load_node(&child, indent_level + 1, file_identifier, scene, resources);
+        }
+    }
+
     pub fn load_scenes_from_gltf(
         &mut self,
-        _gltf: gltf::iter::Scenes,
-        _resources: &ResourceManager,
+        file_identifier: &str,
+        scenes: gltf::iter::Scenes,
+        resources: &ResourceManager,
     ) {
+        let num_scenes = scenes.len();
+        log::info!(
+            "Loading {} scenes from gltf file '{}':",
+            num_scenes,
+            file_identifier
+        );
+
+        for gltf_scene in scenes {
+            let num_nodes = gltf_scene.nodes().len();
+
+            let scene_identifier = gltf_scene.get_identifier(file_identifier);
+            let mut scene = Scene::new(&scene_identifier);
+            log::info!("\tScene '{}': {} nodes", scene_identifier, num_nodes);
+
+            scene.ent_man.reserve_space_for_entities(num_nodes as u32);
+
+            for root_node in gltf_scene.nodes() {
+                SceneManager::load_node(&root_node, 2, file_identifier, &mut scene, &resources);
+            }
+
+            self.loaded_scenes
+                .insert(scene_identifier.to_string(), scene);
+        }
     }
 
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
@@ -75,7 +186,7 @@ impl SceneManager {
             .comp_man
             .add_component::<TransformComponent>(parent_id)
             .unwrap();
-        trans_comp.get_local_transform_mut().scale = 0.05;
+        //trans_comp.get_local_transform_mut().scale = 0.05;
         let phys_comp = scene
             .comp_man
             .add_component::<PhysicsComponent>(parent_id)
@@ -86,8 +197,8 @@ impl SceneManager {
             .comp_man
             .add_component::<MeshComponent>(parent_id)
             .unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("LOD3spShape0"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("local_normal"), 0);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        //mesh_comp.set_material_override(res_man.get_or_create_material("local_normal"), 0);
 
         let child = scene.ent_man.new_entity();
         let child_id = scene.ent_man.get_entity_index(&child).unwrap();

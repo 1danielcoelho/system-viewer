@@ -252,22 +252,24 @@ impl EngineInterface {
     }
 
     #[wasm_bindgen]
-    pub fn load_gltf(&mut self, data: &mut [u8]) {
-        log::info!("Load_gltf: received {} bytes", data.len());
+    pub fn load_gltf(&mut self, identifier: &str, data: &mut [u8]) {
+        log::info!("Load_gltf: id: {}, received {} bytes", identifier, data.len());
+
+        assert!(self.engine.scene_man.get_scene(identifier).is_none(), format!("Duplicate scene with identifier '{}'!", identifier));
 
         if let Ok((gltf_doc, gltf_buffers, gltf_images)) = gltf::import_slice(data) {
             self.engine
                 .res_man
-                .load_textures_from_gltf(gltf_doc.textures());
+                .load_textures_from_gltf(identifier, gltf_doc.textures());
             self.engine
                 .res_man
-                .load_materials_from_gltf(gltf_doc.materials());
+                .load_materials_from_gltf(identifier, gltf_doc.materials());
             self.engine
                 .res_man
-                .load_meshes_from_gltf(gltf_doc.meshes(), &gltf_buffers);
+                .load_meshes_from_gltf(identifier, gltf_doc.meshes(), &gltf_buffers);
             self.engine
                 .scene_man
-                .load_scenes_from_gltf(gltf_doc.scenes(), &self.engine.res_man);
+                .load_scenes_from_gltf(identifier, gltf_doc.scenes(), &self.engine.res_man);
         }
     }
 

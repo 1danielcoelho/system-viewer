@@ -6,7 +6,7 @@ function load_gltf(url, engine) {
   return fetch(url).then((response) =>
     response
       .arrayBuffer()
-      .then((buffer) => engine.load_gltf(new Uint8Array(buffer)))
+      .then((buffer) => engine.load_gltf(url, new Uint8Array(buffer)))
   );
 }
 
@@ -20,6 +20,7 @@ rust.then(async (m) => {
 
   // Sync loading of all assets for now
   await Promise.all([load_gltf("./public/Duck.glb", engine)]);
+  await Promise.all([load_gltf("./public/2CylinderEngine.glb", engine)]);
 
   engine.begin_loop();
 });

@@ -5,22 +5,26 @@ use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
 use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 
-use self::mesh_generation::{
-    generate_axes, generate_cube, generate_grid, generate_plane, intermediate_to_mesh,
-    IntermediateMesh, IntermediatePrimitive,
+use self::{
+    gltf_resource::GltfResource,
+    mesh_generation::{
+        generate_axes, generate_cube, generate_grid, generate_plane, intermediate_to_mesh,
+        IntermediateMesh, IntermediatePrimitive,
+    },
 };
 
+pub use gltf_resource::*;
 pub use materials::*;
 pub use mesh::*;
 pub use shaders::*;
 pub use texture::*;
 
+pub mod gltf_resource;
 mod materials;
 mod mesh;
+mod mesh_generation;
 mod shaders;
 mod texture;
-
-mod mesh_generation;
 
 fn link_program(
     gl: &WebGlRenderingContext,
@@ -97,6 +101,14 @@ impl ResourceManager {
             materials: HashMap::new(),
             gl,
         };
+    }
+
+    pub fn get_mesh(&self, name: &str) -> Option<Rc<Mesh>> {
+        if let Some(mesh) = self.meshes.get(name) {
+            return Some(mesh.clone());
+        }
+
+        return None;
     }
 
     pub fn get_or_create_mesh(&mut self, name: &str) -> Option<Rc<Mesh>> {
@@ -189,18 +201,21 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn load_materials_from_gltf(&mut self, _materials: gltf::iter::Materials) {}
+    pub fn load_materials_from_gltf(
+        &mut self,
+        scene_identifier: &str,
+        materials: gltf::iter::Materials,
+    ) {
+    }
 
     fn load_mesh_from_gltf(
+        scene_identifier: &str,
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
         default_material: &Option<Rc<Material>>,
         ctx: &WebGlRenderingContext,
     ) -> Result<Rc<Mesh>, String> {
-        let mut name = mesh.index().to_string();
-        if let Some(mesh_name) = mesh.name() {
-            name = mesh_name.to_owned() + &name;
-        }
+        let name = mesh.get_identifier(scene_identifier);
 
         let mut inter_prims: Vec<IntermediatePrimitive> = Vec::new();
         inter_prims.reserve(mesh.primitives().len());
@@ -408,6 +423,7 @@ impl ResourceManager {
 
     pub fn load_meshes_from_gltf(
         &mut self,
+        scene_identifier: &str,
         meshes: gltf::iter::Meshes,
         buffers: &Vec<gltf::buffer::Data>,
     ) {
@@ -416,7 +432,13 @@ impl ResourceManager {
         let mut num_loaded = 0;
         let mut num_failed = 0;
         for mesh in meshes {
-            match ResourceManager::load_mesh_from_gltf(&mesh, &buffers, &default_mat, &self.gl) {
+            match ResourceManager::load_mesh_from_gltf(
+                scene_identifier,
+                &mesh,
+                &buffers,
+                &default_mat,
+                &self.gl,
+            ) {
                 Ok(new_mesh) => {
                     log::info!("Loaded gltf mesh: {}", new_mesh.name);
                     self.meshes.insert(new_mesh.name.clone(), new_mesh);
@@ -440,5 +462,5 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn load_textures_from_gltf(&mut self, _textures: gltf::iter::Textures) {}
+    pub fn load_textures_from_gltf(&mut self, identifier: &str, textures: gltf::iter::Textures) {}
 }
