@@ -1,2 +1,2 @@
-pub mod relay_all;
-pub mod relay_color;
+pub static RELAY_ALL: &str = include_str!("relay_all.glsl");
+pub static RELAY_COLOR: &str = include_str!("relay_color.glsl");

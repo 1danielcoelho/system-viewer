@@ -97,7 +97,7 @@
 <!-- # Compile all engine materials up front -->
 <!-- # Cleanup resource manager -->
 # Honestly I may not even need the entity index inside Entity and always use just the uuid
-# Less dumb way of storing/reading shaders
+<!-- # Less dumb way of storing/reading shaders -->
 # Find a better way of handling component updates when sorting after reparenting
 # Lights and simple phong material
 # Get simple PBR materials working

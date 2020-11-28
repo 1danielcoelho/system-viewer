@@ -99,7 +99,7 @@ impl ResourceManager {
     /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
     pub fn initialize(&mut self) {
         self.get_or_create_material("default");
-        self.get_or_create_material("local_normal");
+        self.get_or_create_material("local_normals");
 
         self.get_or_create_mesh("cube");
         self.get_or_create_mesh("plane");
@@ -122,36 +122,23 @@ impl ResourceManager {
 
         let default_mat = self.get_or_create_material("default");
 
-        if identifier == "cube" {
-            let mesh = generate_cube(&self.gl, default_mat);
-            log::info!("Generated mesh '{}'", identifier);
-            self.meshes.insert(identifier.to_string(), mesh.clone());
-            return Some(mesh);
+        let mesh: Option<Rc<Mesh>> = match identifier {
+            "cube" => Some(generate_cube(&self.gl, default_mat)),
+            "plane" => Some(generate_plane(&self.gl, default_mat)),
+            "grid" => Some(generate_grid(&self.gl, 200, default_mat)),
+            "axes" => Some(generate_axes(&self.gl, default_mat)),
+            _ => None,
         };
 
-        if identifier == "plane" {
-            let mesh = generate_plane(&self.gl, default_mat);
-            log::info!("Generated mesh '{}'", identifier);
-            self.meshes.insert(identifier.to_string(), mesh.clone());
-            return Some(mesh);
-        };
+        match mesh {
+            Some(ref mesh) => {
+                log::info!("Generated mesh '{}'", identifier);
+                self.meshes.insert(identifier.to_string(), mesh.clone());
+            }
+            None => log::warn!("Failed to find mesh with name '{}'", identifier),
+        }
 
-        if identifier == "grid" {
-            let mesh = generate_grid(&self.gl, 200, default_mat);
-            log::info!("Generated mesh '{}'", identifier);
-            self.meshes.insert(identifier.to_string(), mesh.clone());
-            return Some(mesh);
-        };
-
-        if identifier == "axes" {
-            let mesh = generate_axes(&self.gl, default_mat);
-            log::info!("Generated mesh '{}'", identifier);
-            self.meshes.insert(identifier.to_string(), mesh.clone());
-            return Some(mesh);
-        };
-
-        log::warn!("Failed to find mesh with name '{}'", identifier);
-        return None;
+        return mesh;
     }
 
     pub fn get_material(&self, identifier: &str) -> Option<Rc<Material>> {
@@ -167,16 +154,22 @@ impl ResourceManager {
             return Some(mat);
         }
 
-        if identifier == "default" {
-            log::info!("Generating material '{}'", identifier);
-            let program = link_program(
+        let program = match identifier {
+            "default" => link_program(
                 &self.gl,
-                &crate::managers::resource::shaders::vertex::relay_color::SHADER,
-                &crate::managers::resource::shaders::fragment::color::SHADER,
-            )
-            .expect(format!("Failed to compile material '{}'!", identifier).as_str());
+                &shaders::vertex::RELAY_COLOR,
+                &shaders::fragment::COLOR,
+            ),
+            "local_normal" => link_program(
+                &self.gl,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::LOCAL_NORMAL,
+            ),
+            _ => Err("Invalid material identifier".to_owned()),
+        };
 
-            let default = Rc::new(Material {
+        if let Ok(program) = program {
+            let mat = Rc::new(Material {
                 name: identifier.to_string(),
                 u_transform: self
                     .gl
@@ -185,30 +178,11 @@ impl ResourceManager {
                 program: program,
             });
 
-            self.materials
-                .insert(identifier.to_string(), default.clone());
-            return Some(default);
-        } else if identifier == "local_normal" {
-            log::info!("Generating material '{}'", identifier);
-            let program = link_program(
-                &self.gl,
-                &crate::managers::resource::shaders::vertex::relay_all::SHADER,
-                &crate::managers::resource::shaders::fragment::local_normal::SHADER,
-            )
-            .expect(format!("Failed to compile material '{}'!", identifier).as_str());
-
-            let local_normal = Rc::new(Material {
-                name: identifier.to_string(),
-                u_transform: self
-                    .gl
-                    .get_uniform_location(&program, "uTransform")
-                    .unwrap(),
-                program: program,
-            });
-
-            self.materials
-                .insert(identifier.to_string(), local_normal.clone());
-            return Some(local_normal);
+            log::info!("Generated material '{}'", identifier);
+            self.materials.insert(identifier.to_string(), mat.clone());
+            return Some(mat);
+        } else {
+            log::error!("Failed to generate material '{}'", identifier);
         }
 
         return None;
