@@ -217,11 +217,7 @@ impl ResourceManager {
     ) -> Result<Rc<Mesh>, String> {
         let name = mesh.get_identifier(scene_identifier);
 
-        log::info!(
-            "Loading gltf mesh {}, num_prims: {}",
-            name,
-            mesh.primitives().len()
-        );
+        log::info!("\tMesh {}, num_prims: {}", name, mesh.primitives().len());
 
         let mut inter_prims: Vec<IntermediatePrimitive> = Vec::new();
         inter_prims.reserve(mesh.primitives().len());
@@ -391,7 +387,7 @@ impl ResourceManager {
             }
 
             log::info!(
-                "\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
+                "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
                 prim_name,
                 indices_vec.len(),
                 positions_vec.len(),
@@ -433,8 +429,12 @@ impl ResourceManager {
     ) {
         let default_mat = self.get_or_create_material("default");
 
-        let mut num_loaded = 0;
-        let mut num_failed = 0;
+        log::info!(
+            "Loading {} meshes from gltf scene {}",
+            meshes.len(),
+            scene_identifier
+        );
+
         for mesh in meshes {
             match ResourceManager::load_mesh_from_gltf(
                 scene_identifier,
@@ -445,20 +445,12 @@ impl ResourceManager {
             ) {
                 Ok(new_mesh) => {
                     self.meshes.insert(new_mesh.name.clone(), new_mesh);
-                    num_loaded += 1;
                 }
                 Err(msg) => {
                     log::error!("Failed to load gltf mesh: {}", msg);
-                    num_failed += 1;
                 }
             }
         }
-
-        log::info!(
-            "Loaded {} meshes from gltf. {} failed",
-            num_loaded,
-            num_failed
-        );
     }
 
     pub fn get_texture(&self, _name: &str) -> Option<Rc<Texture>> {

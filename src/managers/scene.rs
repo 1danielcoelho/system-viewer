@@ -66,7 +66,7 @@ impl SceneManager {
         file_identifier: &str,
         scene: &mut Scene,
         resources: &ResourceManager,
-    ) {
+    ) -> Entity {
         // let indent = "\t".repeat(indent_level as usize);
 
         let ent: Entity = scene.ent_man.new_entity();
@@ -141,8 +141,20 @@ impl SceneManager {
 
         // Children
         for child in node.children() {
-            SceneManager::load_gltf_node(&child, indent_level + 1, file_identifier, scene, resources);
+            let child_ent = SceneManager::load_gltf_node(
+                &child,
+                indent_level + 1,
+                file_identifier,
+                scene,
+                resources,
+            );
+
+            scene
+                .ent_man
+                .set_entity_parent(&ent, &child_ent, &mut scene.comp_man);
         }
+
+        return ent;
     }
 
     pub fn load_scenes_from_gltf(
@@ -163,13 +175,32 @@ impl SceneManager {
 
             let scene_identifier = gltf_scene.get_identifier(file_identifier);
             let mut scene = Scene::new(&scene_identifier);
-            log::info!("\tScene '{}': {} nodes", scene_identifier, num_nodes);
 
-            scene.ent_man.reserve_space_for_entities(num_nodes as u32);
+            scene
+                .ent_man
+                .reserve_space_for_entities((num_nodes + 1) as u32);
 
-            for root_node in gltf_scene.nodes() {
-                SceneManager::load_gltf_node(&root_node, 2, file_identifier, &mut scene, &resources);
+            let root_ent: Entity = scene.ent_man.new_entity();
+
+            for child_node in gltf_scene.nodes() {
+                let child_ent = SceneManager::load_gltf_node(
+                    &child_node,
+                    2,
+                    file_identifier,
+                    &mut scene,
+                    &resources,
+                );
+
+                scene
+                    .ent_man
+                    .set_entity_parent(&root_ent, &child_ent, &mut scene.comp_man);
             }
+
+            log::info!(
+                "\tScene '{}': {} total nodes",
+                scene_identifier,
+                scene.ent_man.get_num_entities()
+            );
 
             self.loaded_scenes
                 .insert(scene_identifier.to_string(), scene);
