@@ -75,8 +75,6 @@
 <!-- - I don't think I need the generational entity thing if I'm using uuids... -->
 <!-- - Tons of indirection when scanning through transform components -->
 <!-- # Move input stuff somewhere else -->
-
-# I want to import a GLTF object
 <!-- - Maybe create like a small slice of the components array, like a mini component manager and entity manager to store the imported gltf scene "prefab". Whenever want to spawn one we just copy it into the main one
     - This could be a "scene" as well
     - Sources (meshes/materials/textures) would be stored on the resource manager and shared
@@ -92,31 +90,42 @@
 <!-- - Flipped Y when going from blender to sv 
 - Nested transforms are broken for the engine scene
     - They were both the same issue: I wasn't flipping the transforms from Y-up to Z-up -->
-<!-- - Make material/mesh names unique in some way -->    
-
+<!-- - Make material/mesh names unique in some way --> 
 <!-- # Compile all engine materials up front -->
 <!-- # Cleanup resource manager -->
 <!-- # Honestly I may not even need the entity index inside Entity and always use just the uuid -->
 <!-- # Less dumb way of storing/reading shaders -->
-# Find a better way of handling component updates when sorting after reparenting
-- Make it so that entity 0 is the "invalid entity". It's going to have some components, but who cares
+<!-- # Make it so that entity 0 is the "invalid entity". It's going to have some components, but who cares -->
+
+# Sparse component arrays
+- Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities
+- Hash map from entity to component
+    - For now a "one for every entity" type of component and a "hashmap" type of component are a decent split, but later we could have another one that is also a contiguous array, but has an index switchboard 
+- Have a component for entity metadata maybe
+- Sparse light component
+- Sparse UI component
 # Lights and simple phong material
-# Get simple PBR materials working
+- Rendering system traverses sparse light components and sets the uniforms for the ones closest to the camera
+    - Maybe do this only once every 10 frames or something like that?
+- Lights
+    - Directional light
+    - Point light
+- Phong material
+- Add normals to procedural geometry
+# I want to import a GLTF object
+- Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
-# Get textures working
+- Get textures working
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now
     - Maybe ASCII too to help debugging
+# Find a better way of handling component updates when sorting after reparenting
 # Testing
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
 - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe
 # Update egui
-# Have a component for entity metadata maybe
-# Sparse component arrays?
-- Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities
-- Hash map from entity to component
 # Move camera `v` and `p` computation away from material. Probably all transform computation?
 - Camera class somehow (probably not worth it being a component)
 # Generated sphere mesh
