@@ -60,14 +60,14 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    fn load_node(
+    fn load_gltf_node(
         node: &gltf::Node,
         indent_level: u32,
         file_identifier: &str,
         scene: &mut Scene,
         resources: &ResourceManager,
     ) {
-        let indent = "\t".repeat(indent_level as usize);
+        // let indent = "\t".repeat(indent_level as usize);
 
         let ent: Entity = scene.ent_man.new_entity();
         let ent_index = scene.ent_man.get_entity_index(&ent).unwrap();
@@ -101,7 +101,7 @@ impl SceneManager {
         }
 
         // Mesh
-        let mut mesh_str = String::new();
+        // let mut mesh_str = String::new();
         if let Some(mesh) = node.mesh() {
             let mesh_comp = scene
                 .comp_man
@@ -109,7 +109,7 @@ impl SceneManager {
                 .unwrap();
 
             let mesh_identifier = mesh.get_identifier(&file_identifier);
-            mesh_str = mesh_identifier.to_owned();
+            // mesh_str = mesh_identifier.to_owned();
             if let Some(found_mesh) = resources.get_mesh(&mesh_identifier) {
                 mesh_comp.set_mesh(Some(found_mesh));
             } else {
@@ -122,26 +122,26 @@ impl SceneManager {
             }
         }
 
-        log::info!(
-            "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
-            indent,
-            node.get_identifier(&file_identifier),
-            pos[0],
-            pos[1],
-            pos[2],
-            quat[0],
-            quat[1],
-            quat[2],
-            quat[3],
-            scale[0],
-            scale[1],
-            scale[2],
-            mesh_str
-        );
+        // log::info!(
+        //     "{}Node '{}': pos: [{}, {}, {}], rot: [{}, {}, {}, {}], scale: [{}, {}, {}], mesh '{}'",
+        //     indent,
+        //     node.get_identifier(&file_identifier),
+        //     pos[0],
+        //     pos[1],
+        //     pos[2],
+        //     quat[0],
+        //     quat[1],
+        //     quat[2],
+        //     quat[3],
+        //     scale[0],
+        //     scale[1],
+        //     scale[2],
+        //     mesh_str
+        // );
 
         // Children
         for child in node.children() {
-            SceneManager::load_node(&child, indent_level + 1, file_identifier, scene, resources);
+            SceneManager::load_gltf_node(&child, indent_level + 1, file_identifier, scene, resources);
         }
     }
 
@@ -168,7 +168,7 @@ impl SceneManager {
             scene.ent_man.reserve_space_for_entities(num_nodes as u32);
 
             for root_node in gltf_scene.nodes() {
-                SceneManager::load_node(&root_node, 2, file_identifier, &mut scene, &resources);
+                SceneManager::load_gltf_node(&root_node, 2, file_identifier, &mut scene, &resources);
             }
 
             self.loaded_scenes

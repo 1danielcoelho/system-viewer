@@ -217,6 +217,12 @@ impl ResourceManager {
     ) -> Result<Rc<Mesh>, String> {
         let name = mesh.get_identifier(scene_identifier);
 
+        log::info!(
+            "Loading gltf mesh {}, num_prims: {}",
+            name,
+            mesh.primitives().len()
+        );
+
         let mut inter_prims: Vec<IntermediatePrimitive> = Vec::new();
         inter_prims.reserve(mesh.primitives().len());
         for prim in mesh.primitives() {
@@ -385,11 +391,15 @@ impl ResourceManager {
             }
 
             log::info!(
-                "Loaded gltf prim {}, num_indices: {}, num_positions: {}, num_colors: {}, mat: {}",
+                "\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
                 prim_name,
                 indices_vec.len(),
                 positions_vec.len(),
+                normals_vec.len(),
                 colors_vec.len(),
+                uv0_vec.len(),
+                uv1_vec.len(),
+                prim.mode().as_gl_enum(),
                 default_material.as_ref().unwrap().name,
             );
 
@@ -405,12 +415,6 @@ impl ResourceManager {
                 mat: Some(default_material.as_ref().unwrap().clone()),
             });
         }
-
-        log::info!(
-            "Loaded gltf mesh {}, num_prims: {}",
-            name,
-            inter_prims.len()
-        );
 
         return Ok(intermediate_to_mesh(
             IntermediateMesh {
@@ -440,7 +444,6 @@ impl ResourceManager {
                 &self.gl,
             ) {
                 Ok(new_mesh) => {
-                    log::info!("Loaded gltf mesh: {}", new_mesh.name);
                     self.meshes.insert(new_mesh.name.clone(), new_mesh);
                     num_loaded += 1;
                 }
