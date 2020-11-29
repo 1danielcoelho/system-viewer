@@ -37,10 +37,6 @@ impl Component for UIComponent {
         return self.enabled;
     }
 
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Ui;
-    }
-
     fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<Self::ComponentType> {
         return &mut w.interface;
     }

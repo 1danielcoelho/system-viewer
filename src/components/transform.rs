@@ -55,10 +55,6 @@ impl Default for TransformComponent {
 impl Component for TransformComponent {
     type ComponentType = TransformComponent;
 
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Transform;
-    }
-
     fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<TransformComponent> {
         return &mut w.transform;
     }

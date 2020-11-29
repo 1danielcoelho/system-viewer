@@ -99,8 +99,10 @@
 
 # Sparse component arrays
 - Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities
+- Can probably store some "component id" static number in each component, and use that to index into the vec_components hash map
 - Hash map from entity to component
     - For now a "one for every entity" type of component and a "hashmap" type of component are a decent split, but later we could have another one that is also a contiguous array, but has an index switchboard 
+- Have systems operate on some abstraction of an iterator to components, so that we can provide any type of storage in the same way
 - Have a component for entity metadata maybe
 - Sparse light component
 - Sparse UI component

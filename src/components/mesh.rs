@@ -74,11 +74,7 @@ impl Default for MeshComponent {
     }
 }
 impl Component for MeshComponent {
-    type ComponentType = MeshComponent;
-
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Mesh;
-    }
+    type ComponentType = Self;
 
     fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<MeshComponent> {
         return &mut w.mesh;

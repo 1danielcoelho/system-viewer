@@ -1,8 +1,61 @@
+use std::collections::HashMap;
+
 use crate::components::{
     Component, MeshComponent, PhysicsComponent, TransformComponent, UIComponent,
 };
 
-use super::{Event, EventReceiver};
+use super::{Entity, Event, EventReceiver};
+
+// Blob of weird stuff so that we can clone ComponentStorage
+//https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object
+pub trait ComponentStorageClone {
+    fn clone_box(&self) -> Box<dyn ComponentStorageBase>;
+}
+impl<T: 'static + ComponentStorageBase + Clone> ComponentStorageClone for T {
+    fn clone_box(&self) -> Box<dyn ComponentStorageBase> {
+        Box::new(self.clone())
+    }
+}
+impl Clone for Box<dyn ComponentStorageBase> {
+    fn clone(&self) -> Box<dyn ComponentStorageBase> {
+        self.clone_box()
+    }
+}
+
+// Base trait so that we can store type-erased storages in ComponentManager
+pub trait ComponentStorageBase : ComponentStorageClone {}
+impl<T: ComponentStorage> ComponentStorageBase for T {}
+
+// Trait implemented by any struct that stores cmoponents
+pub trait ComponentStorage: ComponentStorageBase {
+    type ComponentType: Component;
+
+    fn get_component(&self, index: usize) -> &Self::ComponentType;
+}
+
+#[derive(Clone)]
+pub struct VecStorage<T: Component> {
+    storage: Vec<T>,
+}
+impl<T: 'static + Component> ComponentStorage for VecStorage<T> {
+    type ComponentType = T;
+
+    fn get_component(&self, index: usize) -> &Self::ComponentType {
+        return &self.storage[index];
+    }
+}
+
+#[derive(Clone)]
+pub struct HashMapStorage<T: Component> {
+    storage: HashMap<usize, T>,
+}
+impl<T: 'static + Component> ComponentStorage for HashMapStorage<T> {
+    type ComponentType = T;
+
+    fn get_component(&self, index: usize) -> &Self::ComponentType {
+        return &self.storage[&index];
+    }
+}
 
 #[derive(Clone)]
 pub struct ComponentManager {
@@ -10,14 +63,26 @@ pub struct ComponentManager {
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
     pub interface: Vec<UIComponent>,
+
+    pub storages: HashMap<u32, Box<dyn ComponentStorageBase>>,
 }
 impl ComponentManager {
     pub fn new() -> Self {
+        let storage1: Vec<PhysicsComponent> = Vec::new();
+        let storage2: Vec<TransformComponent> = Vec::new();
+        let storage3: HashMap<usize, TransformComponent> = HashMap::new();
+
+        let mut storages: HashMap<u32, Box<dyn ComponentStorageBase>> = HashMap::new();
+        storages.insert(0, Box::new(VecStorage { storage: storage1 }));
+        storages.insert(1, Box::new(VecStorage { storage: storage2 }));
+        storages.insert(2, Box::new(HashMapStorage { storage: storage3 }));
+
         return Self {
             physics: vec![],
             mesh: vec![],
             transform: vec![],
             interface: vec![],
+            storages,
         };
     }
 
@@ -79,6 +144,19 @@ impl ComponentManager {
         }
     }
 }
+
+// impl Clone for ComponentManager {
+//     fn clone(&self) -> Self {
+//         return Self {
+//             interface: self.interface.clone(),
+//             mesh: self.mesh.clone(),
+//             physics: self.physics.clone(),
+//             transform: self.transform.clone(),
+//             vec_components: self.vec_components.clone_from_slice(src)
+//         }
+//     }
+// }
+
 impl EventReceiver for ComponentManager {
     fn receive_event(&mut self, _event: Event) {
         //
