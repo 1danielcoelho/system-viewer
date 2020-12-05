@@ -1,5 +1,7 @@
 use crate::managers::ComponentManager;
 
+#[repr(u32)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ComponentIndex {
     Transform = 0,
     Mesh = 1,
@@ -9,6 +11,7 @@ pub enum ComponentIndex {
 
 pub trait Component: Default + Clone {
     type ComponentType;
+    const INDEX: ComponentIndex;
 
     fn set_enabled(&mut self, enabled: bool);
     fn get_enabled(&mut self) -> bool;

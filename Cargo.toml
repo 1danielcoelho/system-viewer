@@ -21,6 +21,7 @@ winit = { version = "0.22", features = ["web-sys"] }
 egui = "0.2.0"
 gui_backend = { path = "gui_backend" }
 gltf = "0.15.2"
+anymap = "0.12.1"
 
 [dependencies.web-sys]
 version = "0.3.44"

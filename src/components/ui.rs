@@ -28,6 +28,7 @@ impl Default for UIComponent {
 }
 impl Component for UIComponent {
     type ComponentType = UIComponent;
+    const INDEX: ComponentIndex = ComponentIndex::Ui;
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;

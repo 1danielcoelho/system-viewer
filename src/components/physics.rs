@@ -42,6 +42,7 @@ impl Default for PhysicsComponent {
 }
 impl Component for PhysicsComponent {
     type ComponentType = PhysicsComponent;
+    const INDEX: ComponentIndex = ComponentIndex::Physics;
 
     fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<PhysicsComponent> {
         return &mut w.physics;
