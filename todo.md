@@ -97,13 +97,13 @@
 <!-- # Less dumb way of storing/reading shaders -->
 <!-- # Make it so that entity 0 is the "invalid entity". It's going to have some components, but who cares -->
 
-# Sparse component arrays
+<!-- # Sparse component arrays -->
 <!-- - Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities
 - Hash map from entity to component
     - For now a "one for every entity" type of component and a "hashmap" type of component are a decent split, but later we could have another one that is also a contiguous array, but has an index switchboard  -->
 <!-- - Have a component for entity metadata maybe
     - Don't need this yet, maybe later. I'll leave for when I have actual use cases -->
-- Sparse light component
+<!-- - Sparse light component -->
 <!-- - Sparse UI component -->
 # Lights and simple phong material
 - Rendering system traverses sparse light components and sets the uniforms for the ones closest to the camera
@@ -112,12 +112,14 @@
     - Directional light
     - Point light
 - Phong material
+    - Need to have a material trait object and different materials, as the attributes/uniforms will be different
 - Add normals to procedural geometry
 # I want to import a GLTF object
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
 - Get textures working
+# Procedural sphere
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now

@@ -14,7 +14,7 @@ pub struct SystemManager {
 impl SystemManager {
     pub fn new() -> Self {
         return Self {
-            render: RenderingSystem {},
+            render: RenderingSystem::new(),
             interface: InterfaceSystem::new(),
             physics: PhysicsSystem {},
             trans: TransformUpdateSystem {},
@@ -25,7 +25,8 @@ impl SystemManager {
     pub fn run(&mut self, state: &mut AppState, mut ent_man: &mut ECManager) {
         self.physics.run(state, &mut ent_man);
         self.trans.run(state, &mut ent_man);
-        self.render.run(state, &ent_man.transform, &ent_man.mesh);
+        self.render
+            .run(state, &ent_man.transform, &ent_man.mesh, &ent_man.light);
         self.interface.run(state, &ent_man);
     }
 }

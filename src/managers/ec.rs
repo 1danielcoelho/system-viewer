@@ -3,7 +3,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::{cmp::Reverse, hash::Hash};
 
 use crate::components::{
-    component::ComponentStorageType, Component, MeshComponent, PhysicsComponent,
+    component::ComponentStorageType, Component, LightComponent, MeshComponent, PhysicsComponent,
     TransformComponent, UIComponent,
 };
 
@@ -36,6 +36,7 @@ pub struct ECManager {
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
     pub interface: HashMap<Entity, UIComponent>,
+    pub light: HashMap<Entity, LightComponent>,
 }
 
 impl ECManager {
@@ -50,6 +51,7 @@ impl ECManager {
             mesh: Vec::new(),
             transform: Vec::new(),
             interface: HashMap::new(),
+            light: HashMap::new(),
         }
     }
 
