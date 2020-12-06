@@ -147,6 +147,9 @@
 - https://github.com/ggez/ggez
 - https://github.com/mrDIMAS/rg3d
 - https://github.com/PistonDevelopers/piston
+- https://github.com/wtvr-engine/wtvr3d/blob/8fcbb69104e0e204a6191723589013ddbd66629b/src/renderer/uniform.rs
+- https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/src/frame_buffer.rs
+- https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/resources/shaders/phong_forward.frag
 
 # Physics
 - https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics

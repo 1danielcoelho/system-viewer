@@ -249,7 +249,7 @@ impl ResourceManager {
                 uv0_vec.len(),
                 uv1_vec.len(),
                 prim.mode().as_gl_enum(),
-                default_material.as_ref().unwrap().name,
+                default_material.as_ref().unwrap().get_name(),
             );
 
             inter_prims.push(IntermediatePrimitive {

@@ -19,6 +19,15 @@ mod procedural_meshes;
 mod shaders;
 mod texture;
 
+// https://stackoverflow.com/a/28392068/2434460
+macro_rules! hashmap {
+    ($( $key: expr => $val: expr ),*) => {{
+         let mut map = ::std::collections::HashMap::new();
+         $( map.insert($key, $val); )*
+         map
+    }}
+}
+
 fn link_program(
     gl: &WebGlRenderingContext,
     vert_source: &str,
@@ -169,13 +178,15 @@ impl ResourceManager {
         };
 
         if let Ok(program) = program {
-            let mat = Rc::new(Material {
+            let trans_loc = self
+                .gl
+                .get_uniform_location(&program, "uTransform")
+                .unwrap();
+
+            let mat = Rc::new(UnlitMaterial {
                 name: identifier.to_string(),
-                u_transform: self
-                    .gl
-                    .get_uniform_location(&program, "uTransform")
-                    .unwrap(),
                 program: program,
+                uniform_locations: hashmap!["uTransform".to_owned() => trans_loc],
             });
 
             log::info!("Generated material '{}'", identifier);

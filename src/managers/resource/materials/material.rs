@@ -1,41 +1,24 @@
-use crate::{app_state::AppState, components::LightComponent, systems::NUM_LIGHTS, managers::resource::PrimitiveAttribute};
-
 use web_sys::*;
 
-pub struct Material {
-    pub name: String,
+use crate::{app_state::AppState, systems::NUM_LIGHTS};
 
-    pub program: WebGlProgram,
-
-    pub u_transform: WebGlUniformLocation,
+pub struct UniformData {
+    pub wvp: [f32; 16],
+    pub light_pos_or_dir: [f32; NUM_LIGHTS * 3],
+    pub light_colors: [f32; NUM_LIGHTS * 3],
+    pub light_intensities: [f32; NUM_LIGHTS],
 }
 
-impl Material {
-    pub fn bind_for_drawing(&self, state: &AppState, transform: &[f32; 16], lights: &[LightComponent; NUM_LIGHTS]) {
-        let gl = state.gl.as_ref().unwrap();
+pub trait Material {
+    fn set_name(&mut self, name: &str);
+    fn get_name(&self) -> &str;
 
-        // Set our shader program
-        gl.use_program(Some(&self.program));
+    fn set_program(&mut self, program: WebGlProgram);
+    fn get_program(&self) -> &WebGlProgram;
 
-        // Enable attributes
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
+    fn set_uniform_location(&mut self, id: &str, location: WebGlUniformLocation);
 
-        // Set uniforms
-        gl.uniform_matrix4fv_with_f32_array(Some(&self.u_transform), false, transform);
-    }
+    fn bind_for_drawing(&self, state: &AppState, uniform_data: &UniformData);
 
-    pub fn unbind_from_drawing(&self, state: &AppState) {
-        let gl = state.gl.as_ref().unwrap();
-
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
-        gl.use_program(None);
-    }
+    fn unbind_from_drawing(&self, state: &AppState);
 }

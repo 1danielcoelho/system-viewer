@@ -178,7 +178,7 @@ impl ECManager {
         }
     }
 
-    fn get_entity_index(&self, e: Entity) -> Option<u32> {
+    pub fn get_entity_index(&self, e: Entity) -> Option<u32> {
         match self.entity_to_index.get(&e) {
             Some(index) => {
                 let ent = &self.entity_storage[(*index) as usize];
