@@ -1,7 +1,10 @@
 use egui::{Pos2, Ui};
 use gui_backend::WebInput;
 
-use crate::{app_state::AppState, components::ui::WidgetType, managers::ComponentManager};
+use crate::{
+    app_state::AppState, components::ui::WidgetType, components::UIComponent, managers::ECManager,
+    managers::Entity,
+};
 
 pub struct InterfaceSystem {
     backend: gui_backend::WebBackend,
@@ -18,7 +21,7 @@ impl InterfaceSystem {
         };
     }
 
-    pub fn run(&mut self, state: &mut AppState, comp_man: &ComponentManager) {
+    pub fn run(&mut self, state: &mut AppState, comp_man: &ECManager) {
         self.pre_draw(state);
         self.draw(state, comp_man);
     }
@@ -36,30 +39,28 @@ impl InterfaceSystem {
         self.ui = Some(self.backend.begin_frame(raw_input));
     }
 
-    fn draw(&mut self, state: &mut AppState, comp_man: &ComponentManager) {
+    fn draw(&mut self, state: &mut AppState, comp_man: &ECManager) {
         if self.ui.is_none() {
             return;
         }
+        let ui = self.ui.as_ref().unwrap();
 
-        for entity in 0..comp_man.interface.len() {
-            InterfaceSystem::draw_widget(self.ui.as_ref().unwrap(), state, entity as u32, comp_man);
+        for (ent, comp) in comp_man.interface.iter() {
+            InterfaceSystem::draw_widget(ui, state, comp);
         }
 
         let (_, paint_jobs) = self.backend.end_frame().unwrap();
         self.backend.paint(paint_jobs).expect("Failed to paint!");
     }
 
-    fn draw_widget(ui: &Ui, state: &mut AppState, entity: u32, comp_man: &ComponentManager) {
-        let ui_comp = &comp_man.interface[entity as usize];
-        match ui_comp.widget_type {
+    fn draw_widget(ui: &Ui, state: &mut AppState, comp: &UIComponent) {
+        match comp.widget_type {
             WidgetType::None => {}
-            WidgetType::TestWidget => {
-                InterfaceSystem::draw_test_widget(ui, state, entity, comp_man)
-            }
+            WidgetType::TestWidget => InterfaceSystem::draw_test_widget(ui, state),
         }
     }
 
-    fn draw_test_widget(ui: &Ui, state: &mut AppState, _entity: u32, _comp_man: &ComponentManager) {
+    fn draw_test_widget(ui: &Ui, state: &mut AppState) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
             ui.horizontal(|ui| {
                 ui.label(format!(

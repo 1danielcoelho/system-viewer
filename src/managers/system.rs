@@ -3,7 +3,7 @@ use crate::{
     systems::{InterfaceSystem, PhysicsSystem, RenderingSystem, TransformUpdateSystem},
 };
 
-use super::{ComponentManager, EntityManager, EventManager};
+use super::{ECManager, EventManager};
 
 pub struct SystemManager {
     render: RenderingSystem,
@@ -22,17 +22,10 @@ impl SystemManager {
     }
 
     // TODO: Make some "context" object that has mut refs to everything and is created every frame
-    pub fn run(
-        &mut self,
-        state: &mut AppState,
-        cm: &mut ComponentManager,
-        _em: &mut EventManager,
-        ent_man: &mut EntityManager,
-    ) {
-        self.physics
-            .run(state, &mut cm.transform, &mut cm.physics, ent_man);
-        self.trans.run(state, &mut cm.transform, ent_man);
-        self.render.run(state, &cm.transform, &cm.mesh);
-        self.interface.run(state, &cm);
+    pub fn run(&mut self, state: &mut AppState, mut ent_man: &mut ECManager) {
+        self.physics.run(state, &mut ent_man);
+        self.trans.run(state, &mut ent_man);
+        self.render.run(state, &ent_man.transform, &ent_man.mesh);
+        self.interface.run(state, &ent_man);
     }
 }

@@ -2,10 +2,7 @@ use web_sys::WebGlRenderingContext;
 
 use crate::{
     app_state::AppState,
-    managers::{
-        EventManager, InputManager, ResourceManager, SceneManager,
-        SystemManager,
-    },
+    managers::{EventManager, InputManager, ResourceManager, SceneManager, SystemManager},
 };
 
 pub struct Engine {
@@ -32,12 +29,7 @@ impl Engine {
         self.in_man.run(state);
 
         if let Some(scene_mut) = self.scene_man.get_main_scene_mut() {
-            self.sys_man.run(
-                state,
-                &mut scene_mut.comp_man,
-                &mut self.event_man,
-                &mut scene_mut.ent_man,
-            );
+            self.sys_man.run(state, &mut scene_mut.ent_man);
         }
     }
 }

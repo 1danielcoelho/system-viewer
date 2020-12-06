@@ -1,8 +1,11 @@
 use cgmath::{Matrix3, Vector3};
 
-use crate::managers::ComponentManager;
+use crate::managers::ECManager;
 
-use super::{component::ComponentIndex, Component};
+use super::{
+    component::{ComponentIndex, ComponentStorageType},
+    Component,
+};
 
 #[derive(Clone)]
 pub struct PhysicsComponent {
@@ -42,13 +45,16 @@ impl Default for PhysicsComponent {
 }
 impl Component for PhysicsComponent {
     type ComponentType = PhysicsComponent;
+    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
 
     fn get_component_index() -> ComponentIndex {
         return ComponentIndex::Physics;
     }
 
-    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<PhysicsComponent> {
-        return &mut w.physics;
+    fn get_components_vector<'a>(
+        w: &'a mut ECManager,
+    ) -> Option<&'a mut Vec<PhysicsComponent>> {
+        return Some(&mut w.physics);
     }
 
     fn set_enabled(&mut self, enabled: bool) {

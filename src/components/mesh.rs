@@ -2,10 +2,13 @@ use std::rc::Rc;
 
 use crate::managers::{
     resource::{Material, Mesh},
-    ComponentManager,
+    ECManager,
 };
 
-use super::{component::ComponentIndex, Component};
+use super::{
+    component::{ComponentIndex, ComponentStorageType},
+    Component,
+};
 
 #[derive(Clone)]
 pub struct MeshComponent {
@@ -75,13 +78,14 @@ impl Default for MeshComponent {
 }
 impl Component for MeshComponent {
     type ComponentType = MeshComponent;
+    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
 
     fn get_component_index() -> ComponentIndex {
         return ComponentIndex::Mesh;
     }
 
-    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<MeshComponent> {
-        return &mut w.mesh;
+    fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<MeshComponent>> {
+        return Some(&mut w.mesh);
     }
 
     fn set_enabled(&mut self, enabled: bool) {

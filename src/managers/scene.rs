@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{ComponentManager, Entity, EntityManager, resource::gltf_resources::GltfResource, ResourceManager};
+use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
 use crate::components::{
     transform::TransformType, ui::WidgetType, MeshComponent, PhysicsComponent, TransformComponent,
     UIComponent,
@@ -11,16 +11,14 @@ use crate::components::{
 #[derive(Clone)]
 pub struct Scene {
     pub identifier: String,
-    pub ent_man: EntityManager,
-    pub comp_man: ComponentManager,
+    pub ent_man: ECManager,
     _private: (),
 }
 impl Scene {
     fn new(identifier: &str) -> Scene {
         Scene {
             identifier: identifier.to_string(),
-            ent_man: EntityManager::new(),
-            comp_man: ComponentManager::new(),
+            ent_man: ECManager::new(),
             _private: (),
         }
     }
@@ -70,12 +68,11 @@ impl SceneManager {
         let indent = "\t".repeat(indent_level as usize);
 
         let ent: Entity = scene.ent_man.new_entity();
-        let ent_index = scene.ent_man.get_entity_index(&ent).unwrap();
 
         // Transform
         let trans_comp = scene
-            .comp_man
-            .add_component::<TransformComponent>(ent_index)
+            .ent_man
+            .add_component::<TransformComponent>(ent)
             .unwrap();
         let trans: &mut TransformType = trans_comp.get_local_transform_mut();
         let (pos, quat, scale) = node.transform().decomposed();
@@ -103,10 +100,7 @@ impl SceneManager {
         // Mesh
         let mut mesh_str = String::new();
         if let Some(mesh) = node.mesh() {
-            let mesh_comp = scene
-                .comp_man
-                .add_component::<MeshComponent>(ent_index)
-                .unwrap();
+            let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ent).unwrap();
 
             let mesh_identifier = mesh.get_identifier(&file_identifier);
             mesh_str = mesh_identifier.to_owned();
@@ -149,9 +143,7 @@ impl SceneManager {
                 resources,
             );
 
-            scene
-                .ent_man
-                .set_entity_parent(&ent, &child_ent, &mut scene.comp_man);
+            scene.ent_man.set_entity_parent(ent, child_ent);
         }
 
         return ent;
@@ -193,9 +185,7 @@ impl SceneManager {
                     &resources,
                 );
 
-                scene
-                    .ent_man
-                    .set_entity_parent(&root_ent, &child_ent, &mut scene.comp_man);
+                scene.ent_man.set_entity_parent(root_ent, child_ent);
             }
 
             self.loaded_scenes
@@ -208,90 +198,77 @@ impl SceneManager {
 
         // Setup scene
         let parent = scene.ent_man.new_entity();
-        let parent_id = scene.ent_man.get_entity_index(&parent).unwrap();
         let trans_comp = scene
-            .comp_man
-            .add_component::<TransformComponent>(parent_id)
+            .ent_man
+            .add_component::<TransformComponent>(parent)
             .unwrap();
         //trans_comp.get_local_transform_mut().scale = 0.05;
         let phys_comp = scene
-            .comp_man
-            .add_component::<PhysicsComponent>(parent_id)
+            .ent_man
+            .add_component::<PhysicsComponent>(parent)
             .unwrap();
         phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
         // phys_comp.lin_mom = Vector3::new(10.0, 0.0, 0.0);
         let mesh_comp = scene
-            .comp_man
-            .add_component::<MeshComponent>(parent_id)
+            .ent_man
+            .add_component::<MeshComponent>(parent)
             .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         //mesh_comp.set_material_override(res_man.get_or_create_material("local_normal"), 0);
 
         let child = scene.ent_man.new_entity();
-        let child_id = scene.ent_man.get_entity_index(&child).unwrap();
-        scene
-            .ent_man
-            .set_entity_parent(&parent, &child, &mut scene.comp_man);
+        scene.ent_man.set_entity_parent(parent, child);
         let trans_comp = scene
-            .comp_man
-            .add_component::<TransformComponent>(child_id)
+            .ent_man
+            .add_component::<TransformComponent>(child)
             .unwrap();
         trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = 0.5;
         let phys_comp = scene
-            .comp_man
-            .add_component::<PhysicsComponent>(child_id)
+            .ent_man
+            .add_component::<PhysicsComponent>(child)
             .unwrap();
         phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
-        let mesh_comp = scene
-            .comp_man
-            .add_component::<MeshComponent>(child_id)
-            .unwrap();
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
 
         // let plane = scene.ent_man.new_entity("plane");
         // let trans_comp = scene
-        //     .comp_man
+        //     .ent_man
         //     .add_component::<TransformComponent>(plane)
         //     .unwrap();
         // trans_comp.transform.scale = 3.0;
         // let mesh_comp = scene
-        //     .comp_man
+        //     .ent_man
         //     .add_component::<MeshComponent>(plane)
         //     .unwrap();
         // mesh_comp.mesh = scene.res_man.generate_mesh("plane", &gl);
         // mesh_comp.material = scene.res_man.get_material("material");
 
         let grid = scene.ent_man.new_entity();
-        let grid_id = scene.ent_man.get_entity_index(&grid).unwrap();
         let trans_comp = scene
-            .comp_man
-            .add_component::<TransformComponent>(grid_id)
+            .ent_man
+            .add_component::<TransformComponent>(grid)
             .unwrap();
         trans_comp.get_local_transform_mut().scale = 1000.0;
-        let mesh_comp = scene
-            .comp_man
-            .add_component::<MeshComponent>(grid_id)
-            .unwrap();
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(grid).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
         let axes = scene.ent_man.new_entity();
-        let axes_id = scene.ent_man.get_entity_index(&axes).unwrap();
         let trans_comp = scene
-            .comp_man
-            .add_component::<TransformComponent>(axes_id)
+            .ent_man
+            .add_component::<TransformComponent>(axes)
             .unwrap();
         trans_comp.get_local_transform_mut().scale = 3.0;
-        let mesh_comp = scene
-            .comp_man
-            .add_component::<MeshComponent>(axes_id)
-            .unwrap();
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
         let ui_entity = scene.ent_man.new_entity();
-        let ui_id = scene.ent_man.get_entity_index(&ui_entity).unwrap();
-        scene.comp_man.add_component::<TransformComponent>(ui_id);
-        let ui_comp = scene.comp_man.add_component::<UIComponent>(ui_id).unwrap();
+        scene.ent_man.add_component::<TransformComponent>(ui_entity);
+        let ui_comp = scene
+            .ent_man
+            .add_component::<UIComponent>(ui_entity)
+            .unwrap();
         ui_comp.widget_type = WidgetType::TestWidget;
 
         self.loaded_scenes.insert(identifier.to_string(), scene);
@@ -317,7 +294,7 @@ impl SceneManager {
         identifier: &str,
         target_transform: Option<TransformType>,
     ) -> Result<(), String> {
-        // Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
+        // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
         let mut injected_scene_copy = self
             .get_scene(identifier)
             .ok_or(format!("Failed to find scene to inject '{}'", identifier))?
@@ -337,20 +314,14 @@ impl SceneManager {
         // Update the position of the root scene node to the target transform
         if let Some(target_transform) = target_transform {
             let scene_root_trans =
-                injected_scene_copy.comp_man.transform[0].get_local_transform_mut();
+                injected_scene_copy.ent_man.transform[0].get_local_transform_mut();
             *scene_root_trans = target_transform;
         }
 
         // Inject entities into current_scene, and keep track of where they ended up
-        let remapped_indices = current_scene.ent_man.move_from_other(
-            injected_scene_copy.ent_man,
-            &mut injected_scene_copy.comp_man,
-        );
-
-        // Move components from injected_scene_copy according to the remapped indices
         current_scene
-            .comp_man
-            .move_from_other(injected_scene_copy.comp_man, &remapped_indices);
+            .ent_man
+            .move_from_other(injected_scene_copy.ent_man);
 
         return Ok(());
     }

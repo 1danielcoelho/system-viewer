@@ -1,6 +1,11 @@
-use crate::managers::ComponentManager;
+use std::collections::HashMap;
 
-use super::{component::ComponentIndex, Component};
+use crate::managers::{ECManager, Entity};
+
+use super::{
+    component::{ComponentIndex, ComponentStorageType},
+    Component,
+};
 
 #[derive(Clone)]
 pub enum WidgetType {
@@ -28,6 +33,7 @@ impl Default for UIComponent {
 }
 impl Component for UIComponent {
     type ComponentType = UIComponent;
+    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::HashMap;
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
@@ -41,7 +47,9 @@ impl Component for UIComponent {
         return ComponentIndex::Ui;
     }
 
-    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<Self::ComponentType> {
-        return &mut w.interface;
+    fn get_components_map<'a>(
+        w: &'a mut ECManager,
+    ) -> Option<&'a mut HashMap<Entity, UIComponent>> {
+        return Some(&mut w.interface);
     }
 }

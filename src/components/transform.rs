@@ -1,8 +1,11 @@
-use crate::managers::ComponentManager;
+use crate::managers::ECManager;
 
 use cgmath::Transform;
 
-use super::{component::ComponentIndex, Component};
+use super::{
+    component::{ComponentIndex, ComponentStorageType},
+    Component,
+};
 
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 
@@ -54,13 +57,16 @@ impl Default for TransformComponent {
 }
 impl Component for TransformComponent {
     type ComponentType = TransformComponent;
+    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
 
     fn get_component_index() -> ComponentIndex {
         return ComponentIndex::Transform;
     }
 
-    fn get_components_vector<'a>(w: &'a mut ComponentManager) -> &'a mut Vec<TransformComponent> {
-        return &mut w.transform;
+    fn get_components_vector<'a>(
+        w: &'a mut ECManager,
+    ) -> Option<&'a mut Vec<TransformComponent>> {
+        return Some(&mut w.transform);
     }
 
     fn set_enabled(&mut self, enabled: bool) {

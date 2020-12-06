@@ -4,20 +4,14 @@ use crate::{
     app_state::AppState,
     components::PhysicsComponent,
     components::{Component, TransformComponent},
-    managers::EntityManager,
+    managers::ECManager,
     managers::EventReceiver,
 };
 
 pub struct PhysicsSystem {}
 impl PhysicsSystem {
-    pub fn run(
-        &self,
-        state: &AppState,
-        transforms: &mut Vec<TransformComponent>,
-        physics: &mut Vec<PhysicsComponent>,
-        ent_man: &EntityManager,
-    ) {
-        for entity_index in 0..transforms.len() {
+    pub fn run(&self, state: &AppState, ent_man: &mut ECManager) {
+        for entity_index in 0..ent_man.transform.len() {
             // TODO: Indirection on the hot path...
             if ent_man
                 .get_parent_index_from_index(entity_index as u32)
@@ -28,8 +22,8 @@ impl PhysicsSystem {
 
             PhysicsSystem::update(
                 state,
-                &mut transforms[entity_index],
-                &mut physics[entity_index],
+                &mut ent_man.transform[entity_index],
+                &mut ent_man.physics[entity_index],
             );
         }
     }

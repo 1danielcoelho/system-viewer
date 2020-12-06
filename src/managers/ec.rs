@@ -2,7 +2,10 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use std::{cmp::Reverse, hash::Hash};
 
-use super::ComponentManager;
+use crate::components::{
+    component::ComponentStorageType, Component, MeshComponent, PhysicsComponent,
+    TransformComponent, UIComponent,
+};
 
 #[derive(Debug, Copy, Clone, Eq, Hash)]
 pub struct Entity(u32);
@@ -22,25 +25,31 @@ pub struct EntityEntry {
 }
 
 #[derive(Clone)]
-pub struct EntityManager {
-    // Current entities and spaces are available here
+pub struct ECManager {
     entity_storage: Vec<EntityEntry>,
-
-    // Deallocated spaces of entity_storage: These will be reused first when allocating
     free_indices: BinaryHeap<Reverse<u32>>,
-
-    // Maps from an entity to it's current index in entity_storage
-    entity_to_index: HashMap<Entity, u32>,
+    pub entity_to_index: HashMap<Entity, u32>,
     last_used_entity: Entity,
+
+    // TODO: Maybe put this in a wrapper struct or?
+    pub physics: Vec<PhysicsComponent>,
+    pub mesh: Vec<MeshComponent>,
+    pub transform: Vec<TransformComponent>,
+    pub interface: HashMap<Entity, UIComponent>,
 }
 
-impl EntityManager {
+impl ECManager {
     pub fn new() -> Self {
         Self {
             entity_storage: Vec::new(),
             free_indices: BinaryHeap::new(),
             entity_to_index: HashMap::new(),
             last_used_entity: Entity(0),
+
+            physics: Vec::new(),
+            mesh: Vec::new(),
+            transform: Vec::new(),
+            interface: HashMap::new(),
         }
     }
 
@@ -78,6 +87,8 @@ impl EntityManager {
         self.entity_to_index
             .insert(self.last_used_entity, entity_storage_index);
 
+        log::info!("Creating new entity {:?}", new_entry.current);
+
         return new_entry.current;
     }
 
@@ -93,7 +104,7 @@ impl EntityManager {
     }
 
     // Returns a new Entity guaranteed to occupy an index than 'reference'
-    fn new_entity_larger_than(&mut self, reference: u32) -> Entity {
+    fn new_entity_larger_than(&mut self, reference: u32) -> u32 {
         let mut target_index: Option<u32> = None;
 
         // Checking free indices may be faster
@@ -120,17 +131,18 @@ impl EntityManager {
             target_index = Some(self.entity_storage.len() as u32);
         };
 
-        return self.new_entity_at_index(target_index.unwrap());
+        return target_index.unwrap();
     }
 
-    pub fn delete_entity(&mut self, e: &Entity) -> bool {
+    pub fn delete_entity(&mut self, e: Entity) -> bool {
+        log::info!("Deleting entity {:?}", e);
         match self.get_entity_index(e) {
             Some(index) => {
                 let cloned_entry = self.entity_storage[index as usize].clone();
 
                 // Remove ourselves from our parent
                 if let Some(parent) = self.entity_storage[index as usize].parent {
-                    let parent_entry = self.get_entity_entry_mut(&parent).unwrap();
+                    let parent_entry = self.get_entity_entry_mut(parent).unwrap();
                     let child_index = parent_entry
                         .children
                         .iter()
@@ -141,7 +153,7 @@ impl EntityManager {
 
                 // Delete our children with us
                 for child_entity in cloned_entry.children.iter() {
-                    self.delete_entity(child_entity);
+                    self.delete_entity(*child_entity);
                 }
 
                 let entry_ref = &mut self.entity_storage[index as usize];
@@ -157,15 +169,15 @@ impl EntityManager {
         };
     }
 
-    pub fn is_live(&self, e: &Entity) -> bool {
+    pub fn is_live(&self, e: Entity) -> bool {
         match self.get_entity_entry(e) {
             Some(entry) => entry.live,
             None => false,
         }
     }
 
-    pub fn get_entity_index(&self, e: &Entity) -> Option<u32> {
-        match self.entity_to_index.get(e) {
+    fn get_entity_index(&self, e: Entity) -> Option<u32> {
+        match self.entity_to_index.get(&e) {
             Some(index) => {
                 let ent = &self.entity_storage[(*index) as usize];
                 if ent.live {
@@ -179,7 +191,7 @@ impl EntityManager {
     }
 
     // Returns None if it's not live anymore
-    fn get_entity_entry(&self, e: &Entity) -> Option<&EntityEntry> {
+    fn get_entity_entry(&self, e: Entity) -> Option<&EntityEntry> {
         // Find the actual index as this may be a stale entity reference
         let index = self.get_entity_index(e);
         if index.is_none() {
@@ -190,7 +202,7 @@ impl EntityManager {
         return self.entity_storage.get(index.unwrap() as usize);
     }
 
-    fn get_entity_entry_mut(&mut self, e: &Entity) -> Option<&mut EntityEntry> {
+    fn get_entity_entry_mut(&mut self, e: Entity) -> Option<&mut EntityEntry> {
         // Find the actual index as this may be a stale entity reference
         let index = self.get_entity_index(e);
         if index.is_none() {
@@ -220,14 +232,14 @@ impl EntityManager {
     pub fn get_parent_index_from_index(&self, entity_index: u32) -> Option<u32> {
         match self.entity_storage.get(entity_index as usize) {
             Some(entry) => match entry.parent {
-                Some(parent) => return self.get_entity_index(&parent),
+                Some(parent) => return self.get_entity_index(parent),
                 None => return None,
             },
             None => return None,
         };
     }
 
-    pub fn get_entity_parent(&self, e: &Entity) -> Option<Entity> {
+    pub fn get_entity_parent(&self, e: Entity) -> Option<Entity> {
         match self.get_entity_entry(e) {
             Some(entry) => entry.parent,
             None => None,
@@ -235,11 +247,11 @@ impl EntityManager {
     }
 
     // Topmost parent of the entity's hierarchy. May be the same entity if `e` has no parents
-    pub fn get_entity_ancestor(&self, e: &Entity) -> Entity {
-        let mut parent = self.get_entity_parent(&e);
+    pub fn get_entity_ancestor(&self, e: Entity) -> Entity {
+        let mut parent = self.get_entity_parent(e);
 
         while parent.is_some() {
-            let parent_parent = self.get_entity_parent(parent.as_ref().unwrap());
+            let parent_parent = self.get_entity_parent(parent.unwrap());
 
             if parent_parent.is_none() {
                 return parent.unwrap();
@@ -251,7 +263,7 @@ impl EntityManager {
         return e.clone();
     }
 
-    pub fn get_entity_children(&self, e: &Entity) -> Option<&Vec<Entity>> {
+    pub fn get_entity_children(&self, e: Entity) -> Option<&Vec<Entity>> {
         match self.get_entity_entry(e) {
             Some(entry) => Some(&entry.children),
             None => None,
@@ -262,24 +274,7 @@ impl EntityManager {
         return self.entity_storage.len() as u32;
     }
 
-    pub fn swap_entity_indices(&mut self, a: &Entity, b: &Entity, comp_man: &mut ComponentManager) {
-        let index_a = self.get_entity_index(a).unwrap();
-        let index_b = self.get_entity_index(b).unwrap();
-        if index_a == index_b {
-            return;
-        }
-
-        self.entity_storage.swap(index_a as usize, index_b as usize);
-
-        comp_man.swap_components(index_a, index_b);
-    }
-
-    pub fn set_entity_parent(
-        &mut self,
-        parent: &Entity,
-        child: &Entity,
-        comp_man: &mut ComponentManager,
-    ) {
+    pub fn set_entity_parent(&mut self, parent: Entity, child: Entity) {
         let parent_index = self.get_entity_index(parent);
         let child_index = self.get_entity_index(child);
         if parent_index.is_none() || child_index.is_none() {
@@ -288,67 +283,61 @@ impl EntityManager {
 
         // Update old parent
         if let Some(old_parent) = self.get_entity_parent(child) {
-            if old_parent == *parent {
+            if old_parent == parent {
                 return;
             }
 
-            if let Some(entry) = self.get_entity_entry_mut(&old_parent) {
-                let old_child_index = entry.children.iter().position(|&c| c == *child).unwrap();
+            if let Some(entry) = self.get_entity_entry_mut(old_parent) {
+                let old_child_index = entry.children.iter().position(|&c| c == child).unwrap();
                 entry.children.remove(old_child_index);
             };
         }
 
         // Update new parent
         if let Some(entry) = self.entity_storage.get_mut(parent_index.unwrap() as usize) {
-            let old_child_index = entry.children.iter().position(|&c| c == *child);
+            let old_child_index = entry.children.iter().position(|&c| c == child);
             assert!(
                 old_child_index.is_none(),
                 format!("Entity {:#?} was already child of {:#?}!", child, parent)
             );
 
-            entry.children.push(*child);
+            entry.children.push(child);
         };
 
         // Update child
         if let Some(entry) = self.entity_storage.get_mut(child_index.unwrap() as usize) {
-            entry.parent = Some(*parent);
+            entry.parent = Some(parent);
         }
 
-        // Need to always guarantee parent > child so that when we compute transforms every frame we
+        // Need to always guarantee parent < child so that when we compute transforms every frame we
         // can compute them all in one pass with minimal referencing
-        self.ensure_parent_child_order(parent_index.unwrap(), child_index.unwrap(), comp_man);
+        self.ensure_parent_child_order(parent_index.unwrap(), child_index.unwrap());
     }
 
-    // Will make sure that `e` comes after it's parent in the entity and component arrays, also acting recursively
-    fn ensure_parent_child_order(
-        &mut self,
-        parent_index: u32,
-        child_index: u32,
-        comp_man: &mut ComponentManager,
-    ) {
+    // Will make sure that child comes after it's parent in the entity and component arrays, also acting recursively
+    fn ensure_parent_child_order(&mut self, parent_index: u32, child_index: u32) {
         if child_index > parent_index {
             return;
         }
 
         // Create a new dummy entity in a position where child would be valid (i.e. after parent)
-        let dummy_child = self.new_entity_larger_than(parent_index);
-        let new_child_index = self.entity_to_index[&dummy_child];
+        let new_child_index = self.new_entity_larger_than(parent_index);
 
         // Swap current child with dummy, along with components (this will resize components if needed too)
         self.swap_entities(new_child_index, child_index);
-        comp_man.swap_components(new_child_index, child_index);
+        self.swap_components(new_child_index, child_index);
 
         // Get rid of dummy (just mark it as vacant, really)
-        self.delete_entity(self.get_entity_from_index(child_index).as_ref().unwrap());
+        self.delete_entity(self.get_entity_from_index(child_index).unwrap());
 
         // Propagate for all grandchildren in the child hierarchy
         let grand_child_indices: Vec<u32> = self.entity_storage[new_child_index as usize]
             .children
             .iter()
-            .map(|e| self.get_entity_index(e).unwrap())
+            .map(|e| self.get_entity_index(*e).unwrap())
             .collect();
         for grand_child_index in grand_child_indices.iter() {
-            self.ensure_parent_child_order(new_child_index, *grand_child_index, comp_man);
+            self.ensure_parent_child_order(new_child_index, *grand_child_index);
         }
     }
 
@@ -376,7 +365,8 @@ impl EntityManager {
         }
         self.free_indices.clear();
         self.free_indices.reserve(free_indices_set.len());
-        // TODO: Very slow.. reconstructing heap when only two elements changed. We can't remove things from heap though
+        // TODO: Very slow.. reconstructing entire binary heap when only two elements changed.
+        // We can't remove things from heap though
         for item in free_indices_set.iter() {
             self.free_indices.push(*item);
         }
@@ -397,40 +387,159 @@ impl EntityManager {
     }
 
     /** Used when injecting scenes into eachother */
-    pub fn move_from_other(
-        &mut self,
-        other_man: Self,
-        comp_man: &mut ComponentManager,
-    ) -> Vec<u32> {
+    pub fn move_from_other(&mut self, mut other_man: Self) {
         // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
         // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
         // packing
 
+        log::info!("Moving from other");
+
         // Allocate new entities, keep an array of their newly allocated indices
         let num_other_ents = other_man.get_num_entities();
-
-        let mut other_to_new_index: Vec<u32> = Vec::new();
-        other_to_new_index.resize(num_other_ents as usize, 0);
-
         self.reserve_space_for_entities(num_other_ents);
-        for other_index in 0..num_other_ents {
-            let new_ent = self.new_entity();
-            other_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
+
+        // Create mapping... maps
+        let mut other_index_to_new_index: Vec<u32> = Vec::new();
+        let mut other_ent_to_new_ent: HashMap<Entity, Entity> = HashMap::new();
+        {
+            let mut other_index_to_new_ent: Vec<Entity> = Vec::new();
+            other_index_to_new_index.resize(num_other_ents as usize, 0);
+            other_index_to_new_ent.resize(num_other_ents as usize, Entity(0));
+
+            for other_index in 0..num_other_ents {
+                let new_ent = self.new_entity();
+                other_index_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
+                other_index_to_new_ent[other_index as usize] = new_ent;
+            }
+
+            for (other_ent, other_index) in other_man.entity_to_index.iter() {
+                other_ent_to_new_ent
+                    .insert(*other_ent, other_index_to_new_ent[*other_index as usize]);
+            }
         }
 
         // Replicate parent-child relationships
         for other_index in 0..num_other_ents {
             if let Some(other_parent_index) = other_man.get_parent_index_from_index(other_index) {
-                let new_index = other_to_new_index[other_index as usize];
-                let new_parent_index = other_to_new_index[other_parent_index as usize];
+                let new_index = other_index_to_new_index[other_index as usize];
+                let new_parent_index = other_index_to_new_index[other_parent_index as usize];
 
-                // This could be optimized
+                // TODO: This could be optimized
                 let child_ent = self.get_entity_from_index(new_index).unwrap();
                 let parent_ent = self.get_entity_from_index(new_parent_index).unwrap();
-                self.set_entity_parent(&parent_ent, &child_ent, comp_man);
+                self.set_entity_parent(parent_ent, child_ent);
             }
         }
 
-        return other_to_new_index;
+        // Move vec component data
+        let highest_new_id = other_index_to_new_index.iter().max().unwrap();
+        self.resize_components((highest_new_id + 1) as usize);
+        for this_index in other_index_to_new_index.iter().rev() {
+            self.physics[*this_index as usize] = other_man.physics.pop().unwrap();
+            self.mesh[*this_index as usize] = other_man.mesh.pop().unwrap();
+            self.transform[*this_index as usize] = other_man.transform.pop().unwrap();
+        }
+
+        // Move hashmap component data
+        for (other_ent, new_ent) in other_ent_to_new_ent.iter() {
+            if let Some(comp) = other_man.interface.remove(other_ent) {
+                self.interface.insert(*new_ent, comp);
+            }
+        }
+
+        // TODO: Update entity references in components
+    }
+}
+
+// Component interface
+impl ECManager {
+    pub fn get_component<T>(&mut self, entity: Entity) -> Option<&mut T>
+    where
+        T: Default + Component + Component<ComponentType = T>,
+    {
+        match T::STORAGE_TYPE {
+            ComponentStorageType::Vec => {
+                if let Some(entity_index) = self.get_entity_index(entity) {
+                    let comps = T::get_components_vector(self).unwrap();
+                    return comps.get_mut(entity_index as usize);
+                };
+
+                return None;
+            }
+            ComponentStorageType::HashMap => {
+                let comps = T::get_components_map(self).unwrap();
+                return comps.get_mut(&entity);
+            }
+        }
+    }
+
+    pub fn add_component<'a, T>(&'a mut self, entity: Entity) -> Option<&'a mut T>
+    where
+        T: Default + Component + Component<ComponentType = T>,
+    {
+        log::info!(
+            "Adding component '{:?}' to entity '{:?}'",
+            T::get_component_index(),
+            entity
+        );
+
+        match T::STORAGE_TYPE {
+            ComponentStorageType::Vec => {
+                let index = self.entity_to_index[&entity];
+                self.resize_components((index + 1) as usize);
+
+                let comps = T::get_components_vector(self).unwrap();
+
+                comps[index as usize].set_enabled(true);
+                return comps.get_mut(index as usize);
+            }
+            ComponentStorageType::HashMap => {
+                let comps = T::get_components_map(self).unwrap();
+
+                if !comps.contains_key(&entity) {
+                    comps.insert(entity, T::default());
+                }
+
+                let existing = comps.get_mut(&entity).unwrap();
+                existing.set_enabled(true);
+                return Some(existing);
+            }
+        }
+    }
+
+    fn swap_components(&mut self, index_a: u32, index_b: u32) {
+        if index_a == index_b {
+            return;
+        }
+
+        // Pretty sure I'm converting to and from entities at least once too many...
+        let ent_a = self.get_entity_from_index(index_a).unwrap();
+        let ent_b = self.get_entity_from_index(index_b).unwrap();
+
+        let max_index = index_a.max(index_b);
+        self.resize_components((max_index + 1) as usize);
+
+        self.physics.swap(index_a as usize, index_b as usize);
+        self.mesh.swap(index_a as usize, index_b as usize);
+        self.transform.swap(index_a as usize, index_b as usize);
+
+        let int_a = self.interface.remove(&ent_a);
+        let int_b = self.interface.remove(&ent_b);
+        if let Some(int_a) = int_a {
+            self.interface.insert(ent_b, int_a);
+        }
+        if let Some(int_b) = int_b {
+            self.interface.insert(ent_a, int_b);
+        }
+    }
+
+    fn resize_components(&mut self, min_length: usize) {
+        if min_length <= self.physics.len() {
+            return;
+        }
+
+        self.physics.resize_with(min_length, Default::default);
+        self.mesh.resize_with(min_length, Default::default);
+        self.transform.resize_with(min_length, Default::default);
     }
 }

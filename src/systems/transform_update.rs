@@ -1,16 +1,11 @@
 use crate::{
     app_state::AppState, components::transform::TransformType, components::TransformComponent,
-    managers::EntityManager,
+    managers::ECManager,
 };
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
-    pub fn run(
-        &self,
-        _state: &AppState,
-        transforms: &mut Vec<TransformComponent>,
-        em: &mut EntityManager,
-    ) {
+    pub fn run(&self, _state: &AppState, em: &mut ECManager) {
         let identity: TransformType = cgmath::Transform::one();
 
         for entity_index in 0..em.get_num_entities() {
@@ -22,13 +17,13 @@ impl TransformUpdateSystem {
             match parent_index {
                 Some(parent_index) => {
                     // TODO: Indirection
-                    let parent_transform = transforms[parent_index as usize]
+                    let parent_transform = em.transform[parent_index as usize]
                         .get_world_transform()
                         .clone();
-                    transforms[entity_index as usize].update_world_transform(&parent_transform);
+                    em.transform[entity_index as usize].update_world_transform(&parent_transform);
                 }
                 None => {
-                    transforms[entity_index as usize].update_world_transform(&identity);
+                    em.transform[entity_index as usize].update_world_transform(&identity);
                 }
             }
         }
