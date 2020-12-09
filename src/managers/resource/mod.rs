@@ -1,7 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
-use web_sys::WebGlRenderingContext;
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
+use web_sys::{WebGlRenderingContext, WebGlUniformLocation};
 
 use self::procedural_meshes::*;
 
@@ -86,6 +86,22 @@ fn compile_shader(
             .get_shader_info_log(&shader)
             .unwrap_or_else(|| String::from("Unable to get shader info log")))
     }
+}
+
+fn get_uniform_location_map(
+    gl: &WebGlRenderingContext,
+    program: &WebGlProgram,
+    uniform_names: &[&str],
+) -> HashMap<String, WebGlUniformLocation> {
+    let mut result: HashMap<String, WebGlUniformLocation> = HashMap::new();
+
+    for uniform_name in uniform_names {
+        if let Some(loc) = gl.get_uniform_location(&program, uniform_name) {
+            result.insert((*uniform_name).to_owned(), loc);
+        }
+    }
+
+    return result;
 }
 
 pub struct ResourceManager {
@@ -199,50 +215,25 @@ impl ResourceManager {
         let program = program.unwrap();
 
         let mat: Rc<dyn Material> = match material_type {
-            "unlit" => {
-                let trans_loc = self
-                    .gl
-                    .get_uniform_location(&program, "u_transform")
-                    .unwrap();
-
-                Rc::new(UnlitMaterial {
-                    name: identifier.to_string(),
-                    program: program,
-                    uniform_locations: hashmap!["u_transform".to_owned() => trans_loc],
-                })
-            }
-            "lit" => {
-                let trans_loc = self
-                    .gl
-                    .get_uniform_location(&program, "u_transform")
-                    .unwrap();
-
-                let light_pos_loc = self
-                    .gl
-                    .get_uniform_location(&program, "u_light_pos_or_dir")
-                    .unwrap();
-
-                let light_color_loc = self
-                    .gl
-                    .get_uniform_location(&program, "u_light_colors")
-                    .unwrap();
-
-                let light_intensity_loc = self
-                    .gl
-                    .get_uniform_location(&program, "u_light_intensities")
-                    .unwrap();
-
-                Rc::new(PhongMaterial {
-                    name: identifier.to_string(),
-                    program: program,
-                    uniform_locations: hashmap![
-                        "u_transform".to_owned() => trans_loc,
-                        "u_light_pos_or_dir".to_owned() => light_pos_loc,
-                        "u_light_colors".to_owned() => light_color_loc,
-                        "u_light_intensities".to_owned() => light_intensity_loc
+            "unlit" => Rc::new(UnlitMaterial {
+                name: identifier.to_string(),
+                uniform_locations: get_uniform_location_map(&self.gl, &program, &["u_transform"]),
+                program: program,
+            }),
+            "lit" => Rc::new(PhongMaterial {
+                name: identifier.to_string(),
+                uniform_locations: get_uniform_location_map(
+                    &self.gl,
+                    &program,
+                    &[
+                        "u_transform",
+                        "u_light_pos_or_dir",
+                        "u_light_colors",
+                        "u_light_intensities",
                     ],
-                })
-            }
+                ),
+                program: program,
+            }),
             _ => {
                 log::error!(
                     "Unexpected material type '{}' requested for identifier {}",

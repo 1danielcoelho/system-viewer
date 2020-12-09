@@ -51,20 +51,20 @@ impl Material for PhongMaterial {
 
         // Set uniforms
         gl.uniform_matrix4fv_with_f32_array(
-            Some(&self.uniform_locations["u_transform"]),
+            self.uniform_locations.get("u_transform"),
             false,
             &uniform_data.wvp,
         );
         gl.uniform3fv_with_f32_array(
-            Some(&self.uniform_locations["u_light_pos_or_dir"]),
+            self.uniform_locations.get("u_light_pos_or_dir"),
             &uniform_data.light_pos_or_dir,
         );
         gl.uniform3fv_with_f32_array(
-            Some(&self.uniform_locations["u_light_colors"]),
+            self.uniform_locations.get("u_light_colors"),
             &uniform_data.light_colors,
         );
         gl.uniform3fv_with_f32_array(
-            Some(&self.uniform_locations["u_light_intensities"]),
+            self.uniform_locations.get("u_light_intensities"),
             &uniform_data.light_intensities,
         );
     }

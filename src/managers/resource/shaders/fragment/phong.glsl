@@ -12,7 +12,5 @@ varying lowp vec2 v_uv0;
 varying lowp vec2 v_uv1;
 
 void main() {
-  gl_FragColor = vec4(u_light_colors[0], 1.0) +
-                 vec4(0.00001 * u_light_pos_or_dir[0], 0.0) +
-                 vec4(0.00001 * u_light_intensities[0]);
+  gl_FragColor = vec4(u_light_colors[0], 1.0);
 }
