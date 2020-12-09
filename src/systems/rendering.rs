@@ -33,9 +33,7 @@ macro_rules! glc {
     };
 }
 
-pub struct RenderingSystem {
-    vp_transform: cgmath::Matrix4<f32>,
-}
+pub struct RenderingSystem {}
 impl RenderingSystem {
     pub fn new() -> Self {
         return Self::default();
@@ -73,10 +71,10 @@ impl RenderingSystem {
             state.camera.far,
         );
         let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
-        self.vp_transform = p * v;
 
         let mut result = UniformData {
-            wvp: [0.0; 16], // This will be filled in later
+            w: [0.0; 16], // This will be filled in later
+            vp: *(p * v).as_ref(),
             light_colors: [0.0; 24],
             light_pos_or_dir: [0.0; 24],
             light_intensities: [0.0; 8],
@@ -86,7 +84,7 @@ impl RenderingSystem {
         let mut index = 0;
         for (ent, light) in em.light.iter() {
             let ent_index = em.get_entity_index(*ent).unwrap();
-            let pos = &em.transform[ent_index as usize].get_local_transform().disp;
+            let pos = &em.transform[ent_index as usize].get_world_transform().disp;
 
             result.light_colors[index * 3 + 0] = light.color.x;
             result.light_colors[index * 3 + 1] = light.color.y;
@@ -131,8 +129,7 @@ impl RenderingSystem {
     ) {
         let trans = tc.get_world_transform();
         let w: Matrix4<f32> = (*trans).into(); // TODO: Is this the right way of doing it?
-        let wvp = self.vp_transform * w;
-        uniform_data.wvp = *wvp.as_ref();
+        uniform_data.w = *w.as_ref();
 
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
@@ -153,8 +150,6 @@ impl RenderingSystem {
 
 impl Default for RenderingSystem {
     fn default() -> Self {
-        Self {
-            vp_transform: cgmath::One::one(),
-        }
+        Self {}
     }
 }

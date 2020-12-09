@@ -125,6 +125,7 @@ impl ResourceManager {
     pub fn initialize(&mut self) {
         self.get_or_create_material("default");
         self.get_or_create_material("local_normal");
+        self.get_or_create_material("phong");
 
         self.get_or_create_mesh("cube");
         self.get_or_create_mesh("plane");
@@ -217,7 +218,11 @@ impl ResourceManager {
         let mat: Rc<dyn Material> = match material_type {
             "unlit" => Rc::new(UnlitMaterial {
                 name: identifier.to_string(),
-                uniform_locations: get_uniform_location_map(&self.gl, &program, &["u_transform"]),
+                uniform_locations: get_uniform_location_map(
+                    &self.gl,
+                    &program,
+                    &["u_world_trans", "u_view_proj_trans"],
+                ),
                 program: program,
             }),
             "lit" => Rc::new(PhongMaterial {
@@ -226,7 +231,8 @@ impl ResourceManager {
                     &self.gl,
                     &program,
                     &[
-                        "u_transform",
+                        "u_world_trans",
+                        "u_view_proj_trans",
                         "u_light_pos_or_dir",
                         "u_light_colors",
                         "u_light_intensities",

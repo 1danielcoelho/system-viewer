@@ -213,7 +213,7 @@ impl SceneManager {
             .ent_man
             .add_component::<MeshComponent>(parent)
             .unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        //mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         //mesh_comp.set_material_override(res_man.get_or_create_material("local_normal"), 0);
 
         let child = scene.ent_man.new_entity();
@@ -223,7 +223,7 @@ impl SceneManager {
             .add_component::<TransformComponent>(child)
             .unwrap();
         trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 0.5;
+        trans_comp.get_local_transform_mut().scale = 0.1;
         let phys_comp = scene
             .ent_man
             .add_component::<PhysicsComponent>(child)
@@ -231,35 +231,24 @@ impl SceneManager {
         phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-
-        // Lit cube
-        let cube = scene.ent_man.new_entity();
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(cube)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(8.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 0.8;
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-
-        // Light
-        let light = scene.ent_man.new_entity();
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(light)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(9.0, 1.0, 3.0);
-        trans_comp.get_local_transform_mut().scale = 0.2;
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(light).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         let light_comp = scene
             .ent_man
-            .add_component::<LightComponent>(light)
+            .add_component::<LightComponent>(child)
             .unwrap();
         light_comp.color = cgmath::Vector3::new(0.1, 0.8, 0.2);
         light_comp.intensity = 1.0;
+
+        // Lit cube
+        // let cube = scene.ent_man.new_entity();
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(cube)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = 0.8;
+        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        // mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         // let plane = scene.ent_man.new_entity("plane");
         // let trans_comp = scene

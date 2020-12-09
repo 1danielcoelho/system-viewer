@@ -19,7 +19,7 @@ rust.then(async (m) => {
   let engine = new m.EngineInterface(document.getElementById("rustCanvas"));
 
   // Sync loading of all assets for now
-//   await Promise.all([load_gltf("./public/Duck.glb", engine)]);
+    await Promise.all([load_gltf("./public/Duck.glb", engine)]);
 //   await Promise.all([load_gltf("./public/2CylinderEngine.glb", engine)]);
 //   await Promise.all([load_gltf("./public/gltf_3_cubes.glb", engine)]);
 

@@ -111,9 +111,9 @@
 - Lights
     - Directional light
     - Point light
-- Phong material
-    - Need to have a material trait object and different materials, as the attributes/uniforms will be different
-- Add normals to procedural geometry
+<!-- - Phong material
+    - Need to have a material trait object and different materials, as the attributes/uniforms will be different -->
+# Add normals to procedural geometry
 # I don't think I need this silly "get_component_index()" function, and can just use a trait const
 # I kind of need entity names for debug
 # I want to import a GLTF object

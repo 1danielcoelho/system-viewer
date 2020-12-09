@@ -280,7 +280,7 @@ impl ResourceManager {
         meshes: gltf::iter::Meshes,
         buffers: &Vec<gltf::buffer::Data>,
     ) {
-        let default_mat = self.get_or_create_material("local_normal");
+        let default_mat = self.get_or_create_material("phong");
 
         log::info!(
             "Loading {} meshes from gltf file {}",
