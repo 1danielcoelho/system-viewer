@@ -1,14 +1,14 @@
-attribute vec3 aPosition;
-attribute vec3 aNormal;
-attribute vec4 aColor;
-attribute vec2 aUV0;
-attribute vec2 aUV1;
+attribute vec3 a_position;
+attribute vec3 a_normal;
+attribute vec4 a_color;
+attribute vec2 a_uv0;
+attribute vec2 a_uv1;
 
-uniform mat4 uTransform;
+uniform mat4 u_transform;
 
-varying lowp vec4 vColor;
+varying lowp vec4 v_color;
 
 void main() {
-  vColor = aColor;
-  gl_Position = uTransform * vec4(aPosition, 1.0);
+  v_color = a_color;
+  gl_Position = u_transform * vec4(a_position, 1.0);
 }

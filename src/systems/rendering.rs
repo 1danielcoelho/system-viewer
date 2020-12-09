@@ -75,7 +75,7 @@ impl RenderingSystem {
         let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
         self.vp_transform = p * v;
 
-        let result = UniformData {
+        let mut result = UniformData {
             wvp: [0.0; 16], // This will be filled in later
             light_colors: [0.0; 24],
             light_pos_or_dir: [0.0; 24],
@@ -85,11 +85,22 @@ impl RenderingSystem {
         // Pick lights that will affect the scene (randomly for now)
         let mut index = 0;
         for (ent, light) in em.light.iter() {
-            let transform = em.get_entity_index(*ent);
+            let ent_index = em.get_entity_index(*ent).unwrap();
+            let pos = &em.transform[ent_index as usize].get_local_transform().disp;
 
-            //self.lights[index] = light.clone();
+            result.light_colors[index * 3 + 0] = light.color.x;
+            result.light_colors[index * 3 + 1] = light.color.y;
+            result.light_colors[index * 3 + 2] = light.color.z;
+
+            result.light_intensities[index] = light.intensity;
+
+            result.light_pos_or_dir[index * 3 + 0] = pos.x;
+            result.light_pos_or_dir[index * 3 + 1] = pos.y;
+            result.light_pos_or_dir[index * 3 + 2] = pos.z;
+
+            // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
+
             index += 1;
-
             if index >= NUM_LIGHTS {
                 break;
             }

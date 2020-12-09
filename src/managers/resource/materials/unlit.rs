@@ -51,7 +51,7 @@ impl Material for UnlitMaterial {
 
         // Set uniforms
         gl.uniform_matrix4fv_with_f32_array(
-            Some(&self.uniform_locations["uTransform"]),
+            Some(&self.uniform_locations["u_transform"]),
             false,
             &uniform_data.wvp,
         );

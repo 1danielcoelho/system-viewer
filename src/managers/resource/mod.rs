@@ -43,11 +43,11 @@ fn link_program(
     gl.attach_shader(&program, &vert_shader);
     gl.attach_shader(&program, &frag_shader);
 
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Position as u32, "aPosition");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Normal as u32, "aNormal");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Color as u32, "aColor");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::UV0 as u32, "aUV0");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::UV1 as u32, "aUV1");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Position as u32, "a_position");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Normal as u32, "a_normal");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Color as u32, "a_color");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::UV0 as u32, "a_uv0");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::UV1 as u32, "a_uv1");
 
     gl.link_program(&program);
 
@@ -91,7 +91,7 @@ fn compile_shader(
 pub struct ResourceManager {
     meshes: HashMap<String, Rc<Mesh>>,
     textures: HashMap<String, Rc<Texture>>,
-    materials: HashMap<String, Rc<Material>>,
+    materials: HashMap<String, Rc<dyn Material>>,
 
     gl: WebGlRenderingContext,
 }
@@ -150,7 +150,7 @@ impl ResourceManager {
         return mesh;
     }
 
-    pub fn get_material(&self, identifier: &str) -> Option<Rc<Material>> {
+    pub fn get_material(&self, identifier: &str) -> Option<Rc<dyn Material>> {
         if let Some(mat) = self.materials.get(identifier) {
             return Some(mat.clone());
         }
@@ -158,45 +158,104 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<Material>> {
+    pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<dyn Material>> {
         if let Some(mat) = self.get_material(identifier) {
             return Some(mat);
         }
 
+        let mut material_type = "";
         let program = match identifier {
-            "default" => link_program(
-                &self.gl,
-                &shaders::vertex::RELAY_COLOR,
-                &shaders::fragment::COLOR,
-            ),
-            "local_normal" => link_program(
-                &self.gl,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::LOCAL_NORMAL,
-            ),
+            "default" => {
+                material_type = "unlit";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_COLOR,
+                    &shaders::fragment::COLOR,
+                )
+            }
+            "local_normal" => {
+                material_type = "unlit";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_ALL,
+                    &shaders::fragment::LOCAL_NORMAL,
+                )
+            }
+            "phong" => {
+                material_type = "lit";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_ALL,
+                    &shaders::fragment::PHONG,
+                )
+            }
             _ => Err("Invalid material identifier".to_owned()),
         };
 
-        if let Ok(program) = program {
-            let trans_loc = self
-                .gl
-                .get_uniform_location(&program, "uTransform")
-                .unwrap();
-
-            let mat = Rc::new(UnlitMaterial {
-                name: identifier.to_string(),
-                program: program,
-                uniform_locations: hashmap!["uTransform".to_owned() => trans_loc],
-            });
-
-            log::info!("Generated material '{}'", identifier);
-            self.materials.insert(identifier.to_string(), mat.clone());
-            return Some(mat);
-        } else {
+        if program.is_err() {
             log::error!("Failed to generate material '{}'", identifier);
-        }
+            return None;
+        };
+        let program = program.unwrap();
 
-        return None;
+        let mat: Rc<dyn Material> = match material_type {
+            "unlit" => {
+                let trans_loc = self
+                    .gl
+                    .get_uniform_location(&program, "u_transform")
+                    .unwrap();
+
+                Rc::new(UnlitMaterial {
+                    name: identifier.to_string(),
+                    program: program,
+                    uniform_locations: hashmap!["u_transform".to_owned() => trans_loc],
+                })
+            }
+            "lit" => {
+                let trans_loc = self
+                    .gl
+                    .get_uniform_location(&program, "u_transform")
+                    .unwrap();
+
+                let light_pos_loc = self
+                    .gl
+                    .get_uniform_location(&program, "u_light_pos_or_dir")
+                    .unwrap();
+
+                let light_color_loc = self
+                    .gl
+                    .get_uniform_location(&program, "u_light_colors")
+                    .unwrap();
+
+                let light_intensity_loc = self
+                    .gl
+                    .get_uniform_location(&program, "u_light_intensities")
+                    .unwrap();
+
+                Rc::new(PhongMaterial {
+                    name: identifier.to_string(),
+                    program: program,
+                    uniform_locations: hashmap![
+                        "u_transform".to_owned() => trans_loc,
+                        "u_light_pos_or_dir".to_owned() => light_pos_loc,
+                        "u_light_colors".to_owned() => light_color_loc,
+                        "u_light_intensities".to_owned() => light_intensity_loc
+                    ],
+                })
+            }
+            _ => {
+                log::error!(
+                    "Unexpected material type '{}' requested for identifier {}",
+                    material_type,
+                    identifier
+                );
+                return None;
+            }
+        };
+
+        log::info!("Generated material '{}'", identifier);
+        self.materials.insert(identifier.to_string(), mat.clone());
+        return Some(mat);
     }
 
     pub fn get_texture(&self, _name: &str) -> Option<Rc<Texture>> {

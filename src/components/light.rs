@@ -13,12 +13,9 @@ use super::{
 pub struct LightComponent {
     enabled: bool,
 
-    color: cgmath::Vector3<f32>,
-    intensity: f32,
-
-    direction: Option<cgmath::Vector3<f32>>,
-    max_distance: Option<f32>,
-    angle_deg: Option<f32>,
+    pub color: cgmath::Vector3<f32>,
+    pub intensity: f32,
+    pub direction: Option<cgmath::Vector3<f32>>,
 }
 impl LightComponent {
     fn new() -> Self {
@@ -32,17 +29,15 @@ impl Default for LightComponent {
             color: cgmath::Vector3::new(0.0, 0.0, 0.0), // Needs to be black so that unused lights don't affect the scene
             intensity: 0.0,
             direction: Some(cgmath::Vector3::new(0.0, 0.0, -1.0)), // Pointing down
-            max_distance: Some(10000.0),
-            angle_deg: Some(30.0),
         };
     }
 }
 impl Component for LightComponent {
     type ComponentType = LightComponent;
-    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
+    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::HashMap;
 
     fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Physics;
+        return ComponentIndex::Light;
     }
 
     fn get_components_map<'a>(
