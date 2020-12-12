@@ -298,7 +298,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = 0.5;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         // Origin plane

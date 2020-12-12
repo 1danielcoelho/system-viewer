@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{f32::consts::PI, rc::Rc};
 
 use cgmath::{Vector2, Vector3, Vector4};
 use web_sys::WebGlRenderingContext as GL;
@@ -8,6 +8,91 @@ use super::{
     intermediate_mesh::intermediate_to_mesh, intermediate_mesh::IntermediateMesh,
     intermediate_mesh::IntermediatePrimitive, Material, Mesh,
 };
+
+// Praise songho: http://www.songho.ca/opengl/gl_sphere.html
+pub fn generate_lat_long_sphere(
+    ctx: &WebGlRenderingContext,
+    num_lat_segs: u32,
+    num_long_segs: u32,
+    radius: f32,
+    default_material: Option<Rc<Material>>,
+) -> Rc<Mesh> {
+    let long_step = 2.0 * PI / (num_long_segs as f32);
+    let lat_step = PI / (num_lat_segs as f32);
+    let inv_radius = 1.0 / radius;
+
+    let num_verts = ((num_lat_segs + 1) * (num_long_segs + 1)) as usize; // Poles have a ton of vertices for different uvs
+
+    let mut indices: Vec<u16> = Vec::new();
+    let mut positions: Vec<Vector3<f32>> = Vec::new();
+    let mut normals: Vec<Vector3<f32>> = Vec::new();
+    let mut uv0: Vec<Vector2<f32>> = Vec::new();
+
+    indices.reserve(num_verts);
+    positions.reserve(num_verts);
+    normals.reserve(num_verts);
+    uv0.reserve(num_verts);
+
+    for lat_index in 0..=num_lat_segs {
+        let lat_angle = PI / 2.0 - (lat_index as f32) * lat_step;
+        let xy = radius * lat_angle.cos();
+        let z = radius * lat_angle.sin();
+
+        for long_index in 0..=num_long_segs {
+            let long_angle = (long_index as f32) * long_step;
+
+            let x = xy * long_angle.cos();
+            let y = xy * long_angle.sin();
+
+            positions.push(Vector3::new(x, y, z));
+            normals.push(Vector3::new(x * inv_radius, y * inv_radius, z * inv_radius));
+            uv0.push(Vector2::new(
+                (long_index as f32) / (num_long_segs as f32),
+                1.0 - (lat_index as f32) / (num_lat_segs as f32), // Flip here because we iterate top to bottom but I want UV y 0 at the bottom
+            ));
+        }
+    }
+
+    for i in 0..num_lat_segs {
+        let mut k1 = i * (num_long_segs + 1);
+        let mut k2 = k1 + num_long_segs + 1;
+
+        for _ in 0..num_long_segs {
+            if i != 0 {
+                indices.push(k1 as u16);
+                indices.push(k2 as u16);
+                indices.push((k1 + 1) as u16);
+            }
+
+            if i != (num_lat_segs - 1) {
+                indices.push((k1 + 1) as u16);
+                indices.push(k2 as u16);
+                indices.push((k2 + 1) as u16);
+            }
+
+            k1 += 1;
+            k2 += 1;
+        }
+    }
+
+    return intermediate_to_mesh(
+        IntermediateMesh {
+            name: String::from("lat_long_sphere"),
+            primitives: vec![IntermediatePrimitive {
+                name: String::from("0"),
+                indices,
+                positions,
+                normals,
+                colors: vec![],
+                uv0,
+                uv1: vec![],
+                mat: default_material,
+                mode: GL::TRIANGLES,
+            }],
+        },
+        ctx,
+    );
+}
 
 pub fn generate_cube(
     ctx: &WebGlRenderingContext,
