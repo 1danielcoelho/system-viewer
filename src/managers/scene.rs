@@ -214,7 +214,7 @@ impl SceneManager {
             .add_component::<MeshComponent>(parent)
             .unwrap();
         //mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        //mesh_comp.set_material_override(res_man.get_or_create_material("local_normal"), 0);
+        //mesh_comp.set_material_override(res_man.get_or_create_material("world_normal"), 0);
 
         let child = scene.ent_man.new_entity();
         scene.ent_man.set_entity_parent(parent, child);
@@ -289,30 +289,28 @@ impl SceneManager {
         light_comp.intensity = 1.0;
         light_comp.light_type = LightType::Directional;
 
-        // Lit cube
-        // let cube = scene.ent_man.new_entity();
-        // let trans_comp = scene
-        //     .ent_man
-        //     .add_component::<TransformComponent>(cube)
-        //     .unwrap();
-        // trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        // trans_comp.get_local_transform_mut().scale = 0.8;
-        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
-        // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        // mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        // Origin cube
+        let cube = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(cube)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = 0.5;
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
-        // let plane = scene.ent_man.new_entity("plane");
-        // let trans_comp = scene
-        //     .ent_man
-        //     .add_component::<TransformComponent>(plane)
-        //     .unwrap();
-        // trans_comp.transform.scale = 3.0;
-        // let mesh_comp = scene
-        //     .ent_man
-        //     .add_component::<MeshComponent>(plane)
-        //     .unwrap();
-        // mesh_comp.mesh = scene.res_man.generate_mesh("plane", &gl);
-        // mesh_comp.material = scene.res_man.get_material("material");
+        // Origin plane
+        let plane = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(plane)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 2.0, 0.0);
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         let grid = scene.ent_man.new_entity();
         let trans_comp = scene

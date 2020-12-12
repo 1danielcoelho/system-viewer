@@ -5,4 +5,4 @@ varying lowp vec4 v_color;
 varying lowp vec2 v_uv0;
 varying lowp vec2 v_uv1;
 
-void main() { gl_FragColor = vec4(v_world_normal, 1.0); }
+void main() { gl_FragColor = vec4(v_uv1, 0.0, 1.0); }

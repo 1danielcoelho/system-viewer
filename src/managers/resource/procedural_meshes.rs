@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use cgmath::{Vector3, Vector4};
+use cgmath::{Vector2, Vector3, Vector4};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::WebGlRenderingContext;
 
@@ -19,32 +19,217 @@ pub fn generate_cube(
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
                 indices: vec![
-                    0, 1, 3, 0, 3, 2, 1, 5, 3, 5, 7, 3, 5, 4, 6, 6, 7, 5, 0, 2, 4, 2, 6, 4, 2, 3,
-                    7, 2, 7, 6, 0, 4, 5, 0, 5, 1,
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                    22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
                 ],
                 positions: vec![
-                    Vector3::new(-1.0, -1.0, -1.0),
-                    Vector3::new(-1.0, -1.0, 1.0),
-                    Vector3::new(-1.0, 1.0, -1.0),
-                    Vector3::new(-1.0, 1.0, 1.0),
-                    Vector3::new(1.0, -1.0, -1.0),
-                    Vector3::new(1.0, -1.0, 1.0),
-                    Vector3::new(1.0, 1.0, -1.0),
-                    Vector3::new(1.0, 1.0, 1.0),
+                    // Face 0
+                    Vector3::new(-1.0, -1.0, -1.0), //0
+                    Vector3::new(-1.0, -1.0, 1.0),  //1
+                    Vector3::new(-1.0, 1.0, 1.0),   //3
+                    Vector3::new(-1.0, -1.0, -1.0), //0
+                    Vector3::new(-1.0, 1.0, 1.0),   //3
+                    Vector3::new(-1.0, 1.0, -1.0),  //2
+                    // Face 1
+                    Vector3::new(-1.0, -1.0, 1.0), //1
+                    Vector3::new(1.0, -1.0, 1.0),  //5
+                    Vector3::new(-1.0, 1.0, 1.0),  //3
+                    Vector3::new(1.0, -1.0, 1.0),  //5
+                    Vector3::new(1.0, 1.0, 1.0),   //7
+                    Vector3::new(-1.0, 1.0, 1.0),  //3
+                    // Face 2
+                    Vector3::new(1.0, -1.0, 1.0),  //5
+                    Vector3::new(1.0, -1.0, -1.0), //4
+                    Vector3::new(1.0, 1.0, -1.0),  //6
+                    Vector3::new(1.0, 1.0, -1.0),  //6
+                    Vector3::new(1.0, 1.0, 1.0),   //7
+                    Vector3::new(1.0, -1.0, 1.0),  //5
+                    // Face 3
+                    Vector3::new(-1.0, -1.0, -1.0), //0
+                    Vector3::new(-1.0, 1.0, -1.0),  //2
+                    Vector3::new(1.0, -1.0, -1.0),  //4
+                    Vector3::new(-1.0, 1.0, -1.0),  //2
+                    Vector3::new(1.0, 1.0, -1.0),   //6
+                    Vector3::new(1.0, -1.0, -1.0),  //4
+                    // Face 4
+                    Vector3::new(-1.0, 1.0, -1.0), //2
+                    Vector3::new(-1.0, 1.0, 1.0),  //3
+                    Vector3::new(1.0, 1.0, 1.0),   //7
+                    Vector3::new(-1.0, 1.0, -1.0), //2
+                    Vector3::new(1.0, 1.0, 1.0),   //7
+                    Vector3::new(1.0, 1.0, -1.0),  //6
+                    // Face 5
+                    Vector3::new(-1.0, -1.0, -1.0), //0
+                    Vector3::new(1.0, -1.0, -1.0),  //4
+                    Vector3::new(1.0, -1.0, 1.0),   //5
+                    Vector3::new(-1.0, -1.0, -1.0), //0
+                    Vector3::new(1.0, -1.0, 1.0),   //5
+                    Vector3::new(-1.0, -1.0, 1.0),  //1
                 ],
-                normals: vec![],
+                normals: vec![
+                    Vector3::new(-1.0, 0.0, 0.0),
+                    Vector3::new(-1.0, 0.0, 0.0),
+                    Vector3::new(-1.0, 0.0, 0.0),
+                    Vector3::new(-1.0, 0.0, 0.0),
+                    Vector3::new(-1.0, 0.0, 0.0),
+                    Vector3::new(-1.0, 0.0, 0.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(0.0, 0.0, -1.0),
+                    Vector3::new(0.0, 0.0, -1.0),
+                    Vector3::new(0.0, 0.0, -1.0),
+                    Vector3::new(0.0, 0.0, -1.0),
+                    Vector3::new(0.0, 0.0, -1.0),
+                    Vector3::new(0.0, 0.0, -1.0),
+                    Vector3::new(0.0, 1.0, 0.0),
+                    Vector3::new(0.0, 1.0, 0.0),
+                    Vector3::new(0.0, 1.0, 0.0),
+                    Vector3::new(0.0, 1.0, 0.0),
+                    Vector3::new(0.0, 1.0, 0.0),
+                    Vector3::new(0.0, 1.0, 0.0),
+                    Vector3::new(0.0, -1.0, 0.0),
+                    Vector3::new(0.0, -1.0, 0.0),
+                    Vector3::new(0.0, -1.0, 0.0),
+                    Vector3::new(0.0, -1.0, 0.0),
+                    Vector3::new(0.0, -1.0, 0.0),
+                    Vector3::new(0.0, -1.0, 0.0),
+                ],
                 colors: vec![
-                    Vector4::new(0.0, 0.0, 0.0, 1.0),
-                    Vector4::new(0.0, 0.0, 1.0, 1.0),
-                    Vector4::new(0.0, 1.0, 0.0, 1.0),
-                    Vector4::new(0.0, 1.0, 1.0, 1.0),
-                    Vector4::new(1.0, 0.0, 0.0, 1.0),
-                    Vector4::new(1.0, 0.0, 1.0, 1.0),
-                    Vector4::new(1.0, 1.0, 0.0, 1.0),
-                    Vector4::new(1.0, 1.0, 1.0, 1.0),
+                    Vector4::new(0.0, 0.0, 0.0, 1.0), //0
+                    Vector4::new(0.0, 0.0, 1.0, 1.0), //1
+                    Vector4::new(0.0, 1.0, 1.0, 1.0), //3
+                    Vector4::new(0.0, 0.0, 0.0, 1.0), //0
+                    Vector4::new(0.0, 1.0, 1.0, 1.0), //3
+                    Vector4::new(0.0, 1.0, 0.0, 1.0), //2
+                    Vector4::new(0.0, 0.0, 1.0, 1.0), //1
+                    Vector4::new(1.0, 0.0, 1.0, 1.0), //5
+                    Vector4::new(0.0, 1.0, 1.0, 1.0), //3
+                    Vector4::new(1.0, 0.0, 1.0, 1.0), //5
+                    Vector4::new(1.0, 1.0, 1.0, 1.0), //7
+                    Vector4::new(0.0, 1.0, 1.0, 1.0), //3
+                    Vector4::new(1.0, 0.0, 1.0, 1.0), //5
+                    Vector4::new(1.0, 0.0, 0.0, 1.0), //4
+                    Vector4::new(1.0, 1.0, 0.0, 1.0), //6
+                    Vector4::new(1.0, 1.0, 0.0, 1.0), //6
+                    Vector4::new(1.0, 1.0, 1.0, 1.0), //7
+                    Vector4::new(1.0, 0.0, 1.0, 1.0), //5
+                    Vector4::new(0.0, 0.0, 0.0, 1.0), //0
+                    Vector4::new(0.0, 1.0, 0.0, 1.0), //2
+                    Vector4::new(1.0, 0.0, 0.0, 1.0), //4
+                    Vector4::new(0.0, 1.0, 0.0, 1.0), //2
+                    Vector4::new(1.0, 1.0, 0.0, 1.0), //6
+                    Vector4::new(1.0, 0.0, 0.0, 1.0), //4
+                    Vector4::new(0.0, 1.0, 0.0, 1.0), //2
+                    Vector4::new(0.0, 1.0, 1.0, 1.0), //3
+                    Vector4::new(1.0, 1.0, 1.0, 1.0), //7
+                    Vector4::new(0.0, 1.0, 0.0, 1.0), //2
+                    Vector4::new(1.0, 1.0, 1.0, 1.0), //7
+                    Vector4::new(1.0, 1.0, 0.0, 1.0), //6
+                    Vector4::new(0.0, 0.0, 0.0, 1.0), //0
+                    Vector4::new(1.0, 0.0, 0.0, 1.0), //4
+                    Vector4::new(1.0, 0.0, 1.0, 1.0), //5
+                    Vector4::new(0.0, 0.0, 0.0, 1.0), //0
+                    Vector4::new(1.0, 0.0, 1.0, 1.0), //5
+                    Vector4::new(0.0, 0.0, 1.0, 1.0), //1
                 ],
-                uv0: vec![],
-                uv1: vec![],
+                uv0: vec![
+                    // Face 0
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    // Face 1
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    // Face 2
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    // Face 3
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    // Face 4
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    // Face 5
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                ],
+                uv1: vec![
+                    // Face 0
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    // Face 1
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    // Face 2
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    // Face 3
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    // Face 4
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    // Face 5
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                ],
                 mode: GL::TRIANGLES,
                 mat: default_material,
             }],
@@ -62,22 +247,47 @@ pub fn generate_plane(
             name: String::from("plane"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
-                indices: vec![0, 1, 3, 0, 3, 2],
+                indices: vec![0, 1, 2, 3, 4, 5],
                 positions: vec![
-                    Vector3::new(1.0, 1.0, 0.0),
                     Vector3::new(1.0, -1.0, 0.0),
+                    Vector3::new(1.0, 1.0, 0.0),
+                    Vector3::new(-1.0, -1.0, 0.0),
                     Vector3::new(-1.0, 1.0, 0.0),
                     Vector3::new(-1.0, -1.0, 0.0),
+                    Vector3::new(1.0, 1.0, 0.0),
                 ],
-                normals: vec![],
+                normals: vec![
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                    Vector3::new(0.0, 0.0, 1.0),
+                ],
                 colors: vec![
                     Vector4::new(0.0, 0.0, 0.0, 1.0),
-                    Vector4::new(0.0, 0.0, 1.0, 1.0),
+                    Vector4::new(1.0, 0.0, 0.0, 1.0),
                     Vector4::new(0.0, 1.0, 0.0, 1.0),
-                    Vector4::new(0.0, 1.0, 1.0, 1.0),
+                    Vector4::new(1.0, 1.0, 0.0, 1.0),
+                    Vector4::new(0.0, 1.0, 0.0, 1.0),
+                    Vector4::new(1.0, 0.0, 0.0, 1.0),
                 ],
-                uv0: vec![],
-                uv1: vec![],
+                uv0: vec![
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                ],
+                uv1: vec![
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
+                ],
                 mode: GL::TRIANGLES,
                 mat: default_material,
             }],

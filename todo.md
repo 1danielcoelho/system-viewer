@@ -117,15 +117,18 @@
 - Multiple lights of different types -->
 <!-- - Phong material
     - Need to have a material trait object and different materials, as the attributes/uniforms will be different -->
-# Add normals to procedural geometry
-# I don't think I need this silly "get_component_index()" function, and can just use a trait const
-# I kind of need entity names for debug
+<!-- # Add normals to procedural geometry
+- And UVs -->
+# Procedural sphere
 # I want to import a GLTF object
+- Get textures working
+    - Need to import them from byte buffers, since they come in from glb files. Maybe let JS handle the decompression/parsing of png/jpg?
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
-- Get textures working
-# Procedural sphere
+# I don't think I need this silly "get_component_index()" function, and can just use a trait const
+# I kind of need entity names for debug
+# Pass along an inverse transform to transform normals with
 # Scene manager
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now

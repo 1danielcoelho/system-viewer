@@ -124,7 +124,7 @@ impl ResourceManager {
     /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
     pub fn initialize(&mut self) {
         self.get_or_create_material("default");
-        self.get_or_create_material("local_normal");
+        self.get_or_create_material("world_normal");
         self.get_or_create_material("phong");
 
         self.get_or_create_mesh("cube");
@@ -190,12 +190,28 @@ impl ResourceManager {
                     &shaders::fragment::COLOR,
                 )
             }
-            "local_normal" => {
+            "world_normal" => {
                 material_type = "unlit";
                 link_program(
                     &self.gl,
                     &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::LOCAL_NORMAL,
+                    &shaders::fragment::WORLD_NORMAL,
+                )
+            }
+            "uv0" => {
+                material_type = "unlit";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_ALL,
+                    &shaders::fragment::UV0,
+                )
+            }
+            "uv1" => {
+                material_type = "unlit";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_ALL,
+                    &shaders::fragment::UV1,
                 )
             }
             "phong" => {
