@@ -196,83 +196,77 @@ impl SceneManager {
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         let mut scene = Scene::new(identifier);
 
-        // Setup scene
-        let parent = scene.ent_man.new_entity();
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(parent)
-            .unwrap();
-        //trans_comp.get_local_transform_mut().scale = 0.05;
-        let phys_comp = scene
-            .ent_man
-            .add_component::<PhysicsComponent>(parent)
-            .unwrap();
-        phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
-        // phys_comp.lin_mom = Vector3::new(10.0, 0.0, 0.0);
-        let mesh_comp = scene
-            .ent_man
-            .add_component::<MeshComponent>(parent)
-            .unwrap();
-        //mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        //mesh_comp.set_material_override(res_man.get_or_create_material("world_normal"), 0);
+        // // Parent spinning around Z
+        // let parent = scene.ent_man.new_entity();
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(parent)
+        //     .unwrap();
+        // let phys_comp = scene
+        //     .ent_man
+        //     .add_component::<PhysicsComponent>(parent)
+        //     .unwrap();
+        // phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
+        // let mesh_comp = scene
+        //     .ent_man
+        //     .add_component::<MeshComponent>(parent)
+        //     .unwrap();
 
-        let child = scene.ent_man.new_entity();
-        scene.ent_man.set_entity_parent(parent, child);
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(child)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 0.1;
-        let phys_comp = scene
-            .ent_man
-            .add_component::<PhysicsComponent>(child)
-            .unwrap();
-        // phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        let light_comp = scene
-            .ent_man
-            .add_component::<LightComponent>(child)
-            .unwrap();
-        light_comp.color = cgmath::Vector3::new(0.1, 0.8, 0.2);
-        light_comp.intensity = 1.0;
+        // // Light rotating around Z
+        // let child = scene.ent_man.new_entity();
+        // scene.ent_man.set_entity_parent(parent, child);
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(child)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = 0.1;
+        // let phys_comp = scene
+        //     .ent_man
+        //     .add_component::<PhysicsComponent>(child)
+        //     .unwrap();
+        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        // let light_comp = scene
+        //     .ent_man
+        //     .add_component::<LightComponent>(child)
+        //     .unwrap();
+        // light_comp.color = cgmath::Vector3::new(0.1, 0.8, 0.2);
+        // light_comp.intensity = 1.0;
 
-        // Other parent
-        let parent = scene.ent_man.new_entity();
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(parent)
-            .unwrap();
-        //trans_comp.get_local_transform_mut().scale = 0.05;
-        let phys_comp = scene
-            .ent_man
-            .add_component::<PhysicsComponent>(parent)
-            .unwrap();
-        phys_comp.ang_mom = Vector3::new(0.0, 1.0, 0.0);
+        // // Parent spinning around Y
+        // let parent = scene.ent_man.new_entity();
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(parent)
+        //     .unwrap();
+        // let phys_comp = scene
+        //     .ent_man
+        //     .add_component::<PhysicsComponent>(parent)
+        //     .unwrap();
+        // phys_comp.ang_mom = Vector3::new(0.0, 1.0, 0.0);
 
-        // Other child
-        let child = scene.ent_man.new_entity();
-        scene.ent_man.set_entity_parent(parent, child);
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(child)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 0.1;
-        let phys_comp = scene
-            .ent_man
-            .add_component::<PhysicsComponent>(child)
-            .unwrap();
-        // phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        let light_comp = scene
-            .ent_man
-            .add_component::<LightComponent>(child)
-            .unwrap();
-        light_comp.color = cgmath::Vector3::new(0.1, 0.1, 0.8);
-        light_comp.intensity = 1.0;
+        // // Light rotating around Y
+        // let child = scene.ent_man.new_entity();
+        // scene.ent_man.set_entity_parent(parent, child);
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(child)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = 0.1;
+        // let phys_comp = scene
+        //     .ent_man
+        //     .add_component::<PhysicsComponent>(child)
+        //     .unwrap();
+        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        // let light_comp = scene
+        //     .ent_man
+        //     .add_component::<LightComponent>(child)
+        //     .unwrap();
+        // light_comp.color = cgmath::Vector3::new(0.1, 0.1, 0.8);
+        // light_comp.intensity = 1.0;
 
         // Directional light
         let dir_light = scene.ent_man.new_entity();
@@ -285,11 +279,11 @@ impl SceneManager {
             .ent_man
             .add_component::<LightComponent>(dir_light)
             .unwrap();
-        light_comp.color = cgmath::Vector3::new(0.9, 0.1, 0.0);
+        light_comp.color = cgmath::Vector3::new(1.0, 1.0, 1.0);
         light_comp.intensity = 1.0;
         light_comp.light_type = LightType::Directional;
 
-        // Origin cube
+        // Ico-sphere
         let cube = scene.ent_man.new_entity();
         let trans_comp = scene
             .ent_man
@@ -301,7 +295,7 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
-        // Origin plane
+        // Lat-long sphere
         let plane = scene.ent_man.new_entity();
         let trans_comp = scene
             .ent_man
@@ -312,6 +306,7 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
+        // Grid
         let grid = scene.ent_man.new_entity();
         let trans_comp = scene
             .ent_man
@@ -321,6 +316,7 @@ impl SceneManager {
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(grid).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
+        // Axes
         let axes = scene.ent_man.new_entity();
         let trans_comp = scene
             .ent_man
@@ -330,6 +326,7 @@ impl SceneManager {
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
+        // Debug UI
         let ui_entity = scene.ent_man.new_entity();
         scene.ent_man.add_component::<TransformComponent>(ui_entity);
         let ui_comp = scene

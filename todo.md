@@ -120,6 +120,8 @@
 <!-- # Add normals to procedural geometry
 - And UVs -->
 <!-- # Procedural sphere -->
+# Icosphere normals look weird
+# Setup test scene for textures (plane, boxes and stuff)
 # I want to import a GLTF object
 - Get textures working
     - Need to import them from byte buffers, since they come in from glb files. Maybe let JS handle the decompression/parsing of png/jpg?
