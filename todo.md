@@ -106,11 +106,15 @@
 <!-- - Sparse light component -->
 <!-- - Sparse UI component -->
 # Lights and simple phong material
-- Rendering system traverses sparse light components and sets the uniforms for the ones closest to the camera
-    - Maybe do this only once every 10 frames or something like that?
-- Lights
+<!-- - Rendering system traverses sparse light components and sets the uniforms for the ones closest to the camera
+    - Maybe do this only once every 10 frames or something like that? -->
+<!-- - Multiple lights -->
+- I think I can set the number of lights via a uniform?
+- Different light types
     - Directional light
     - Point light
+    - Spot light
+- Multiple lights of different types
 <!-- - Phong material
     - Need to have a material trait object and different materials, as the attributes/uniforms will be different -->
 # Add normals to procedural geometry

@@ -228,7 +228,7 @@ impl SceneManager {
             .ent_man
             .add_component::<PhysicsComponent>(child)
             .unwrap();
-        phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
+        // phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         let light_comp = scene
@@ -237,6 +237,43 @@ impl SceneManager {
             .unwrap();
         light_comp.color = cgmath::Vector3::new(0.1, 0.8, 0.2);
         light_comp.intensity = 1.0;
+
+        // Other parent
+        let parent = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(parent)
+            .unwrap();
+        //trans_comp.get_local_transform_mut().scale = 0.05;
+        let phys_comp = scene
+            .ent_man
+            .add_component::<PhysicsComponent>(parent)
+            .unwrap();
+        phys_comp.ang_mom = Vector3::new(0.0, 1.0, 0.0);
+
+        // Other child
+        let child = scene.ent_man.new_entity();
+        scene.ent_man.set_entity_parent(parent, child);
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(child)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = 0.1;
+        let phys_comp = scene
+            .ent_man
+            .add_component::<PhysicsComponent>(child)
+            .unwrap();
+        // phys_comp.ang_mom = Vector3::new(-1.0, 0.0, 0.0); // This shouldn't do anything
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        let light_comp = scene
+            .ent_man
+            .add_component::<LightComponent>(child)
+            .unwrap();
+        light_comp.color = cgmath::Vector3::new(0.1, 0.1, 0.8);
+        light_comp.intensity = 1.0;
+
 
         // Lit cube
         // let cube = scene.ent_man.new_entity();
