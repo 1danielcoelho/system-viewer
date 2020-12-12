@@ -296,9 +296,9 @@ impl SceneManager {
             .add_component::<TransformComponent>(cube)
             .unwrap();
         trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 0.5;
+        trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         // Origin plane
@@ -307,9 +307,9 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(plane)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 2.0, 0.0);
+        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 0.0, 0.0);
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         let grid = scene.ent_man.new_entity();

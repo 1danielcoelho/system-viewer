@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, rc::Rc};
 
-use cgmath::{Vector2, Vector3, Vector4};
+use cgmath::{InnerSpace, Vector2, Vector3, Vector4};
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::WebGlRenderingContext;
 
@@ -85,6 +85,160 @@ pub fn generate_lat_long_sphere(
                 normals,
                 colors: vec![],
                 uv0,
+                uv1: vec![],
+                mat: default_material,
+                mode: GL::TRIANGLES,
+            }],
+        },
+        ctx,
+    );
+}
+
+// Praise songho: http://www.songho.ca/opengl/gl_sphere.html
+// https://schneide.blog/2016/07/15/generating-an-icosphere-in-c/
+pub fn generate_ico_sphere(
+    ctx: &WebGlRenderingContext,
+    radius: f32,
+    num_subdiv: u32,
+    default_material: Option<Rc<Material>>,
+) -> Rc<Mesh> {
+    let final_num_verts = (20 * 3 * 4u32.pow(num_subdiv)) as usize;
+
+    let mut indices: Vec<u16> = Vec::new();
+    let mut positions: Vec<Vector3<f32>> = Vec::new();
+    let mut normals: Vec<Vector3<f32>> = Vec::new();
+    let mut temp_indices: Vec<u16> = Vec::new();
+    let mut temp_positions: Vec<Vector3<f32>> = Vec::new();
+
+    indices.reserve(final_num_verts);
+    positions.reserve(final_num_verts);
+    normals.resize(final_num_verts, Vector3::new(0.0, 0.0, 1.0));
+    temp_indices.reserve(final_num_verts);
+    temp_positions.reserve(final_num_verts);
+
+    let X = 0.525731112119133606 * radius;
+    let Z = 0.850650808352039932 * radius;
+    let N = 0.0;
+
+    positions.push(Vector3::new(-X, N, Z));
+    positions.push(Vector3::new(X, N, Z));
+    positions.push(Vector3::new(-X, N, -Z));
+    positions.push(Vector3::new(X, N, -Z));
+    positions.push(Vector3::new(N, Z, X));
+    positions.push(Vector3::new(N, Z, -X));
+    positions.push(Vector3::new(N, -Z, X));
+    positions.push(Vector3::new(N, -Z, -X));
+    positions.push(Vector3::new(Z, X, N));
+    positions.push(Vector3::new(-Z, X, N));
+    positions.push(Vector3::new(Z, -X, N));
+    positions.push(Vector3::new(-Z, -X, N));
+
+    // 60 indices
+    indices = vec![
+        0, 4, 1, 0, 9, 4, 9, 5, 4, 4, 5, 8, 4, 8, 1, 8, 10, 1, 8, 3, 10, 5, 3, 8, 5, 2, 3, 2, 7, 3,
+        7, 10, 3, 7, 6, 10, 7, 11, 6, 11, 0, 6, 0, 1, 6, 6, 1, 10, 9, 0, 11, 9, 11, 2, 9, 2, 5, 7,
+        2, 11,
+    ];
+
+    // We start off with 12 positions, but for each subdiv we'll only share vertices within a face
+    // Doesn't matter much as we'll end up with 3 verts per triangle in the end anyway, and this way
+    // the algorithm is simple
+    let mut num_verts_after_subdiv = 30;
+    let mut num_indices_after_subdiv = 60;
+    for _ in 0..num_subdiv {
+        num_verts_after_subdiv *= 4;
+        num_indices_after_subdiv *= 4;
+
+        temp_positions.resize(num_verts_after_subdiv, Vector3::new(0.0, 0.0, 0.0));
+        temp_indices.resize(num_indices_after_subdiv, 0);
+
+        let mut new_vert_index = 0;
+        let mut new_indices_index = 0;
+
+        // Step over each triangle from the previous subdiv, and create 4 others in the temp vecs
+        for triangle_index in 0..(indices.len() / 3) {
+            let p0 = &positions[indices[triangle_index * 3 + 0] as usize];
+            let p1 = &positions[indices[triangle_index * 3 + 1] as usize];
+            let p2 = &positions[indices[triangle_index * 3 + 2] as usize];
+
+            //         p0
+            //        / \
+            //       / 1 \
+            //      /     \
+            //     p3------p4
+            //    / \  3  / \
+            //   /   \   /   \
+            //  /  2  \ /  4  \
+            // p1------p5------p2
+
+            temp_positions[new_vert_index + 0] = *p0;
+            temp_positions[new_vert_index + 1] = *p1;
+            temp_positions[new_vert_index + 2] = *p2;
+            temp_positions[new_vert_index + 3] = radius * (p0 + p1).normalize();
+            temp_positions[new_vert_index + 4] = radius * (p0 + p2).normalize();
+            temp_positions[new_vert_index + 5] = radius * (p1 + p2).normalize();
+
+            temp_indices[new_indices_index + 0] = (new_vert_index + 0) as u16;
+            temp_indices[new_indices_index + 1] = (new_vert_index + 3) as u16;
+            temp_indices[new_indices_index + 2] = (new_vert_index + 4) as u16;
+
+            temp_indices[new_indices_index + 3] = (new_vert_index + 3) as u16;
+            temp_indices[new_indices_index + 4] = (new_vert_index + 1) as u16;
+            temp_indices[new_indices_index + 5] = (new_vert_index + 5) as u16;
+
+            temp_indices[new_indices_index + 6] = (new_vert_index + 3) as u16;
+            temp_indices[new_indices_index + 7] = (new_vert_index + 5) as u16;
+            temp_indices[new_indices_index + 8] = (new_vert_index + 4) as u16;
+
+            temp_indices[new_indices_index + 9] = (new_vert_index + 4) as u16;
+            temp_indices[new_indices_index + 10] = (new_vert_index + 5) as u16;
+            temp_indices[new_indices_index + 11] = (new_vert_index + 2) as u16;
+
+            new_vert_index += 6;
+            new_indices_index += 12;
+        }
+
+        std::mem::swap(&mut positions, &mut temp_positions);
+        std::mem::swap(&mut indices, &mut temp_indices);
+    }
+
+    // Final pass to generate 1 vertex per triangle and normals.. no uv1 yet because that's non-trivial 
+    temp_positions.resize(final_num_verts, Vector3::new(0.0, 0.0, 0.0));
+    temp_indices.resize(final_num_verts, 0);
+    let mut new_index = 0;
+    for triangle_index in 0..(indices.len() / 3) {
+        let p0 = &positions[indices[triangle_index * 3 + 0] as usize];
+        let p1 = &positions[indices[triangle_index * 3 + 1] as usize];
+        let p2 = &positions[indices[triangle_index * 3 + 2] as usize];
+
+        temp_positions[new_index + 0] = *p0;
+        temp_positions[new_index + 1] = *p1;
+        temp_positions[new_index + 2] = *p2;
+
+        temp_indices[new_index + 0] = (new_index + 0) as u16;
+        temp_indices[new_index + 1] = (new_index + 1) as u16;
+        temp_indices[new_index + 2] = (new_index + 2) as u16;
+
+        normals[new_index + 0] = p0.normalize();
+        normals[new_index + 1] = p1.normalize();
+        normals[new_index + 2] = p2.normalize();
+
+        new_index += 3;
+    }
+
+    std::mem::swap(&mut positions, &mut temp_positions);
+    std::mem::swap(&mut indices, &mut temp_indices);
+
+    return intermediate_to_mesh(
+        IntermediateMesh {
+            name: String::from("ico_sphere"),
+            primitives: vec![IntermediatePrimitive {
+                name: String::from("0"),
+                indices,
+                positions,
+                normals,
+                colors: vec![],
+                uv0: vec![],
                 uv1: vec![],
                 mat: default_material,
                 mode: GL::TRIANGLES,
