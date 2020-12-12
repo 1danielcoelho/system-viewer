@@ -215,9 +215,10 @@ pub fn generate_ico_sphere(
         temp_positions[new_index + 1] = *p1;
         temp_positions[new_index + 2] = *p2;
 
+        // TODO: Why did I need to flip winding order here? I think my original icosahedron was clockwise?
         temp_indices[new_index + 0] = (new_index + 0) as u16;
-        temp_indices[new_index + 1] = (new_index + 1) as u16;
-        temp_indices[new_index + 2] = (new_index + 2) as u16;
+        temp_indices[new_index + 2] = (new_index + 1) as u16;
+        temp_indices[new_index + 1] = (new_index + 2) as u16;
 
         normals[new_index + 0] = p0.normalize();
         normals[new_index + 1] = p1.normalize();

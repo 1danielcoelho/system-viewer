@@ -120,7 +120,7 @@
 <!-- # Add normals to procedural geometry
 - And UVs -->
 <!-- # Procedural sphere -->
-# Icosphere normals look weird
+<!-- # Icosphere normals look weird -->
 # Setup test scene for textures (plane, boxes and stuff)
 # I want to import a GLTF object
 - Get textures working
