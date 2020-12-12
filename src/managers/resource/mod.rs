@@ -233,6 +233,7 @@ impl ResourceManager {
                     &[
                         "u_world_trans",
                         "u_view_proj_trans",
+                        "u_light_types",
                         "u_light_pos_or_dir",
                         "u_light_colors",
                         "u_light_intensities",

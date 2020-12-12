@@ -5,6 +5,7 @@ use crate::{app_state::AppState, systems::NUM_LIGHTS};
 pub struct UniformData {
     pub w: [f32; 16],
     pub vp: [f32; 16],
+    pub light_types: [i32; NUM_LIGHTS],
     pub light_pos_or_dir: [f32; NUM_LIGHTS * 3],
     pub light_colors: [f32; NUM_LIGHTS * 3],
     pub light_intensities: [f32; NUM_LIGHTS],

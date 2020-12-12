@@ -60,6 +60,10 @@ impl Material for PhongMaterial {
             false,
             &uniform_data.vp,
         );
+        gl.uniform1iv_with_i32_array(
+            self.uniform_locations.get("u_light_types"),
+            &uniform_data.light_types,
+        );
         gl.uniform3fv_with_f32_array(
             self.uniform_locations.get("u_light_pos_or_dir"),
             &uniform_data.light_pos_or_dir,

@@ -9,10 +9,17 @@ use super::{
     Component,
 };
 
+#[derive(Clone, Copy)]
+pub enum LightType {
+    Point = 0,
+    Directional = 1,
+}
+
 #[derive(Clone)]
 pub struct LightComponent {
     enabled: bool,
 
+    pub light_type: LightType,
     pub color: cgmath::Vector3<f32>,
     pub intensity: f32,
     pub direction: Option<cgmath::Vector3<f32>>,
@@ -26,6 +33,8 @@ impl Default for LightComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
+
+            light_type: LightType::Point,
             color: cgmath::Vector3::new(0.0, 0.0, 0.0), // Needs to be black so that unused lights don't affect the scene
             intensity: 0.0,
             direction: Some(cgmath::Vector3::new(0.0, 0.0, -1.0)), // Pointing down

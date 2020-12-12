@@ -75,9 +75,10 @@ impl RenderingSystem {
         let mut result = UniformData {
             w: [0.0; 16], // This will be filled in later
             vp: *(p * v).as_ref(),
-            light_colors: [0.0; 24],
-            light_pos_or_dir: [0.0; 24],
-            light_intensities: [0.0; 8],
+            light_types: [0; NUM_LIGHTS],
+            light_colors: [0.0; NUM_LIGHTS * 3],
+            light_pos_or_dir: [0.0; NUM_LIGHTS * 3],
+            light_intensities: [0.0; NUM_LIGHTS],
         };
 
         // Pick lights that will affect the scene (randomly for now)
@@ -85,6 +86,8 @@ impl RenderingSystem {
         for (ent, light) in em.light.iter() {
             let ent_index = em.get_entity_index(*ent).unwrap();
             let pos = &em.transform[ent_index as usize].get_world_transform().disp;
+
+            result.light_types[index] = light.light_type as i32;
 
             result.light_colors[index * 3 + 0] = light.color.x;
             result.light_colors[index * 3 + 1] = light.color.y;

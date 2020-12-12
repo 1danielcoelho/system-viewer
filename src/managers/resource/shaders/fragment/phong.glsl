@@ -2,6 +2,10 @@ precision mediump float;
 
 const int MAX_LIGHTS = 8;
 
+const int POINT_LIGHT = 0;
+const int DIR_LIGHT = 1;
+
+uniform int u_light_types[MAX_LIGHTS];
 uniform vec3 u_light_pos_or_dir[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
 uniform float u_light_intensities[MAX_LIGHTS];
@@ -23,17 +27,35 @@ vec3 calc_point_light(vec3 light_pos, vec3 light_color, float light_intensity)
     return light_color * intensity;
 }
 
+vec3 calc_dir_light(vec3 light_dir, vec3 light_color, float light_intensity)
+{
+    float intensity = dot(-normalize(light_dir), v_world_normal);
+    intensity = clamp(intensity, 0.0, 1.0);
+    return light_color * intensity;
+}
+
 void main() 
 {
     vec3 total_color = vec3(0, 0, 0);
 
     for(int i = 0; i < MAX_LIGHTS; ++i)
     {
-        total_color += calc_point_light(
-            u_light_pos_or_dir[i], 
-            u_light_colors[i], 
-            u_light_intensities[i]
-        );
+        if (u_light_types[i] == POINT_LIGHT)
+        {
+            total_color += calc_point_light(
+                u_light_pos_or_dir[i], 
+                u_light_colors[i], 
+                u_light_intensities[i]
+            );
+        }
+        else
+        {
+            total_color += calc_dir_light(
+                u_light_pos_or_dir[i], 
+                u_light_colors[i], 
+                u_light_intensities[i]
+            );
+        }
     }
 
     gl_FragColor = vec4(total_color, 1.0);

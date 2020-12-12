@@ -4,8 +4,8 @@ use cgmath::{InnerSpace, UlpsEq, Vector3};
 
 use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
 use crate::components::{
-    transform::TransformType, ui::WidgetType, LightComponent, MeshComponent, PhysicsComponent,
-    TransformComponent, UIComponent,
+    light::LightType, transform::TransformType, ui::WidgetType, LightComponent, MeshComponent,
+    PhysicsComponent, TransformComponent, UIComponent,
 };
 
 #[derive(Clone)]
@@ -274,6 +274,20 @@ impl SceneManager {
         light_comp.color = cgmath::Vector3::new(0.1, 0.1, 0.8);
         light_comp.intensity = 1.0;
 
+        // Directional light
+        let dir_light = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(dir_light)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.2, 0.0, -1.0);
+        let light_comp = scene
+            .ent_man
+            .add_component::<LightComponent>(dir_light)
+            .unwrap();
+        light_comp.color = cgmath::Vector3::new(0.9, 0.1, 0.0);
+        light_comp.intensity = 1.0;
+        light_comp.light_type = LightType::Directional;
 
         // Lit cube
         // let cube = scene.ent_man.new_entity();

@@ -105,16 +105,16 @@
     - Don't need this yet, maybe later. I'll leave for when I have actual use cases -->
 <!-- - Sparse light component -->
 <!-- - Sparse UI component -->
-# Lights and simple phong material
+<!-- # Lights and simple phong material -->
 <!-- - Rendering system traverses sparse light components and sets the uniforms for the ones closest to the camera
     - Maybe do this only once every 10 frames or something like that? -->
 <!-- - Multiple lights -->
-- I think I can set the number of lights via a uniform?
-- Different light types
+<!-- - I think I can set the number of lights via a uniform?
+    - Not in WebGL at least. I'll just carry on with a const num lights, and if performance becomes an issue I can text-replace different shader permutations for different number of lights, or still provide an uniform and break out of the loop whenever num_lights is reached -->
+<!-- - Different light types
     - Directional light
     - Point light
-    - Spot light
-- Multiple lights of different types
+- Multiple lights of different types -->
 <!-- - Phong material
     - Need to have a material trait object and different materials, as the attributes/uniforms will be different -->
 # Add normals to procedural geometry
