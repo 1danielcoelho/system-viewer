@@ -281,9 +281,11 @@ impl EngineInterface {
         // TODO: Catch duplicate scenes
 
         if let Ok((gltf_doc, gltf_buffers, gltf_images)) = gltf::import_slice(data) {
-            self.engine
-                .res_man
-                .load_textures_from_gltf(file_identifier, gltf_doc.textures());
+            self.engine.res_man.load_textures_from_gltf(
+                file_identifier,
+                gltf_doc.textures(),
+                &gltf_images,
+            );
 
             self.engine
                 .res_man

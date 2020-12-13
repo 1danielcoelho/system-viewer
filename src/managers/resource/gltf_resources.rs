@@ -1,7 +1,10 @@
 use std::{io::Cursor, rc::Rc};
 
 use cgmath::{Vector2, Vector3, Vector4};
-use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
+use gltf::{
+    image::Format,
+    mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
+};
 use image::{io::Reader, DynamicImage, ImageError, ImageFormat};
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
@@ -13,24 +16,24 @@ use super::{
 };
 
 pub trait GltfResource {
-    fn get_identifier(&self, scene_identifier: &str) -> String;
+    fn get_identifier(&self, identifier: &str) -> String;
 }
 
 impl GltfResource for gltf::Mesh<'_> {
-    fn get_identifier(&self, scene_identifier: &str) -> String {
-        return scene_identifier.to_owned() + "_mesh_" + &self.index().to_string();
+    fn get_identifier(&self, file_identifier: &str) -> String {
+        return file_identifier.to_owned() + "_mesh_" + &self.index().to_string();
     }
 }
 
 impl GltfResource for gltf::Material<'_> {
-    fn get_identifier(&self, scene_identifier: &str) -> String {
-        return scene_identifier.to_owned() + "_mesh_" + &self.index().unwrap().to_string();
+    fn get_identifier(&self, file_identifier: &str) -> String {
+        return file_identifier.to_owned() + "_material_" + &self.index().unwrap().to_string();
     }
 }
 
 impl GltfResource for gltf::Texture<'_> {
-    fn get_identifier(&self, scene_identifier: &str) -> String {
-        return scene_identifier.to_owned() + "_mesh_" + &self.index().to_string();
+    fn get_identifier(&self, file_identifier: &str) -> String {
+        return file_identifier.to_owned() + "_texture_" + &self.index().to_string();
     }
 }
 
@@ -41,8 +44,8 @@ impl GltfResource for gltf::Node<'_> {
 }
 
 impl GltfResource for gltf::Scene<'_> {
-    fn get_identifier(&self, scene_identifier: &str) -> String {
-        return scene_identifier.to_owned() + "_scene_" + &self.index().to_string();
+    fn get_identifier(&self, file_identifier: &str) -> String {
+        return file_identifier.to_owned() + "_scene_" + &self.index().to_string();
     }
 }
 
@@ -60,13 +63,13 @@ impl ResourceManager {
     }
 
     fn load_mesh_from_gltf(
-        scene_identifier: &str,
+        file_identifier: &str,
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
-        default_material: &Option<Rc<Material>>,
+        default_material: &Option<Rc<dyn Material>>,
         ctx: &WebGlRenderingContext,
     ) -> Result<Rc<Mesh>, String> {
-        let identifier = mesh.get_identifier(scene_identifier);
+        let identifier = mesh.get_identifier(file_identifier);
 
         log::info!(
             "\tMesh {}, num_prims: {}",
@@ -308,15 +311,17 @@ impl ResourceManager {
         }
     }
 
+    // Likely useless since I went for this before realizing the gltf crate can already
+    // decode textures into 8 bit per channel data
     fn load_texture_from_bytes(
         bytes: &[u8],
         image_format: ImageFormat,
         ctx: &WebGlRenderingContext,
-    ) -> Result<Texture, String> {
+    ) -> Result<Rc<Texture>, String> {
         let mut reader = Reader::new(Cursor::new(bytes));
         reader.set_format(image_format);
         let decoded = reader.decode();
-        
+
         if let Err(error) = decoded {
             return Err(std::format!("Error loading texture: {}", error));
         }
@@ -325,6 +330,7 @@ impl ResourceManager {
         let mut width: u32 = 0;
         let mut height: u32 = 0;
         let mut format: u32 = 0;
+        let mut num_channels: u8 = 0;
         let mut buf: Option<&[u8]> = None;
         let converted_bgr;
         let converted_bgra;
@@ -335,6 +341,7 @@ impl ResourceManager {
                 width = img.width();
                 height = img.height();
                 format = GL::ALPHA;
+                num_channels = 1;
                 buf = Some(img.as_raw());
             }
             // RG
@@ -342,6 +349,7 @@ impl ResourceManager {
                 width = img.width();
                 height = img.height();
                 format = GL::LUMINANCE_ALPHA;
+                num_channels = 2;
                 buf = Some(img.as_raw());
             }
             // RGB
@@ -349,6 +357,7 @@ impl ResourceManager {
                 width = img.width();
                 height = img.height();
                 format = GL::RGB;
+                num_channels = 3;
                 buf = Some(img.as_raw());
             }
             DynamicImage::ImageBgr8(_) => {
@@ -356,6 +365,7 @@ impl ResourceManager {
                 width = converted_bgr.width();
                 height = converted_bgr.height();
                 format = GL::RGB;
+                num_channels = 3;
                 buf = Some(converted_bgr.as_raw());
             }
             // RGBA
@@ -363,6 +373,7 @@ impl ResourceManager {
                 width = img.width();
                 height = img.height();
                 format = GL::RGBA;
+                num_channels = 4;
                 buf = Some(img.as_raw());
             }
             DynamicImage::ImageBgra8(_) => {
@@ -370,6 +381,7 @@ impl ResourceManager {
                 width = converted_bgra.width();
                 height = converted_bgra.height();
                 format = GL::RGBA;
+                num_channels = 4;
                 buf = Some(converted_bgra.as_raw());
             }
             _ => {}
@@ -379,7 +391,6 @@ impl ResourceManager {
             return Err(format!("Failed to decode {:?}", image_format));
         }
 
-        let mut tex = Texture::new();
         let gl_tex = ctx.create_texture().unwrap();
         ctx.active_texture(GL::TEXTURE0);
         ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
@@ -403,15 +414,84 @@ impl ResourceManager {
         .unwrap();
 
         ctx.bind_texture(GL::TEXTURE_2D, None);
-        tex.gl_handle = Some(gl_tex);
 
-        return Ok(tex);
+        return Ok(Rc::new(Texture {
+            name: "texture".to_owned(),
+            width,
+            height,
+            gl_format: format,
+            num_channels,
+            gl_handle: Some(gl_tex),
+        }));
+    }
+
+    fn load_texture_from_gltf(
+        file_identifier: &str,
+        texture: &gltf::Texture,
+        image_data: &gltf::image::Data,
+        ctx: &WebGlRenderingContext,
+    ) -> Result<Rc<Texture>, String> {
+        let identifier = texture.get_identifier(file_identifier);
+        let width = image_data.width;
+        let height = image_data.height;
+        let (gl_format, num_channels) = match image_data.format {
+            Format::R8 => (GL::ALPHA, 1),
+            Format::R8G8 => (GL::LUMINANCE_ALPHA, 2),
+            Format::R8G8B8 => (GL::RGB, 3),
+            Format::R8G8B8A8 => (GL::RGBA, 4),
+            Format::B8G8R8 => (GL::RGB, 3), // TODO: Switch to WebGL2
+            Format::B8G8R8A8 => (GL::RGBA, 4),
+            other => return Err(format!("Unsupported gltf texture format '{:?}'", other)),
+        };
+
+        log::info!(
+            "\tLoading texture '{}': Width: {}, Height: {}, Format: {}, Num channels: {}",
+            identifier,
+            width,
+            height,
+            gl_format,
+            num_channels
+        );
+
+        let gl_handle = ctx.create_texture().unwrap();
+        ctx.active_texture(GL::TEXTURE0);
+        ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_handle));
+
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, GL::CLAMP_TO_EDGE as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, GL::CLAMP_TO_EDGE as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
+
+        ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+            GL::TEXTURE_2D,
+            0,
+            gl_format as i32,
+            width as i32,
+            height as i32,
+            0,
+            gl_format,
+            GL::UNSIGNED_BYTE,
+            Some(&image_data.pixels),
+        )
+        .unwrap();
+
+        ctx.bind_texture(GL::TEXTURE_2D, None);
+
+        return Ok(Rc::new(Texture {
+            name: identifier,
+            width,
+            height,
+            gl_format,
+            num_channels,
+            gl_handle: Some(gl_handle),
+        }));
     }
 
     pub fn load_textures_from_gltf(
         &mut self,
         file_identifier: &str,
         textures: gltf::iter::Textures,
+        images: &Vec<gltf::image::Data>,
     ) {
         log::info!(
             "Loading {} textures from gltf file {}",
@@ -420,27 +500,17 @@ impl ResourceManager {
         );
 
         for texture in textures {
-            log::info!(
-                "Texture {}: Name: {}",
-                texture.index(),
-                texture.name().unwrap_or("")
-            );
-            let img = texture.source();
-            log::info!(
-                "\tImage {}: Name: {}",
-                img.index(),
-                img.name().unwrap_or("")
-            );
-            match img.source() {
-                gltf::image::Source::View { view, mime_type } => {
-                    log::info!("\t\tView: {:#?}, Mime type: {}", view, mime_type);
+            match ResourceManager::load_texture_from_gltf(
+                file_identifier,
+                &texture,
+                &images[texture.source().index()],
+                &self.gl,
+            ) {
+                Ok(new_tex) => {
+                    self.textures.insert(new_tex.name.clone(), new_tex);
                 }
-                gltf::image::Source::Uri { uri, mime_type } => {
-                    log::info!(
-                        "\t\tUri: {:#?}, Mime type: {}",
-                        uri,
-                        mime_type.unwrap_or("")
-                    );
+                Err(msg) => {
+                    log::error!("Failed to load gltf texture: {}", msg);
                 }
             }
         }
