@@ -12,26 +12,54 @@ use super::{
 // Praise songho: http://www.songho.ca/opengl/gl_sphere.html
 pub fn generate_lat_long_sphere(
     ctx: &WebGlRenderingContext,
-    num_lat_segs: u32,
-    num_long_segs: u32,
+    mut num_lat_segs: u32,
+    mut num_long_segs: u32,
     radius: f32,
-    default_material: Option<Rc<Material>>,
+    smooth_normals: bool,
+    mut shared_vertices: bool,
+    default_material: Option<Rc<dyn Material>>,
 ) -> Rc<Mesh> {
+    if !smooth_normals {
+        shared_vertices = false;
+    }
+    num_lat_segs = num_lat_segs.max(3);
+    num_long_segs = num_long_segs.max(3);
+
     let long_step = 2.0 * PI / (num_long_segs as f32);
     let lat_step = PI / (num_lat_segs as f32);
-    let inv_radius = 1.0 / radius;
 
-    let num_verts = ((num_lat_segs + 1) * (num_long_segs + 1)) as usize; // Poles have a ton of vertices for different uvs
+    // First and last rows only have 1 triangle per segment, while others have 2
+    // Pole vertices are never shared (for different uvs), even with shared_vertices == true
+    // Always (num_long_segs + 1) because we have an extra latitudinal seam of vertices for different uvs, even when shared
+    let num_verts: usize;
+    let num_inds: usize;
+    if shared_vertices {
+        // 2 "rows" of polar vertices + each remaining vertex row
+        num_verts = ((2 * (num_long_segs + 1)) + (num_lat_segs - 1) * (num_long_segs + 1)) as usize; // == (num_lat_segs + 1) * (num_long_segs + 1) btw
+        num_inds = (3 * 2 * num_long_segs + 6 * (num_lat_segs - 2) * num_long_segs) as usize;
+    } else {
+        // 2 "rows" of polar vertex triangles + remaining lat segs * 6 verts per seg
+        num_verts = (3 * 2 * num_long_segs + 6 * (num_lat_segs - 2) * num_long_segs) as usize;
+        num_inds = num_verts;
+    }
 
-    let mut indices: Vec<u16> = Vec::new();
-    let mut positions: Vec<Vector3<f32>> = Vec::new();
-    let mut normals: Vec<Vector3<f32>> = Vec::new();
-    let mut uv0: Vec<Vector2<f32>> = Vec::new();
+    log::info!(
+        "Generating uv sphere: Radius: {}, Vertices: {}, Indices: {}, Smooth: {}, Shared verts: {}",
+        radius,
+        num_verts,
+        num_inds,
+        smooth_normals,
+        shared_vertices
+    );
 
-    indices.reserve(num_verts);
-    positions.reserve(num_verts);
-    normals.reserve(num_verts);
-    uv0.reserve(num_verts);
+    // Generate unique vertices (extra row for poles and the latitude seam)
+    let num_shared_verts = ((num_lat_segs + 1) * (num_long_segs + 1)) as usize;
+    let mut temp_positions: Vec<Vector3<f32>> = Vec::new();
+    let mut temp_normals: Vec<Vector3<f32>> = Vec::new();
+    let mut temp_uv0: Vec<Vector2<f32>> = Vec::new();
+    temp_positions.reserve(num_shared_verts);
+    temp_uv0.reserve(num_shared_verts);
+    temp_normals.reserve(num_shared_verts);
 
     for lat_index in 0..=num_lat_segs {
         let lat_angle = PI / 2.0 - (lat_index as f32) * lat_step;
@@ -44,36 +72,134 @@ pub fn generate_lat_long_sphere(
             let x = xy * long_angle.cos();
             let y = xy * long_angle.sin();
 
-            positions.push(Vector3::new(x, y, z));
-            normals.push(Vector3::new(x * inv_radius, y * inv_radius, z * inv_radius));
-            uv0.push(Vector2::new(
+            temp_positions.push(Vector3::new(x, y, z));
+            temp_uv0.push(Vector2::new(
                 (long_index as f32) / (num_long_segs as f32),
                 1.0 - (lat_index as f32) / (num_lat_segs as f32), // Flip here because we iterate top to bottom but I want UV y 0 at the bottom
             ));
         }
     }
 
-    for i in 0..num_lat_segs {
-        let mut k1 = i * (num_long_segs + 1);
-        let mut k2 = k1 + num_long_segs + 1;
+    // Generate final vertex data
+    let mut indices: Vec<u16> = Vec::new();
+    let mut positions: Vec<Vector3<f32>> = Vec::new();
+    let mut uv0: Vec<Vector2<f32>> = Vec::new();
+    indices.reserve(num_inds);
+    if shared_vertices {
+        for i in 0..num_lat_segs {
+            let mut k1 = i * (num_long_segs + 1);
+            let mut k2 = k1 + (num_long_segs + 1);
 
-        for _ in 0..num_long_segs {
-            if i != 0 {
-                indices.push(k1 as u16);
-                indices.push(k2 as u16);
-                indices.push((k1 + 1) as u16);
+            for _ in 0..num_long_segs {
+                if i != 0 {
+                    indices.push(k1 as u16);
+                    indices.push(k2 as u16);
+                    indices.push((k1 + 1) as u16);
+                }
+
+                if i != (num_lat_segs - 1) {
+                    indices.push((k1 + 1) as u16);
+                    indices.push(k2 as u16);
+                    indices.push((k2 + 1) as u16);
+                }
+
+                k1 += 1;
+                k2 += 1;
             }
+        }
+        std::mem::swap(&mut temp_positions, &mut positions);
+        std::mem::swap(&mut temp_uv0, &mut uv0);
+    } else {
+        positions.reserve(num_verts);
+        uv0.reserve(num_verts);
 
-            if i != (num_lat_segs - 1) {
-                indices.push((k1 + 1) as u16);
-                indices.push(k2 as u16);
-                indices.push((k2 + 1) as u16);
+        let mut index = 0;
+        for i in 0..num_lat_segs {
+            let mut k1 = i * (num_long_segs + 1);
+            let mut k2 = k1 + (num_long_segs + 1);
+
+            for _ in 0..num_long_segs {
+                let p_k1 = &temp_positions[k1 as usize];
+                let p_k2 = &temp_positions[k2 as usize];
+                let p_k1p1 = &temp_positions[(k1 + 1) as usize];
+                let p_k2p1 = &temp_positions[(k2 + 1) as usize];
+
+                let uv_k1 = &temp_uv0[k1 as usize];
+                let uv_k2 = &temp_uv0[k2 as usize];
+                let uv_k1p1 = &temp_uv0[(k1 + 1) as usize];
+                let uv_k2p1 = &temp_uv0[(k2 + 1) as usize];
+
+                if i != 0 {
+                    positions.push(*p_k1);
+                    positions.push(*p_k2);
+                    positions.push(*p_k1p1);
+
+                    uv0.push(*uv_k1);
+                    uv0.push(*uv_k2);
+                    uv0.push(*uv_k1p1);
+
+                    indices.push(index + 0);
+                    indices.push(index + 1);
+                    indices.push(index + 2);
+                    index += 3;
+                }
+
+                if i != (num_lat_segs - 1) {
+                    positions.push(*p_k1p1);
+                    positions.push(*p_k2);
+                    positions.push(*p_k2p1);
+
+                    uv0.push(*uv_k1p1);
+                    uv0.push(*uv_k2);
+                    uv0.push(*uv_k2p1);
+
+                    indices.push(index + 0);
+                    indices.push(index + 1);
+                    indices.push(index + 2);
+                    index += 3;
+                }
+
+                k1 += 1;
+                k2 += 1;
             }
-
-            k1 += 1;
-            k2 += 1;
         }
     }
+
+    // Do normals in a separate pass as they don't need lat/long index
+    let mut normals: Vec<Vector3<f32>> = Vec::new();
+    normals.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
+    for triangle_index in 0..(indices.len() / 3) {
+        let i0 = indices[triangle_index * 3 + 0] as usize;
+        let i1 = indices[triangle_index * 3 + 1] as usize;
+        let i2 = indices[triangle_index * 3 + 2] as usize;
+
+        let p0 = &positions[i0];
+        let p1 = &positions[i1];
+        let p2 = &positions[i2];
+
+        if smooth_normals {
+            normals[i0] = p0.normalize();
+            normals[i1] = p1.normalize();
+            normals[i2] = p2.normalize();
+        } else {
+            let normal = (p1 - p0).cross(p2 - p0).normalize();
+            normals[i0] = normal;
+            normals[i1] = normal;
+            normals[i2] = normal;
+        }
+    }
+
+    log::info!(
+        "\tUV sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, uv: {}/{}",
+        positions.len(),
+        positions.capacity(),
+        indices.len(),
+        indices.capacity(),
+        normals.len(),
+        normals.capacity(),
+        uv0.len(),
+        uv0.capacity(),
+    );
 
     return intermediate_to_mesh(
         IntermediateMesh {
@@ -96,13 +222,25 @@ pub fn generate_lat_long_sphere(
 
 // Praise songho: http://www.songho.ca/opengl/gl_sphere.html
 // https://schneide.blog/2016/07/15/generating-an-icosphere-in-c/
+// TODO: Fix weirdness when radius < 0
+// TODO: Option for shared vertices
+// TODO: Texture coordinates
 pub fn generate_ico_sphere(
     ctx: &WebGlRenderingContext,
     radius: f32,
     num_subdiv: u32,
-    default_material: Option<Rc<Material>>,
+    smooth_normals: bool,
+    default_material: Option<Rc<dyn Material>>,
 ) -> Rc<Mesh> {
     let final_num_verts = (20 * 3 * 4u32.pow(num_subdiv)) as usize;
+
+    log::info!(
+        "Generating ico sphere: Radius: {}, Num subdiv: {}, Vertices: {}, Smooth: {}",
+        radius,
+        num_subdiv,
+        final_num_verts,
+        smooth_normals,
+    );
 
     let mut indices: Vec<u16> = Vec::new();
     let mut positions: Vec<Vector3<f32>> = Vec::new();
@@ -202,7 +340,7 @@ pub fn generate_ico_sphere(
         std::mem::swap(&mut indices, &mut temp_indices);
     }
 
-    // Final pass to generate 1 vertex per triangle and normals.. no uv1 yet because that's non-trivial 
+    // Final pass to generate 1 vertex per triangle and normals.. no uv1 yet because that's non-trivial
     temp_positions.resize(final_num_verts, Vector3::new(0.0, 0.0, 0.0));
     temp_indices.resize(final_num_verts, 0);
     let mut new_index = 0;
@@ -220,15 +358,34 @@ pub fn generate_ico_sphere(
         temp_indices[new_index + 2] = (new_index + 1) as u16;
         temp_indices[new_index + 1] = (new_index + 2) as u16;
 
-        normals[new_index + 0] = p0.normalize();
-        normals[new_index + 1] = p1.normalize();
-        normals[new_index + 2] = p2.normalize();
+        if smooth_normals {
+            normals[new_index + 0] = p0.normalize();
+            normals[new_index + 1] = p1.normalize();
+            normals[new_index + 2] = p2.normalize();
+        } else {
+            let normal = (p2 - p0).cross(p1 - p0).normalize();
+            normals[new_index + 0] = normal;
+            normals[new_index + 1] = normal;
+            normals[new_index + 2] = normal;
+        }
 
         new_index += 3;
     }
 
     std::mem::swap(&mut positions, &mut temp_positions);
     std::mem::swap(&mut indices, &mut temp_indices);
+
+    log::info!(
+        "\tIco sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, uv: {}/{}",
+        positions.len(),
+        positions.capacity(),
+        indices.len(),
+        indices.capacity(),
+        normals.len(),
+        normals.capacity(),
+        0,
+        0,
+    );
 
     return intermediate_to_mesh(
         IntermediateMesh {
@@ -251,7 +408,7 @@ pub fn generate_ico_sphere(
 
 pub fn generate_cube(
     ctx: &WebGlRenderingContext,
-    default_material: Option<Rc<Material>>,
+    default_material: Option<Rc<dyn Material>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
         IntermediateMesh {
@@ -480,7 +637,7 @@ pub fn generate_cube(
 
 pub fn generate_plane(
     ctx: &WebGlRenderingContext,
-    default_material: Option<Rc<Material>>,
+    default_material: Option<Rc<dyn Material>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
         IntermediateMesh {
@@ -539,7 +696,7 @@ pub fn generate_plane(
 pub fn generate_grid(
     ctx: &WebGlRenderingContext,
     num_lines: u32,
-    default_material: Option<Rc<Material>>,
+    default_material: Option<Rc<dyn Material>>,
 ) -> Rc<Mesh> {
     assert!(num_lines > 2);
 
@@ -598,7 +755,7 @@ pub fn generate_grid(
 
 pub fn generate_axes(
     ctx: &WebGlRenderingContext,
-    default_material: Option<Rc<Material>>,
+    default_material: Option<Rc<dyn Material>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
         IntermediateMesh {
