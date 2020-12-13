@@ -1,7 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use crate::{
-    app_state::AppState, components::LightComponent, managers::resource::PrimitiveAttribute,
+    app_state::AppState,
+    components::LightComponent,
+    managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
     systems::NUM_LIGHTS,
 };
 
@@ -13,6 +15,7 @@ pub struct PhongMaterial {
     pub name: String,
     pub program: WebGlProgram,
     pub uniform_locations: HashMap<String, WebGlUniformLocation>,
+    pub textures: HashMap<TextureUnit, Rc<Texture>>,
 }
 
 impl Material for PhongMaterial {
@@ -87,5 +90,20 @@ impl Material for PhongMaterial {
         gl.disable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
         gl.disable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
         gl.use_program(None);
+    }
+
+    fn set_texture(&mut self, unit: TextureUnit, texture: Rc<Texture>) {
+        self.textures.insert(unit, texture);
+    }
+
+    fn get_texture(&mut self, unit: TextureUnit) -> Option<Rc<Texture>> {
+        return match self.textures.get(&unit) {
+            Some(tex) => Some(tex.clone()),
+            None => None,
+        };
+    }
+
+    fn get_used_textures(&self) -> &HashMap<TextureUnit, Rc<Texture>> {
+        return &self.textures;
     }
 }

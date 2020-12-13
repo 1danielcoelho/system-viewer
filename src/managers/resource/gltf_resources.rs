@@ -1,13 +1,15 @@
-use std::rc::Rc;
+use std::{io::Cursor, rc::Rc};
 
 use cgmath::{Vector2, Vector3, Vector4};
 use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
+use image::{io::Reader, DynamicImage, ImageError, ImageFormat};
 use web_sys::WebGlRenderingContext;
+use web_sys::WebGlRenderingContext as GL;
 
 use super::{
     intermediate_mesh::IntermediateMesh,
     intermediate_mesh::{intermediate_to_mesh, IntermediatePrimitive},
-    Material, Mesh, ResourceManager,
+    Material, Mesh, ResourceManager, Texture,
 };
 
 pub trait GltfResource {
@@ -306,6 +308,106 @@ impl ResourceManager {
         }
     }
 
+    fn load_texture_from_bytes(
+        bytes: &[u8],
+        image_format: ImageFormat,
+        ctx: &WebGlRenderingContext,
+    ) -> Result<Texture, String> {
+        let mut reader = Reader::new(Cursor::new(bytes));
+        reader.set_format(image_format);
+        let decoded = reader.decode();
+        
+        if let Err(error) = decoded {
+            return Err(std::format!("Error loading texture: {}", error));
+        }
+        let decoded = decoded.unwrap();
+
+        let mut width: u32 = 0;
+        let mut height: u32 = 0;
+        let mut format: u32 = 0;
+        let mut buf: Option<&[u8]> = None;
+        let converted_bgr;
+        let converted_bgra;
+
+        match decoded {
+            // R
+            DynamicImage::ImageLuma8(ref img) => {
+                width = img.width();
+                height = img.height();
+                format = GL::ALPHA;
+                buf = Some(img.as_raw());
+            }
+            // RG
+            DynamicImage::ImageLumaA8(ref img) => {
+                width = img.width();
+                height = img.height();
+                format = GL::LUMINANCE_ALPHA;
+                buf = Some(img.as_raw());
+            }
+            // RGB
+            DynamicImage::ImageRgb8(ref img) => {
+                width = img.width();
+                height = img.height();
+                format = GL::RGB;
+                buf = Some(img.as_raw());
+            }
+            DynamicImage::ImageBgr8(_) => {
+                converted_bgr = decoded.to_rgb8();
+                width = converted_bgr.width();
+                height = converted_bgr.height();
+                format = GL::RGB;
+                buf = Some(converted_bgr.as_raw());
+            }
+            // RGBA
+            DynamicImage::ImageRgba8(ref img) => {
+                width = img.width();
+                height = img.height();
+                format = GL::RGBA;
+                buf = Some(img.as_raw());
+            }
+            DynamicImage::ImageBgra8(_) => {
+                converted_bgra = decoded.to_rgba8();
+                width = converted_bgra.width();
+                height = converted_bgra.height();
+                format = GL::RGBA;
+                buf = Some(converted_bgra.as_raw());
+            }
+            _ => {}
+        };
+
+        if buf.is_none() {
+            return Err(format!("Failed to decode {:?}", image_format));
+        }
+
+        let mut tex = Texture::new();
+        let gl_tex = ctx.create_texture().unwrap();
+        ctx.active_texture(GL::TEXTURE0);
+        ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
+
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, GL::CLAMP_TO_EDGE as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, GL::CLAMP_TO_EDGE as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
+
+        ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+            GL::TEXTURE_2D,
+            0,
+            format as i32,
+            width as i32,
+            height as i32,
+            0,
+            format,
+            GL::UNSIGNED_BYTE, // Just u8 for now
+            buf,
+        )
+        .unwrap();
+
+        ctx.bind_texture(GL::TEXTURE_2D, None);
+        tex.gl_handle = Some(gl_tex);
+
+        return Ok(tex);
+    }
+
     pub fn load_textures_from_gltf(
         &mut self,
         file_identifier: &str,
@@ -316,5 +418,31 @@ impl ResourceManager {
             textures.len(),
             file_identifier
         );
+
+        for texture in textures {
+            log::info!(
+                "Texture {}: Name: {}",
+                texture.index(),
+                texture.name().unwrap_or("")
+            );
+            let img = texture.source();
+            log::info!(
+                "\tImage {}: Name: {}",
+                img.index(),
+                img.name().unwrap_or("")
+            );
+            match img.source() {
+                gltf::image::Source::View { view, mime_type } => {
+                    log::info!("\t\tView: {:#?}, Mime type: {}", view, mime_type);
+                }
+                gltf::image::Source::Uri { uri, mime_type } => {
+                    log::info!(
+                        "\t\tUri: {:#?}, Mime type: {}",
+                        uri,
+                        mime_type.unwrap_or("")
+                    );
+                }
+            }
+        }
     }
 }

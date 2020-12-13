@@ -242,6 +242,7 @@ impl ResourceManager {
                     &["u_world_trans", "u_view_proj_trans"],
                 ),
                 program: program,
+                textures: HashMap::new(),
             }),
             "lit" => Rc::new(PhongMaterial {
                 name: identifier.to_string(),
@@ -258,6 +259,7 @@ impl ResourceManager {
                     ],
                 ),
                 program: program,
+                textures: HashMap::new(),
             }),
             _ => {
                 log::error!(

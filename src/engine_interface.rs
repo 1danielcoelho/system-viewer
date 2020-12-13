@@ -41,12 +41,24 @@ impl EngineInterface {
             .unwrap()
             .dyn_into()
             .unwrap();
+
+        // Setup webgl context
         gl.enable(GL::BLEND);
         gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);
         gl.enable(GL::CULL_FACE);
         gl.cull_face(GL::BACK);
         gl.clear_color(0.0, 0.0, 0.0, 1.0); //RGBA
         gl.clear_depth(1.);
+
+        let max_combined_tex_units = gl.get_parameter(GL::MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+        let max_vert_tex_units = gl.get_parameter(GL::MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+        let max_frag_tex_units = gl.get_parameter(GL::MAX_TEXTURE_IMAGE_UNITS);
+        log::info!(
+            "Max texture units: Vertex shader: {:?}, Fragment shader: {:?}, Combined: {:?}",
+            max_vert_tex_units,
+            max_frag_tex_units,
+            max_combined_tex_units
+        );
 
         // Restore the canvas to be 100% because the window builder will attempt to set it to some size, and we want it to be driven by layout
         let style = canvas.style();

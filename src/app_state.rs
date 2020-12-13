@@ -67,10 +67,10 @@ impl AppState {
                 down_down: false,
             },
             camera: Camera {
-                pos: cgmath::Point3::new(0.0, -5.0, 0.0),
+                pos: cgmath::Point3::new(-4.0, -7.0, 8.0),
                 up: cgmath::Vector3::new(0.0, 0.0, 1.0),
                 target: cgmath::Point3::new(0.0, 0.0, 0.0),
-                fov_v: cgmath::Deg(80.0),
+                fov_v: cgmath::Deg(60.0),
                 near: 0.1,
                 far: 100000.0,
             },

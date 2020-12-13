@@ -1,6 +1,8 @@
+use std::{collections::HashMap, rc::Rc};
+
 use web_sys::*;
 
-use crate::{app_state::AppState, systems::NUM_LIGHTS};
+use crate::{app_state::AppState, managers::resource::{Texture, TextureUnit}, systems::NUM_LIGHTS};
 
 pub struct UniformData {
     pub w: [f32; 16],
@@ -20,7 +22,10 @@ pub trait Material {
 
     fn set_uniform_location(&mut self, id: &str, location: WebGlUniformLocation);
 
-    fn bind_for_drawing(&self, state: &AppState, uniform_data: &UniformData);
+    fn set_texture(&mut self, unit: TextureUnit, texture: Rc<Texture>);
+    fn get_texture(&mut self, unit: TextureUnit) -> Option<Rc<Texture>>;
+    fn get_used_textures(&self) -> &HashMap<TextureUnit, Rc<Texture>>;
 
+    fn bind_for_drawing(&self, state: &AppState, uniform_data: &UniformData);
     fn unbind_from_drawing(&self, state: &AppState);
 }
