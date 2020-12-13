@@ -153,8 +153,8 @@ impl ResourceManager {
             "plane" => Some(generate_plane(&self.gl, default_mat)),
             "grid" => Some(generate_grid(&self.gl, 200, default_mat)),
             "axes" => Some(generate_axes(&self.gl, default_mat)),
-            "lat_long_sphere" => Some(generate_lat_long_sphere(&self.gl, 16, 16, 0.5, false, false, default_mat)),
-            "ico_sphere" => Some(generate_ico_sphere(&self.gl, 1.0, 2, false, default_mat)), 
+            "lat_long_sphere" => Some(generate_lat_long_sphere(&self.gl, 16, 16, 0.8, true, true, default_mat)),
+            "ico_sphere" => Some(generate_ico_sphere(&self.gl, 0.8, 2, false, default_mat)), 
             _ => None,
         };
 

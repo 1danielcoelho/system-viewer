@@ -283,26 +283,53 @@ impl SceneManager {
         light_comp.intensity = 1.0;
         light_comp.light_type = LightType::Directional;
 
-        // Ico-sphere
-        let cube = scene.ent_man.new_entity();
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(cube)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 1.0;
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-
-        // Lat-long sphere
+        // Plane
         let plane = scene.ent_man.new_entity();
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(plane)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = 2.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+
+        // Cube
+        let cube = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(cube)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(-4.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = 1.0;
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+
+        // Ico-sphere
+        let ico = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(ico)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 6.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = 1.0;
+        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+
+        // Lat-long sphere
+        let lat_long = scene.ent_man.new_entity();
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(lat_long)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 6.0, 0.0);
+        let mesh_comp = scene
+            .ent_man
+            .add_component::<MeshComponent>(lat_long)
+            .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 

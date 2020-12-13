@@ -548,12 +548,12 @@ pub fn generate_cube(
                     Vector2::new(0.0, 1.0),
                     Vector2::new(0.0, 0.0),
                     // Face 1
-                    Vector2::new(0.0, 1.0),
-                    Vector2::new(0.0, 0.0),
-                    Vector2::new(1.0, 1.0),
                     Vector2::new(0.0, 0.0),
                     Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
                     Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
                     // Face 2
                     Vector2::new(0.0, 1.0),
                     Vector2::new(0.0, 0.0),
@@ -592,12 +592,12 @@ pub fn generate_cube(
                     Vector2::new(0.0, 1.0),
                     Vector2::new(0.0, 0.0),
                     // Face 1
-                    Vector2::new(0.0, 1.0),
-                    Vector2::new(0.0, 0.0),
-                    Vector2::new(1.0, 1.0),
                     Vector2::new(0.0, 0.0),
                     Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 1.0),
+                    Vector2::new(1.0, 0.0),
                     Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 1.0),
                     // Face 2
                     Vector2::new(0.0, 1.0),
                     Vector2::new(0.0, 0.0),
@@ -670,12 +670,12 @@ pub fn generate_plane(
                     Vector4::new(1.0, 0.0, 0.0, 1.0),
                 ],
                 uv0: vec![
-                    Vector2::new(0.0, 0.0),
                     Vector2::new(1.0, 0.0),
-                    Vector2::new(0.0, 1.0),
                     Vector2::new(1.0, 1.0),
+                    Vector2::new(0.0, 0.0),
                     Vector2::new(0.0, 1.0),
-                    Vector2::new(1.0, 0.0),
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(1.0, 1.0),
                 ],
                 uv1: vec![
                     Vector2::new(0.0, 0.0),
