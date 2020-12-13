@@ -124,7 +124,9 @@
 <!-- # Setup test scene for textures (plane, boxes and stuff) -->
 # I want to import a GLTF object
 - Get textures working
-    - Need to import them from byte buffers, since they come in from glb files. Maybe let JS handle the decompression/parsing of png/jpg?
+    - Import them from gltf
+    - Import from raw bytes    
+    - Actually use textures
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
