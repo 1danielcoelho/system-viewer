@@ -124,8 +124,10 @@
 <!-- # Setup test scene for textures (plane, boxes and stuff) -->
 # I want to import a GLTF object
 - Get textures working
-    - Import them from gltf
-    - Import from raw bytes    
+    <!-- - Import them from gltf -->
+    <!-- - Import from raw bytes     -->
+    - Allow cloning materials so that we can set custom parameters (like textures) for each
+    - Allow modifying materials (RefCell?)
     - Actually use textures
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes

@@ -344,6 +344,14 @@ impl ResourceManager {
                     &shaders::fragment::UV1,
                 )
             }
+            "albedo" => {
+                material_type = "texture";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_ALL,
+                    &shaders::fragment::ALBEDO,
+                )
+            }
             "phong" => {
                 material_type = "lit";
                 link_program(
@@ -385,6 +393,16 @@ impl ResourceManager {
                         "u_light_colors",
                         "u_light_intensities",
                     ],
+                ),
+                program: program,
+                textures: HashMap::new(),
+            }),
+            "texture" => Rc::new(TextureTestMaterial {
+                name: identifier.to_string(),
+                uniform_locations: get_uniform_location_map(
+                    &self.gl,
+                    &program,
+                    &["u_world_trans", "u_view_proj_trans", "us_albedo"],
                 ),
                 program: program,
                 textures: HashMap::new(),
