@@ -9,7 +9,7 @@ use crate::{
     app_state::AppState,
     components::LightComponent,
     components::{MeshComponent, TransformComponent},
-    managers::resource::UniformData,
+    managers::resource::{FrameUniformValues, UniformName, UniformValue},
     managers::ECManager,
     managers::Entity,
 };
@@ -49,7 +49,7 @@ impl RenderingSystem {
         self.post_draw(state);
     }
 
-    fn pre_draw(&mut self, state: &AppState, em: &mut ECManager) -> UniformData {
+    fn pre_draw(&mut self, state: &AppState, em: &mut ECManager) -> FrameUniformValues {
         let gl: &WebGlRenderingContext = (state.gl.as_ref()).unwrap();
 
         // Setup GL state
@@ -72,14 +72,18 @@ impl RenderingSystem {
         );
         let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
 
-        let mut result = UniformData {
-            w: [0.0; 16], // This will be filled in later
+        let mut result = FrameUniformValues {
             vp: *(p * v).as_ref(),
-            light_types: [0; NUM_LIGHTS],
-            light_colors: [0.0; NUM_LIGHTS * 3],
-            light_pos_or_dir: [0.0; NUM_LIGHTS * 3],
-            light_intensities: [0.0; NUM_LIGHTS],
+            light_types: Vec::new(),
+            light_colors: Vec::new(),
+            light_pos_or_dir: Vec::new(),
+            light_intensities: Vec::new(),
         };
+
+        result.light_types.reserve(NUM_LIGHTS);
+        result.light_colors.reserve(NUM_LIGHTS * 3);
+        result.light_pos_or_dir.reserve(NUM_LIGHTS * 3);
+        result.light_intensities.reserve(NUM_LIGHTS);
 
         // Pick lights that will affect the scene (randomly for now)
         let mut index = 0;
@@ -87,17 +91,17 @@ impl RenderingSystem {
             let ent_index = em.get_entity_index(*ent).unwrap();
             let pos = &em.transform[ent_index as usize].get_world_transform().disp;
 
-            result.light_types[index] = light.light_type as i32;
+            result.light_types.push(light.light_type as i32);
 
-            result.light_colors[index * 3 + 0] = light.color.x;
-            result.light_colors[index * 3 + 1] = light.color.y;
-            result.light_colors[index * 3 + 2] = light.color.z;
+            result.light_colors.push(light.color.x);
+            result.light_colors.push(light.color.y);
+            result.light_colors.push(light.color.z);
 
-            result.light_intensities[index] = light.intensity;
+            result.light_intensities.push(light.intensity);
 
-            result.light_pos_or_dir[index * 3 + 0] = pos.x;
-            result.light_pos_or_dir[index * 3 + 1] = pos.y;
-            result.light_pos_or_dir[index * 3 + 2] = pos.z;
+            result.light_pos_or_dir.push(pos.x);
+            result.light_pos_or_dir.push(pos.y);
+            result.light_pos_or_dir.push(pos.z);
 
             // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
 
@@ -110,7 +114,7 @@ impl RenderingSystem {
         return result;
     }
 
-    fn draw(&self, state: &AppState, uniform_data: &mut UniformData, em: &mut ECManager) {
+    fn draw(&self, state: &AppState, uniform_data: &mut FrameUniformValues, em: &mut ECManager) {
         for (t, m) in em.transform.iter().zip(em.mesh.iter()) {
             self.draw_one(state, uniform_data, t, m);
         }
@@ -126,19 +130,48 @@ impl RenderingSystem {
     fn draw_one(
         &self,
         state: &AppState,
-        uniform_data: &mut UniformData,
+        uniform_data: &FrameUniformValues,
         tc: &TransformComponent,
         mc: &MeshComponent,
     ) {
         let trans = tc.get_world_transform();
         let w: Matrix4<f32> = (*trans).into(); // TODO: Is this the right way of doing it?
-        uniform_data.w = *w.as_ref();
+        let world_trans_uniform_data: [f32; 16] = *w.as_ref();
 
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
                 let resolved_mat = mc.get_resolved_material(primitive_index);
+
                 if let Some(mat) = &resolved_mat {
-                    mat.borrow().bind_for_drawing(state, uniform_data);
+                    let mut mat_mut = mat.borrow_mut();
+
+                    // TODO: I shouldn't need to clone these...
+                    mat_mut.set_uniform_value(
+                        UniformName::WorldTrans,
+                        UniformValue::Matrix(world_trans_uniform_data),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::ViewProjTrans,
+                        UniformValue::Matrix(uniform_data.vp),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightTypes,
+                        UniformValue::IntArr(uniform_data.light_types.clone()),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightPosDir,
+                        UniformValue::Vec3Arr(uniform_data.light_pos_or_dir.clone()),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightColors,
+                        UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightIntensities,
+                        UniformValue::FloatArr(uniform_data.light_intensities.clone()),
+                    );
+
+                    mat_mut.bind_for_drawing(state);
                 }
 
                 primitive.draw(state.gl.as_ref().unwrap());

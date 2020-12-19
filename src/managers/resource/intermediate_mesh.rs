@@ -21,7 +21,7 @@ pub struct IntermediatePrimitive {
     pub uv0: Vec<cgmath::Vector2<f32>>,
     pub uv1: Vec<cgmath::Vector2<f32>>,
     pub mode: u32,
-    pub mat: Option<Rc<RefCell<dyn Material>>>,
+    pub mat: Option<Rc<RefCell<Material>>>,
 }
 
 pub fn fill_float_attribute_buffer(

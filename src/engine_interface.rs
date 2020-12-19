@@ -323,7 +323,7 @@ impl EngineInterface {
         let albedo_mat = self.engine.res_man.get_or_create_material("albedo_0").unwrap();
         let tex = self.engine.res_man.get_texture("./public/shapes2_512.png").unwrap();
 
-        albedo_mat.borrow_mut().set_texture(TextureUnit::Albedo, tex);
+        albedo_mat.borrow_mut().textures.insert(TextureUnit::Albedo, tex);
 
         self.engine
             .scene_man

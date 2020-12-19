@@ -33,7 +33,7 @@ pub struct Primitive {
 
     pub mode: u32,
 
-    pub default_material: Option<Rc<RefCell<dyn Material>>>,
+    pub default_material: Option<Rc<RefCell<Material>>>,
 }
 
 impl Primitive {

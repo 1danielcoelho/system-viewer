@@ -1,102 +1,26 @@
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 
 use image::{io::Reader, DynamicImage, ImageFormat};
-use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
-use web_sys::{WebGlRenderingContext, WebGlUniformLocation};
+use web_sys::WebGlRenderingContext as GL;
+use web_sys::WebGlRenderingContext;
 
 use crate::utils::{get_unique_name, remove_numbered_suffix};
 
 use self::procedural_meshes::*;
 
 pub use gltf_resources::*;
-pub use materials::*;
+pub use material::*;
 pub use mesh::*;
 pub use shaders::*;
 pub use texture::*;
 
 pub mod gltf_resources;
 mod intermediate_mesh;
-mod materials;
+mod material;
 mod mesh;
 mod procedural_meshes;
 mod shaders;
 mod texture;
-
-fn link_program(
-    gl: &WebGlRenderingContext,
-    vert_source: &str,
-    frag_source: &str,
-) -> Result<WebGlProgram, String> {
-    let program = gl
-        .create_program()
-        .ok_or_else(|| String::from("Error creating program"))?;
-
-    let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, vert_source).unwrap();
-    let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, frag_source).unwrap();
-
-    gl.attach_shader(&program, &vert_shader);
-    gl.attach_shader(&program, &frag_shader);
-
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Position as u32, "a_position");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Normal as u32, "a_normal");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Color as u32, "a_color");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::UV0 as u32, "a_uv0");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::UV1 as u32, "a_uv1");
-
-    gl.link_program(&program);
-
-    if gl
-        .get_program_parameter(&program, WebGlRenderingContext::LINK_STATUS)
-        .as_bool()
-        .unwrap_or(false)
-    {
-        Ok(program)
-    } else {
-        Err(gl
-            .get_program_info_log(&program)
-            .unwrap_or_else(|| String::from("Unknown error creating program object")))
-    }
-}
-
-fn compile_shader(
-    gl: &WebGlRenderingContext,
-    shader_type: u32,
-    source: &str,
-) -> Result<WebGlShader, String> {
-    let shader = gl
-        .create_shader(shader_type)
-        .ok_or_else(|| String::from("Error creating shader"))?;
-    gl.shader_source(&shader, source);
-    gl.compile_shader(&shader);
-
-    if gl
-        .get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS)
-        .as_bool()
-        .unwrap_or(false)
-    {
-        Ok(shader)
-    } else {
-        Err(gl
-            .get_shader_info_log(&shader)
-            .unwrap_or_else(|| String::from("Unable to get shader info log")))
-    }
-}
-
-fn get_uniform_location_map(
-    gl: &WebGlRenderingContext,
-    program: &WebGlProgram,
-    uniform_names: &[UniformName],
-) -> HashMap<UniformName, WebGlUniformLocation> {
-    let mut result: HashMap<UniformName, WebGlUniformLocation> = HashMap::new();
-
-    for uniform_name in uniform_names {
-        if let Some(loc) = gl.get_uniform_location(&program, uniform_name.as_str()) {
-            result.insert(*uniform_name, loc);
-        }
-    }
-
-    return result;
-}
 
 fn load_texture_from_bytes(
     identifier: &str,
@@ -227,7 +151,7 @@ fn load_texture_from_bytes(
 pub struct ResourceManager {
     meshes: HashMap<String, Rc<Mesh>>,
     textures: HashMap<String, Rc<Texture>>,
-    materials: HashMap<String, Rc<RefCell<dyn Material>>>,
+    materials: HashMap<String, Rc<RefCell<Material>>>,
 
     gl: WebGlRenderingContext,
 }
@@ -297,7 +221,7 @@ impl ResourceManager {
         return mesh;
     }
 
-    pub fn get_material(&self, identifier: &str) -> Option<Rc<RefCell<dyn Material>>> {
+    pub fn get_material(&self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
         if let Some(mat) = self.materials.get(identifier) {
             return Some(mat.clone());
         }
@@ -305,7 +229,7 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn instantiate_material(&mut self, identifier: &str) -> Option<Rc<RefCell<dyn Material>>> {
+    pub fn instantiate_material(&mut self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
         let master_mat = self.get_or_create_material(identifier);
         if master_mat.is_none() {
             return None;
@@ -314,7 +238,7 @@ impl ResourceManager {
         let instance = master_mat.clone();
 
         let new_name = get_unique_name(remove_numbered_suffix(identifier), &self.materials);
-        instance.as_ref().unwrap().borrow_mut().set_name(&new_name);
+        instance.as_ref().unwrap().borrow_mut().name = new_name.clone();
 
         log::info!("Generated material instance '{}'", new_name);
         self.materials
@@ -322,163 +246,102 @@ impl ResourceManager {
         return instance;
     }
 
-    pub fn get_or_create_material(
-        &mut self,
-        identifier: &str,
-    ) -> Option<Rc<RefCell<dyn Material>>> {
+    pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
         if let Some(mat) = self.get_material(identifier) {
             return Some(mat);
         }
 
-        let mut material_type = "";
-        let program = match identifier {
-            "default" => {
-                material_type = "unlit";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_COLOR,
-                    &shaders::fragment::COLOR,
-                )
-            }
-            "world_normal" => {
-                material_type = "unlit";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::WORLD_NORMAL,
-                )
-            }
-            "uv0" => {
-                material_type = "unlit";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::UV0,
-                )
-            }
-            "uv1" => {
-                material_type = "unlit";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::UV1,
-                )
-            }
-            "albedo" => {
-                material_type = "texture";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::ALBEDO,
-                )
-            }
-            "phong" => {
-                material_type = "lit";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::PHONG,
-                )
-            }
-            "gltf_metal_rough" => {
-                material_type = "gltf_metal_rough";
-                link_program(
-                    &self.gl,
-                    &shaders::vertex::RELAY_ALL,
-                    &shaders::fragment::GLTF_METAL_ROUGH,
-                )
-            }
+        let mat = match identifier {
+            "default" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_COLOR,
+                &shaders::fragment::COLOR,
+                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+            ),
+            "world_normal" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::WORLD_NORMAL,
+                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+            ),
+            "uv0" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::UV0,
+                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+            ),
+            "uv1" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::UV1,
+                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+            ),
+            "albedo" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::ALBEDO,
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::ViewProjTrans,
+                    UniformName::Albedo,
+                ],
+            ),
+            "phong" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::PHONG,
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::ViewProjTrans,
+                    UniformName::LightTypes,
+                    UniformName::LightPosDir,
+                    UniformName::LightColors,
+                    UniformName::LightIntensities,
+                ],
+            ),
+            "gltf_metal_rough" => Material::new(
+                &self.gl,
+                identifier,
+                &shaders::vertex::RELAY_ALL,
+                &shaders::fragment::GLTF_METAL_ROUGH,
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::ViewProjTrans,
+                    UniformName::LightTypes,
+                    UniformName::LightPosDir,
+                    UniformName::LightColors,
+                    UniformName::LightIntensities,
+                    UniformName::Albedo,
+                    UniformName::MetallicRoughness,
+                    UniformName::Normal,
+                    UniformName::Emissive,
+                    UniformName::Opacity,
+                    UniformName::Occlusion,
+                ],
+            ),
             _ => Err("Invalid material identifier".to_owned()),
         };
-
-        if program.is_err() {
+        if mat.is_err() {
             log::error!(
-                "Failed to generate material '{}'. Error: {}",
+                "Error when creating material with identifier '{}': {:?}",
                 identifier,
-                program.err().unwrap()
+                mat.err()
             );
             return None;
-        };
-        let program = program.unwrap();
+        }
 
-        let mat: Rc<RefCell<dyn Material>> = match material_type {
-            "unlit" => Rc::new(RefCell::new(UnlitMaterial {
-                name: identifier.to_string(),
-                uniform_locations: get_uniform_location_map(
-                    &self.gl,
-                    &program,
-                    &[UniformName::WorldTrans, UniformName::ViewProjTrans],
-                ),
-                program: program,
-                textures: HashMap::new(),
-            })),
-            "lit" => Rc::new(RefCell::new(PhongMaterial {
-                name: identifier.to_string(),
-                uniform_locations: get_uniform_location_map(
-                    &self.gl,
-                    &program,
-                    &[
-                        UniformName::WorldTrans,
-                        UniformName::ViewProjTrans,
-                        UniformName::LightTypes,
-                        UniformName::LightPosDir,
-                        UniformName::LightColors,
-                        UniformName::LightIntensities,
-                    ],
-                ),
-                program: program,
-                textures: HashMap::new(),
-            })),
-            "texture" => Rc::new(RefCell::new(TextureTestMaterial {
-                name: identifier.to_string(),
-                uniform_locations: get_uniform_location_map(
-                    &self.gl,
-                    &program,
-                    &[
-                        UniformName::WorldTrans,
-                        UniformName::ViewProjTrans,
-                        UniformName::Albedo,
-                    ],
-                ),
-                program: program,
-                textures: HashMap::new(),
-            })),
-            "gltf_metal_rough" => Rc::new(RefCell::new(GltfMetalRough {
-                name: identifier.to_string(),
-                uniform_locations: get_uniform_location_map(
-                    &self.gl,
-                    &program,
-                    &[
-                        UniformName::WorldTrans,
-                        UniformName::ViewProjTrans,
-                        UniformName::LightTypes,
-                        UniformName::LightPosDir,
-                        UniformName::LightColors,
-                        UniformName::LightIntensities,
-                        UniformName::Albedo,
-                        UniformName::MetallicRoughness,
-                        UniformName::Normal,
-                        UniformName::Emissive,
-                        UniformName::Opacity,
-                        UniformName::Occlusion,
-                    ],
-                ),
-                program: program,
-                textures: HashMap::new(),
-            })),
-            _ => {
-                log::error!(
-                    "Unexpected material type '{}' requested for identifier {}",
-                    material_type,
-                    identifier
-                );
-                return None;
-            }
-        };
+        let ref_mat = Rc::new(RefCell::new(mat.unwrap()));
 
         log::info!("Generated material '{}'", identifier);
-        self.materials.insert(identifier.to_string(), mat.clone());
-        return Some(mat);
+        self.materials
+            .insert(identifier.to_string(), ref_mat.clone());
+        return Some(ref_mat);
     }
 
     pub fn create_texture(
