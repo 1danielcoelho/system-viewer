@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::{app_state::AppState, engine::Engine};
+use crate::{app_state::AppState, engine::Engine, managers::resource::TextureUnit};
 use crate::{components::transform::TransformType, wasm_bindgen::JsCast};
 
 use gltf::Gltf;
@@ -308,6 +308,12 @@ impl EngineInterface {
     #[wasm_bindgen]
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
+
+        let albedo_mat = self.engine.res_man.get_or_create_material("albedo_0").unwrap();
+        let tex = self.engine.res_man.get_texture("./public/Duck.glb_texture_0").unwrap();
+
+        albedo_mat.borrow_mut().set_texture(TextureUnit::Albedo, tex);
+
         // self.engine
         //     .scene_man
         //     .inject_scene(

@@ -123,15 +123,16 @@
 <!-- # Icosphere normals look weird -->
 <!-- # Setup test scene for textures (plane, boxes and stuff) -->
 # I want to import a GLTF object
-- Get textures working
-    <!-- - Import them from gltf -->
-    <!-- - Import from raw bytes     -->
-    <!-- - Allow cloning materials so that we can set custom parameters (like textures) for each -->
-    <!-- - Allow modifying materials so that we can change uniforms at runtime (RefCell?) -->
-    - Actually use textures
+<!-- - Get textures working
+    - Import them from gltf
+    - Import from raw bytes    
+    - Allow cloning materials so that we can set custom parameters (like textures) for each
+    - Allow modifying materials so that we can change uniforms at runtime (RefCell?)
+    - Actually use textures -->
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
+# Load textures from public folder
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 # I don't think I need this silly "get_component_index()" function, and can just use a trait const
 # I kind of need entity names for debug

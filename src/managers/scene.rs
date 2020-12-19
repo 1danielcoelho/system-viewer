@@ -283,6 +283,9 @@ impl SceneManager {
         light_comp.intensity = 1.0;
         light_comp.light_type = LightType::Directional;
 
+        let albedo_mat = res_man.instantiate_material("albedo");
+        //albedo_mat.set_texture(TextureUnit::Albedo, texture);
+
         // Plane
         let plane = scene.ent_man.new_entity();
         let trans_comp = scene
@@ -293,7 +296,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 2.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
-        mesh_comp.set_material_override(res_man.instantiate_material("phong"), 0);
+        mesh_comp.set_material_override(albedo_mat, 0);
 
         // Cube
         let cube = scene.ent_man.new_entity();

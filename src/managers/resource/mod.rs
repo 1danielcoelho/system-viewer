@@ -386,7 +386,7 @@ impl ResourceManager {
         };
 
         if program.is_err() {
-            log::error!("Failed to generate material '{}'", identifier);
+            log::error!("Failed to generate material '{}'. Error: {}", identifier, program.err().unwrap());
             return None;
         };
         let program = program.unwrap();
