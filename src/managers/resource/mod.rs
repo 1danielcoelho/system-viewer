@@ -1,8 +1,10 @@
-use std::{collections::HashMap, io::Cursor, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 
 use image::{io::Reader, DynamicImage, ImageFormat};
 use web_sys::{WebGlProgram, WebGlRenderingContext as GL, WebGlShader};
 use web_sys::{WebGlRenderingContext, WebGlUniformLocation};
+
+use crate::utils::{get_unique_name, remove_numbered_suffix};
 
 use self::procedural_meshes::*;
 
@@ -227,7 +229,7 @@ fn load_texture_from_bytes(
 pub struct ResourceManager {
     meshes: HashMap<String, Rc<Mesh>>,
     textures: HashMap<String, Rc<Texture>>,
-    materials: HashMap<String, Rc<dyn Material>>,
+    materials: HashMap<String, Rc<RefCell<dyn Material>>>,
 
     gl: WebGlRenderingContext,
 }
@@ -297,7 +299,7 @@ impl ResourceManager {
         return mesh;
     }
 
-    pub fn get_material(&self, identifier: &str) -> Option<Rc<dyn Material>> {
+    pub fn get_material(&self, identifier: &str) -> Option<Rc<RefCell<dyn Material>>> {
         if let Some(mat) = self.materials.get(identifier) {
             return Some(mat.clone());
         }
@@ -305,7 +307,27 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<dyn Material>> {
+    pub fn instantiate_material(&mut self, identifier: &str) -> Option<Rc<RefCell<dyn Material>>> {
+        let master_mat = self.get_or_create_material(identifier);
+        if master_mat.is_none() {
+            return None;
+        };
+
+        let instance = master_mat.clone();
+        
+        let new_name = get_unique_name(remove_numbered_suffix(identifier), &self.materials);
+        instance.as_ref().unwrap().borrow_mut().set_name(&new_name);
+
+        log::info!("Generated material instance '{}'", new_name);
+        self.materials
+            .insert(new_name.to_string(), instance.as_ref().unwrap().clone());
+        return instance;
+    }
+
+    pub fn get_or_create_material(
+        &mut self,
+        identifier: &str,
+    ) -> Option<Rc<RefCell<dyn Material>>> {
         if let Some(mat) = self.get_material(identifier) {
             return Some(mat);
         }
@@ -369,8 +391,8 @@ impl ResourceManager {
         };
         let program = program.unwrap();
 
-        let mat: Rc<dyn Material> = match material_type {
-            "unlit" => Rc::new(UnlitMaterial {
+        let mat: Rc<RefCell<dyn Material>> = match material_type {
+            "unlit" => Rc::new(RefCell::new(UnlitMaterial {
                 name: identifier.to_string(),
                 uniform_locations: get_uniform_location_map(
                     &self.gl,
@@ -379,8 +401,8 @@ impl ResourceManager {
                 ),
                 program: program,
                 textures: HashMap::new(),
-            }),
-            "lit" => Rc::new(PhongMaterial {
+            })),
+            "lit" => Rc::new(RefCell::new(PhongMaterial {
                 name: identifier.to_string(),
                 uniform_locations: get_uniform_location_map(
                     &self.gl,
@@ -396,8 +418,8 @@ impl ResourceManager {
                 ),
                 program: program,
                 textures: HashMap::new(),
-            }),
-            "texture" => Rc::new(TextureTestMaterial {
+            })),
+            "texture" => Rc::new(RefCell::new(TextureTestMaterial {
                 name: identifier.to_string(),
                 uniform_locations: get_uniform_location_map(
                     &self.gl,
@@ -406,7 +428,7 @@ impl ResourceManager {
                 ),
                 program: program,
                 textures: HashMap::new(),
-            }),
+            })),
             _ => {
                 log::error!(
                     "Unexpected material type '{}' requested for identifier {}",

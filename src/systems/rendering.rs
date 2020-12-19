@@ -138,13 +138,13 @@ impl RenderingSystem {
             for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
                 let resolved_mat = mc.get_resolved_material(primitive_index);
                 if let Some(mat) = &resolved_mat {
-                    mat.bind_for_drawing(state, uniform_data);
+                    mat.borrow().bind_for_drawing(state, uniform_data);
                 }
 
                 primitive.draw(state.gl.as_ref().unwrap());
 
                 if let Some(mat) = &resolved_mat {
-                    mat.unbind_from_drawing(state);
+                    mat.borrow().unbind_from_drawing(state);
                 }
             }
         }

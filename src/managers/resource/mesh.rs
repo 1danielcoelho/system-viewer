@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
@@ -33,7 +33,7 @@ pub struct Primitive {
 
     pub mode: u32,
 
-    pub default_material: Option<Rc<Material>>,
+    pub default_material: Option<Rc<RefCell<dyn Material>>>,
 }
 
 impl Primitive {

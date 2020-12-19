@@ -293,7 +293,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 2.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        mesh_comp.set_material_override(res_man.instantiate_material("phong"), 0);
 
         // Cube
         let cube = scene.ent_man.new_entity();

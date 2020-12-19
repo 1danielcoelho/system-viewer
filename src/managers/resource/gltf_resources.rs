@@ -1,11 +1,10 @@
-use std::{io::Cursor, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use cgmath::{Vector2, Vector3, Vector4};
 use gltf::{
     image::Format,
     mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
 };
-use image::{io::Reader, DynamicImage, ImageError, ImageFormat};
 use web_sys::WebGlRenderingContext;
 use web_sys::WebGlRenderingContext as GL;
 
@@ -66,7 +65,7 @@ impl ResourceManager {
         file_identifier: &str,
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
-        default_material: &Option<Rc<dyn Material>>,
+        default_material: &Option<Rc<RefCell<dyn Material>>>,
         ctx: &WebGlRenderingContext,
     ) -> Result<Rc<Mesh>, String> {
         let identifier = mesh.get_identifier(file_identifier);
@@ -254,7 +253,7 @@ impl ResourceManager {
                 uv0_vec.len(),
                 uv1_vec.len(),
                 prim.mode().as_gl_enum(),
-                default_material.as_ref().unwrap().get_name(),
+                default_material.as_ref().unwrap().borrow().get_name(),
             );
 
             inter_prims.push(IntermediatePrimitive {
@@ -309,7 +308,7 @@ impl ResourceManager {
                 }
             }
         }
-    }    
+    }
 
     fn load_texture_from_gltf(
         file_identifier: &str,

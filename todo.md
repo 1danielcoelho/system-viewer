@@ -126,8 +126,8 @@
 - Get textures working
     <!-- - Import them from gltf -->
     <!-- - Import from raw bytes     -->
-    - Allow cloning materials so that we can set custom parameters (like textures) for each
-    - Allow modifying materials (RefCell?)
+    <!-- - Allow cloning materials so that we can set custom parameters (like textures) for each -->
+    <!-- - Allow modifying materials so that we can change uniforms at runtime (RefCell?) -->
     - Actually use textures
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes

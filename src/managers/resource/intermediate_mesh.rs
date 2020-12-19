@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
@@ -21,7 +21,7 @@ pub struct IntermediatePrimitive {
     pub uv0: Vec<cgmath::Vector2<f32>>,
     pub uv1: Vec<cgmath::Vector2<f32>>,
     pub mode: u32,
-    pub mat: Option<Rc<Material>>,
+    pub mat: Option<Rc<RefCell<dyn Material>>>,
 }
 
 pub fn fill_float_attribute_buffer(

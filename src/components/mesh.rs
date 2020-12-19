@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::managers::{
     resource::{Material, Mesh},
@@ -19,7 +19,7 @@ pub struct MeshComponent {
     pub raycasting_visible: bool,
     pub visible: bool,
     mesh: Option<Rc<Mesh>>,
-    material_overrides: Vec<Option<Rc<Material>>>,
+    material_overrides: Vec<Option<Rc<RefCell<dyn Material>>>>,
 }
 impl MeshComponent {
     fn new() -> Self {
@@ -40,7 +40,7 @@ impl MeshComponent {
         }
     }
 
-    pub fn get_material_override(&self, index: usize) -> Option<Rc<Material>> {
+    pub fn get_material_override(&self, index: usize) -> Option<Rc<RefCell<dyn Material>>> {
         if let Some(material_override) = self.material_overrides.get(index) {
             return material_override.clone();
         } else {
@@ -48,11 +48,11 @@ impl MeshComponent {
         }
     }
 
-    pub fn set_material_override(&mut self, material: Option<Rc<Material>>, index: usize) {
+    pub fn set_material_override(&mut self, material: Option<Rc<RefCell<dyn Material>>>, index: usize) {
         self.material_overrides[index] = material;
     }
 
-    pub fn get_resolved_material(&self, index: usize) -> Option<Rc<Material>> {
+    pub fn get_resolved_material(&self, index: usize) -> Option<Rc<RefCell<dyn Material>>> {
         if self.material_overrides.len() <= index {
             return None;
         } else if let Some(material_override) = self.get_material_override(index) {

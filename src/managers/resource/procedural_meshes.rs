@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cgmath::{InnerSpace, Vector2, Vector3, Vector4};
 use web_sys::WebGlRenderingContext as GL;
@@ -17,7 +17,7 @@ pub fn generate_lat_long_sphere(
     radius: f32,
     smooth_normals: bool,
     mut shared_vertices: bool,
-    default_material: Option<Rc<dyn Material>>,
+    default_material: Option<Rc<RefCell<dyn Material>>>,
 ) -> Rc<Mesh> {
     if !smooth_normals {
         shared_vertices = false;
@@ -230,7 +230,7 @@ pub fn generate_ico_sphere(
     radius: f32,
     num_subdiv: u32,
     smooth_normals: bool,
-    default_material: Option<Rc<dyn Material>>,
+    default_material: Option<Rc<RefCell<dyn Material>>>,
 ) -> Rc<Mesh> {
     let final_num_verts = (20 * 3 * 4u32.pow(num_subdiv)) as usize;
 
@@ -408,7 +408,7 @@ pub fn generate_ico_sphere(
 
 pub fn generate_cube(
     ctx: &WebGlRenderingContext,
-    default_material: Option<Rc<dyn Material>>,
+    default_material: Option<Rc<RefCell<dyn Material>>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
         IntermediateMesh {
@@ -637,7 +637,7 @@ pub fn generate_cube(
 
 pub fn generate_plane(
     ctx: &WebGlRenderingContext,
-    default_material: Option<Rc<dyn Material>>,
+    default_material: Option<Rc<RefCell<dyn Material>>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
         IntermediateMesh {
@@ -696,7 +696,7 @@ pub fn generate_plane(
 pub fn generate_grid(
     ctx: &WebGlRenderingContext,
     num_lines: u32,
-    default_material: Option<Rc<dyn Material>>,
+    default_material: Option<Rc<RefCell<dyn Material>>>,
 ) -> Rc<Mesh> {
     assert!(num_lines > 2);
 
@@ -755,7 +755,7 @@ pub fn generate_grid(
 
 pub fn generate_axes(
     ctx: &WebGlRenderingContext,
-    default_material: Option<Rc<dyn Material>>,
+    default_material: Option<Rc<RefCell<dyn Material>>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
         IntermediateMesh {
