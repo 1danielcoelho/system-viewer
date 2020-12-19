@@ -2,19 +2,17 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::{
     app_state::AppState,
-    components::LightComponent,
     managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
-    systems::NUM_LIGHTS,
 };
 
 use web_sys::*;
 
-use super::{Material, UniformData};
+use super::{Material, UniformData, UniformName};
 
 pub struct PhongMaterial {
     pub name: String,
     pub program: WebGlProgram,
-    pub uniform_locations: HashMap<String, WebGlUniformLocation>,
+    pub uniform_locations: HashMap<UniformName, WebGlUniformLocation>,
     pub textures: HashMap<TextureUnit, Rc<Texture>>,
 }
 
@@ -35,8 +33,8 @@ impl Material for PhongMaterial {
         return &self.program;
     }
 
-    fn set_uniform_location(&mut self, id: &str, location: WebGlUniformLocation) {
-        self.uniform_locations.insert(id.to_owned(), location);
+    fn set_uniform_location(&mut self, id: UniformName, location: WebGlUniformLocation) {
+        self.uniform_locations.insert(id, location);
     }
 
     fn bind_for_drawing(&self, state: &AppState, uniform_data: &UniformData) {
@@ -54,29 +52,29 @@ impl Material for PhongMaterial {
 
         // Set uniforms
         gl.uniform_matrix4fv_with_f32_array(
-            self.uniform_locations.get("u_world_trans"),
+            self.uniform_locations.get(&UniformName::WorldTrans),
             false,
             &uniform_data.w,
         );
         gl.uniform_matrix4fv_with_f32_array(
-            self.uniform_locations.get("u_view_proj_trans"),
+            self.uniform_locations.get(&UniformName::ViewProjTrans),
             false,
             &uniform_data.vp,
         );
         gl.uniform1iv_with_i32_array(
-            self.uniform_locations.get("u_light_types"),
+            self.uniform_locations.get(&UniformName::LightTypes),
             &uniform_data.light_types,
         );
         gl.uniform3fv_with_f32_array(
-            self.uniform_locations.get("u_light_pos_or_dir"),
+            self.uniform_locations.get(&UniformName::LightPosDir),
             &uniform_data.light_pos_or_dir,
         );
         gl.uniform3fv_with_f32_array(
-            self.uniform_locations.get("u_light_colors"),
+            self.uniform_locations.get(&UniformName::LightColors),
             &uniform_data.light_colors,
         );
         gl.uniform1fv_with_f32_array(
-            self.uniform_locations.get("u_light_intensities"),
+            self.uniform_locations.get(&UniformName::LightIntensities),
             &uniform_data.light_intensities,
         );
     }

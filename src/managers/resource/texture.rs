@@ -3,8 +3,11 @@ use web_sys::WebGlTexture;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum TextureUnit {
     Albedo = 0,
-    RoughnessMetallic = 1,
-    Opacity = 2,
+    MetallicRoughness = 1,
+    Normal = 2,
+    Emissive = 3,
+    Opacity = 4,
+    Occlusion = 5,
 }
 
 pub struct Texture {

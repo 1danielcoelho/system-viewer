@@ -134,6 +134,7 @@
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
+# String enum for uniform names
 # I don't think I need this silly "get_component_index()" function, and can just use a trait const
 # I kind of need entity names for debug
 # Egui leaves textures on texture unit 0

@@ -85,13 +85,13 @@ fn compile_shader(
 fn get_uniform_location_map(
     gl: &WebGlRenderingContext,
     program: &WebGlProgram,
-    uniform_names: &[&str],
-) -> HashMap<String, WebGlUniformLocation> {
-    let mut result: HashMap<String, WebGlUniformLocation> = HashMap::new();
+    uniform_names: &[UniformName],
+) -> HashMap<UniformName, WebGlUniformLocation> {
+    let mut result: HashMap<UniformName, WebGlUniformLocation> = HashMap::new();
 
     for uniform_name in uniform_names {
-        if let Some(loc) = gl.get_uniform_location(&program, uniform_name) {
-            result.insert((*uniform_name).to_owned(), loc);
+        if let Some(loc) = gl.get_uniform_location(&program, uniform_name.as_str()) {
+            result.insert(*uniform_name, loc);
         }
     }
 
@@ -380,6 +380,14 @@ impl ResourceManager {
                     &shaders::fragment::PHONG,
                 )
             }
+            "gltf_metal_rough" => {
+                material_type = "gltf_metal_rough";
+                link_program(
+                    &self.gl,
+                    &shaders::vertex::RELAY_ALL,
+                    &shaders::fragment::GLTF_METAL_ROUGH,
+                )
+            }
             _ => Err("Invalid material identifier".to_owned()),
         };
 
@@ -399,7 +407,7 @@ impl ResourceManager {
                 uniform_locations: get_uniform_location_map(
                     &self.gl,
                     &program,
-                    &["u_world_trans", "u_view_proj_trans"],
+                    &[UniformName::WorldTrans, UniformName::ViewProjTrans],
                 ),
                 program: program,
                 textures: HashMap::new(),
@@ -410,12 +418,12 @@ impl ResourceManager {
                     &self.gl,
                     &program,
                     &[
-                        "u_world_trans",
-                        "u_view_proj_trans",
-                        "u_light_types",
-                        "u_light_pos_or_dir",
-                        "u_light_colors",
-                        "u_light_intensities",
+                        UniformName::WorldTrans,
+                        UniformName::ViewProjTrans,
+                        UniformName::LightTypes,
+                        UniformName::LightPosDir,
+                        UniformName::LightColors,
+                        UniformName::LightIntensities,
                     ],
                 ),
                 program: program,
@@ -426,7 +434,34 @@ impl ResourceManager {
                 uniform_locations: get_uniform_location_map(
                     &self.gl,
                     &program,
-                    &["u_world_trans", "u_view_proj_trans", "us_albedo"],
+                    &[
+                        UniformName::WorldTrans,
+                        UniformName::ViewProjTrans,
+                        UniformName::Albedo,
+                    ],
+                ),
+                program: program,
+                textures: HashMap::new(),
+            })),
+            "gltf_metal_rough" => Rc::new(RefCell::new(GltfMetalRough {
+                name: identifier.to_string(),
+                uniform_locations: get_uniform_location_map(
+                    &self.gl,
+                    &program,
+                    &[
+                        UniformName::WorldTrans,
+                        UniformName::ViewProjTrans,
+                        UniformName::LightTypes,
+                        UniformName::LightPosDir,
+                        UniformName::LightColors,
+                        UniformName::LightIntensities,
+                        UniformName::Albedo,
+                        UniformName::MetallicRoughness,
+                        UniformName::Normal,
+                        UniformName::Emissive,
+                        UniformName::Opacity,
+                        UniformName::Occlusion,
+                    ],
                 ),
                 program: program,
                 textures: HashMap::new(),

@@ -8,12 +8,12 @@ use crate::{
 
 use web_sys::*;
 
-use super::{Material, UniformData};
+use super::{Material, UniformData, UniformName};
 
 pub struct TextureTestMaterial {
     pub name: String,
     pub program: WebGlProgram,
-    pub uniform_locations: HashMap<String, WebGlUniformLocation>,
+    pub uniform_locations: HashMap<UniformName, WebGlUniformLocation>,
     pub textures: HashMap<TextureUnit, Rc<Texture>>,
 }
 
@@ -34,8 +34,8 @@ impl Material for TextureTestMaterial {
         return &self.program;
     }
 
-    fn set_uniform_location(&mut self, id: &str, location: WebGlUniformLocation) {
-        self.uniform_locations.insert(id.to_owned(), location);
+    fn set_uniform_location(&mut self, id: UniformName, location: WebGlUniformLocation) {
+        self.uniform_locations.insert(id, location);
     }
 
     fn bind_for_drawing(&self, state: &AppState, uniform_data: &UniformData) {
@@ -53,17 +53,17 @@ impl Material for TextureTestMaterial {
 
         // Set uniforms
         gl.uniform_matrix4fv_with_f32_array(
-            self.uniform_locations.get("u_world_trans"),
+            self.uniform_locations.get(&UniformName::WorldTrans),
             false,
             &uniform_data.w,
         );
         gl.uniform_matrix4fv_with_f32_array(
-            self.uniform_locations.get("u_view_proj_trans"),
+            self.uniform_locations.get(&UniformName::ViewProjTrans),
             false,
             &uniform_data.vp,
         );
         gl.uniform1i(
-            self.uniform_locations.get("us_albedo"),
+            self.uniform_locations.get(&UniformName::Albedo),
             TextureUnit::Albedo as i32,
         );
 

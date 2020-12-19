@@ -325,17 +325,17 @@ impl EngineInterface {
 
         albedo_mat.borrow_mut().set_texture(TextureUnit::Albedo, tex);
 
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/Duck.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 1.0,
-        //             disp: cgmath::Vector3::new(0.0, 0.0, -0.5),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/Duck.glb_scene_0",
+                Some(TransformType {
+                    scale: 3.0,
+                    disp: cgmath::Vector3::new(5.0, 0.0, -0.5),
+                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                }),
+            )
+            .expect("Failed to inject scene!");
 
         // self.engine
         //     .scene_man

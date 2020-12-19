@@ -59,6 +59,8 @@ impl ResourceManager {
             materials.len(),
             file_identifier
         );
+
+        
     }
 
     fn load_mesh_from_gltf(

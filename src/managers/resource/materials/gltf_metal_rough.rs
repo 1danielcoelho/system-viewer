@@ -1,4 +1,5 @@
 use std::{collections::HashMap, rc::Rc};
+use web_sys::WebGlRenderingContext as GL;
 
 use crate::{
     app_state::AppState,
@@ -9,14 +10,14 @@ use web_sys::*;
 
 use super::{Material, UniformData, UniformName};
 
-pub struct UnlitMaterial {
+pub struct GltfMetalRough {
     pub name: String,
     pub program: WebGlProgram,
     pub uniform_locations: HashMap<UniformName, WebGlUniformLocation>,
     pub textures: HashMap<TextureUnit, Rc<Texture>>,
 }
 
-impl Material for UnlitMaterial {
+impl Material for GltfMetalRough {
     fn set_name(&mut self, name: &str) {
         self.name = name.to_owned();
     }
@@ -61,10 +62,61 @@ impl Material for UnlitMaterial {
             false,
             &uniform_data.vp,
         );
+        gl.uniform1iv_with_i32_array(
+            self.uniform_locations.get(&UniformName::LightTypes),
+            &uniform_data.light_types,
+        );
+        gl.uniform3fv_with_f32_array(
+            self.uniform_locations.get(&UniformName::LightPosDir),
+            &uniform_data.light_pos_or_dir,
+        );
+        gl.uniform3fv_with_f32_array(
+            self.uniform_locations.get(&UniformName::LightColors),
+            &uniform_data.light_colors,
+        );
+        gl.uniform1fv_with_f32_array(
+            self.uniform_locations.get(&UniformName::LightIntensities),
+            &uniform_data.light_intensities,
+        );
+        gl.uniform1i(
+            self.uniform_locations.get(&UniformName::Albedo),
+            TextureUnit::Albedo as i32,
+        );
+        gl.uniform1i(
+            self.uniform_locations.get(&UniformName::MetallicRoughness),
+            TextureUnit::MetallicRoughness as i32,
+        );
+        gl.uniform1i(
+            self.uniform_locations.get(&UniformName::Normal),
+            TextureUnit::Normal as i32,
+        );
+        gl.uniform1i(
+            self.uniform_locations.get(&UniformName::Emissive),
+            TextureUnit::Emissive as i32,
+        );
+        gl.uniform1i(
+            self.uniform_locations.get(&UniformName::Opacity),
+            TextureUnit::Opacity as i32,
+        );
+        gl.uniform1i(
+            self.uniform_locations.get(&UniformName::Occlusion),
+            TextureUnit::Occlusion as i32,
+        );
+
+        // Bind textures
+        for (unit, tex) in &self.textures {
+            gl.active_texture(GL::TEXTURE0 + (*unit as u32));
+            gl.bind_texture(GL::TEXTURE_2D, tex.gl_handle.as_ref());
+        }
     }
 
     fn unbind_from_drawing(&self, state: &AppState) {
         let gl = state.gl.as_ref().unwrap();
+
+        for (unit, _) in &self.textures {
+            gl.active_texture(GL::TEXTURE0 + (*unit as u32));
+            gl.bind_texture(GL::TEXTURE_2D, None);
+        }
 
         gl.disable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
         gl.disable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
