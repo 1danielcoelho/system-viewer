@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;

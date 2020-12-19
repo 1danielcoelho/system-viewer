@@ -1,4 +1,4 @@
-use crate::{components::component::ComponentIndex, engine::Engine};
+use crate::{engine::Engine};
 use std::collections::VecDeque;
 
 pub enum EventTransmitter {

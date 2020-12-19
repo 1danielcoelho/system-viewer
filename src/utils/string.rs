@@ -13,7 +13,7 @@ pub fn remove_numbered_suffix(s: &str) -> &str {
 }
 
 pub fn get_unique_name<T>(prefix: &str, map: &HashMap<String, T>) -> String {
-    let mut result = prefix.to_owned();
+    let result = prefix.to_owned();
     if !map.contains_key(prefix) {
         return result;
     }

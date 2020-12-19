@@ -8,8 +8,6 @@ use crate::{
     managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
 };
 
-use super::shaders;
-
 pub struct FrameUniformValues {
     pub vp: [f32; 16],
     pub light_types: Vec<i32>,
@@ -130,22 +128,6 @@ fn compile_shader(
             .get_shader_info_log(&shader)
             .unwrap_or_else(|| String::from("Unable to get shader info log")))
     }
-}
-
-fn get_uniform_location_map(
-    gl: &WebGlRenderingContext,
-    program: &WebGlProgram,
-    uniform_names: &[UniformName],
-) -> HashMap<UniformName, WebGlUniformLocation> {
-    let mut result: HashMap<UniformName, WebGlUniformLocation> = HashMap::new();
-
-    for uniform_name in uniform_names {
-        if let Some(loc) = gl.get_uniform_location(&program, uniform_name.as_str()) {
-            result.insert(*uniform_name, loc);
-        }
-    }
-
-    return result;
 }
 
 pub struct Material {

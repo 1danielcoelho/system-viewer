@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use crate::{app_state::AppState, engine::Engine, managers::resource::TextureUnit};
 use crate::{components::transform::TransformType, wasm_bindgen::JsCast};
 
-use gltf::Gltf;
+
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};

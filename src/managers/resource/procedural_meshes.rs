@@ -254,22 +254,22 @@ pub fn generate_ico_sphere(
     temp_indices.reserve(final_num_verts);
     temp_positions.reserve(final_num_verts);
 
-    let X = 0.525731112119133606 * radius;
-    let Z = 0.850650808352039932 * radius;
-    let N = 0.0;
+    let x = 0.525731112119133606 * radius;
+    let z = 0.850650808352039932 * radius;
+    let n = 0.0;
 
-    positions.push(Vector3::new(-X, N, Z));
-    positions.push(Vector3::new(X, N, Z));
-    positions.push(Vector3::new(-X, N, -Z));
-    positions.push(Vector3::new(X, N, -Z));
-    positions.push(Vector3::new(N, Z, X));
-    positions.push(Vector3::new(N, Z, -X));
-    positions.push(Vector3::new(N, -Z, X));
-    positions.push(Vector3::new(N, -Z, -X));
-    positions.push(Vector3::new(Z, X, N));
-    positions.push(Vector3::new(-Z, X, N));
-    positions.push(Vector3::new(Z, -X, N));
-    positions.push(Vector3::new(-Z, -X, N));
+    positions.push(Vector3::new(-x, n, z));
+    positions.push(Vector3::new(x, n, z));
+    positions.push(Vector3::new(-x, n, -z));
+    positions.push(Vector3::new(x, n, -z));
+    positions.push(Vector3::new(n, z, x));
+    positions.push(Vector3::new(n, z, -x));
+    positions.push(Vector3::new(n, -z, x));
+    positions.push(Vector3::new(n, -z, -x));
+    positions.push(Vector3::new(z, x, n));
+    positions.push(Vector3::new(-z, x, n));
+    positions.push(Vector3::new(z, -x, n));
+    positions.push(Vector3::new(-z, -x, n));
 
     // 60 indices
     indices = vec![

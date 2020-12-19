@@ -3,7 +3,6 @@ use gui_backend::WebInput;
 
 use crate::{
     app_state::AppState, components::ui::WidgetType, components::UIComponent, managers::ECManager,
-    managers::Entity,
 };
 
 pub struct InterfaceSystem {
@@ -45,7 +44,7 @@ impl InterfaceSystem {
         }
         let ui = self.ui.as_ref().unwrap();
 
-        for (ent, comp) in comp_man.interface.iter() {
+        for (_ent, comp) in comp_man.interface.iter() {
             InterfaceSystem::draw_widget(ui, state, comp);
         }
 

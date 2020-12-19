@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{ECManager, Entity, ResourceManager, resource::{TextureUnit, gltf_resources::GltfResource}};
+use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
 use crate::components::{
     light::LightType, transform::TransformType, ui::WidgetType, LightComponent, MeshComponent,
-    PhysicsComponent, TransformComponent, UIComponent,
+    TransformComponent, UIComponent,
 };
 
 #[derive(Clone)]
@@ -65,7 +65,7 @@ impl SceneManager {
         scene: &mut Scene,
         resources: &ResourceManager,
     ) -> Entity {
-        let indent = "\t".repeat(indent_level as usize);
+        // let indent = "\t".repeat(indent_level as usize);
 
         let ent: Entity = scene.ent_man.new_entity();
 
@@ -98,12 +98,12 @@ impl SceneManager {
         }
 
         // Mesh
-        let mut mesh_str = String::new();
+        // let mut mesh_str = String::new();
         if let Some(mesh) = node.mesh() {
             let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ent).unwrap();
 
             let mesh_identifier = mesh.get_identifier(&file_identifier);
-            mesh_str = mesh_identifier.to_owned();
+            // mesh_str = mesh_identifier.to_owned();
             if let Some(found_mesh) = resources.get_mesh(&mesh_identifier) {
                 mesh_comp.set_mesh(Some(found_mesh));
             } else {

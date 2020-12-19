@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use cgmath::Matrix4;
 
 use web_sys::WebGlRenderingContext;
@@ -7,11 +5,9 @@ use web_sys::WebGlRenderingContext as GL;
 
 use crate::{
     app_state::AppState,
-    components::LightComponent,
     components::{MeshComponent, TransformComponent},
     managers::resource::{FrameUniformValues, UniformName, UniformValue},
     managers::ECManager,
-    managers::Entity,
 };
 
 pub const NUM_LIGHTS: usize = 8;

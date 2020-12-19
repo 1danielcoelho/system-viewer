@@ -3,7 +3,7 @@ use crate::{
     systems::{InterfaceSystem, PhysicsSystem, RenderingSystem, TransformUpdateSystem},
 };
 
-use super::{ECManager, EventManager};
+use super::{ECManager};
 
 pub struct SystemManager {
     render: RenderingSystem,

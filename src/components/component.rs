@@ -25,12 +25,12 @@ pub trait Component: Default + Clone {
 
     fn get_component_index() -> ComponentIndex;
 
-    fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<Self::ComponentType>> {
+    fn get_components_vector<'a>(_w: &'a mut ECManager) -> Option<&'a mut Vec<Self::ComponentType>> {
         return None;
     }
 
     fn get_components_map<'a>(
-        w: &'a mut ECManager,
+        _w: &'a mut ECManager,
     ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
         return None;
     }

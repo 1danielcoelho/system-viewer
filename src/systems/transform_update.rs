@@ -1,5 +1,5 @@
 use crate::{
-    app_state::AppState, components::transform::TransformType, components::TransformComponent,
+    app_state::AppState, components::transform::TransformType,
     managers::ECManager,
 };
 
