@@ -5,6 +5,7 @@ use web_sys::*;
 
 use crate::{
     app_state::AppState,
+    components::light::LightType,
     managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
 };
 
@@ -25,13 +26,50 @@ pub enum UniformName {
     LightColors,
     LightIntensities,
     BaseColor,
+    BaseColorFactor,
     MetallicRoughness,
+    MetallicFactor,
+    RoughnessFactor,
     Normal,
     Emissive,
+    EmissiveFactor,
     Opacity,
     Occlusion,
 }
 impl UniformName {
+    pub fn default_value(&self) -> UniformValue {
+        match *self {
+            UniformName::WorldTrans => UniformValue::Matrix([
+                1.0, 0.0, 0.0, 0.0, //
+                0.0, 1.0, 0.0, 0.0, //
+                0.0, 0.0, 1.0, 0.0, //
+                0.0, 0.0, 0.0, 0.0, //
+            ]),
+            UniformName::ViewProjTrans => UniformValue::Matrix([
+                1.0, 0.0, 0.0, 0.0, //
+                0.0, 1.0, 0.0, 0.0, //
+                0.0, 0.0, 1.0, 0.0, //
+                0.0, 0.0, 0.0, 0.0, //
+            ]),
+            UniformName::LightTypes => UniformValue::IntArr(vec![LightType::Directional as i32]),
+            UniformName::LightPosDir => UniformValue::Vec3Arr(vec![0.0, 0.0, -1.0]),
+            UniformName::LightColors => UniformValue::Vec3Arr(vec![1.0, 1.0, 1.0]),
+            UniformName::LightIntensities => UniformValue::FloatArr(vec![1.0]),
+            UniformName::BaseColor => UniformValue::Int(TextureUnit::BaseColor as i32),
+            UniformName::BaseColorFactor => UniformValue::Vec3([1.0, 1.0, 1.0]),
+            UniformName::MetallicRoughness => {
+                UniformValue::Int(TextureUnit::MetallicRoughness as i32)
+            }
+            UniformName::MetallicFactor => UniformValue::Float(1.0),
+            UniformName::RoughnessFactor => UniformValue::Float(1.0),
+            UniformName::Normal => UniformValue::Int(TextureUnit::Normal as i32),
+            UniformName::Emissive => UniformValue::Int(TextureUnit::Emissive as i32),
+            UniformName::EmissiveFactor => UniformValue::Vec3([1.0, 1.0, 1.0]),
+            UniformName::Opacity => UniformValue::Int(TextureUnit::Opacity as i32),
+            UniformName::Occlusion => UniformValue::Int(TextureUnit::Occlusion as i32),
+        }
+    }
+
     pub fn as_str(&self) -> &'static str {
         match *self {
             UniformName::WorldTrans => "u_world_trans",
@@ -41,16 +79,20 @@ impl UniformName {
             UniformName::LightColors => "u_light_colors",
             UniformName::LightIntensities => "u_light_intensities",
             UniformName::BaseColor => "us_basecolor",
+            UniformName::BaseColorFactor => "u_basecolor_factor",
             UniformName::MetallicRoughness => "us_metal_rough",
+            UniformName::MetallicFactor => "u_metallic_factor",
+            UniformName::RoughnessFactor => "u_roughness_factor",
             UniformName::Normal => "us_normal",
             UniformName::Emissive => "us_emissive",
+            UniformName::EmissiveFactor => "u_emissive_factor",
             UniformName::Opacity => "us_opacity",
             UniformName::Occlusion => "us_occlusion",
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UniformValue {
     Float(f32),
     Int(i32),
@@ -65,6 +107,7 @@ pub enum UniformValue {
     Vec4Arr(Vec<f32>),
 }
 
+#[derive(Clone)]
 pub struct Uniform {
     pub value: UniformValue,
     pub location: Option<WebGlUniformLocation>,
@@ -138,6 +181,17 @@ pub struct Material {
     uniforms: HashMap<UniformName, Uniform>,
 }
 
+impl Clone for Material {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            program: self.program.clone(),
+            textures: self.textures.clone(),
+            uniforms: self.uniforms.clone(),
+        }
+    }
+}
+
 impl Material {
     pub fn new(
         gl: &WebGlRenderingContext,
@@ -159,7 +213,7 @@ impl Material {
             new_mat.uniforms.insert(
                 *uniform_name,
                 Uniform {
-                    value: UniformValue::Int(0),
+                    value: uniform_name.default_value(),
                     location: gl.get_uniform_location(&new_mat.program, uniform_name.as_str()),
                 },
             );
@@ -170,6 +224,9 @@ impl Material {
 
     pub fn set_uniform_value(&mut self, name: UniformName, value: UniformValue) {
         if let Some(uniform) = self.uniforms.get_mut(&name) {
+            if std::mem::discriminant(&uniform.value) != std::mem::discriminant(&value) {
+                log::warn!("Tried to set uniform '{:?}' with value '{:?}' which is of a different variant than it's current value of '{:?}'!", name, value, uniform.value);
+            }
             uniform.value = value;
         }
     }
@@ -228,6 +285,8 @@ impl Material {
 
         // Bind textures
         for (unit, tex) in &self.textures {
+            // log::info!("\tBinding texture {} to unit {:?}", tex.name, unit);
+
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
             gl.bind_texture(GL::TEXTURE_2D, tex.gl_handle.as_ref());
         }

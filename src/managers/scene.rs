@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
+use super::{
+    resource::{gltf_resources::GltfResource, TextureUnit},
+    ECManager, Entity, ResourceManager,
+};
 use crate::components::{
     light::LightType, transform::TransformType, ui::WidgetType, LightComponent, MeshComponent,
     TransformComponent, UIComponent,
@@ -283,9 +286,16 @@ impl SceneManager {
         light_comp.intensity = 1.0;
         light_comp.light_type = LightType::Directional;
 
-        let basecolor_mat = res_man.instantiate_material("basecolor");
-        // let tex = res_man.get_texture("./public/Duck.glb_texture_0").unwrap();
-        // basecolor_mat.as_ref().unwrap().borrow_mut().set_texture(TextureUnit::BaseColor, tex);
+        let tex = res_man.get_texture("./public/shapes2_512.png").unwrap();
+        let tex_duck = res_man.get_texture("./public/Duck.glb_texture_0").unwrap();
+
+        let test_mat1 = res_man.instantiate_material("gltf_metal_rough");
+        test_mat1
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .textures
+            .insert(TextureUnit::BaseColor, tex);
 
         // Plane
         let plane = scene.ent_man.new_entity();
@@ -297,7 +307,15 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 2.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
-        mesh_comp.set_material_override(basecolor_mat.clone(), 0);
+        mesh_comp.set_material_override(test_mat1, 0);
+
+        let test_mat2 = res_man.instantiate_material("gltf_metal_rough");
+        test_mat2
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .textures
+            .insert(TextureUnit::BaseColor, tex_duck);
 
         // Cube
         let cube = scene.ent_man.new_entity();
@@ -309,7 +327,9 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        mesh_comp.set_material_override(basecolor_mat.clone(), 0);
+        mesh_comp.set_material_override(test_mat2, 0);
+
+        let test_mat3 = res_man.instantiate_material("gltf_metal_rough");
 
         // Ico-sphere
         let ico = scene.ent_man.new_entity();
@@ -321,7 +341,9 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-        mesh_comp.set_material_override(basecolor_mat.clone(), 0);
+        mesh_comp.set_material_override(test_mat3, 0);
+
+        let test_mat4 = res_man.instantiate_material("gltf_metal_rough");
 
         // Lat-long sphere
         let lat_long = scene.ent_man.new_entity();
@@ -335,7 +357,7 @@ impl SceneManager {
             .add_component::<MeshComponent>(lat_long)
             .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(basecolor_mat.clone(), 0);
+        mesh_comp.set_material_override(test_mat4, 0);
 
         // Grid
         let grid = scene.ent_man.new_entity();

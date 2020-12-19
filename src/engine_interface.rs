@@ -3,7 +3,6 @@ use std::sync::{Arc, Mutex};
 use crate::{app_state::AppState, engine::Engine, managers::resource::TextureUnit};
 use crate::{components::transform::TransformType, wasm_bindgen::JsCast};
 
-
 use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
@@ -87,11 +86,6 @@ impl EngineInterface {
         EngineInterface::setup_event_handlers(&canvas, app_state.clone());
 
         engine.res_man.initialize();
-
-        engine
-            .scene_man
-            .load_test_scene("test", &mut engine.res_man);
-        engine.scene_man.set_scene("test");
 
         return EngineInterface {
             canvas,
@@ -278,7 +272,9 @@ impl EngineInterface {
             data.len()
         );
 
-        self.engine.res_man.create_texture(file_identifier, data, None);
+        self.engine
+            .res_man
+            .create_texture(file_identifier, data, None);
     }
 
     #[wasm_bindgen]
@@ -320,10 +316,10 @@ impl EngineInterface {
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
 
-        let basecolor_mat = self.engine.res_man.get_or_create_material("basecolor_0").unwrap();
-        let tex = self.engine.res_man.get_texture("./public/shapes2_512.png").unwrap();
-
-        basecolor_mat.borrow_mut().textures.insert(TextureUnit::BaseColor, tex);
+        self.engine
+            .scene_man
+            .load_test_scene("test", &mut self.engine.res_man);
+        self.engine.scene_man.set_scene("test");
 
         self.engine
             .scene_man

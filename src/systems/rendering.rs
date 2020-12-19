@@ -167,6 +167,7 @@ impl RenderingSystem {
                         UniformValue::FloatArr(uniform_data.light_intensities.clone()),
                     );
 
+                    // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
                     mat_mut.bind_for_drawing(state);
                 }
 

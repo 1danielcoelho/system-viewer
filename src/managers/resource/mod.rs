@@ -235,15 +235,15 @@ impl ResourceManager {
             return None;
         };
 
-        let instance = master_mat.clone();
+        let instance = Rc::new(RefCell::new(master_mat.unwrap().borrow().clone()));
 
         let new_name = get_unique_name(remove_numbered_suffix(identifier), &self.materials);
-        instance.as_ref().unwrap().borrow_mut().name = new_name.clone();
+        instance.borrow_mut().name = new_name.clone();
 
         log::info!("Generated material instance '{}'", new_name);
         self.materials
-            .insert(new_name.to_string(), instance.as_ref().unwrap().clone());
-        return instance;
+            .insert(new_name.to_string(), instance.clone());
+        return Some(instance);
     }
 
     pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
@@ -318,9 +318,13 @@ impl ResourceManager {
                     UniformName::LightColors,
                     UniformName::LightIntensities,
                     UniformName::BaseColor,
+                    UniformName::BaseColorFactor,
                     UniformName::MetallicRoughness,
+                    UniformName::MetallicFactor,
+                    UniformName::RoughnessFactor,
                     UniformName::Normal,
                     UniformName::Emissive,
+                    UniformName::EmissiveFactor,
                     UniformName::Opacity,
                     UniformName::Occlusion,
                 ],
