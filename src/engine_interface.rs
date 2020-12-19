@@ -271,9 +271,20 @@ impl EngineInterface {
     }
 
     #[wasm_bindgen]
+    pub fn load_texture(&mut self, file_identifier: &str, data: &mut [u8]) {
+        log::info!(
+            "Loading texture from file '{}' ({} bytes)",
+            file_identifier,
+            data.len()
+        );
+
+        self.engine.res_man.create_texture(file_identifier, data, None);
+    }
+
+    #[wasm_bindgen]
     pub fn load_gltf(&mut self, file_identifier: &str, data: &mut [u8]) {
         log::info!(
-            "Loading GLTF file '{}' ({} bytes)",
+            "Loading GLTF from file '{}' ({} bytes)",
             file_identifier,
             data.len()
         );
@@ -310,7 +321,7 @@ impl EngineInterface {
         log::info!("Beginning engine loop...");
 
         let albedo_mat = self.engine.res_man.get_or_create_material("albedo_0").unwrap();
-        let tex = self.engine.res_man.get_texture("./public/Duck.glb_texture_0").unwrap();
+        let tex = self.engine.res_man.get_texture("./public/shapes2_512.png").unwrap();
 
         albedo_mat.borrow_mut().set_texture(TextureUnit::Albedo, tex);
 

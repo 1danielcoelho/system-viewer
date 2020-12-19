@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
+use super::{ECManager, Entity, ResourceManager, resource::{TextureUnit, gltf_resources::GltfResource}};
 use crate::components::{
     light::LightType, transform::TransformType, ui::WidgetType, LightComponent, MeshComponent,
     PhysicsComponent, TransformComponent, UIComponent,
@@ -284,7 +284,8 @@ impl SceneManager {
         light_comp.light_type = LightType::Directional;
 
         let albedo_mat = res_man.instantiate_material("albedo");
-        //albedo_mat.set_texture(TextureUnit::Albedo, texture);
+        // let tex = res_man.get_texture("./public/Duck.glb_texture_0").unwrap();
+        // albedo_mat.as_ref().unwrap().borrow_mut().set_texture(TextureUnit::Albedo, tex);
 
         // Plane
         let plane = scene.ent_man.new_entity();
@@ -296,7 +297,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 2.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
-        mesh_comp.set_material_override(albedo_mat, 0);
+        mesh_comp.set_material_override(albedo_mat.clone(), 0);
 
         // Cube
         let cube = scene.ent_man.new_entity();
@@ -308,7 +309,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        mesh_comp.set_material_override(albedo_mat.clone(), 0);
 
         // Ico-sphere
         let ico = scene.ent_man.new_entity();
@@ -320,7 +321,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        mesh_comp.set_material_override(albedo_mat.clone(), 0);
 
         // Lat-long sphere
         let lat_long = scene.ent_man.new_entity();
@@ -334,7 +335,7 @@ impl SceneManager {
             .add_component::<MeshComponent>(lat_long)
             .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        mesh_comp.set_material_override(albedo_mat.clone(), 0);
 
         // Grid
         let grid = scene.ent_man.new_entity();

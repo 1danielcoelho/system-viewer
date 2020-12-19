@@ -98,8 +98,6 @@ fn get_uniform_location_map(
     return result;
 }
 
-// Likely useless since I went for this before realizing the gltf crate can already
-// decode textures into 8 bit per channel data
 fn load_texture_from_bytes(
     identifier: &str,
     bytes: &[u8],
@@ -314,7 +312,7 @@ impl ResourceManager {
         };
 
         let instance = master_mat.clone();
-        
+
         let new_name = get_unique_name(remove_numbered_suffix(identifier), &self.materials);
         instance.as_ref().unwrap().borrow_mut().set_name(&new_name);
 
@@ -386,7 +384,11 @@ impl ResourceManager {
         };
 
         if program.is_err() {
-            log::error!("Failed to generate material '{}'. Error: {}", identifier, program.err().unwrap());
+            log::error!(
+                "Failed to generate material '{}'. Error: {}",
+                identifier,
+                program.err().unwrap()
+            );
             return None;
         };
         let program = program.unwrap();

@@ -122,6 +122,7 @@
 <!-- # Procedural sphere -->
 <!-- # Icosphere normals look weird -->
 <!-- # Setup test scene for textures (plane, boxes and stuff) -->
+<!-- # Load textures from public folder -->
 # I want to import a GLTF object
 <!-- - Get textures working
     - Import them from gltf
@@ -132,10 +133,11 @@
 - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes
-# Load textures from public folder
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 # I don't think I need this silly "get_component_index()" function, and can just use a trait const
 # I kind of need entity names for debug
+# Egui leaves textures on texture unit 0
+# At some point I put None when setting material for a mesh and it kind of looked like it was using the uv0 material?
 # Pass along an inverse transform to transform normals with
 # Scene manager
 - Likely use Serde
