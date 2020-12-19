@@ -280,15 +280,15 @@ impl ResourceManager {
                 &shaders::fragment::UV1,
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             ),
-            "albedo" => Material::new(
+            "basecolor" => Material::new(
                 &self.gl,
                 identifier,
                 &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::ALBEDO,
+                &shaders::fragment::BASECOLOR,
                 &[
                     UniformName::WorldTrans,
                     UniformName::ViewProjTrans,
-                    UniformName::Albedo,
+                    UniformName::BaseColor,
                 ],
             ),
             "phong" => Material::new(
@@ -317,7 +317,7 @@ impl ResourceManager {
                     UniformName::LightPosDir,
                     UniformName::LightColors,
                     UniformName::LightIntensities,
-                    UniformName::Albedo,
+                    UniformName::BaseColor,
                     UniformName::MetallicRoughness,
                     UniformName::Normal,
                     UniformName::Emissive,

@@ -8,7 +8,7 @@ uniform int u_light_types[MAX_LIGHTS];
 uniform vec3 u_light_pos_or_dir[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
 uniform float u_light_intensities[MAX_LIGHTS];
-uniform sampler2D us_albedo;
+uniform sampler2D us_basecolor;
 uniform sampler2D us_metal_rough;
 uniform sampler2D us_normal;
 uniform sampler2D us_emissive;
@@ -41,5 +41,5 @@ vec3 calc_dir_light(vec3 light_dir, vec3 light_color, float light_intensity)
 
 void main() 
 {
-    gl_FragColor = texture2D(us_albedo, v_uv0); 
+    gl_FragColor = texture2D(us_basecolor, v_uv0); 
 }

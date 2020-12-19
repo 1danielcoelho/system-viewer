@@ -320,10 +320,10 @@ impl EngineInterface {
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
 
-        let albedo_mat = self.engine.res_man.get_or_create_material("albedo_0").unwrap();
+        let basecolor_mat = self.engine.res_man.get_or_create_material("basecolor_0").unwrap();
         let tex = self.engine.res_man.get_texture("./public/shapes2_512.png").unwrap();
 
-        albedo_mat.borrow_mut().textures.insert(TextureUnit::Albedo, tex);
+        basecolor_mat.borrow_mut().textures.insert(TextureUnit::BaseColor, tex);
 
         self.engine
             .scene_man

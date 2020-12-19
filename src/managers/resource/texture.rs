@@ -2,7 +2,7 @@ use web_sys::WebGlTexture;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum TextureUnit {
-    Albedo = 0,
+    BaseColor = 0,
     MetallicRoughness = 1,
     Normal = 2,
     Emissive = 3,
