@@ -123,17 +123,22 @@
 <!-- # Icosphere normals look weird -->
 <!-- # Setup test scene for textures (plane, boxes and stuff) -->
 <!-- # Load textures from public folder -->
-# I want to import a GLTF object
+<!-- # I want to import a GLTF object -->
 <!-- - Get textures working
     - Import them from gltf
     - Import from raw bytes    
     - Allow cloning materials so that we can set custom parameters (like textures) for each
     - Allow modifying materials so that we can change uniforms at runtime (RefCell?)
     - Actually use textures -->
-- Get simple PBR materials working
+<!-- - Get simple PBR materials working
     - Fetch imported GLTF materials when parsing GLTF meshes
-    - Have meshes use imported GLTF materials by identifier, like nodes use meshes
+    - Have meshes use imported GLTF materials by identifier, like nodes use meshes -->
 <!-- # Would be nice to have an "automatic" way of handling uniforms... there's a lot of repetition -->
+
+# Shader system refactor
+- I need to support defines, includes and conditional compilation
+    - Make Material struct detect when a texture is set, record a new define for it, and invalidate its program. When drawing, the rendering system would see an invalid program for a shader and provide it with the gl rendering context to recompile
+
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 <!-- # String enum for uniform names -->
 # I don't think I need this silly "get_component_index()" function, and can just use a trait const

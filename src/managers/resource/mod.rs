@@ -252,36 +252,31 @@ impl ResourceManager {
         }
 
         let mat = match identifier {
-            "default" => Material::new(
-                &self.gl,
+            "default" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_COLOR,
                 &shaders::fragment::COLOR,
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
-            ),
-            "world_normal" => Material::new(
-                &self.gl,
+            )),
+            "world_normal" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_ALL,
                 &shaders::fragment::WORLD_NORMAL,
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
-            ),
-            "uv0" => Material::new(
-                &self.gl,
+            )),
+            "uv0" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_ALL,
                 &shaders::fragment::UV0,
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
-            ),
-            "uv1" => Material::new(
-                &self.gl,
+            )),
+            "uv1" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_ALL,
                 &shaders::fragment::UV1,
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
-            ),
-            "basecolor" => Material::new(
-                &self.gl,
+            )),
+            "basecolor" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_ALL,
                 &shaders::fragment::BASECOLOR,
@@ -290,9 +285,8 @@ impl ResourceManager {
                     UniformName::ViewProjTrans,
                     UniformName::BaseColor,
                 ],
-            ),
-            "phong" => Material::new(
-                &self.gl,
+            )),
+            "phong" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_ALL,
                 &shaders::fragment::PHONG,
@@ -304,9 +298,8 @@ impl ResourceManager {
                     UniformName::LightColors,
                     UniformName::LightIntensities,
                 ],
-            ),
-            "gltf_metal_rough" => Material::new(
-                &self.gl,
+            )),
+            "gltf_metal_rough" => Some(Material::new(
                 identifier,
                 &shaders::vertex::RELAY_ALL,
                 &shaders::fragment::GLTF_METAL_ROUGH,
@@ -327,15 +320,11 @@ impl ResourceManager {
                     UniformName::EmissiveFactor,
                     UniformName::Occlusion,
                 ],
-            ),
-            _ => Err("Invalid material identifier".to_owned()),
+            )),
+            _ => None,
         };
-        if mat.is_err() {
-            log::error!(
-                "Error when creating material with identifier '{}': {:?}",
-                identifier,
-                mat.err()
-            );
+        if mat.is_none() {
+            log::error!("Invalid material identifier '{}'", identifier);
             return None;
         }
 

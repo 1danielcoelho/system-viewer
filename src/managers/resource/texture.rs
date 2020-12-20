@@ -8,6 +8,17 @@ pub enum TextureUnit {
     Emissive = 3,
     Occlusion = 4,
 }
+impl TextureUnit {
+    pub fn get_define(&self) -> &'static str {
+        match *self {
+            TextureUnit::BaseColor => "#define BASECOLOR_TEXTURE",
+            TextureUnit::MetallicRoughness => "#define METALLICROUGHNESS_TEXTURE",
+            TextureUnit::Normal => "#define NORMAL_TEXTURE",
+            TextureUnit::Emissive => "#define EMISSIVE_TEXTURE",
+            TextureUnit::Occlusion => "#define OCCLUSION_TEXTURE",
+        }
+    }
+}
 
 pub struct Texture {
     pub name: String,
@@ -17,4 +28,3 @@ pub struct Texture {
     pub gl_format: u32,
     pub gl_handle: Option<WebGlTexture>,
 }
-

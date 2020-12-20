@@ -112,6 +112,7 @@ pub struct Uniform {
 
 fn link_program(
     gl: &WebGlRenderingContext,
+    prefix_lines: &[&str],
     vert_source: &str,
     frag_source: &str,
 ) -> Result<WebGlProgram, String> {
@@ -119,8 +120,8 @@ fn link_program(
         .create_program()
         .ok_or_else(|| String::from("Error creating program"))?;
 
-    let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, vert_source).unwrap();
-    let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, frag_source).unwrap();
+    let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, prefix_lines, vert_source).unwrap();
+    let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, prefix_lines, frag_source).unwrap();
 
     gl.attach_shader(&program, &vert_shader);
     gl.attach_shader(&program, &frag_shader);
@@ -149,12 +150,16 @@ fn link_program(
 fn compile_shader(
     gl: &WebGlRenderingContext,
     shader_type: u32,
+    prefix_lines: &[&str],
     source: &str,
 ) -> Result<WebGlShader, String> {
     let shader = gl
         .create_shader(shader_type)
         .ok_or_else(|| String::from("Error creating shader"))?;
-    gl.shader_source(&shader, source);
+
+    let final_source = prefix_lines.join("\n") + "\n" + source;
+
+    gl.shader_source(&shader, &final_source);
     gl.compile_shader(&shader);
 
     if gl
@@ -172,51 +177,111 @@ fn compile_shader(
 
 pub struct Material {
     pub name: String,
-    pub program: WebGlProgram,
-    pub textures: HashMap<TextureUnit, Rc<Texture>>,
 
+    vert: &'static str,
+    frag: &'static str,
+    program: Option<WebGlProgram>,
+    textures: HashMap<TextureUnit, Rc<Texture>>,
     uniforms: HashMap<UniformName, Uniform>,
+    defines: Vec<&'static str>,
 }
 
 impl Clone for Material {
     fn clone(&self) -> Self {
         Self {
             name: self.name.clone(),
+            vert: self.vert,
+            frag: self.frag,
             program: self.program.clone(),
             textures: self.textures.clone(),
             uniforms: self.uniforms.clone(),
+            defines: self.defines.clone(),
         }
     }
 }
 
 impl Material {
     pub fn new(
-        gl: &WebGlRenderingContext,
         name: &str,
-        vert: &str,
-        frag: &str,
-        uniforms: &[UniformName],
-    ) -> Result<Self, String> {
-        let program = link_program(gl, vert, frag)?;
-
-        let mut new_mat = Self {
-            name: name.to_owned(),
-            program,
-            textures: HashMap::new(),
-            uniforms: HashMap::new(),
-        };
-
-        for uniform_name in uniforms {
-            new_mat.uniforms.insert(
+        vert: &'static str,
+        frag: &'static str,
+        uniform_names: &[UniformName],
+    ) -> Self {
+        let mut uniforms: HashMap<UniformName, Uniform> = HashMap::new();
+        for uniform_name in uniform_names {
+            uniforms.insert(
                 *uniform_name,
                 Uniform {
                     value: uniform_name.default_value(),
-                    location: gl.get_uniform_location(&new_mat.program, uniform_name.as_str()),
+                    location: None,
                 },
             );
         }
 
-        return Ok(new_mat);
+        Self {
+            name: name.to_owned(),
+            vert,
+            frag,
+            program: None,
+            textures: HashMap::new(),
+            uniforms,
+            defines: Vec::new(),
+        }
+    }
+
+    pub fn recompile_program(&mut self, gl: &WebGlRenderingContext) {
+        let program = link_program(gl, &self.defines, self.vert, self.frag);
+        if program.is_err() {
+            log::error!(
+                "Error recompiling material '{}': '{:?}'",
+                self.name,
+                program.err()
+            );
+            return;
+        }
+        let program = program.unwrap();
+
+        for (uniform_name, uniform) in self.uniforms.iter_mut() {
+            uniform.location = gl.get_uniform_location(&program, uniform_name.as_str());
+        }
+
+        self.program = Some(program);
+    }
+
+    pub fn set_define(&mut self, define: &'static str) {
+        self.defines.push(define);
+        self.program = None;
+    }
+
+    pub fn clear_define(&mut self, define: &'static str) {
+        if let Some(pos) = self.defines.iter().position(|x| *x == define) {
+            self.defines.remove(pos);
+        }
+    }
+
+    pub fn set_texture(&mut self, unit: TextureUnit, tex: Option<Rc<Texture>>) {
+        if let Some(tex) = tex {
+            self.set_define(unit.get_define());
+
+            log::info!(
+                "Set texture {} on unit {:?} of material {}. Defines: '{:?}'",
+                tex.name,
+                unit,
+                self.name,
+                self.defines
+            );
+            self.textures.insert(unit, tex);
+        } else {
+            self.textures.remove(&unit);
+            self.clear_define(unit.get_define());
+
+            log::info!(
+                "Removed texture on unit {:?} of material {}. Defines: '{:?}'",
+                unit,
+                self.name,
+                self.defines
+            );
+        }
     }
 
     pub fn set_uniform_value(&mut self, name: UniformName, value: UniformValue) {
@@ -228,11 +293,15 @@ impl Material {
         }
     }
 
-    pub fn bind_for_drawing(&self, state: &AppState) {
+    pub fn bind_for_drawing(&mut self, state: &AppState) {
         let gl = state.gl.as_ref().unwrap();
 
+        if self.program.is_none() {
+            self.recompile_program(gl);
+        }
+
         // Set our shader program
-        gl.use_program(Some(&self.program));
+        gl.use_program(self.program.as_ref());
 
         // Enable attributes
         gl.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);

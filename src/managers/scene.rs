@@ -294,8 +294,7 @@ impl SceneManager {
             .as_ref()
             .unwrap()
             .borrow_mut()
-            .textures
-            .insert(TextureUnit::BaseColor, tex);
+            .set_texture(TextureUnit::BaseColor, Some(tex));
 
         // Plane
         let plane = scene.ent_man.new_entity();
@@ -314,8 +313,7 @@ impl SceneManager {
             .as_ref()
             .unwrap()
             .borrow_mut()
-            .textures
-            .insert(TextureUnit::BaseColor, tex_duck);
+            .set_texture(TextureUnit::BaseColor, Some(tex_duck));
 
         // Cube
         let cube = scene.ent_man.new_entity();

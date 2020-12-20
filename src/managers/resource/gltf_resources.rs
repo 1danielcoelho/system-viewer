@@ -67,7 +67,7 @@ impl ResourceManager {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_texture(&tex_identifier) {
                 log::info!("\t\tBaseColor texture: '{}'", tex_identifier);
-                mat_mut.textures.insert(TextureUnit::BaseColor, tex);
+                mat_mut.set_texture(TextureUnit::BaseColor, Some(tex));
             } else {
                 log::warn!(
                     "Failed to find texture '{}' referenced by material '{}'",
@@ -87,7 +87,7 @@ impl ResourceManager {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_texture(&tex_identifier) {
                 log::info!("\t\tMetallicRoughness texture: '{}'", tex_identifier);
-                mat_mut.textures.insert(TextureUnit::MetallicRoughness, tex);
+                mat_mut.set_texture(TextureUnit::MetallicRoughness, Some(tex));
             } else {
                 log::warn!(
                     "Failed to find texture '{}' referenced by material '{}'",
@@ -112,7 +112,7 @@ impl ResourceManager {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_texture(&tex_identifier) {
                 log::info!("\t\tNormal texture: '{}'", tex_identifier);
-                mat_mut.textures.insert(TextureUnit::Normal, tex);
+                mat_mut.set_texture(TextureUnit::Normal, Some(tex));
             } else {
                 log::warn!(
                     "Failed to find texture '{}' referenced by material '{}'",
@@ -127,7 +127,7 @@ impl ResourceManager {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_texture(&tex_identifier) {
                 log::info!("\t\tOcclusion texture: '{}'", tex_identifier);
-                mat_mut.textures.insert(TextureUnit::Occlusion, tex);
+                mat_mut.set_texture(TextureUnit::Occlusion, Some(tex));
             } else {
                 log::warn!(
                     "Failed to find texture '{}' referenced by material '{}'",
@@ -142,7 +142,7 @@ impl ResourceManager {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_texture(&tex_identifier) {
                 log::info!("\t\tEmissive texture: '{}'", tex_identifier);
-                mat_mut.textures.insert(TextureUnit::Emissive, tex);
+                mat_mut.set_texture(TextureUnit::Emissive, Some(tex));
             } else {
                 log::warn!(
                     "Failed to find texture '{}' referenced by material '{}'",

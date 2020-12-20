@@ -8,11 +8,16 @@ uniform int u_light_types[MAX_LIGHTS];
 uniform vec3 u_light_pos_or_dir[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
 uniform float u_light_intensities[MAX_LIGHTS];
+
+uniform vec4 u_basecolor_factor;
+uniform float u_metallic_factor;
+uniform float u_roughness_factor;
+uniform float u_emissive_factor;
+
 uniform sampler2D us_basecolor;
 uniform sampler2D us_metal_rough;
 uniform sampler2D us_normal;
 uniform sampler2D us_emissive;
-uniform sampler2D us_opacity;
 uniform sampler2D us_occlusion;
 
 varying lowp vec3 v_world_normal;
