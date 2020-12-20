@@ -325,7 +325,6 @@ impl ResourceManager {
                     UniformName::Normal,
                     UniformName::Emissive,
                     UniformName::EmissiveFactor,
-                    UniformName::Opacity,
                     UniformName::Occlusion,
                 ],
             ),

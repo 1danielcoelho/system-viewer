@@ -11,7 +11,7 @@ use web_sys::WebGlRenderingContext as GL;
 use super::{
     intermediate_mesh::IntermediateMesh,
     intermediate_mesh::{intermediate_to_mesh, IntermediatePrimitive},
-    Material, Mesh, ResourceManager, Texture,
+    Material, Mesh, ResourceManager, Texture, TextureUnit, UniformName, UniformValue,
 };
 
 pub trait GltfResource {
@@ -49,25 +49,158 @@ impl GltfResource for gltf::Scene<'_> {
 }
 
 impl ResourceManager {
+    fn load_material_from_gltf(
+        &mut self,
+        file_identifier: &str,
+        material: &gltf::Material,
+    ) -> Result<Rc<RefCell<Material>>, String> {
+        let identifier = material.get_identifier(file_identifier);
+        log::info!("\tLoading gltf material '{}'", identifier);
+
+        let mat = self.instantiate_material("gltf_metal_rough").unwrap();
+        let mut mat_mut = mat.borrow_mut();
+
+        let pbr = material.pbr_metallic_roughness();
+
+        // Base color texture
+        if let Some(gltf_tex) = pbr.base_color_texture() {
+            let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
+            if let Some(tex) = self.get_texture(&tex_identifier) {
+                log::info!("\t\tBaseColor texture: '{}'", tex_identifier);
+                mat_mut.textures.insert(TextureUnit::BaseColor, tex);
+            } else {
+                log::warn!(
+                    "Failed to find texture '{}' referenced by material '{}'",
+                    tex_identifier,
+                    identifier
+                );
+            }
+        }
+
+        // Base color factor
+        let factor = pbr.base_color_factor();
+        mat_mut.set_uniform_value(UniformName::BaseColorFactor, UniformValue::Vec4(factor));
+        log::info!("\t\tBaseColor factor: '{:?}'", factor);
+
+        // Metallic-roughness texture
+        if let Some(gltf_tex) = pbr.metallic_roughness_texture() {
+            let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
+            if let Some(tex) = self.get_texture(&tex_identifier) {
+                log::info!("\t\tMetallicRoughness texture: '{}'", tex_identifier);
+                mat_mut.textures.insert(TextureUnit::MetallicRoughness, tex);
+            } else {
+                log::warn!(
+                    "Failed to find texture '{}' referenced by material '{}'",
+                    tex_identifier,
+                    identifier
+                );
+            }
+        }
+
+        // Metallic factor
+        let factor = pbr.metallic_factor();
+        mat_mut.set_uniform_value(UniformName::MetallicFactor, UniformValue::Float(factor));
+        log::info!("\t\tMetallic factor: '{:?}'", factor);
+
+        // Roughness factor
+        let factor = pbr.roughness_factor();
+        mat_mut.set_uniform_value(UniformName::RoughnessFactor, UniformValue::Float(factor));
+        log::info!("\t\tRoughness factor: '{:?}'", factor);
+
+        // Normal texture
+        if let Some(gltf_tex) = material.normal_texture() {
+            let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
+            if let Some(tex) = self.get_texture(&tex_identifier) {
+                log::info!("\t\tNormal texture: '{}'", tex_identifier);
+                mat_mut.textures.insert(TextureUnit::Normal, tex);
+            } else {
+                log::warn!(
+                    "Failed to find texture '{}' referenced by material '{}'",
+                    tex_identifier,
+                    identifier
+                );
+            }
+        }
+
+        // Occlusion texture
+        if let Some(gltf_tex) = material.occlusion_texture() {
+            let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
+            if let Some(tex) = self.get_texture(&tex_identifier) {
+                log::info!("\t\tOcclusion texture: '{}'", tex_identifier);
+                mat_mut.textures.insert(TextureUnit::Occlusion, tex);
+            } else {
+                log::warn!(
+                    "Failed to find texture '{}' referenced by material '{}'",
+                    tex_identifier,
+                    identifier
+                );
+            }
+        }
+
+        // Emissive texture
+        if let Some(gltf_tex) = material.occlusion_texture() {
+            let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
+            if let Some(tex) = self.get_texture(&tex_identifier) {
+                log::info!("\t\tEmissive texture: '{}'", tex_identifier);
+                mat_mut.textures.insert(TextureUnit::Emissive, tex);
+            } else {
+                log::warn!(
+                    "Failed to find texture '{}' referenced by material '{}'",
+                    tex_identifier,
+                    identifier
+                );
+            }
+        }
+
+        // Emissive factor
+        let factor = material.emissive_factor();
+        mat_mut.set_uniform_value(UniformName::EmissiveFactor, UniformValue::Vec3(factor));
+        log::info!("\t\tEmissive factor: '{:?}'", factor);
+
+        return Ok(mat.clone());
+    }
+
+    /**
+     * Also returns a vec of whatever we parsed for each material index, because we can't
+     * find the exact material instance that we want via identifier alone, as it will have
+     * a trailing suffix
+     */
     pub fn load_materials_from_gltf(
         &mut self,
         file_identifier: &str,
         materials: gltf::iter::Materials,
-    ) {
+    ) -> Vec<Option<Rc<RefCell<Material>>>> {
         log::info!(
             "Loading {} materials from gltf file {}",
             materials.len(),
             file_identifier
         );
 
+        let mut result = Vec::new();
+        result.resize(materials.len(), None);
 
+        for (index, material) in materials.enumerate() {
+            match self.load_material_from_gltf(file_identifier, &material) {
+                Ok(new_mat) => {
+                    self.materials
+                        .insert(new_mat.borrow().name.clone(), new_mat.clone());
+                    result[index] = Some(new_mat.clone());
+                }
+                Err(msg) => {
+                    log::error!("Failed to load gltf texture: {}", msg);
+                }
+            }
+        }
+
+        return result;
     }
 
     fn load_mesh_from_gltf(
+        &self,
         file_identifier: &str,
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
-        default_material: &Option<Rc<RefCell<Material>>>,
+        mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
         ctx: &WebGlRenderingContext,
     ) -> Result<Rc<Mesh>, String> {
         let identifier = mesh.get_identifier(file_identifier);
@@ -245,6 +378,15 @@ impl ResourceManager {
                 }
             }
 
+            let mut mat_instance: Rc<RefCell<Material>> =
+                self.get_material("gltf_metal_rough").unwrap();
+
+            if let Some(mat_index) = prim.material().index() {
+                if let Some(mat) = &mat_index_to_parsed[mat_index] {
+                    mat_instance = mat.clone();
+                }
+            }
+
             log::info!(
                 "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
                 prim_name,
@@ -255,7 +397,7 @@ impl ResourceManager {
                 uv0_vec.len(),
                 uv1_vec.len(),
                 prim.mode().as_gl_enum(),
-                default_material.as_ref().unwrap().borrow().name,
+                mat_instance.borrow().name,
             );
 
             inter_prims.push(IntermediatePrimitive {
@@ -267,7 +409,7 @@ impl ResourceManager {
                 uv0: uv0_vec,
                 uv1: uv1_vec,
                 mode: prim.mode().as_gl_enum(),
-                mat: Some(default_material.as_ref().unwrap().clone()),
+                mat: Some(mat_instance),
             });
         }
 
@@ -285,9 +427,8 @@ impl ResourceManager {
         file_identifier: &str,
         meshes: gltf::iter::Meshes,
         buffers: &Vec<gltf::buffer::Data>,
+        mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
     ) {
-        let default_mat = self.get_or_create_material("phong");
-
         log::info!(
             "Loading {} meshes from gltf file {}",
             meshes.len(),
@@ -295,11 +436,11 @@ impl ResourceManager {
         );
 
         for mesh in meshes {
-            match ResourceManager::load_mesh_from_gltf(
+            match self.load_mesh_from_gltf(
                 file_identifier,
                 &mesh,
                 &buffers,
-                &default_mat,
+                mat_index_to_parsed,
                 &self.gl,
             ) {
                 Ok(new_mesh) => {

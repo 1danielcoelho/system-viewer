@@ -33,7 +33,6 @@ pub enum UniformName {
     Normal,
     Emissive,
     EmissiveFactor,
-    Opacity,
     Occlusion,
 }
 impl UniformName {
@@ -56,7 +55,7 @@ impl UniformName {
             UniformName::LightColors => UniformValue::Vec3Arr(vec![1.0, 1.0, 1.0]),
             UniformName::LightIntensities => UniformValue::FloatArr(vec![1.0]),
             UniformName::BaseColor => UniformValue::Int(TextureUnit::BaseColor as i32),
-            UniformName::BaseColorFactor => UniformValue::Vec3([1.0, 1.0, 1.0]),
+            UniformName::BaseColorFactor => UniformValue::Vec4([1.0, 1.0, 1.0, 1.0]),
             UniformName::MetallicRoughness => {
                 UniformValue::Int(TextureUnit::MetallicRoughness as i32)
             }
@@ -65,7 +64,6 @@ impl UniformName {
             UniformName::Normal => UniformValue::Int(TextureUnit::Normal as i32),
             UniformName::Emissive => UniformValue::Int(TextureUnit::Emissive as i32),
             UniformName::EmissiveFactor => UniformValue::Vec3([1.0, 1.0, 1.0]),
-            UniformName::Opacity => UniformValue::Int(TextureUnit::Opacity as i32),
             UniformName::Occlusion => UniformValue::Int(TextureUnit::Occlusion as i32),
         }
     }
@@ -86,7 +84,6 @@ impl UniformName {
             UniformName::Normal => "us_normal",
             UniformName::Emissive => "us_emissive",
             UniformName::EmissiveFactor => "u_emissive_factor",
-            UniformName::Opacity => "us_opacity",
             UniformName::Occlusion => "us_occlusion",
         }
     }

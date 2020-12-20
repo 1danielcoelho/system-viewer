@@ -294,7 +294,8 @@ impl EngineInterface {
                 &gltf_images,
             );
 
-            self.engine
+            let mat_index_to_parsed = self
+                .engine
                 .res_man
                 .load_materials_from_gltf(file_identifier, gltf_doc.materials());
 
@@ -302,6 +303,7 @@ impl EngineInterface {
                 file_identifier,
                 gltf_doc.meshes(),
                 &gltf_buffers,
+                &mat_index_to_parsed,
             );
 
             self.engine.scene_man.load_scenes_from_gltf(

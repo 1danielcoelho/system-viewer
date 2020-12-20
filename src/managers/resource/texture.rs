@@ -6,8 +6,7 @@ pub enum TextureUnit {
     MetallicRoughness = 1,
     Normal = 2,
     Emissive = 3,
-    Opacity = 4,
-    Occlusion = 5,
+    Occlusion = 4,
 }
 
 pub struct Texture {
