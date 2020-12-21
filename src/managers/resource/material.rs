@@ -7,6 +7,7 @@ use crate::{
     app_state::AppState,
     components::light::LightType,
     managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
+    managers::resource::shaders::*
 };
 
 pub struct FrameUniformValues {
@@ -120,8 +121,8 @@ fn link_program(
         .create_program()
         .ok_or_else(|| String::from("Error creating program"))?;
 
-    let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, prefix_lines, vert_source).unwrap();
-    let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, prefix_lines, frag_source).unwrap();
+    let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, prefix_lines, &SHADER_STORAGE[vert_source]).unwrap();
+    let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, prefix_lines, &SHADER_STORAGE[frag_source]).unwrap();
 
     gl.attach_shader(&program, &vert_shader);
     gl.attach_shader(&program, &frag_shader);

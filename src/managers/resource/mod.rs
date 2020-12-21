@@ -254,32 +254,32 @@ impl ResourceManager {
         let mat = match identifier {
             "default" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_COLOR,
-                &shaders::fragment::COLOR,
+                "relay_color.vert",
+                "color.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "world_normal" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::WORLD_NORMAL,
+                "relay_all.vert",
+                "world_normal.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "uv0" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::UV0,
+                "relay_all.vert",
+                "uv0.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "uv1" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::UV1,
+                "relay_all.vert",
+                "uv1.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "basecolor" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::BASECOLOR,
+                "relay_all.vert",
+                "basecolor.frag",
                 &[
                     UniformName::WorldTrans,
                     UniformName::ViewProjTrans,
@@ -288,8 +288,8 @@ impl ResourceManager {
             )),
             "phong" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::PHONG,
+                "relay_all.vert",
+                "phong.frag",
                 &[
                     UniformName::WorldTrans,
                     UniformName::ViewProjTrans,
@@ -301,8 +301,8 @@ impl ResourceManager {
             )),
             "gltf_metal_rough" => Some(Material::new(
                 identifier,
-                &shaders::vertex::RELAY_ALL,
-                &shaders::fragment::GLTF_METAL_ROUGH,
+                "relay_all.vert",
+                "gltf_metal_rough.frag",
                 &[
                     UniformName::WorldTrans,
                     UniformName::ViewProjTrans,
