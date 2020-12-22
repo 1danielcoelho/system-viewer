@@ -256,6 +256,14 @@ impl ResourceManager {
                     .collect();
             }
 
+            // Normals
+            let mut tangents_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
+            if let Some(tangents) = reader.read_tangents() {
+                tangents_vec = tangents
+                    .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
+                    .collect();
+            }
+
             // Colors
             let mut colors_vec: Vec<cgmath::Vector4<f32>> = Vec::new();
             if let Some(colors) = reader.read_colors(0) {
@@ -405,6 +413,7 @@ impl ResourceManager {
                 indices: indices_vec,
                 positions: positions_vec,
                 normals: normals_vec,
+                tangents: tangents_vec,
                 colors: colors_vec,
                 uv0: uv0_vec,
                 uv1: uv1_vec,

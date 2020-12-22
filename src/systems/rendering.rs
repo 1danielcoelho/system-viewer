@@ -74,6 +74,7 @@ impl RenderingSystem {
             light_colors: Vec::new(),
             light_pos_or_dir: Vec::new(),
             light_intensities: Vec::new(),
+            camera_pos: [state.camera.pos.x, state.camera.pos.y, state.camera.pos.z],
         };
 
         result.light_types.reserve(NUM_LIGHTS);
@@ -93,7 +94,9 @@ impl RenderingSystem {
             result.light_colors.push(light.color.y);
             result.light_colors.push(light.color.z);
 
-            result.light_intensities.push(light.intensity);
+            result
+                .light_intensities
+                .push(light.intensity.powf(state.light_intensity));
 
             result.light_pos_or_dir.push(pos.x);
             result.light_pos_or_dir.push(pos.y);
@@ -165,6 +168,10 @@ impl RenderingSystem {
                     mat_mut.set_uniform_value(
                         UniformName::LightIntensities,
                         UniformValue::FloatArr(uniform_data.light_intensities.clone()),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::CameraPos,
+                        UniformValue::Vec3(uniform_data.camera_pos),
                     );
 
                     // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);

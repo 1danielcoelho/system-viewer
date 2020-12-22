@@ -6,8 +6,8 @@ use web_sys::*;
 use crate::{
     app_state::AppState,
     components::light::LightType,
+    managers::resource::shaders::*,
     managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
-    managers::resource::shaders::*
 };
 
 pub struct FrameUniformValues {
@@ -16,6 +16,7 @@ pub struct FrameUniformValues {
     pub light_pos_or_dir: Vec<f32>,
     pub light_colors: Vec<f32>,
     pub light_intensities: Vec<f32>,
+    pub camera_pos: [f32; 3],
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -26,6 +27,7 @@ pub enum UniformName {
     LightPosDir,
     LightColors,
     LightIntensities,
+    CameraPos,
     BaseColor,
     BaseColorFactor,
     MetallicRoughness,
@@ -55,6 +57,7 @@ impl UniformName {
             UniformName::LightPosDir => UniformValue::Vec3Arr(vec![0.0, 0.0, -1.0]),
             UniformName::LightColors => UniformValue::Vec3Arr(vec![1.0, 1.0, 1.0]),
             UniformName::LightIntensities => UniformValue::FloatArr(vec![1.0]),
+            UniformName::CameraPos => UniformValue::Vec3([0.0, 0.0, 0.0]),
             UniformName::BaseColor => UniformValue::Int(TextureUnit::BaseColor as i32),
             UniformName::BaseColorFactor => UniformValue::Vec4([1.0, 1.0, 1.0, 1.0]),
             UniformName::MetallicRoughness => {
@@ -64,7 +67,7 @@ impl UniformName {
             UniformName::RoughnessFactor => UniformValue::Float(1.0),
             UniformName::Normal => UniformValue::Int(TextureUnit::Normal as i32),
             UniformName::Emissive => UniformValue::Int(TextureUnit::Emissive as i32),
-            UniformName::EmissiveFactor => UniformValue::Vec3([1.0, 1.0, 1.0]),
+            UniformName::EmissiveFactor => UniformValue::Vec3([0.0, 0.0, 0.0]),
             UniformName::Occlusion => UniformValue::Int(TextureUnit::Occlusion as i32),
         }
     }
@@ -77,6 +80,7 @@ impl UniformName {
             UniformName::LightPosDir => "u_light_pos_or_dir",
             UniformName::LightColors => "u_light_colors",
             UniformName::LightIntensities => "u_light_intensities",
+            UniformName::CameraPos => "u_world_camera_pos",
             UniformName::BaseColor => "us_basecolor",
             UniformName::BaseColorFactor => "u_basecolor_factor",
             UniformName::MetallicRoughness => "us_metal_rough",
@@ -121,14 +125,25 @@ fn link_program(
         .create_program()
         .ok_or_else(|| String::from("Error creating program"))?;
 
-    let vert_shader = compile_shader(&gl, GL::VERTEX_SHADER, prefix_lines, &SHADER_STORAGE[vert_source]).unwrap();
-    let frag_shader = compile_shader(&gl, GL::FRAGMENT_SHADER, prefix_lines, &SHADER_STORAGE[frag_source]).unwrap();
+    let vert_shader = compile_shader(
+        &gl,
+        GL::VERTEX_SHADER,
+        prefix_lines,
+        &SHADER_STORAGE[vert_source],
+    )?;
+    let frag_shader = compile_shader(
+        &gl,
+        GL::FRAGMENT_SHADER,
+        prefix_lines,
+        &SHADER_STORAGE[frag_source],
+    )?;
 
     gl.attach_shader(&program, &vert_shader);
     gl.attach_shader(&program, &frag_shader);
 
     gl.bind_attrib_location(&program, PrimitiveAttribute::Position as u32, "a_position");
     gl.bind_attrib_location(&program, PrimitiveAttribute::Normal as u32, "a_normal");
+    gl.bind_attrib_location(&program, PrimitiveAttribute::Tangent as u32, "a_tangent");
     gl.bind_attrib_location(&program, PrimitiveAttribute::Color as u32, "a_color");
     gl.bind_attrib_location(&program, PrimitiveAttribute::UV0 as u32, "a_uv0");
     gl.bind_attrib_location(&program, PrimitiveAttribute::UV1 as u32, "a_uv1");
@@ -154,11 +169,11 @@ fn compile_shader(
     prefix_lines: &[&str],
     source: &str,
 ) -> Result<WebGlShader, String> {
+    let final_source = prefix_lines.join("\n") + "\n" + source;
+
     let shader = gl
         .create_shader(shader_type)
         .ok_or_else(|| String::from("Error creating shader"))?;
-
-    let final_source = prefix_lines.join("\n") + "\n" + source;
 
     gl.shader_source(&shader, &final_source);
     gl.compile_shader(&shader);
@@ -170,9 +185,12 @@ fn compile_shader(
     {
         Ok(shader)
     } else {
-        Err(gl
-            .get_shader_info_log(&shader)
-            .unwrap_or_else(|| String::from("Unable to get shader info log")))
+        Err(format!(
+            "Error compiling shader source below: \n\n{}\n\n=======================================================================\nError:\n{}",
+            final_source,
+            gl.get_shader_info_log(&shader)
+                .unwrap_or_else(|| String::from("Unable to get shader info log"))
+        ))
     }
 }
 
@@ -185,6 +203,8 @@ pub struct Material {
     textures: HashMap<TextureUnit, Rc<Texture>>,
     uniforms: HashMap<UniformName, Uniform>,
     defines: Vec<&'static str>,
+
+    failed_to_compile: bool,
 }
 
 impl Clone for Material {
@@ -197,6 +217,7 @@ impl Clone for Material {
             textures: self.textures.clone(),
             uniforms: self.uniforms.clone(),
             defines: self.defines.clone(),
+            failed_to_compile: false, // Maybe the clone can do it somehow?
         }
     }
 }
@@ -227,17 +248,23 @@ impl Material {
             textures: HashMap::new(),
             uniforms,
             defines: Vec::new(),
+            failed_to_compile: false,
         }
     }
 
     pub fn recompile_program(&mut self, gl: &WebGlRenderingContext) {
+        if self.failed_to_compile {
+            return;
+        }
+
         let program = link_program(gl, &self.defines, self.vert, self.frag);
         if program.is_err() {
             log::error!(
-                "Error recompiling material '{}': '{:?}'",
+                "Error compiling material '{}': '{}'",
                 self.name,
-                program.err()
+                program.err().unwrap_or_default(),
             );
+            self.failed_to_compile = true;
             return;
         }
         let program = program.unwrap();
@@ -252,11 +279,14 @@ impl Material {
     pub fn set_define(&mut self, define: &'static str) {
         self.defines.push(define);
         self.program = None;
+        self.failed_to_compile = false;
     }
 
     pub fn clear_define(&mut self, define: &'static str) {
         if let Some(pos) = self.defines.iter().position(|x| *x == define) {
             self.defines.remove(pos);
+            self.program = None;
+            self.failed_to_compile = false;
         }
     }
 
@@ -298,6 +328,11 @@ impl Material {
         let gl = state.gl.as_ref().unwrap();
 
         if self.program.is_none() {
+            // Prevent repeatedly trying to recompile something that doesn't work
+            if self.failed_to_compile {
+                return;
+            }
+
             self.recompile_program(gl);
         }
 

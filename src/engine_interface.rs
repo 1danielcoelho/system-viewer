@@ -5,8 +5,6 @@ use wasm_bindgen::JsCast;
 use crate::components::transform::TransformType;
 use crate::{app_state::AppState, engine::Engine};
 
-use crate::managers::resource::*;
-
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 use winit::{

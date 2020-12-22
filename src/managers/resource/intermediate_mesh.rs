@@ -17,6 +17,7 @@ pub struct IntermediatePrimitive {
     pub indices: Vec<u16>,
     pub positions: Vec<cgmath::Vector3<f32>>,
     pub normals: Vec<cgmath::Vector3<f32>>,
+    pub tangents: Vec<cgmath::Vector3<f32>>,
     pub colors: Vec<cgmath::Vector4<f32>>,
     pub uv0: Vec<cgmath::Vector2<f32>>,
     pub uv1: Vec<cgmath::Vector2<f32>>,
@@ -100,6 +101,15 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
             &mut normal_buffer,
         );
 
+        // Tangents
+        let mut tangent_buffer = ctx.create_buffer().unwrap();
+        fill_float_attribute_buffer(
+            &ctx,
+            prim.tangents.as_ptr() as u32 / 4,
+            prim.tangents.len() as u32 * 3,
+            &mut tangent_buffer,
+        );
+
         // Colors
         let mut color_buffer = ctx.create_buffer().unwrap();
         fill_float_attribute_buffer(
@@ -133,6 +143,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext
             index_buffer,
             position_buffer,
             normal_buffer,
+            tangent_buffer,
             color_buffer,
             uv0_buffer,
             uv1_buffer,

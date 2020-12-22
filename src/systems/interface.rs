@@ -93,6 +93,17 @@ impl InterfaceSystem {
 
             ui.separator();
 
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::f32(&mut state.light_intensity)
+                        .range(0.0..=1000.0)
+                        .speed(0.01),
+                );
+                ui.label(format!("Light intensity exponent"));
+            });
+
+            ui.separator();
+
             // TODO: Can't use ui.columns due to some bug where everything in column 0 responds at once
             ui.horizontal(|ui| {
                 ui.add(

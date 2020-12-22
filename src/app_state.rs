@@ -36,6 +36,7 @@ pub struct AppState {
     pub simulation_speed: f64,
     pub move_speed: f32,
     pub rotate_speed: f32,
+    pub light_intensity: f32,
     pub input: Input,
     pub camera: Camera,
     pub gl: Option<WebGlRenderingContext>,
@@ -52,6 +53,7 @@ impl AppState {
             simulation_speed: 1.,
             move_speed: 5.0,
             rotate_speed: 5.0,
+            light_intensity: 0.35,
             input: Input {
                 mouse_x: 0,
                 mouse_y: 0,

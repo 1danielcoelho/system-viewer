@@ -283,7 +283,7 @@ impl SceneManager {
             .add_component::<LightComponent>(dir_light)
             .unwrap();
         light_comp.color = cgmath::Vector3::new(1.0, 1.0, 1.0);
-        light_comp.intensity = 1.0;
+        light_comp.intensity = 100.0;
         light_comp.light_type = LightType::Directional;
 
         let tex = res_man.get_texture("./public/shapes2_512.png").unwrap();

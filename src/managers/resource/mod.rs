@@ -310,6 +310,7 @@ impl ResourceManager {
                     UniformName::LightPosDir,
                     UniformName::LightColors,
                     UniformName::LightIntensities,
+                    UniformName::CameraPos,
                     UniformName::BaseColor,
                     UniformName::BaseColorFactor,
                     UniformName::MetallicRoughness,
