@@ -168,7 +168,8 @@ impl ResourceManager {
     /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
     pub fn initialize(&mut self) {
         self.get_or_create_material("default");
-        self.get_or_create_material("world_normal");
+        self.get_or_create_material("world_normals");
+        self.get_or_create_material("world_tangents");
         self.get_or_create_material("phong");
 
         self.get_or_create_mesh("cube");
@@ -258,10 +259,16 @@ impl ResourceManager {
                 "color.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
-            "world_normal" => Some(Material::new(
+            "world_normals" => Some(Material::new(
                 identifier,
                 "relay_all.vert",
-                "world_normal.frag",
+                "world_normals.frag",
+                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+            )),
+            "world_tangents" => Some(Material::new(
+                identifier,
+                "relay_all.vert",
+                "world_tangents.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "uv0" => Some(Material::new(

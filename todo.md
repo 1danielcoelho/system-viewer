@@ -147,6 +147,7 @@
 - Allow defines like HAS_NORMALS, HAS_TANGENTS, HAS_VERTEXCOLOR, etc
     - Fallback for when we have no tangents or normals 
 - Debug defines to see each channel, once we get picking...
+- Need to upload inverse transpose for transforming normals
 
 # Update to WebGL2
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it

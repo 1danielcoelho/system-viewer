@@ -26,7 +26,8 @@ lazy_static! {
             "phong.frag",
             "uv0.frag",
             "uv1.frag",
-            "world_normal.frag",
+            "world_normals.frag",
+            "world_tangents.frag",
             "relay_all.vert",
             "relay_color.vert"
         ];

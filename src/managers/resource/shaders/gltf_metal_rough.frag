@@ -46,13 +46,11 @@ vec4 get_base_color()
 vec3 get_normal()
 {
     #ifdef NORMAL_TEXTURE
-        vec3 normal = texture2D(us_normal, v_uv0).rgb * 2.0 - vec3(1.0);
-        // normal *= vec3(u_normal_scale, u_normal_scale, 1.0);
-        normal = normalize(normal);
+        vec3 bitangent = cross(v_world_normal, v_world_tangent);
 
-        vec3 bitangent = cross(normal, v_world_tangent);
+        vec3 normal_tex = normalize(texture2D(us_normal, v_uv0).rgb * 2.0 - vec3(1.0));
 
-        return mat3(v_world_tangent, bitangent, normal) * normal;
+        return mat3(v_world_tangent, bitangent, v_world_normal) * normal_tex;
     #else 
         return v_world_normal;
     #endif
