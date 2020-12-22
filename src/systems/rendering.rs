@@ -1,8 +1,8 @@
 use cgmath::prelude::*;
 use cgmath::Matrix4;
 
-use web_sys::WebGlRenderingContext;
-use web_sys::WebGlRenderingContext as GL;
+use web_sys::WebGl2RenderingContext;
+use web_sys::WebGl2RenderingContext as GL;
 
 use crate::{
     app_state::AppState,
@@ -47,7 +47,7 @@ impl RenderingSystem {
     }
 
     fn pre_draw(&mut self, state: &AppState, em: &mut ECManager) -> FrameUniformValues {
-        let gl: &WebGlRenderingContext = (state.gl.as_ref()).unwrap();
+        let gl: &WebGl2RenderingContext = (state.gl.as_ref()).unwrap();
 
         // Setup GL state
         glc!(gl, gl.enable(GL::CULL_FACE)); // Egui needs this disabled for now
@@ -121,7 +121,7 @@ impl RenderingSystem {
     }
 
     fn post_draw(&self, state: &AppState) {
-        let gl: &WebGlRenderingContext = (state.gl.as_ref()).unwrap();
+        let gl: &WebGl2RenderingContext = (state.gl.as_ref()).unwrap();
 
         // Egui needs this disabled for now
         glc!(gl, gl.disable(GL::DEPTH_TEST));

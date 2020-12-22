@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlBuffer, WebGlRenderingContext, WebGlRenderingContext as GL};
+use web_sys::{WebGlBuffer, WebGl2RenderingContext, WebGl2RenderingContext as GL};
 
 use super::{Material, Mesh, Primitive};
 
@@ -26,7 +26,7 @@ pub struct IntermediatePrimitive {
 }
 
 pub fn fill_float_attribute_buffer(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     location: u32,
     num_elements: u32,
     out_buffer: &mut WebGlBuffer,
@@ -46,7 +46,7 @@ pub fn fill_float_attribute_buffer(
 }
 
 pub fn fill_short_element_buffer(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     location: u32,
     num_elements: u32,
     out_buffer: &mut WebGlBuffer,
@@ -69,7 +69,7 @@ pub fn fill_short_element_buffer(
     );
 }
 
-pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGlRenderingContext) -> Rc<Mesh> {
+pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContext) -> Rc<Mesh> {
     let mut primitives: Vec<Primitive> = Vec::new();
     primitives.reserve(inter.primitives.len());
 

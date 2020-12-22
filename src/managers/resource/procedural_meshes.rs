@@ -1,8 +1,8 @@
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cgmath::{InnerSpace, Vector2, Vector3, Vector4};
-use web_sys::WebGlRenderingContext as GL;
-use web_sys::WebGlRenderingContext;
+use web_sys::WebGl2RenderingContext as GL;
+use web_sys::WebGl2RenderingContext;
 
 use super::{
     intermediate_mesh::intermediate_to_mesh, intermediate_mesh::IntermediateMesh,
@@ -11,7 +11,7 @@ use super::{
 
 // Praise songho: http://www.songho.ca/opengl/gl_sphere.html
 pub fn generate_lat_long_sphere(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     mut num_lat_segs: u32,
     mut num_long_segs: u32,
     radius: f32,
@@ -238,7 +238,7 @@ pub fn generate_lat_long_sphere(
 // TODO: Option for shared vertices
 // TODO: Texture coordinates
 pub fn generate_ico_sphere(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     radius: f32,
     num_subdiv: u32,
     smooth_normals: bool,
@@ -437,7 +437,7 @@ pub fn generate_ico_sphere(
 }
 
 pub fn generate_cube(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
@@ -716,7 +716,7 @@ pub fn generate_cube(
 }
 
 pub fn generate_plane(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(
@@ -782,7 +782,7 @@ pub fn generate_plane(
 }
 
 pub fn generate_grid(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     num_lines: u32,
     default_material: Option<Rc<RefCell<Material>>>,
 ) -> Rc<Mesh> {
@@ -843,7 +843,7 @@ pub fn generate_grid(
 }
 
 pub fn generate_axes(
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,
 ) -> Rc<Mesh> {
     intermediate_to_mesh(

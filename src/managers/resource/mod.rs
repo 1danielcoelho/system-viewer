@@ -1,8 +1,8 @@
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 
 use image::{io::Reader, DynamicImage, ImageFormat};
-use web_sys::WebGlRenderingContext as GL;
-use web_sys::WebGlRenderingContext;
+use web_sys::WebGl2RenderingContext as GL;
+use web_sys::WebGl2RenderingContext;
 
 use crate::utils::{get_unique_name, remove_numbered_suffix};
 
@@ -26,7 +26,7 @@ fn load_texture_from_bytes(
     identifier: &str,
     bytes: &[u8],
     image_format: Option<ImageFormat>,
-    ctx: &WebGlRenderingContext,
+    ctx: &WebGl2RenderingContext,
 ) -> Result<Rc<Texture>, String> {
     let mut reader = Reader::new(Cursor::new(bytes));
     match image_format {
@@ -153,10 +153,10 @@ pub struct ResourceManager {
     textures: HashMap<String, Rc<Texture>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
 
-    gl: WebGlRenderingContext,
+    gl: WebGl2RenderingContext,
 }
 impl ResourceManager {
-    pub fn new(gl: WebGlRenderingContext) -> Self {
+    pub fn new(gl: WebGl2RenderingContext) -> Self {
         return Self {
             meshes: HashMap::new(),
             textures: HashMap::new(),

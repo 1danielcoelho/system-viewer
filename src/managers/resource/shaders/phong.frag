@@ -10,11 +10,13 @@ uniform vec3 u_light_pos_or_dir[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
 uniform float u_light_intensities[MAX_LIGHTS];
 
-varying lowp vec3 v_world_normal;
-varying lowp vec4 v_color;
-varying lowp vec2 v_uv0;
-varying lowp vec2 v_uv1;
-varying lowp vec3 v_world_pos;
+in vec3 v_world_normal;
+in vec4 v_color;
+in vec2 v_uv0;
+in vec2 v_uv1;
+in vec3 v_world_pos;
+
+out vec4 out_frag_color;
 
 vec3 calc_point_light(vec3 light_pos, vec3 light_color, float light_intensity)
 {
@@ -58,5 +60,5 @@ void main()
         }
     }
 
-    gl_FragColor = vec4(total_color, 1.0);
+    out_frag_color = vec4(total_color, 1.0);
 }

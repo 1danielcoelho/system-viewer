@@ -145,7 +145,8 @@
 <!-- - Provide tangents for the procedural spheres -->
 <!-- - Need to upload inverse transpose for transforming normals -->
 # Update to WebGL2
-- Better sooner than later as I need to update all shaders...
+<!-- - Better sooner than later as I need to update all shaders... -->
+- Use VAOs
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
 # I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 

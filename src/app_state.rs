@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use web_sys::WebGlRenderingContext;
+use web_sys::WebGl2RenderingContext;
 
 pub struct Camera {
     pub pos: cgmath::Point3<f32>,
@@ -39,7 +39,7 @@ pub struct AppState {
     pub light_intensity: f32,
     pub input: Input,
     pub camera: Camera,
-    pub gl: Option<WebGlRenderingContext>,
+    pub gl: Option<WebGl2RenderingContext>,
 }
 impl AppState {
     pub fn new() -> Arc<Mutex<Self>> {

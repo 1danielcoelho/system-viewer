@@ -1,7 +1,7 @@
 use {
     js_sys::WebAssembly,
     wasm_bindgen::{prelude::*, JsCast},
-    web_sys::{WebGlBuffer, WebGlProgram, WebGlRenderingContext, WebGlShader, WebGlTexture},
+    web_sys::{WebGlBuffer, WebGlProgram, WebGl2RenderingContext, WebGlShader, WebGlTexture},
 };
 
 use egui::{
@@ -10,7 +10,7 @@ use egui::{
     vec2,
 };
 
-type Gl = WebGlRenderingContext;
+type Gl = WebGl2RenderingContext;
 
 const VERTEX_SHADER_SOURCE: &str = r#"
     precision mediump float;
@@ -83,7 +83,7 @@ const FRAGMENT_SHADER_SOURCE: &str = r#"
 pub struct Painter {
     canvas_id: String,
     canvas: web_sys::HtmlCanvasElement,
-    gl: WebGlRenderingContext,
+    gl: WebGl2RenderingContext,
     program: WebGlProgram,
     index_buffer: WebGlBuffer,
     pos_buffer: WebGlBuffer,
@@ -123,9 +123,9 @@ impl Painter {
         let canvas = crate::canvas_element_or_die(canvas_id);
 
         let gl = canvas
-            .get_context("webgl")?
+            .get_context("webgl2")?
             .unwrap()
-            .dyn_into::<WebGlRenderingContext>()?;
+            .dyn_into::<WebGl2RenderingContext>()?;
 
         // --------------------------------------------------------------------
 
@@ -481,7 +481,7 @@ impl Painter {
 }
 
 fn compile_shader(
-    gl: &WebGlRenderingContext,
+    gl: &WebGl2RenderingContext,
     shader_type: u32,
     source: &str,
 ) -> Result<WebGlShader, String> {
@@ -505,7 +505,7 @@ fn compile_shader(
 }
 
 fn link_program<'a, T: IntoIterator<Item = &'a WebGlShader>>(
-    gl: &WebGlRenderingContext,
+    gl: &WebGl2RenderingContext,
     shaders: T,
 ) -> Result<WebGlProgram, String> {
     let program = gl

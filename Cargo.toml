@@ -44,7 +44,7 @@ features = [
   'TouchList',
   'WebGlBuffer',
   'WebGlProgram',
-  'WebGlRenderingContext',
+  'WebGl2RenderingContext',
   'WebGlShader',
   'WebGlTexture',
   'WebGlUniformLocation',

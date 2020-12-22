@@ -1,6 +1,6 @@
 const rust = import("./pkg/index");
 const canvas = document.getElementById("rustCanvas");
-const gl = canvas.getContext("webgl", { antialias: true });
+const gl = canvas.getContext("webgl2", { antialias: true });
 
 function load_gltf(url, engine) {
   return fetch(url).then((response) =>

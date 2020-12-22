@@ -5,8 +5,8 @@ use wasm_bindgen::JsCast;
 use crate::components::transform::TransformType;
 use crate::{app_state::AppState, engine::Engine};
 
-use web_sys::WebGlRenderingContext as GL;
-use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
+use web_sys::WebGl2RenderingContext as GL;
+use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
 use winit::{
     event::Event,
     event::WindowEvent,
@@ -35,8 +35,8 @@ impl EngineInterface {
     pub fn new(canvas: HtmlCanvasElement) -> Self {
         log::info!("Initializing...");
 
-        let gl: WebGlRenderingContext = canvas
-            .get_context("webgl")
+        let gl: WebGl2RenderingContext = canvas
+            .get_context("webgl2")
             .unwrap()
             .unwrap()
             .dyn_into()

@@ -1,4 +1,4 @@
-use web_sys::WebGlRenderingContext;
+use web_sys::WebGl2RenderingContext;
 
 use crate::{
     app_state::AppState,
@@ -13,7 +13,7 @@ pub struct Engine {
     pub scene_man: SceneManager,
 }
 impl Engine {
-    pub fn new(gl: WebGlRenderingContext) -> Self {
+    pub fn new(gl: WebGl2RenderingContext) -> Self {
         let new_world = Self {
             scene_man: SceneManager::new(),
             res_man: ResourceManager::new(gl),

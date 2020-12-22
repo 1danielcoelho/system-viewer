@@ -25,19 +25,21 @@ uniform sampler2D us_normal;
 uniform sampler2D us_emissive;
 uniform sampler2D us_occlusion;
 
-varying lowp vec3 v_world_normal;
-varying lowp vec3 v_world_tangent;
-varying lowp vec4 v_color;
-varying lowp vec2 v_uv0;
-varying lowp vec2 v_uv1;
-varying lowp vec3 v_world_pos;
+in vec3 v_world_normal;
+in vec3 v_world_tangent;
+in vec4 v_color;
+in vec2 v_uv0;
+in vec2 v_uv1;
+in vec3 v_world_pos;
+
+out vec4 out_frag_color;
 
 vec4 get_base_color()
 {
     vec4 base_color = u_basecolor_factor;
 
     #ifdef BASECOLOR_TEXTURE
-        base_color *= sRGB_to_linear(texture2D(us_basecolor, v_uv0));
+        base_color *= sRGB_to_linear(texture(us_basecolor, v_uv0));
     #endif
 
     return base_color;// TODO: Vertexcolor, but only when set: * v_color;
@@ -48,7 +50,7 @@ vec3 get_normal()
     #ifdef NORMAL_TEXTURE
         vec3 bitangent = cross(v_world_normal, v_world_tangent);
 
-        vec3 normal_tex = normalize(texture2D(us_normal, v_uv0).rgb * 2.0 - vec3(1.0));
+        vec3 normal_tex = normalize(texture(us_normal, v_uv0).rgb * 2.0 - vec3(1.0));
 
         return mat3(v_world_tangent, bitangent, v_world_normal) * normal_tex;
     #else 
@@ -68,9 +70,9 @@ void main()
     float metallic = u_metallic_factor;
 
     #ifdef METALLICROUGHNESS_TEXTURE
-        vec4 sample = texture2D(us_metal_rough, v_uv0);
-        perceptual_roughness *= sample.g;
-        metallic *= sample.b;
+        vec4 mr_sample = texture(us_metal_rough, v_uv0);
+        perceptual_roughness *= mr_sample.g;
+        metallic *= mr_sample.b;
     #endif
 
     vec3 albedo = mix(base_color.rgb *( vec3(1.0) - f0), vec3(0), metallic);
@@ -114,16 +116,16 @@ void main()
 
     vec3 emissive_color = u_emissive_factor;
     #ifdef EMISSIVE_TEXTURE
-        emissive_color = sRGB_to_linear(texture2D(us_emissive, v_uv0)).rgb;
+        emissive_color = sRGB_to_linear(texture(us_emissive, v_uv0)).rgb;
     #endif 
 
     vec3 color = emissive_color + diffuse_color + specular_color;
 
     float ao = 1.0;
     #ifdef OCCLUSION_TEXTURE
-        ao = texture2D(us_occlusion, v_uv0).r;        
+        ao = texture(us_occlusion, v_uv0).r;        
     #endif
     color *= ao;
 
-    gl_FragColor = vec4(linear_to_sRGB(color), base_color.a); 
+    out_frag_color = vec4(linear_to_sRGB(color), base_color.a); 
 }

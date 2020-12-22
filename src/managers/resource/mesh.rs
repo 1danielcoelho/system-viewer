@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use web_sys::WebGlRenderingContext as GL;
-use web_sys::{WebGlBuffer, WebGlRenderingContext};
+use web_sys::WebGl2RenderingContext as GL;
+use web_sys::{WebGlBuffer, WebGl2RenderingContext};
 
 use super::Material;
 
@@ -39,7 +39,7 @@ pub struct Primitive {
 }
 
 impl Primitive {
-    pub fn draw(&self, ctx: &WebGlRenderingContext) {
+    pub fn draw(&self, ctx: &WebGl2RenderingContext) {
         // Bind index buffer
         ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.index_buffer));
 

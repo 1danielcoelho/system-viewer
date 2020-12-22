@@ -1,20 +1,20 @@
-attribute vec3 a_position;
-attribute vec3 a_normal;
-attribute vec3 a_tangent;
-attribute vec4 a_color;
-attribute vec2 a_uv0;
-attribute vec2 a_uv1;
+in vec3 a_position;
+in vec3 a_normal;
+in vec3 a_tangent;
+in vec4 a_color;
+in vec2 a_uv0;
+in vec2 a_uv1;
 
 uniform mat4 u_world_trans;
 uniform mat4 u_world_trans_inv_transp;
 uniform mat4 u_view_proj_trans;
 
-varying lowp vec3 v_world_normal;
-varying lowp vec3 v_world_tangent;
-varying lowp vec4 v_color;
-varying lowp vec2 v_uv0;
-varying lowp vec2 v_uv1;
-varying lowp vec3 v_world_pos;
+out vec3 v_world_normal;
+out vec3 v_world_tangent;
+out vec4 v_color;
+out vec2 v_uv0;
+out vec2 v_uv1;
+out vec3 v_world_pos;
 
 void main() {
     v_world_normal = normalize((u_world_trans_inv_transp * vec4(a_normal, 0.0)).xyz);

@@ -5,8 +5,8 @@ use gltf::{
     image::Format,
     mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
 };
-use web_sys::WebGlRenderingContext;
-use web_sys::WebGlRenderingContext as GL;
+use web_sys::WebGl2RenderingContext;
+use web_sys::WebGl2RenderingContext as GL;
 
 use super::{
     intermediate_mesh::IntermediateMesh,
@@ -201,7 +201,7 @@ impl ResourceManager {
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
         mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
-        ctx: &WebGlRenderingContext,
+        ctx: &WebGl2RenderingContext,
     ) -> Result<Rc<Mesh>, String> {
         let identifier = mesh.get_identifier(file_identifier);
 
@@ -466,7 +466,7 @@ impl ResourceManager {
         file_identifier: &str,
         texture: &gltf::Texture,
         image_data: &gltf::image::Data,
-        ctx: &WebGlRenderingContext,
+        ctx: &WebGl2RenderingContext,
     ) -> Result<Rc<Texture>, String> {
         let identifier = texture.get_identifier(file_identifier);
         let width = image_data.width;
