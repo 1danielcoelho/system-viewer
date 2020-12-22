@@ -142,8 +142,8 @@
 # Shader system refactor
 <!-- - I need to support defines, includes and conditional compilation
     - Make Material struct detect when a texture is set, record a new define for it, and invalidate its program. When drawing, the rendering system would see an invalid program for a shader and provide it with the gl rendering context to recompile -->
-- Test for more textures/scenes
-- Provide tangents for the procedural spheres
+<!-- - Test for more textures/scenes -->
+<!-- - Provide tangents for the procedural spheres -->
 - Allow defines like HAS_NORMALS, HAS_TANGENTS, HAS_VERTEXCOLOR, etc
     - Fallback for when we have no tangents or normals 
 - Debug defines to see each channel, once we get picking...
@@ -151,6 +151,7 @@
 
 # Update to WebGL2
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
+# I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 <!-- # String enum for uniform names -->

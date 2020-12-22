@@ -405,6 +405,21 @@ impl EngineInterface {
         // self.engine
         //     .scene_man
         //     .inject_scene(
+        //         "./public/BoomBox.glb_scene_0",
+        //         Some(TransformType {
+        //             scale: 100.0,
+        //             disp: cgmath::Vector3::new(0.0, -10.0, 0.0),
+        //             rot: cgmath::Rotation3::from_axis_angle(
+        //                 cgmath::Vector3::new(0.0, 0.0, 1.0),
+        //                 cgmath::Deg(30.0),
+        //             ),
+        //         }),
+        //     )
+        //     .expect("Failed to inject scene!");
+
+        // self.engine
+        //     .scene_man
+        //     .inject_scene(
         //         "./public/gltf_3_cubes.glb_scene_0",
         //         Some(TransformType {
         //             scale: 0.1,

@@ -167,7 +167,9 @@ pub fn generate_lat_long_sphere(
 
     // Do normals in a separate pass as they don't need lat/long index
     let mut normals: Vec<Vector3<f32>> = Vec::new();
+    let mut tangents: Vec<Vector3<f32>> = Vec::new();
     normals.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
+    tangents.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
     for triangle_index in 0..(indices.len() / 3) {
         let i0 = indices[triangle_index * 3 + 0] as usize;
         let i1 = indices[triangle_index * 3 + 1] as usize;
@@ -181,22 +183,31 @@ pub fn generate_lat_long_sphere(
             normals[i0] = p0.normalize();
             normals[i1] = p1.normalize();
             normals[i2] = p2.normalize();
+            tangents[i0] = normals[i0].cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i1] = normals[i1].cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i2] = normals[i2].cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
         } else {
             let normal = (p1 - p0).cross(p2 - p0).normalize();
+            let tangent = normal.cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
             normals[i0] = normal;
             normals[i1] = normal;
             normals[i2] = normal;
+            tangents[i0] = tangent;
+            tangents[i1] = tangent;
+            tangents[i2] = tangent;
         }
     }
 
     log::info!(
-        "\tUV sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, uv: {}/{}",
+        "\tUV sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, tangent: {}/{}, uv: {}/{}",
         positions.len(),
         positions.capacity(),
         indices.len(),
         indices.capacity(),
         normals.len(),
         normals.capacity(),
+        tangents.len(),
+        tangents.capacity(),
         uv0.len(),
         uv0.capacity(),
     );
@@ -209,7 +220,7 @@ pub fn generate_lat_long_sphere(
                 indices,
                 positions,
                 normals,
-                tangents: vec![],
+                tangents,
                 colors: vec![],
                 uv0,
                 uv1: vec![],
@@ -246,12 +257,14 @@ pub fn generate_ico_sphere(
     let mut indices: Vec<u16> = Vec::new();
     let mut positions: Vec<Vector3<f32>> = Vec::new();
     let mut normals: Vec<Vector3<f32>> = Vec::new();
+    let mut tangents: Vec<Vector3<f32>> = Vec::new();
     let mut temp_indices: Vec<u16> = Vec::new();
     let mut temp_positions: Vec<Vector3<f32>> = Vec::new();
 
     indices.reserve(final_num_verts);
     positions.reserve(final_num_verts);
     normals.resize(final_num_verts, Vector3::new(0.0, 0.0, 1.0));
+    tangents.resize(final_num_verts, Vector3::new(1.0, 0.0, 0.0));
     temp_indices.reserve(final_num_verts);
     temp_positions.reserve(final_num_verts);
 
@@ -363,11 +376,24 @@ pub fn generate_ico_sphere(
             normals[new_index + 0] = p0.normalize();
             normals[new_index + 1] = p1.normalize();
             normals[new_index + 2] = p2.normalize();
+            tangents[new_index + 0] = normals[new_index + 0]
+                .cross(Vector3::new(0.0, 0.0, 1.0))
+                .normalize();
+            tangents[new_index + 1] = normals[new_index + 1]
+                .cross(Vector3::new(0.0, 0.0, 1.0))
+                .normalize();
+            tangents[new_index + 2] = normals[new_index + 2]
+                .cross(Vector3::new(0.0, 0.0, 1.0))
+                .normalize();
         } else {
             let normal = (p2 - p0).cross(p1 - p0).normalize();
+            let tangent = normal.cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
             normals[new_index + 0] = normal;
             normals[new_index + 1] = normal;
             normals[new_index + 2] = normal;
+            tangents[new_index + 0] = tangent;
+            tangents[new_index + 1] = tangent;
+            tangents[new_index + 2] = tangent;
         }
 
         new_index += 3;
@@ -377,13 +403,15 @@ pub fn generate_ico_sphere(
     std::mem::swap(&mut indices, &mut temp_indices);
 
     log::info!(
-        "\tIco sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, uv: {}/{}",
+        "\tIco sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, tangent: {}/{}, uv: {}/{}",
         positions.len(),
         positions.capacity(),
         indices.len(),
         indices.capacity(),
         normals.len(),
         normals.capacity(),
+        tangents.len(),
+        tangents.capacity(),
         0,
         0,
     );
@@ -396,7 +424,7 @@ pub fn generate_ico_sphere(
                 indices,
                 positions,
                 normals,
-                tangents: vec![],
+                tangents,
                 colors: vec![],
                 uv0: vec![],
                 uv1: vec![],
@@ -546,12 +574,12 @@ pub fn generate_cube(
                     Vector3::new(-1.0, 0.0, 0.0),
                     Vector3::new(-1.0, 0.0, 0.0),
                     // Face 5
-                    Vector3::new(1.0, -1.0, 0.0),
-                    Vector3::new(1.0, -1.0, 0.0),
-                    Vector3::new(1.0, -1.0, 0.0),
-                    Vector3::new(1.0, -1.0, 0.0),
-                    Vector3::new(1.0, -1.0, 0.0),
-                    Vector3::new(1.0, -1.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
+                    Vector3::new(1.0, 0.0, 0.0),
                 ],
                 colors: vec![
                     Vector4::new(0.0, 0.0, 0.0, 1.0), //0

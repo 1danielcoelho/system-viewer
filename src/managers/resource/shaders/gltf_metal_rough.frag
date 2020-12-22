@@ -119,9 +119,11 @@ void main()
 
     vec3 color = emissive_color + diffuse_color + specular_color;
 
+    float ao = 1.0;
     #ifdef OCCLUSION_TEXTURE
-        color *= texture2D(us_occlusion, v_uv0).r;        
+        ao = texture2D(us_occlusion, v_uv0).r;        
     #endif
+    color *= ao;
 
     gl_FragColor = vec4(linear_to_sRGB(color), base_color.a); 
 }

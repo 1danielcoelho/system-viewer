@@ -200,8 +200,8 @@ impl ResourceManager {
             "axes" => Some(generate_axes(&self.gl, default_mat)),
             "lat_long_sphere" => Some(generate_lat_long_sphere(
                 &self.gl,
-                16,
-                16,
+                32,
+                32,
                 0.8,
                 true,
                 true,
