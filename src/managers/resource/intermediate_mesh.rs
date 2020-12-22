@@ -2,9 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlBuffer, WebGl2RenderingContext, WebGl2RenderingContext as GL};
+use web_sys::{WebGl2RenderingContext, WebGl2RenderingContext as GL, WebGlBuffer};
 
-use super::{Material, Mesh, Primitive};
+use super::{Material, Mesh, Primitive, PrimitiveAttribute};
 
 pub struct IntermediateMesh {
     pub name: String,
@@ -74,6 +74,10 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
     primitives.reserve(inter.primitives.len());
 
     for prim in inter.primitives {
+        // Create VAO
+        let vao = ctx.create_vertex_array();
+        ctx.bind_vertex_array(vao.as_ref());
+
         // Indices
         let mut index_buffer = ctx.create_buffer().unwrap();
         fill_short_element_buffer(
@@ -82,6 +86,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.indices.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
             &mut index_buffer,
         );
+        ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&index_buffer));
 
         // Positions
         let mut position_buffer = ctx.create_buffer().unwrap();
@@ -90,6 +95,16 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.positions.as_ptr() as u32 / 4, // Divided by 4 because the wasm_bindgen memory buffer will be interpreted as an array of floats, so the prim.positions' array pointer target address (u8* basically) needs to be divided by 4 to get the correct starting element
             prim.positions.len() as u32 * 3, // Multiplying by 3 because this will be moved into an f32 buffer, and we have len * 3 f32s
             &mut position_buffer,
+        );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::Position as u32,
+            3,
+            GL::FLOAT,
+            false,
+            0,
+            0,
         );
 
         // Normals
@@ -100,6 +115,16 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.normals.len() as u32 * 3,
             &mut normal_buffer,
         );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&normal_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::Normal as u32,
+            3,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
 
         // Tangents
         let mut tangent_buffer = ctx.create_buffer().unwrap();
@@ -108,6 +133,16 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.tangents.as_ptr() as u32 / 4,
             prim.tangents.len() as u32 * 3,
             &mut tangent_buffer,
+        );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Tangent as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&tangent_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::Tangent as u32,
+            3,
+            GL::FLOAT,
+            false,
+            0,
+            0,
         );
 
         // Colors
@@ -118,6 +153,16 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.colors.len() as u32 * 4,
             &mut color_buffer,
         );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&color_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::Color as u32,
+            4,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
 
         // UV0
         let mut uv0_buffer = ctx.create_buffer().unwrap();
@@ -126,6 +171,16 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.uv0.as_ptr() as u32 / 4,
             prim.uv0.len() as u32 * 2,
             &mut uv0_buffer,
+        );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&uv0_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::UV0 as u32,
+            2,
+            GL::FLOAT,
+            false,
+            0,
+            0,
         );
 
         // UV1
@@ -136,17 +191,23 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             prim.uv0.len() as u32 * 2,
             &mut uv1_buffer,
         );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&uv0_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::UV1 as u32,
+            2,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
+
+        ctx.bind_vertex_array(None);
 
         primitives.push(Primitive {
             name: String::from("0"),
             index_count: prim.indices.len() as i32,
-            index_buffer,
-            position_buffer,
-            normal_buffer,
-            tangent_buffer,
-            color_buffer,
-            uv0_buffer,
-            uv1_buffer,
+            vao: vao.unwrap(),
             mode: prim.mode,
             default_material: prim.mat,
         });

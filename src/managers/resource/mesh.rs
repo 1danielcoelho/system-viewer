@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use web_sys::WebGl2RenderingContext as GL;
-use web_sys::{WebGlBuffer, WebGl2RenderingContext};
+use web_sys::WebGl2RenderingContext;
+use web_sys::{WebGl2RenderingContext as GL, WebGlVertexArrayObject};
 
 use super::Material;
 
@@ -25,91 +25,16 @@ pub struct Primitive {
     pub name: String,
 
     pub index_count: i32,
-    pub index_buffer: WebGlBuffer,
-    pub position_buffer: WebGlBuffer,
-    pub normal_buffer: WebGlBuffer,
-    pub tangent_buffer: WebGlBuffer,
-    pub color_buffer: WebGlBuffer,
-    pub uv0_buffer: WebGlBuffer,
-    pub uv1_buffer: WebGlBuffer,
-
     pub mode: u32,
+    pub vao: WebGlVertexArrayObject,
 
     pub default_material: Option<Rc<RefCell<Material>>>,
 }
 
 impl Primitive {
     pub fn draw(&self, ctx: &WebGl2RenderingContext) {
-        // Bind index buffer
-        ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&self.index_buffer));
-
-        // Bind vertex buffer
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.position_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Position as u32,
-            3,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
-
-        // Bind normal buffer
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.normal_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Normal as u32,
-            3,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
-
-        // Bind tangent buffer
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.tangent_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Tangent as u32,
-            3,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
-
-        // Bind color buffer
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.color_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Color as u32,
-            4,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
-
-        // Bind uv0 buffer
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.uv0_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::UV0 as u32,
-            2,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
-
-        // Bind uv1 buffer
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&self.uv0_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::UV1 as u32,
-            2,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
-
-        // Draw
+        ctx.bind_vertex_array(Some(&self.vao));
         ctx.draw_elements_with_i32(self.mode, self.index_count, GL::UNSIGNED_SHORT, 0);
+        ctx.bind_vertex_array(None);
     }
 }

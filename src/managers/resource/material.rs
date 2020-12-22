@@ -347,13 +347,6 @@ impl Material {
         // Set our shader program
         gl.use_program(self.program.as_ref());
 
-        // Enable attributes
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
-        gl.enable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
-
         // Set uniforms
         for (_, uniform) in self.uniforms.iter() {
             match &uniform.value {
@@ -410,11 +403,6 @@ impl Material {
             gl.bind_texture(GL::TEXTURE_2D, None);
         }
 
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
-        gl.disable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
         gl.use_program(None);
     }
 }
