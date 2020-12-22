@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::managers::{ECManager, Entity};
 
 #[derive(Debug)]
-pub enum ComponentIndex {
+pub enum ComponentType {
     Transform,
     Mesh,
     Physics,
@@ -19,13 +19,14 @@ pub enum ComponentStorageType {
 pub trait Component: Default + Clone {
     type ComponentType;
     const STORAGE_TYPE: ComponentStorageType;
+    const COMPONENT_TYPE: ComponentType;
 
     fn set_enabled(&mut self, enabled: bool);
     fn get_enabled(&mut self) -> bool;
 
-    fn get_component_index() -> ComponentIndex;
-
-    fn get_components_vector<'a>(_w: &'a mut ECManager) -> Option<&'a mut Vec<Self::ComponentType>> {
+    fn get_components_vector<'a>(
+        _w: &'a mut ECManager,
+    ) -> Option<&'a mut Vec<Self::ComponentType>> {
         return None;
     }
 

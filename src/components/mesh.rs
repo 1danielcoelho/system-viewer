@@ -6,7 +6,7 @@ use crate::managers::{
 };
 
 use super::{
-    component::{ComponentIndex, ComponentStorageType},
+    component::{ComponentType, ComponentStorageType},
     Component,
 };
 
@@ -48,11 +48,7 @@ impl MeshComponent {
         }
     }
 
-    pub fn set_material_override(
-        &mut self,
-        material: Option<Rc<RefCell<Material>>>,
-        index: usize,
-    ) {
+    pub fn set_material_override(&mut self, material: Option<Rc<RefCell<Material>>>, index: usize) {
         self.material_overrides[index] = material;
     }
 
@@ -83,10 +79,7 @@ impl Default for MeshComponent {
 impl Component for MeshComponent {
     type ComponentType = MeshComponent;
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
-
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Mesh;
-    }
+    const COMPONENT_TYPE: ComponentType = ComponentType::Mesh;
 
     fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<MeshComponent>> {
         return Some(&mut w.mesh);

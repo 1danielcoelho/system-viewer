@@ -67,7 +67,9 @@ impl SceneManager {
     ) -> Entity {
         // let indent = "\t".repeat(indent_level as usize);
 
-        let ent: Entity = scene.ent_man.new_entity();
+        let ent: Entity = scene
+            .ent_man
+            .new_entity(Some(&node.get_identifier(file_identifier)));
 
         // Transform
         let trans_comp = scene
@@ -174,7 +176,7 @@ impl SceneManager {
                 .ent_man
                 .reserve_space_for_entities((num_nodes + 1) as u32);
 
-            let root_ent: Entity = scene.ent_man.new_entity();
+            let root_ent: Entity = scene.ent_man.new_entity(Some(&scene_identifier));
 
             for child_node in gltf_scene.nodes() {
                 let child_ent = SceneManager::load_gltf_node(
@@ -269,7 +271,7 @@ impl SceneManager {
         // light_comp.intensity = 1.0;
 
         // Directional light
-        let dir_light = scene.ent_man.new_entity();
+        let dir_light = scene.ent_man.new_entity(Some("dir_light"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(dir_light)
@@ -319,7 +321,7 @@ impl SceneManager {
         //     .set_texture(TextureUnit::MetallicRoughness, Some(orm));
 
         // Plane
-        let plane = scene.ent_man.new_entity();
+        let plane = scene.ent_man.new_entity(Some("plane"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(plane)
@@ -331,7 +333,7 @@ impl SceneManager {
         mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Cube
-        let cube = scene.ent_man.new_entity();
+        let cube = scene.ent_man.new_entity(Some("cube"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(cube)
@@ -343,7 +345,7 @@ impl SceneManager {
         mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Ico-sphere
-        let ico = scene.ent_man.new_entity();
+        let ico = scene.ent_man.new_entity(Some("ico_sphere"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(ico)
@@ -355,7 +357,7 @@ impl SceneManager {
         mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Lat-long sphere
-        let lat_long = scene.ent_man.new_entity();
+        let lat_long = scene.ent_man.new_entity(Some("lat_long_sphere"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(lat_long)
@@ -369,7 +371,7 @@ impl SceneManager {
         mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Grid
-        let grid = scene.ent_man.new_entity();
+        let grid = scene.ent_man.new_entity(Some("grid"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(grid)
@@ -379,7 +381,7 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
         // Axes
-        let axes = scene.ent_man.new_entity();
+        let axes = scene.ent_man.new_entity(Some("axes"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(axes)
@@ -389,7 +391,7 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
         // Debug UI
-        let ui_entity = scene.ent_man.new_entity();
+        let ui_entity = scene.ent_man.new_entity(Some("debug_ui"));
         scene.ent_man.add_component::<TransformComponent>(ui_entity);
         let ui_comp = scene
             .ent_man

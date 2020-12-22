@@ -303,7 +303,7 @@ impl Material {
             self.set_define(unit.get_define());
 
             log::info!(
-                "Set texture {} on unit {:?} of material {}. Defines: '{:?}'",
+                "\t\t\tSet texture {} on unit {:?} of material {}. Defines: '{:?}'",
                 tex.name,
                 unit,
                 self.name,
@@ -315,7 +315,7 @@ impl Material {
             self.clear_define(unit.get_define());
 
             log::info!(
-                "Removed texture on unit {:?} of material {}. Defines: '{:?}'",
+                "\t\t\tRemoved texture on unit {:?} of material {}. Defines: '{:?}'",
                 unit,
                 self.name,
                 self.defines

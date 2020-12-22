@@ -20,6 +20,7 @@ pub struct EntityEntry {
     live: bool,
     current: Entity,
 
+    name: Option<String>,
     parent: Option<Entity>,
     children: Vec<Entity>,
 }
@@ -62,7 +63,7 @@ impl ECManager {
         self.entity_storage.reserve(num_missing as usize);
     }
 
-    fn new_entity_at_index(&mut self, entity_storage_index: u32) -> Entity {
+    fn new_entity_at_index(&mut self, entity_storage_index: u32, name: Option<&str>) -> Entity {
         if entity_storage_index >= self.entity_storage.len() as u32 {
             assert!(
                 self.entity_storage.len() < 500 || entity_storage_index < (2 * self.entity_storage.len() as u32),
@@ -73,6 +74,7 @@ impl ECManager {
                 (entity_storage_index + 1) as usize,
                 EntityEntry {
                     live: false,
+                    name: None,
                     current: Entity(0),
                     parent: None,
                     children: Vec::new(),
@@ -85,24 +87,39 @@ impl ECManager {
         let new_entry: &mut EntityEntry = &mut self.entity_storage[entity_storage_index as usize];
         new_entry.current = self.last_used_entity;
         new_entry.live = true;
+        new_entry.name = Some(String::from(name.unwrap_or_default()));
 
         self.entity_to_index
             .insert(self.last_used_entity, entity_storage_index);
 
-        log::info!("Creating new entity {:?}", new_entry.current);
+        log::info!(
+            "Creating new entity {:?}: '{}'",
+            new_entry.current,
+            new_entry.name.as_ref().unwrap_or(&String::new()),
+        );
 
         return new_entry.current;
     }
 
     // Returns a new Entity. It may occupy an existing, vacant spot or be a brand new
     // reallocation. Repeatedly calling this always returns entities with increasing indices
-    pub fn new_entity(&mut self) -> Entity {
+    pub fn new_entity(&mut self, name: Option<&str>) -> Entity {
         let target_index = match self.free_indices.pop() {
             Some(Reverse { 0: vacant_index }) => vacant_index,
             None => self.entity_storage.len() as u32,
         };
 
-        return self.new_entity_at_index(target_index);
+        return self.new_entity_at_index(target_index, name);
+    }
+
+    pub fn get_entity_name(&self, entity: Entity) -> Option<&str> {
+        match self.get_entity_entry(entity) {
+            Some(entry) => match entry.name {
+                Some(_) => Some(entry.name.as_ref().unwrap()),
+                None => None,
+            },
+            None => None,
+        }
     }
 
     // Returns a new Entity guaranteed to occupy an index than 'reference'
@@ -409,7 +426,8 @@ impl ECManager {
             other_index_to_new_ent.resize(num_other_ents as usize, Entity(0));
 
             for other_index in 0..num_other_ents {
-                let new_ent = self.new_entity();
+                let other_name = other_man.get_entity_from_index(other_index).unwrap();
+                let new_ent = self.new_entity(other_man.get_entity_name(other_name));
                 other_index_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
                 other_index_to_new_ent[other_index as usize] = new_ent;
             }
@@ -481,7 +499,7 @@ impl ECManager {
     {
         log::info!(
             "Adding component '{:?}' to entity '{:?}'",
-            T::get_component_index(),
+            T::COMPONENT_TYPE,
             entity
         );
 

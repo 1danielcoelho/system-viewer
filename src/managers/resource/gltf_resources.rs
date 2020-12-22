@@ -20,31 +20,57 @@ pub trait GltfResource {
 
 impl GltfResource for gltf::Mesh<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        return file_identifier.to_owned() + "_mesh_" + &self.index().to_string();
+        let mut result = file_identifier.to_owned() + "_mesh_" + &self.index().to_string();
+        if let Some(name) = self.name() {
+            result += &("_".to_owned() + name);
+        }
+
+        return result;
     }
 }
 
 impl GltfResource for gltf::Material<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        return file_identifier.to_owned() + "_material_" + &self.index().unwrap().to_string();
+        let mut result =
+            file_identifier.to_owned() + "_material_" + &self.index().unwrap().to_string();
+        if let Some(name) = self.name() {
+            result += &("_".to_owned() + name);
+        }
+
+        return result;
     }
 }
 
 impl GltfResource for gltf::Texture<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        return file_identifier.to_owned() + "_texture_" + &self.index().to_string();
+        let mut result = file_identifier.to_owned() + "_texture_" + &self.index().to_string();
+        if let Some(name) = self.name() {
+            result += &("_".to_owned() + name);
+        }
+
+        return result;
     }
 }
 
 impl GltfResource for gltf::Node<'_> {
     fn get_identifier(&self, scene_identifier: &str) -> String {
-        return scene_identifier.to_owned() + "_node_" + &self.index().to_string();
+        let mut result = scene_identifier.to_owned() + "_node_" + &self.index().to_string();
+        if let Some(name) = self.name() {
+            result += &("_".to_owned() + name);
+        }
+
+        return result;
     }
 }
 
 impl GltfResource for gltf::Scene<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        return file_identifier.to_owned() + "_scene_" + &self.index().to_string();
+        let mut result = file_identifier.to_owned() + "_scene_" + &self.index().to_string();
+        if let Some(name) = self.name() {
+            result += &("_".to_owned() + name);
+        }
+
+        return result;
     }
 }
 

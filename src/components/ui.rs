@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::managers::{ECManager, Entity};
 
 use super::{
-    component::{ComponentIndex, ComponentStorageType},
+    component::{ComponentStorageType, ComponentType},
     Component,
 };
 
@@ -34,6 +34,7 @@ impl Default for UIComponent {
 impl Component for UIComponent {
     type ComponentType = UIComponent;
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::HashMap;
+    const COMPONENT_TYPE: ComponentType = ComponentType::Ui;
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
@@ -41,10 +42,6 @@ impl Component for UIComponent {
 
     fn get_enabled(&mut self) -> bool {
         return self.enabled;
-    }
-
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Ui;
     }
 
     fn get_components_map<'a>(

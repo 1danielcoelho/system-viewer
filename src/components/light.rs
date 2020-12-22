@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 
-
-
 use crate::managers::{ECManager, Entity};
 
 use super::{
-    component::{ComponentIndex, ComponentStorageType},
+    component::{ComponentType, ComponentStorageType},
     Component,
 };
 
@@ -44,10 +42,7 @@ impl Default for LightComponent {
 impl Component for LightComponent {
     type ComponentType = LightComponent;
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::HashMap;
-
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Light;
-    }
+    const COMPONENT_TYPE: ComponentType = ComponentType::Light;
 
     fn get_components_map<'a>(
         w: &'a mut ECManager,

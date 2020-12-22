@@ -3,7 +3,7 @@ use cgmath::{Matrix3, Vector3};
 use crate::managers::ECManager;
 
 use super::{
-    component::{ComponentIndex, ComponentStorageType},
+    component::{ComponentType, ComponentStorageType},
     Component,
 };
 
@@ -46,14 +46,9 @@ impl Default for PhysicsComponent {
 impl Component for PhysicsComponent {
     type ComponentType = PhysicsComponent;
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
+    const COMPONENT_TYPE: ComponentType = ComponentType::Physics;
 
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Physics;
-    }
-
-    fn get_components_vector<'a>(
-        w: &'a mut ECManager,
-    ) -> Option<&'a mut Vec<PhysicsComponent>> {
+    fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<PhysicsComponent>> {
         return Some(&mut w.physics);
     }
 

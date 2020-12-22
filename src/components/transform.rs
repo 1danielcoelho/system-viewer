@@ -3,7 +3,7 @@ use crate::managers::ECManager;
 use cgmath::Transform;
 
 use super::{
-    component::{ComponentIndex, ComponentStorageType},
+    component::{ComponentType, ComponentStorageType},
     Component,
 };
 
@@ -58,14 +58,9 @@ impl Default for TransformComponent {
 impl Component for TransformComponent {
     type ComponentType = TransformComponent;
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
+    const COMPONENT_TYPE: ComponentType = ComponentType::Transform;
 
-    fn get_component_index() -> ComponentIndex {
-        return ComponentIndex::Transform;
-    }
-
-    fn get_components_vector<'a>(
-        w: &'a mut ECManager,
-    ) -> Option<&'a mut Vec<TransformComponent>> {
+    fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<TransformComponent>> {
         return Some(&mut w.transform);
     }
 
