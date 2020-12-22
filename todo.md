@@ -138,18 +138,14 @@
 - Maybe the WASM interface can't pass objects larger than X so that the GLTF importer starts reading garbage and never finishes?
 - https://github.com/rustwasm/wasm-pack/issues/479
     - Actually the problem is the GLTF crate. I just bumped the opt-level -->
-
-# Shader system refactor
+<!-- # Shader system refactor -->
 <!-- - I need to support defines, includes and conditional compilation
     - Make Material struct detect when a texture is set, record a new define for it, and invalidate its program. When drawing, the rendering system would see an invalid program for a shader and provide it with the gl rendering context to recompile -->
 <!-- - Test for more textures/scenes -->
 <!-- - Provide tangents for the procedural spheres -->
-- Allow defines like HAS_NORMALS, HAS_TANGENTS, HAS_VERTEXCOLOR, etc
-    - Fallback for when we have no tangents or normals 
-- Debug defines to see each channel, once we get picking...
-- Need to upload inverse transpose for transforming normals
-
+<!-- - Need to upload inverse transpose for transforming normals -->
 # Update to WebGL2
+- Better sooner than later as I need to update all shaders...
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
 # I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 

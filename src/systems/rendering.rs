@@ -1,3 +1,4 @@
+use cgmath::prelude::*;
 use cgmath::Matrix4;
 
 use web_sys::WebGlRenderingContext;
@@ -137,6 +138,9 @@ impl RenderingSystem {
         let w: Matrix4<f32> = (*trans).into(); // TODO: Is this the right way of doing it?
         let world_trans_uniform_data: [f32; 16] = *w.as_ref();
 
+        let w_inv_trans: Matrix4<f32> = w.invert().unwrap_or(cgmath::One::one()).transpose();
+        let w_inv_trans_uniform_data: [f32; 16] = *w_inv_trans.as_ref();
+
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
                 let resolved_mat = mc.get_resolved_material(primitive_index);
@@ -148,6 +152,10 @@ impl RenderingSystem {
                     mat_mut.set_uniform_value(
                         UniformName::WorldTrans,
                         UniformValue::Matrix(world_trans_uniform_data),
+                    );
+                    mat_mut.set_uniform_value(
+                        UniformName::WorldTransInvTranspose,
+                        UniformValue::Matrix(w_inv_trans_uniform_data),
                     );
                     mat_mut.set_uniform_value(
                         UniformName::ViewProjTrans,

@@ -263,25 +263,41 @@ impl ResourceManager {
                 identifier,
                 "relay_all.vert",
                 "world_normals.frag",
-                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::WorldTransInvTranspose,
+                    UniformName::ViewProjTrans,
+                ],
             )),
             "world_tangents" => Some(Material::new(
                 identifier,
                 "relay_all.vert",
                 "world_tangents.frag",
-                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::WorldTransInvTranspose,
+                    UniformName::ViewProjTrans,
+                ],
             )),
             "uv0" => Some(Material::new(
                 identifier,
                 "relay_all.vert",
                 "uv0.frag",
-                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::WorldTransInvTranspose,
+                    UniformName::ViewProjTrans,
+                ],
             )),
             "uv1" => Some(Material::new(
                 identifier,
                 "relay_all.vert",
                 "uv1.frag",
-                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+                &[
+                    UniformName::WorldTrans,
+                    UniformName::WorldTransInvTranspose,
+                    UniformName::ViewProjTrans,
+                ],
             )),
             "basecolor" => Some(Material::new(
                 identifier,
@@ -299,6 +315,7 @@ impl ResourceManager {
                 "phong.frag",
                 &[
                     UniformName::WorldTrans,
+                    UniformName::WorldTransInvTranspose,
                     UniformName::ViewProjTrans,
                     UniformName::LightTypes,
                     UniformName::LightPosDir,
@@ -312,6 +329,7 @@ impl ResourceManager {
                 "gltf_metal_rough.frag",
                 &[
                     UniformName::WorldTrans,
+                    UniformName::WorldTransInvTranspose,
                     UniformName::ViewProjTrans,
                     UniformName::LightTypes,
                     UniformName::LightPosDir,

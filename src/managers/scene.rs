@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{
-    resource::{gltf_resources::GltfResource, TextureUnit},
-    ECManager, Entity, ResourceManager,
-};
+use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
 use crate::components::{
     light::LightType, transform::TransformType, ui::WidgetType, LightComponent, MeshComponent,
     TransformComponent, UIComponent,
