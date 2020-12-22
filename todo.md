@@ -134,14 +134,22 @@
     - Fetch imported GLTF materials when parsing GLTF meshes
     - Have meshes use imported GLTF materials by identifier, like nodes use meshes -->
 <!-- # Would be nice to have an "automatic" way of handling uniforms... there's a lot of repetition -->
+<!-- # GLTF importer crate completely freezes if the file is like 8MB
+- Maybe the WASM interface can't pass objects larger than X so that the GLTF importer starts reading garbage and never finishes?
+- https://github.com/rustwasm/wasm-pack/issues/479
+    - Actually the problem is the GLTF crate. I just bumped the opt-level -->
 
 # Shader system refactor
 <!-- - I need to support defines, includes and conditional compilation
     - Make Material struct detect when a texture is set, record a new define for it, and invalidate its program. When drawing, the rendering system would see an invalid program for a shader and provide it with the gl rendering context to recompile -->
+- Test for more textures/scenes
 - Provide tangents for the procedural spheres
 - Allow defines like HAS_NORMALS, HAS_TANGENTS, HAS_VERTEXCOLOR, etc
     - Fallback for when we have no tangents or normals 
 - Debug defines to see each channel, once we get picking...
+
+# Update to WebGL2
+# GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
 
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 <!-- # String enum for uniform names -->

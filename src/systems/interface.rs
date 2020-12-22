@@ -96,7 +96,7 @@ impl InterfaceSystem {
             ui.horizontal(|ui| {
                 ui.add(
                     egui::DragValue::f32(&mut state.light_intensity)
-                        .range(0.0..=1000.0)
+                        .range(-1000.0..=1000.0)
                         .speed(0.01),
                 );
                 ui.label(format!("Light intensity exponent"));

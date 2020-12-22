@@ -27,12 +27,19 @@ rust.then(async (m) => {
   let engine = new m.EngineInterface(document.getElementById("rustCanvas"));
 
   // Sync loading of all assets for now
-  await Promise.all([
-    load_gltf("./public/Duck.glb", engine),
-    // load_gltf("./public/2CylinderEngine.glb", engine),
-    // load_gltf("./public/gltf_3_cubes.glb", engine),
-    load_texture("./public/shapes2_512.png", engine),
-  ]);
+  await load_gltf("./public/Duck.glb", engine);
+  //   await load_gltf("./public/2CylinderEngine.glb", engine);
+  await load_gltf("./public/WaterBottle.glb", engine);
+  //   await load_gltf("./public/DamagedHelmet.glb", engine);
+  //   await load_gltf("./public/gltf_3_cubes.glb", engine);
+  await load_texture("./public/shapes2_512.png", engine);
+  //   await load_texture("./public/WaterBottle_baseColor.png", engine);
+  //   await load_texture("./public/WaterBottle_emissive.png", engine);
+  //   await load_texture("./public/WaterBottle_normal.png", engine);
+  //   await load_texture(
+  //     "./public/WaterBottle_occlusionRoughnessMetallic.png",
+  //     engine
+  //   );
 
   engine.begin_loop();
 });

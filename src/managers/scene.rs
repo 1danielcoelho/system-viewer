@@ -286,15 +286,40 @@ impl SceneManager {
         light_comp.intensity = 100.0;
         light_comp.light_type = LightType::Directional;
 
-        let tex = res_man.get_texture("./public/shapes2_512.png").unwrap();
-        let tex_duck = res_man.get_texture("./public/Duck.glb_texture_0").unwrap();
+        // let base_color = res_man
+        //     .get_texture("./public/WaterBottle_baseColor.png")
+        //     .unwrap();
+        // let emissive = res_man
+        //     .get_texture("./public/WaterBottle_emissive.png")
+        //     .unwrap();
+        // let normal = res_man
+        //     .get_texture("./public/WaterBottle_normal.png")
+        //     .unwrap();
+        // let orm = res_man
+        //     .get_texture("./public/WaterBottle_occlusionRoughnessMetallic.png")
+        //     .unwrap();
 
         let test_mat1 = res_man.instantiate_material("gltf_metal_rough");
-        test_mat1
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .set_texture(TextureUnit::BaseColor, Some(tex));
+        // test_mat1
+        //     .as_ref()
+        //     .unwrap()
+        //     .borrow_mut()
+        //     .set_texture(TextureUnit::BaseColor, Some(base_color));
+        // test_mat1
+        //     .as_ref()
+        //     .unwrap()
+        //     .borrow_mut()
+        //     .set_texture(TextureUnit::Emissive, Some(emissive));
+        // test_mat1
+        //     .as_ref()
+        //     .unwrap()
+        //     .borrow_mut()
+        //     .set_texture(TextureUnit::Normal, Some(normal));
+        // test_mat1
+        //     .as_ref()
+        //     .unwrap()
+        //     .borrow_mut()
+        //     .set_texture(TextureUnit::MetallicRoughness, Some(orm));
 
         // Plane
         let plane = scene.ent_man.new_entity();
@@ -306,14 +331,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 2.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
-        mesh_comp.set_material_override(test_mat1, 0);
-
-        let test_mat2 = res_man.instantiate_material("gltf_metal_rough");
-        test_mat2
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .set_texture(TextureUnit::BaseColor, Some(tex_duck));
+        mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Cube
         let cube = scene.ent_man.new_entity();
@@ -325,9 +343,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        mesh_comp.set_material_override(test_mat2, 0);
-
-        let test_mat3 = res_man.instantiate_material("gltf_metal_rough");
+        mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Ico-sphere
         let ico = scene.ent_man.new_entity();
@@ -339,9 +355,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-        mesh_comp.set_material_override(test_mat3, 0);
-
-        let test_mat4 = res_man.instantiate_material("gltf_metal_rough");
+        mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Lat-long sphere
         let lat_long = scene.ent_man.new_entity();
@@ -355,7 +369,7 @@ impl SceneManager {
             .add_component::<MeshComponent>(lat_long)
             .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(test_mat4, 0);
+        mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // Grid
         let grid = scene.ent_man.new_entity();

@@ -46,8 +46,8 @@ vec4 get_base_color()
 vec3 get_normal()
 {
     #ifdef NORMAL_TEXTURE
-        vec3 normal = texture2D(us_normal, v_uv0) * 2.0 - vec3(1.0);
-        normal *= vec3(u_normal_scale, u_normal_scale, 1.0);
+        vec3 normal = texture2D(us_normal, v_uv0).rgb * 2.0 - vec3(1.0);
+        // normal *= vec3(u_normal_scale, u_normal_scale, 1.0);
         normal = normalize(normal);
 
         vec3 bitangent = cross(normal, v_world_tangent);
@@ -116,7 +116,7 @@ void main()
 
     vec3 emissive_color = u_emissive_factor;
     #ifdef EMISSIVE_TEXTURE
-        emissive_color *= sRGB_to_linear(texture2D(us_emissive, v_uv0)).rgb;
+        emissive_color = sRGB_to_linear(texture2D(us_emissive, v_uv0)).rgb;
     #endif 
 
     vec3 color = emissive_color + diffuse_color + specular_color;

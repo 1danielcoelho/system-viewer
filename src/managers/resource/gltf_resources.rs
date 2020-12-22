@@ -138,7 +138,7 @@ impl ResourceManager {
         }
 
         // Emissive texture
-        if let Some(gltf_tex) = material.occlusion_texture() {
+        if let Some(gltf_tex) = material.emissive_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_texture(&tex_identifier) {
                 log::info!("\t\tEmissive texture: '{}'", tex_identifier);

@@ -57,3 +57,6 @@ wasm-pack = "0.9.1"
 
 [profile.release]
 opt-level = "s"
+
+[profile.dev.package."*"]
+opt-level = 3
