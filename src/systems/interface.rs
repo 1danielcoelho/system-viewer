@@ -1,4 +1,4 @@
-use egui::{Id, LayerId, Pos2, Ui};
+use egui::{Align, Id, LayerId, Layout, Pos2, Ui};
 use gui_backend::WebInput;
 use web_sys::WebGl2RenderingContext;
 
@@ -73,96 +73,91 @@ impl InterfaceSystem {
 
     fn draw_test_widget(ui: &Ui, state: &mut AppState) {
         egui::Window::new("Debug").show(&ui.ctx(), |ui| {
-            ui.horizontal(|ui| {
-                ui.label(format!(
-                    "{:.2} Simulated seconds since start",
-                    state.phys_time_ms / 1000.0
-                ));
+            ui.columns(2, |cols| {
+                cols[0].label("Simulated seconds since start:");
+                cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0));
             });
 
-            ui.horizontal(|ui| {
-                ui.label(format!(
-                    "{:.2} Real seconds since start",
-                    state.real_time_ms / 1000.0
-                ));
+            ui.columns(2, |cols| {
+                cols[0].label("Real seconds since start:");
+                cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0));
             });
 
-            ui.horizontal(|ui| {
-                ui.label(format!(
-                    "{:.2} Frames per second",
-                    1000.0 / state.real_delta_time_ms
-                ));
+            ui.columns(2, |cols| {
+                cols[0].label("Frames per second:");
+                cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms));
             });
 
-            ui.horizontal(|ui| {
-                ui.add(
+            ui.columns(2, |cols| {
+                cols[0].label("Simulation speed:");
+                cols[1].add(
                     egui::DragValue::f64(&mut state.simulation_speed)
                         .range(-100.0..=100.0)
                         .speed(0.01),
                 );
-                ui.label(format!("Simulation speed"));
             });
 
             ui.separator();
 
-            ui.horizontal(|ui| {
-                ui.add(
+            ui.columns(2, |cols| {
+                cols[0].label("Light intensity exponent:");
+                cols[1].add(
                     egui::DragValue::f32(&mut state.light_intensity)
                         .range(-1000.0..=1000.0)
                         .speed(0.01),
                 );
-                ui.label(format!("Light intensity exponent"));
             });
 
             ui.separator();
 
-            // TODO: Can't use ui.columns due to some bug where everything in column 0 responds at once
-            ui.horizontal(|ui| {
-                ui.add(
+            ui.columns(2, |cols| {
+                cols[0].label("Vertical FOV (deg):");
+                cols[1].add(
                     egui::DragValue::f32(&mut state.camera.fov_v.0)
                         .range(0.1..=120.0)
                         .speed(0.5),
                 );
-                ui.label(format!("Vertical FOV (deg)"));
             });
 
-            ui.horizontal(|ui| {
-                ui.add(
+            ui.columns(2, |cols| {
+                cols[0].label("Near:");
+                cols[1].add(
                     egui::DragValue::f32(&mut state.camera.near)
-                        .range(0.1..=19.9)
-                        .speed(0.1),
+                        .range(0.01..=19.9)
+                        .speed(0.01),
                 );
-                ui.label(format!("Near"));
             });
 
-            ui.horizontal(|ui| {
-                ui.add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
-                ui.label(format!("Far"));
+            ui.columns(2, |cols| {
+                cols[0].label("Far:");
+                cols[1].add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
             });
 
-            ui.horizontal(|ui| {
-                ui.add(
+            ui.columns(2, |cols| {
+                cols[0].label("Camera pos:");
+                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
+                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
+                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+            });
+
+            ui.separator();
+
+            ui.columns(2, |cols| {
+                cols[0].label("Move speed:");
+                cols[1].add(
                     egui::DragValue::f32(&mut state.move_speed)
                         .range(1.0..=1000.0)
                         .speed(0.1),
                 );
-                ui.label(format!("Move speed"));
             });
 
-            ui.horizontal(|ui| {
-                ui.add(
+            ui.columns(2, |cols| {
+                cols[0].label("Rotation speed:");
+                cols[1].add(
                     egui::DragValue::f32(&mut state.rotate_speed)
                         .range(1.0..=10.0)
                         .speed(0.1),
                 );
-                ui.label(format!("Rotation speed"));
-            });
-
-            ui.horizontal(|ui| {
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
-                ui.label(format!("Camera pos"));
             });
         });
     }

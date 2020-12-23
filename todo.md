@@ -156,9 +156,9 @@
 <!-- # Move camera `v` and `p` computation away from material. Probably all transform computation?
 - Camera class somehow (probably not worth it being a component) -->
 <!-- # Generated sphere mesh -->
-# Update egui
+<!-- # Update egui -->
 <!-- - I think the main reason why I need the custom backend is to prevent it from clearing the buffer before drawing. And now so that I can get the context from it -->
-- I think he fixed the column thing so I can probably make an aligned table for the debug widget
+<!-- - I think he fixed the column thing so I can probably make an aligned table for the debug widget -->
 # Picking
 - Showing different UI for the picked thing
     - Expose some controls like material uniforms
