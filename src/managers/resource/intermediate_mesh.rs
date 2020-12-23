@@ -217,6 +217,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
         id: 0,
         name: inter.name,
         primitives,
+        bb: None,
     });
 
     return result;

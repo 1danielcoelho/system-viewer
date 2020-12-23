@@ -11,19 +11,26 @@ pub struct Camera {
     pub far: f32,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ButtonState {
+    Depressed,
+    Pressed,
+    Handled,
+}
+
 pub struct Input {
     pub mouse_x: i32,
     pub mouse_y: i32,
     pub delta_x: i32, // since last frame
     pub delta_y: i32, // since last frame
-    pub m0_down: bool,
-    pub m1_down: bool,
-    pub forward_down: bool,
-    pub left_down: bool,
-    pub right_down: bool,
-    pub back_down: bool,
-    pub up_down: bool,
-    pub down_down: bool, // ugh
+    pub m0: ButtonState,
+    pub m1: ButtonState,
+    pub forward: ButtonState,
+    pub left: ButtonState,
+    pub right: ButtonState,
+    pub back: ButtonState,
+    pub up: ButtonState,
+    pub down: ButtonState, // ugh
 }
 
 pub struct AppState {
@@ -59,14 +66,14 @@ impl AppState {
                 mouse_y: 0,
                 delta_x: 0,
                 delta_y: 0,
-                m0_down: false,
-                m1_down: false,
-                forward_down: false,
-                left_down: false,
-                right_down: false,
-                back_down: false,
-                up_down: false,
-                down_down: false,
+                m0: ButtonState::Depressed,
+                m1: ButtonState::Depressed,
+                forward: ButtonState::Depressed,
+                left: ButtonState::Depressed,
+                right: ButtonState::Depressed,
+                back: ButtonState::Depressed,
+                up: ButtonState::Depressed,
+                down: ButtonState::Depressed,
             },
             camera: Camera {
                 pos: cgmath::Point3::new(-4.0, -7.0, 8.0),

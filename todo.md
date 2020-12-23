@@ -159,7 +159,22 @@
 <!-- # Update egui -->
 <!-- - I think the main reason why I need the custom backend is to prevent it from clearing the buffer before drawing. And now so that I can get the context from it -->
 <!-- - I think he fixed the column thing so I can probably make an aligned table for the debug widget -->
+
+
+
+# UI refactor
+- Remove UI "components", as that doesn't seem like the best idea
+- Heavily refactor interface system into interface manager
+- Put egui context directly on the app state. Each component can draw anything, like you're supposed to in imgui
+- UI manager or something that will draw the scene-independent UI, like top menus, debug menus, notifications, etc.
+- interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
+    - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
+    - interface system will also draw top-level UI
+- Still no idea how to get UI to block raycasting
+
+
 # Picking
+- Need to test the ray intersection functions
 - Showing different UI for the picked thing
     - Expose some controls like material uniforms
 # Try setting up a simple orbit scene on rails/with physics

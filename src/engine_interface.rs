@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
-use crate::components::transform::TransformType;
 use crate::{app_state::AppState, engine::Engine};
+use crate::{app_state::ButtonState, components::transform::TransformType};
 
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
@@ -105,11 +105,11 @@ impl EngineInterface {
             let handler = move |event: web_sys::MouseEvent| {
                 let state = &mut *app_state_clone.lock().unwrap();
                 match event.button() as i16 {
-                    0 => state.input.m0_down = true,
+                    0 => state.input.m0 = ButtonState::Pressed,
 
                     // 1 is the mouse wheel click
                     2 => {
-                        state.input.m1_down = true;
+                        state.input.m1 = ButtonState::Pressed;
                         canvas_clone.request_pointer_lock();
                     }
                     _ => {}
@@ -130,7 +130,7 @@ impl EngineInterface {
                 let state = &mut *app_state_clone.lock().unwrap();
 
                 // With pointer lock client_x and client_y don't actually change, so we need movement_*
-                if state.input.m1_down {
+                if state.input.m1 == ButtonState::Pressed {
                     state.input.mouse_x += event.movement_x();
                     state.input.mouse_y += event.movement_y();
                 } else {
@@ -152,11 +152,11 @@ impl EngineInterface {
             let handler = move |event: web_sys::MouseEvent| {
                 let state = &mut *app_state_clone.lock().unwrap();
                 match event.button() as i16 {
-                    0 => state.input.m0_down = false,
+                    0 => state.input.m0 = ButtonState::Depressed,
 
                     // 1 is the mouse wheel click
                     2 => {
-                        state.input.m1_down = false;
+                        state.input.m1 = ButtonState::Depressed;
 
                         // Release pointer lock
                         let window = web_sys::window().unwrap();
@@ -201,22 +201,22 @@ impl EngineInterface {
                 let state = &mut *app_state_clone.lock().unwrap();
                 match (event.code() as String).as_str() {
                     "KeyW" | "ArrowUp" => {
-                        state.input.forward_down = true;
+                        state.input.forward = ButtonState::Pressed;
                     }
                     "KeyA" | "ArrowLeft" => {
-                        state.input.left_down = true;
+                        state.input.left = ButtonState::Pressed;
                     }
                     "KeyS" | "ArrowDown" => {
-                        state.input.back_down = true;
+                        state.input.back = ButtonState::Pressed;
                     }
                     "KeyD" | "ArrowRight" => {
-                        state.input.right_down = true;
+                        state.input.right = ButtonState::Pressed;
                     }
                     "KeyE" => {
-                        state.input.up_down = true;
+                        state.input.up = ButtonState::Pressed;
                     }
                     "KeyQ" => {
-                        state.input.down_down = true;
+                        state.input.down = ButtonState::Pressed;
                     }
                     _ => {}
                 };
@@ -236,22 +236,22 @@ impl EngineInterface {
                 let state = &mut *app_state_clone.lock().unwrap();
                 match (event.code() as String).as_str() {
                     "KeyW" | "ArrowUp" => {
-                        state.input.forward_down = false;
+                        state.input.forward = ButtonState::Depressed;
                     }
                     "KeyA" | "ArrowLeft" => {
-                        state.input.left_down = false;
+                        state.input.left = ButtonState::Depressed;
                     }
                     "KeyS" | "ArrowDown" => {
-                        state.input.back_down = false;
+                        state.input.back = ButtonState::Depressed;
                     }
                     "KeyD" | "ArrowRight" => {
-                        state.input.right_down = false;
+                        state.input.right = ButtonState::Depressed;
                     }
                     "KeyE" => {
-                        state.input.up_down = false;
+                        state.input.up = ButtonState::Depressed;
                     }
                     "KeyQ" => {
-                        state.input.down_down = false;
+                        state.input.down = ButtonState::Depressed;
                     }
                     _ => {}
                 };

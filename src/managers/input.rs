@@ -1,12 +1,6 @@
-
-
 use cgmath::{Basis3, Deg, InnerSpace, MetricSpace, Rotation, Rotation3, Vector3};
 
-
-
-use crate::app_state::AppState;
-
-
+use crate::app_state::{AppState, ButtonState};
 
 pub struct InputManager {
     last_mouse_x: i32,
@@ -39,26 +33,28 @@ impl InputManager {
         let rotate_speed = state.rotate_speed * 0.5;
 
         let mut incr: cgmath::Vector3<f32> = cgmath::Vector3::new(0.0, 0.0, 0.0);
-        if state.input.forward_down {
+        if state.input.forward == ButtonState::Pressed {
             incr += cam_forward * (state.real_delta_time_ms as f32) * move_speed;
         }
-        if state.input.back_down {
+        if state.input.back == ButtonState::Pressed {
             incr -= cam_forward * (state.real_delta_time_ms as f32) * move_speed;
         }
-        if state.input.left_down {
+        if state.input.left == ButtonState::Pressed {
             incr -= cam_right * (state.real_delta_time_ms as f32) * move_speed;
         }
-        if state.input.right_down {
+        if state.input.right == ButtonState::Pressed {
             incr += cam_right * (state.real_delta_time_ms as f32) * move_speed;
         }
-        if state.input.up_down {
+        if state.input.up == ButtonState::Pressed {
             incr += cam_up * (state.real_delta_time_ms as f32) * move_speed;
         }
-        if state.input.down_down {
+        if state.input.down == ButtonState::Pressed {
             incr -= cam_up * (state.real_delta_time_ms as f32) * move_speed;
         }
 
-        if state.input.m1_down && (state.input.delta_y.abs() > 0 || state.input.delta_x.abs() > 0) {
+        if state.input.m1 == ButtonState::Pressed
+            && (state.input.delta_y.abs() > 0 || state.input.delta_x.abs() > 0)
+        {
             let half_canvas_height_world =
                 state.camera.near * cgmath::Angle::tan(state.camera.fov_v / 2.0);
             let half_canvas_width_world = aspect * half_canvas_height_world;

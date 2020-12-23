@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 use web_sys::{WebGl2RenderingContext as GL, WebGlVertexArrayObject};
 
-use super::Material;
+use super::{BoundingBox, Material};
 
 #[repr(u32)]
 pub enum PrimitiveAttribute {
@@ -19,6 +19,7 @@ pub struct Mesh {
     pub id: u32,
     pub name: String,
     pub primitives: Vec<Primitive>,
+    pub bb: Option<Box<dyn BoundingBox>>,
 }
 
 pub struct Primitive {

@@ -6,7 +6,7 @@ use crate::managers::{
 };
 
 use super::{
-    component::{ComponentType, ComponentStorageType},
+    component::{ComponentStorageType, ComponentType},
     Component,
 };
 
@@ -14,8 +14,6 @@ use super::{
 pub struct MeshComponent {
     enabled: bool,
 
-    pub aabb_min: cgmath::Vector3<f32>,
-    pub aabb_max: cgmath::Vector3<f32>,
     pub raycasting_visible: bool,
     pub visible: bool,
     mesh: Option<Rc<Mesh>>,
@@ -67,8 +65,6 @@ impl Default for MeshComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
-            aabb_min: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            aabb_max: cgmath::Vector3::new(0.0, 0.0, 0.0),
             raycasting_visible: true,
             visible: true,
             mesh: None,
