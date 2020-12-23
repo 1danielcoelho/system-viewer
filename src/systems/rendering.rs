@@ -50,7 +50,7 @@ impl RenderingSystem {
         let gl: &WebGl2RenderingContext = (state.gl.as_ref()).unwrap();
 
         // Setup GL state
-        glc!(gl, gl.enable(GL::CULL_FACE)); // Egui needs this disabled for now
+        glc!(gl, gl.enable(GL::CULL_FACE));
         glc!(gl, gl.disable(GL::SCISSOR_TEST));
         glc!(gl, gl.enable(GL::DEPTH_TEST));
         glc!(

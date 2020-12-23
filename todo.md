@@ -157,6 +157,8 @@
 - Camera class somehow (probably not worth it being a component) -->
 <!-- # Generated sphere mesh -->
 # Update egui
+<!-- - I think the main reason why I need the custom backend is to prevent it from clearing the buffer before drawing. And now so that I can get the context from it -->
+- I think he fixed the column thing so I can probably make an aligned table for the debug widget
 # Picking
 - Showing different UI for the picked thing
     - Expose some controls like material uniforms
@@ -178,6 +180,7 @@
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
 # I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
+- WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
 # We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
 
 # Docs link:

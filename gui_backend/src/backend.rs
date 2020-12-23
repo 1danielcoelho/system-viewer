@@ -8,7 +8,7 @@ pub use egui::{
 // ----------------------------------------------------------------------------
 
 pub struct WebBackend {
-    ctx: Arc<egui::Context>,
+    pub ctx: Arc<egui::Context>,
     painter: webgl::Painter,
     previous_frame_time: Option<f32>,
     frame_start: Option<f64>,
@@ -33,8 +33,7 @@ impl WebBackend {
         self.painter.canvas_id()
     }
 
-    /// Returns a master fullscreen UI, covering the entire screen.
-    pub fn begin_frame(&mut self, raw_input: egui::RawInput) -> egui::Ui {
+    pub fn begin_frame(&mut self, raw_input: egui::RawInput) {
         self.frame_start = Some(now_sec());
         self.ctx.begin_frame(raw_input)
     }
@@ -45,7 +44,8 @@ impl WebBackend {
             .take()
             .expect("unmatched calls to begin_frame/end_frame");
 
-        let (output, paint_jobs) = self.ctx.end_frame();
+        let (output, paint_commands) = self.ctx.end_frame();
+        let paint_jobs = self.ctx.tesselate(paint_commands);
 
         self.auto_save();
 
@@ -80,32 +80,71 @@ impl WebBackend {
     }
 }
 
-// TODO: Just use RawInput?
+impl egui::app::TextureAllocator for webgl::Painter {
+    fn alloc(&mut self) -> egui::TextureId {
+        self.alloc_user_texture()
+    }
+
+    fn set_srgba_premultiplied(
+        &mut self,
+        id: egui::TextureId,
+        size: (usize, usize),
+        srgba_pixels: &[Srgba],
+    ) {
+        self.set_user_texture(id, size, srgba_pixels);
+    }
+
+    fn free(&mut self, id: egui::TextureId) {
+        self.free_user_texture(id)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 /// Data gathered between frames.
-/// Is translated to `egui::RawInput` at the start of each frame.
 #[derive(Default)]
 pub struct WebInput {
-    pub mouse_pos: Option<egui::Pos2>,
-    pub mouse_down: bool, // TODO: which button
+    /// Is this a touch screen? If so, we ignore mouse events.
     pub is_touch: bool,
-    pub scroll_delta: egui::Vec2,
-    pub events: Vec<egui::Event>,
+
+    pub raw: egui::RawInput,
 }
 
 impl WebInput {
-    pub fn new_frame(&mut self, pixels_per_point: f32) -> egui::RawInput {
-        // Compensate for potential different scale of Egui compared to native.
-        let scale = native_pixels_per_point() / pixels_per_point;
-        let scroll_delta = std::mem::take(&mut self.scroll_delta) * scale;
-        let mouse_pos = self.mouse_pos.map(|mp| pos2(mp.x * scale, mp.y * scale));
+    pub fn new_frame(&mut self) -> egui::RawInput {
         egui::RawInput {
-            mouse_down: self.mouse_down,
-            mouse_pos,
-            scroll_delta,
-            screen_size: screen_size_in_native_points().unwrap() * scale,
-            pixels_per_point: Some(pixels_per_point),
+            screen_size: screen_size_in_native_points().unwrap(),
+            pixels_per_point: Some(native_pixels_per_point()),
             time: now_sec(),
-            events: std::mem::take(&mut self.events),
+            ..self.raw.take()
         }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+use std::sync::atomic::Ordering::SeqCst;
+
+pub struct NeedRepaint(std::sync::atomic::AtomicBool);
+
+impl Default for NeedRepaint {
+    fn default() -> Self {
+        Self(true.into())
+    }
+}
+
+impl NeedRepaint {
+    pub fn fetch_and_clear(&self) -> bool {
+        self.0.swap(false, SeqCst)
+    }
+
+    pub fn set_true(&self) {
+        self.0.store(true, SeqCst);
+    }
+}
+
+impl egui::app::RepaintSignal for NeedRepaint {
+    fn request_repaint(&self) {
+        self.0.store(true, SeqCst);
     }
 }

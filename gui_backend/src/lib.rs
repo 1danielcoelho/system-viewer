@@ -1,7 +1,9 @@
 #![forbid(unsafe_code)]
+#![deny(warnings)]
 #![warn(clippy::all)]
 
 pub mod backend;
+pub mod fetch;
 pub mod webgl;
 
 pub use backend::*;
@@ -12,10 +14,22 @@ use wasm_bindgen::prelude::*;
 // ----------------------------------------------------------------------------
 // Helpers to hide some of the verbosity of web_sys
 
-pub fn console_log(s: String) {
+/// Log some text to the developer console (`console.log(...)` in JS)
+pub fn console_log(s: impl Into<JsValue>) {
     web_sys::console::log_1(&s.into());
 }
 
+/// Log a warning to the developer console (`console.warn(...)` in JS)
+pub fn console_warn(s: impl Into<JsValue>) {
+    web_sys::console::warn_1(&s.into());
+}
+
+/// Log an error to the developer console (`console.error(...)` in JS)
+pub fn console_error(s: impl Into<JsValue>) {
+    web_sys::console::error_1(&s.into());
+}
+
+/// Current time in seconds (since undefined point in time)
 pub fn now_sec() -> f64 {
     web_sys::window()
         .expect("should have a Window")
@@ -132,7 +146,7 @@ pub fn save_memory(ctx: &egui::Context) {
         }
         Err(err) => {
             console_log(format!(
-                "ERROR: Failed to seriealize memory as json: {}",
+                "ERROR: Failed to serialize memory as json: {}",
                 err
             ));
         }
@@ -140,10 +154,21 @@ pub fn save_memory(ctx: &egui::Context) {
 }
 
 pub fn handle_output(output: &egui::Output) {
-    set_cursor_icon(output.cursor_icon);
-    if let Some(url) = &output.open_url {
-        open_url(url);
+    let egui::Output {
+        cursor_icon,
+        open_url,
+        copied_text: _,
+        needs_repaint: _, // handled elsewhere
+    } = output;
+
+    set_cursor_icon(*cursor_icon);
+    if let Some(url) = open_url {
+        crate::open_url(url);
     }
+
+    // if !copied_text.is_empty() {
+    //     set_clipboard_text(copied_text);
+    // }
 }
 
 pub fn set_cursor_icon(cursor: egui::CursorIcon) -> Option<()> {
@@ -153,6 +178,27 @@ pub fn set_cursor_icon(cursor: egui::CursorIcon) -> Option<()> {
         .style()
         .set_property("cursor", cursor_web_name(cursor))
         .ok()
+}
+
+// pub fn set_clipboard_text(s: &str) {
+//     if let Some(window) = web_sys::window() {
+//         let clipboard = window.navigator().clipboard();
+//         let promise = clipboard.write_text(s);
+//         let future = wasm_bindgen_futures::JsFuture::from(promise);
+//         let future = async move {
+//             if let Err(err) = future.await {
+//                 console_log(format!("Copy/cut action denied: {:?}", err));
+//             }
+//         };
+//         wasm_bindgen_futures::spawn_local(future);
+//     }
+// }
+
+pub fn spawn_future<F>(future: F)
+where
+    F: std::future::Future<Output = ()> + 'static,
+{
+    wasm_bindgen_futures::spawn_local(future);
 }
 
 fn cursor_web_name(cursor: egui::CursorIcon) -> &'static str {
@@ -165,9 +211,11 @@ fn cursor_web_name(cursor: egui::CursorIcon) -> &'static str {
         ResizeNwSe => "nwse-resize",
         ResizeVertical => "ns-resize",
         Text => "text",
+        Grab => "grab",
+        Grabbing => "grabbing",
         // "no-drop"
         // "not-allowed"
-        // default, help, pointer, progress, wait, cell, crosshair, text, alias, copy, move, grab, grabbing,
+        // default, help, pointer, progress, wait, cell, crosshair, text, alias, copy, move
     }
 }
 
@@ -187,24 +235,26 @@ pub fn location_hash() -> Option<String> {
 /// a real text input or the name of a key.
 pub fn translate_key(key: &str) -> Option<egui::Key> {
     match key {
-        "Alt" => Some(egui::Key::Alt),
+        "ArrowDown" => Some(egui::Key::ArrowDown),
+        "ArrowLeft" => Some(egui::Key::ArrowLeft),
+        "ArrowRight" => Some(egui::Key::ArrowRight),
+        "ArrowUp" => Some(egui::Key::ArrowUp),
         "Backspace" => Some(egui::Key::Backspace),
-        "Control" => Some(egui::Key::Control),
         "Delete" => Some(egui::Key::Delete),
-        "ArrowDown" => Some(egui::Key::Down),
         "End" => Some(egui::Key::End),
+        "Enter" => Some(egui::Key::Enter),
+        "Space" => Some(egui::Key::Space),
         "Esc" | "Escape" => Some(egui::Key::Escape),
-        "Home" => Some(egui::Key::Home),
         "Help" | "Insert" => Some(egui::Key::Insert),
-        "ArrowLeft" => Some(egui::Key::Left),
-        "Meta" => Some(egui::Key::Logo),
+        "Home" => Some(egui::Key::Home),
         "PageDown" => Some(egui::Key::PageDown),
         "PageUp" => Some(egui::Key::PageUp),
-        "Enter" => Some(egui::Key::Enter),
-        "ArrowRight" => Some(egui::Key::Right),
-        "Shift" => Some(egui::Key::Shift),
         "Tab" => Some(egui::Key::Tab),
-        "ArrowUp" => Some(egui::Key::Up),
+        "a" | "A" => Some(egui::Key::A),
+        "k" | "K" => Some(egui::Key::K),
+        "u" | "U" => Some(egui::Key::U),
+        "w" | "W" => Some(egui::Key::W),
+        "z" | "Z" => Some(egui::Key::Z),
         _ => None,
     }
 }

@@ -1,5 +1,8 @@
-use egui::{Pos2, Ui};
+use egui::{Id, LayerId, Pos2, Ui};
 use gui_backend::WebInput;
+use web_sys::WebGl2RenderingContext;
+
+type GL = WebGl2RenderingContext;
 
 use crate::{
     app_state::AppState, components::ui::WidgetType, components::UIComponent, managers::ECManager,
@@ -26,7 +29,7 @@ impl InterfaceSystem {
     }
 
     fn pre_draw(&mut self, state: &AppState) {
-        let mut raw_input = self.web_input.new_frame(1.0);
+        let mut raw_input = self.web_input.new_frame();
 
         // TODO: Combine these or get rid of one of them?
         raw_input.mouse_pos = Some(Pos2 {
@@ -35,7 +38,16 @@ impl InterfaceSystem {
         });
         raw_input.mouse_down = state.input.m0_down;
 
-        self.ui = Some(self.backend.begin_frame(raw_input));
+        self.backend.begin_frame(raw_input);
+        let rect = self.backend.ctx.available_rect();
+
+        self.ui = Some(Ui::new(
+            self.backend.ctx.clone(),
+            LayerId::background(),
+            Id::new("interface"),
+            rect,
+            rect,
+        ));
     }
 
     fn draw(&mut self, state: &mut AppState, comp_man: &ECManager) {
