@@ -33,15 +33,15 @@ pub fn raycast(
         }
         let mesh = mesh.unwrap();
 
-        if mesh.bb.is_none() {
+        if mesh.collider.is_none() {
             continue;
         }
-        let bb = mesh.bb.as_ref().unwrap();
+        let collider = mesh.collider.as_ref().unwrap();
 
         let world_trans = trans_comp.get_world_transform();
         let inv_world_trans = world_trans.inverse_transform().unwrap();
 
-        // @Performance: Maybe it would be faster to transform the bb instead?
+        // @Performance: Maybe it would be faster to transform the collider instead?
         // But then we'd get some weirdness like AABB not really being axis-aligned anymore,
         // or spheres behaving weirdly on non-uniform scaling
         let bb_space_ray = Ray {
@@ -49,7 +49,7 @@ pub fn raycast(
             direction: inv_world_trans.transform_vector(ray.direction).normalize(),
         };
 
-        let bb_space_t = bb.intersects(&bb_space_ray);
+        let bb_space_t = collider.intersects(&bb_space_ray);
         let bb_space_delta = bb_space_t * bb_space_ray.direction;
         let world_space_delta = world_trans.transform_vector(bb_space_delta);
         let world_space_t2 = world_space_delta.magnitude2();

@@ -8,14 +8,14 @@ use crate::utils::{get_unique_name, remove_numbered_suffix};
 
 use self::procedural_meshes::*;
 
-pub use bounding_box::*;
+pub use collider::*;
 pub use gltf_resources::*;
 pub use material::*;
 pub use mesh::*;
 pub use shaders::*;
 pub use texture::*;
 
-mod bounding_box;
+mod collider;
 pub mod gltf_resources;
 mod intermediate_mesh;
 mod material;

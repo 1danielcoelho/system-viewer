@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 use web_sys::{WebGl2RenderingContext as GL, WebGlVertexArrayObject};
 
-use super::{BoundingBox, Material};
+use super::{intermediate_mesh::IntermediatePrimitive, Collider, Material};
 
 #[repr(u32)]
 pub enum PrimitiveAttribute {
@@ -19,7 +19,12 @@ pub struct Mesh {
     pub id: u32,
     pub name: String,
     pub primitives: Vec<Primitive>,
-    pub bb: Option<Box<dyn BoundingBox>>,
+    pub collider: Option<Box<dyn Collider>>,
+}
+impl PartialEq for Mesh {
+    fn eq(&self, other: &Self) -> bool {
+        return self.id == other.id;
+    }
 }
 
 pub struct Primitive {
@@ -28,6 +33,9 @@ pub struct Primitive {
     pub index_count: i32,
     pub mode: u32,
     pub vao: WebGlVertexArrayObject,
+
+    // We keep these around sometimes in case this mesh is used as a collider
+    pub source_data: Option<IntermediatePrimitive>,
 
     pub default_material: Option<Rc<RefCell<Material>>>,
 }

@@ -1,10 +1,10 @@
-use std::{cell::RefCell, rc::Rc};
-
+use cgmath::*;
 use js_sys::WebAssembly;
+use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::JsCast;
 use web_sys::{WebGl2RenderingContext, WebGl2RenderingContext as GL, WebGlBuffer};
 
-use super::{BoundingBox, Material, Mesh, Primitive, PrimitiveAttribute};
+use super::{Collider, Material, Mesh, Primitive, PrimitiveAttribute};
 
 pub struct IntermediateMesh {
     pub name: String,
@@ -15,15 +15,15 @@ pub struct IntermediatePrimitive {
     pub name: String,
 
     pub indices: Vec<u16>,
-    pub positions: Vec<cgmath::Vector3<f32>>,
-    pub normals: Vec<cgmath::Vector3<f32>>,
-    pub tangents: Vec<cgmath::Vector3<f32>>,
-    pub colors: Vec<cgmath::Vector4<f32>>,
-    pub uv0: Vec<cgmath::Vector2<f32>>,
-    pub uv1: Vec<cgmath::Vector2<f32>>,
+    pub positions: Vec<Vector3<f32>>,
+    pub normals: Vec<Vector3<f32>>,
+    pub tangents: Vec<Vector3<f32>>,
+    pub colors: Vec<Vector4<f32>>,
+    pub uv0: Vec<Vector2<f32>>,
+    pub uv1: Vec<Vector2<f32>>,
     pub mode: u32,
     pub mat: Option<Rc<RefCell<Material>>>,
-    pub bb: Option<Box<dyn BoundingBox>>,
+    pub collider: Option<Box<dyn Collider>>,
 }
 
 pub fn fill_float_attribute_buffer(
@@ -211,6 +211,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             vao: vao.unwrap(),
             mode: prim.mode,
             default_material: prim.mat,
+            source_data: None,
         });
     }
 
@@ -218,7 +219,7 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
         id: 0,
         name: inter.name,
         primitives,
-        bb: None,
+        collider: None,
     });
 
     return result;
