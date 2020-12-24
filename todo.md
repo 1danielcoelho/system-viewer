@@ -175,7 +175,7 @@
     <!-- - Need to set proper unique IDs on meshes now that the colliders rely on them -->
     <!-- - Maybe reshuffle it a bit so that the actual intersection math is on raytracing utils -->
     <!-- - Raycasting doesn't work on plane -->
-    - Disable raycasting when we're dragging with right click, as it chugs a little bit somehow
+    <!-- - Disable raycasting when we're dragging with right click, as it chugs a little bit somehow -->
     <!-- - We don't need to keep all of the data like vertex colors and normals... make a dedicated struct for it and move just the pos/indices arrays -->
     <!-- - It has a noticeable effect on framerate... hopefully we can always just use bounding boxes -->
 <!-- - Still no idea how to get UI to block raycasting
@@ -183,8 +183,8 @@
     
 
 # Picking
-- Need to test the ray intersection functions
-- Maybe it would be neat to have a debug draw of bounding boxes
+<!-- - Need to test the ray intersection functions -->
+<!-- - Maybe it would be neat to have a debug draw of bounding boxes -->
 - Showing different UI for the picked thing
     - Expose some controls like material uniforms
 # Try setting up a simple orbit scene on rails/with physics

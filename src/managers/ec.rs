@@ -230,7 +230,7 @@ impl ECManager {
         return self.entity_storage.get_mut(index.unwrap() as usize);
     }
 
-    fn get_entity_from_index(&self, index: u32) -> Option<Entity> {
+    pub fn get_entity_from_index(&self, index: u32) -> Option<Entity> {
         match self.entity_storage.get(index as usize) {
             Some(entry) => {
                 if entry.live {

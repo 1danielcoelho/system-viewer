@@ -1,7 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 use egui::Ui;
 use web_sys::WebGl2RenderingContext;
+
+use crate::managers::Entity;
 
 pub struct Camera {
     pub pos: cgmath::Point3<f32>,
@@ -47,6 +52,7 @@ pub struct AppState {
     pub rotate_speed: f32,
     pub light_intensity: f32,
     pub input: Input,
+    pub selection: HashSet<Entity>,
     pub camera: Camera,
     pub gl: Option<WebGl2RenderingContext>,
     pub ui: Option<Ui>,
@@ -79,6 +85,7 @@ impl AppState {
                 up: ButtonState::Depressed,
                 down: ButtonState::Depressed,
             },
+            selection: HashSet::new(),
             camera: Camera {
                 pos: cgmath::Point3::new(-4.0, -7.0, 8.0),
                 up: cgmath::Vector3::new(0.0, 0.0, 1.0),

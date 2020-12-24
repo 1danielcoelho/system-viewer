@@ -124,8 +124,28 @@ fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
         direction: (world_pos - state.camera.pos).normalize(),
     };
 
-    let rayhit = raycast(&ray, &ent_man.mesh, &ent_man.transform);
-    // log::info!("Raycast hit: {:?}", rayhit);
+    if state.input.m0 == ButtonState::Pressed {
+        if let Some(hit) = raycast(&ray, &ent_man.mesh, &ent_man.transform) {
+            if let Some(entity) = ent_man.get_entity_from_index(hit.entity_index) {
+                state.selection.clear();
+                state.selection.insert(entity);
+            }
+        } else {
+            state.selection.clear();
+        }
+
+        // log::info!("Raycast hit: {:?}", rayhit);
+
+        // let ui = state.ui.take();
+        // let response = egui::Window::new("Test")
+        //     .fixed_pos(Pos2 {
+        //         x: state.input.mouse_x as f32,
+        //         y: state.input.mouse_y as f32,
+        //     })
+        //     .show(&ui.as_ref().unwrap().ctx(), |ui| {});
+
+        // state.ui = ui;
+    }
 }
 
 fn draw_test_widget(state: &mut AppState) {
@@ -258,6 +278,15 @@ fn draw_test_widget(state: &mut AppState) {
                 )
             );
         });
+
+        if let Some(selection) = state.selection.iter().next().cloned() {
+            ui.separator();
+
+            ui.columns(2, |cols| {
+                handle_output!(state, cols[0].label("Entity:"));
+                handle_output!(state, cols[1].label(format!("{:?}", selection)));
+            });
+        }
     });
 
     if let Some(response) = response {
