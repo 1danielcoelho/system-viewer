@@ -3,7 +3,8 @@ use web_sys::WebGl2RenderingContext;
 use crate::{
     app_state::AppState,
     managers::{
-        EventManager, InputManager, InterfaceManager, ResourceManager, SceneManager, SystemManager,
+        ECManager, EventManager, InputManager, InterfaceManager, ResourceManager, SceneManager,
+        SystemManager,
     },
 };
 
@@ -35,11 +36,19 @@ impl Engine {
         // Startup the UI frame
         self.int_man.begin_frame(state);
 
-        if let Some(scene_mut) = self.scene_man.get_main_scene_mut() {
-            self.sys_man.run(state, &mut scene_mut.ent_man);
+        // Get the scene's entity manager
+        let main_scene = self.scene_man.get_main_scene_mut();
+        let mut ent_man: Option<&mut ECManager> = match main_scene {
+            Some(scene) => Some(&mut scene.ent_man),
+            None => None,
+        };
+
+        // Run all systems if we have a scene
+        if let Some(ref mut ent_man) = ent_man {
+            self.sys_man.run(state, *ent_man);
         }
 
-        // Draw the interface after all systems added in their widgets
-        self.int_man.end_frame();
+        // Draw the UI, also handling mouse interaction if we have a scene
+        self.int_man.end_frame(state, ent_man);
     }
 }

@@ -1,7 +1,13 @@
-use crate::app_state::{AppState, ButtonState};
+use crate::{
+    app_state::{AppState, ButtonState},
+    utils::{raycast, Ray},
+};
+use cgmath::*;
 use egui::{Id, LayerId, Pos2, Response, Ui};
 use gui_backend::WebInput;
 use web_sys::WebGl2RenderingContext;
+
+use super::ECManager;
 
 type GL = WebGl2RenderingContext;
 
@@ -15,6 +21,10 @@ macro_rules! handle_output {
 fn handle_output_func(state: &mut AppState, output: Response) {
     if output.clicked && state.input.m0 == ButtonState::Pressed {
         state.input.m0 = ButtonState::Handled;
+    }
+
+    if output.hovered {
+        state.input.over_ui = true;
     }
 }
 
@@ -31,21 +41,32 @@ impl InterfaceManager {
         };
     }
 
+    /**
+     * This runs before all systems, and starts collecting all the UI elements we'll draw, as
+     * well as draws the main UI
+     */
     pub fn begin_frame(&mut self, state: &mut AppState) {
         self.pre_draw(state);
 
         InterfaceManager::draw_main_ui(state);
     }
 
-    pub fn end_frame(&mut self) {
-        let (_, paint_jobs) = self.backend.end_frame().unwrap();
-        self.backend.paint(paint_jobs).expect("Failed to paint!");
+    /** This runs after all systems, and draws the collected UI elements to the framebuffer */
+    pub fn end_frame(&mut self, state: &mut AppState, ent_man: Option<&mut ECManager>) {
+        self.draw();
+
+        if let Some(ent_man) = ent_man {
+            if !state.input.over_ui {
+                handle_mouse_on_scene(state, ent_man);
+            }
+        }
     }
 
     fn pre_draw(&mut self, state: &mut AppState) {
-        let mut raw_input = self.web_input.new_frame();
+        state.input.over_ui = false;
 
-        // TODO: Combine these or get rid of one of them?
+        // TODO: Fill in more data in raw_input
+        let mut raw_input = self.web_input.new_frame();
         raw_input.mouse_pos = Some(Pos2 {
             x: state.input.mouse_x as f32,
             y: state.input.mouse_y as f32,
@@ -54,7 +75,6 @@ impl InterfaceManager {
 
         self.backend.begin_frame(raw_input);
         let rect = self.backend.ctx.available_rect();
-
         state.ui = Some(Ui::new(
             self.backend.ctx.clone(),
             LayerId::background(),
@@ -64,6 +84,13 @@ impl InterfaceManager {
         ));
     }
 
+    fn draw(&mut self) {
+        // We shouldn't need to raycast against the drawn elements because every widget we draw will optionally
+        // also write to AppState if the mouse is over itself
+        let (_, paint_jobs) = self.backend.end_frame().unwrap();
+        self.backend.paint(paint_jobs).expect("Failed to paint!");
+    }
+
     fn draw_main_ui(state: &mut AppState) {
         // TODO: Draw menus and toolbars and stuff
 
@@ -71,11 +98,41 @@ impl InterfaceManager {
     }
 }
 
+fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
+    let p = cgmath::perspective(
+        state.camera.fov_v,
+        state.canvas_width as f32 / state.canvas_height as f32,
+        state.camera.near,
+        state.camera.far,
+    );
+    let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
+
+    let ndc_near_pos = Point3::new(
+        -1.0 + 2.0 * state.input.mouse_x as f32 / (state.canvas_width - 1) as f32,
+        1.0 - 2.0 * state.input.mouse_y as f32 / (state.canvas_height - 1) as f32,
+        -1.0,
+    );
+
+    let world_pos = v
+        .invert()
+        .unwrap()
+        .concat(&p.invert().unwrap())
+        .transform_point(ndc_near_pos);
+
+    let ray = Ray {
+        start: state.camera.pos,
+        direction: (world_pos - state.camera.pos).normalize(),
+    };
+
+    let rayhit = raycast(&ray, &ent_man.mesh, &ent_man.transform);
+    log::info!("Raycast hit: {:?}", rayhit);
+}
+
 fn draw_test_widget(state: &mut AppState) {
     // Have to take ui out of state or else we'll have aliasing issues passing ui into the closure below
     let ui = state.ui.take();
 
-    egui::Window::new("Debug").show(&ui.as_ref().unwrap().ctx(), |ui| {
+    let response = egui::Window::new("Debug").show(&ui.as_ref().unwrap().ctx(), |ui| {
         ui.columns(2, |cols| {
             handle_output!(state, cols[0].label("Simulated seconds since start:"));
             handle_output!(
@@ -202,6 +259,10 @@ fn draw_test_widget(state: &mut AppState) {
             );
         });
     });
+
+    if let Some(response) = response {
+        handle_output!(state, response);
+    }
 
     state.ui = ui;
 }

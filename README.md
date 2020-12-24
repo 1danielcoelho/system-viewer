@@ -11,5 +11,6 @@
 # Conventions
 - UV(0, 0) is on top left
 - Right-handed, Z-up
+- NDC space: Left-handed, X right, Y up, Z into the screen, (-1, -1, -1) on bottom left close, (1, 1, 1) on top right far
 
 

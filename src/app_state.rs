@@ -20,10 +20,11 @@ pub enum ButtonState {
 }
 
 pub struct Input {
-    pub mouse_x: i32,
-    pub mouse_y: i32,
-    pub delta_x: i32, // since last frame
-    pub delta_y: i32, // since last frame
+    pub mouse_x: i32,  // Canvas pixels, (0,0) on top left
+    pub mouse_y: i32,  // Canvas pixels, (0,0) on top left
+    pub delta_x: i32,  // Since last frame
+    pub delta_y: i32,  // Since last frame
+    pub over_ui: bool, // Prevents interaction with the scene
     pub m0: ButtonState,
     pub m1: ButtonState,
     pub forward: ButtonState,
@@ -31,7 +32,7 @@ pub struct Input {
     pub right: ButtonState,
     pub back: ButtonState,
     pub up: ButtonState,
-    pub down: ButtonState, // ugh
+    pub down: ButtonState,
 }
 
 pub struct AppState {
@@ -68,6 +69,7 @@ impl AppState {
                 mouse_y: 0,
                 delta_x: 0,
                 delta_y: 0,
+                over_ui: false,
                 m0: ButtonState::Depressed,
                 m1: ButtonState::Depressed,
                 forward: ButtonState::Depressed,

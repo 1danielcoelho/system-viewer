@@ -445,6 +445,7 @@ impl ResourceManager {
                 uv1: uv1_vec,
                 mode: prim.mode().as_gl_enum(),
                 mat: Some(mat_instance),
+                bb: None,
             });
         }
 

@@ -170,11 +170,12 @@
 - interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
     - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
     - interface system will also draw top-level UI
-- Still no idea how to get UI to block raycasting
-
+<!-- - Still no idea how to get UI to block raycasting
+    - Looks like I can just traverse the Rects and Triangles emitted from all paint jobs -->
 
 # Picking
 - Need to test the ray intersection functions
+- Maybe it would be neat to have a debug draw of bounding boxes
 - Showing different UI for the picked thing
     - Expose some controls like material uniforms
 # Try setting up a simple orbit scene on rails/with physics

@@ -4,7 +4,7 @@ use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
 use web_sys::{WebGl2RenderingContext, WebGl2RenderingContext as GL, WebGlBuffer};
 
-use super::{Material, Mesh, Primitive, PrimitiveAttribute};
+use super::{BoundingBox, Material, Mesh, Primitive, PrimitiveAttribute};
 
 pub struct IntermediateMesh {
     pub name: String,
@@ -23,6 +23,7 @@ pub struct IntermediatePrimitive {
     pub uv1: Vec<cgmath::Vector2<f32>>,
     pub mode: u32,
     pub mat: Option<Rc<RefCell<Material>>>,
+    pub bb: Option<Box<dyn BoundingBox>>,
 }
 
 pub fn fill_float_attribute_buffer(
