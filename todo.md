@@ -176,8 +176,8 @@
     <!-- - Maybe reshuffle it a bit so that the actual intersection math is on raytracing utils -->
     <!-- - Raycasting doesn't work on plane -->
     - Disable raycasting when we're dragging with right click, as it chugs a little bit somehow
-    - We don't need to keep all of the data like vertex colors and normals... make a dedicated struct for it and move just the pos/indices arrays
-    - It has a noticeable effect on framerate... hopefully we can always just use bounding boxes
+    <!-- - We don't need to keep all of the data like vertex colors and normals... make a dedicated struct for it and move just the pos/indices arrays -->
+    <!-- - It has a noticeable effect on framerate... hopefully we can always just use bounding boxes -->
 <!-- - Still no idea how to get UI to block raycasting
     - Looks like I can just traverse the Rects and Triangles emitted from all paint jobs -->
     

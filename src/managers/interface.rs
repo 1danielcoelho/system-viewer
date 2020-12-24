@@ -56,7 +56,7 @@ impl InterfaceManager {
         self.draw();
 
         if let Some(ent_man) = ent_man {
-            if !state.input.over_ui {
+            if !state.input.over_ui && state.input.m1 == ButtonState::Depressed {
                 handle_mouse_on_scene(state, ent_man);
             }
         }
@@ -125,7 +125,7 @@ fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
     };
 
     let rayhit = raycast(&ray, &ent_man.mesh, &ent_man.transform);
-    log::info!("Raycast hit: {:?}", rayhit);
+    // log::info!("Raycast hit: {:?}", rayhit);
 }
 
 fn draw_test_widget(state: &mut AppState) {

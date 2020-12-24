@@ -484,9 +484,28 @@ impl ResourceManager {
 
         {
             let mut mut_result = result.borrow_mut();
+
             mut_result.collider = Some(mesh_collider);
-            for (prim, inter_prim) in mut_result.primitives.iter_mut().zip(intermediate.primitives.drain(..)) {
-                prim.source_data = Some(inter_prim);
+
+            // Keep indices and positions on the mesh primitive so we can raycast against it
+            for (prim, inter_prim) in mut_result
+                .primitives
+                .iter_mut()
+                .zip(intermediate.primitives.drain(..))
+            {
+                prim.source_data = Some(IntermediatePrimitive {
+                    name: inter_prim.name,
+                    indices: inter_prim.indices,
+                    positions: inter_prim.positions,
+                    normals: Vec::new(),
+                    tangents: Vec::new(),
+                    colors: Vec::new(),
+                    uv0: Vec::new(),
+                    uv1: Vec::new(),
+                    mode: inter_prim.mode,
+                    mat: None,
+                    collider: None,
+                });
             }
         }
 
