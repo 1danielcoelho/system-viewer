@@ -1,13 +1,13 @@
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
-
-use cgmath::{InnerSpace, Vector2, Vector3, Vector4};
-use web_sys::WebGl2RenderingContext as GL;
-use web_sys::WebGl2RenderingContext;
-
 use super::{
     intermediate_mesh::intermediate_to_mesh, intermediate_mesh::IntermediateMesh,
-    intermediate_mesh::IntermediatePrimitive, Material, Mesh,
+    intermediate_mesh::IntermediatePrimitive, AxisAlignedBoxCollider, Material, Mesh,
+    SphereCollider,
 };
+use cgmath::*;
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use web_sys::WebGl2RenderingContext;
+
+type GL = web_sys::WebGl2RenderingContext;
 
 // Praise songho: http://www.songho.ca/opengl/gl_sphere.html
 pub fn generate_lat_long_sphere(
@@ -226,7 +226,10 @@ pub fn generate_lat_long_sphere(
                 uv1: vec![],
                 mat: default_material,
                 mode: GL::TRIANGLES,
-                collider: None,
+                collider: Some(Box::new(SphereCollider {
+                    center: Point3::new(0.0, 0.0, 0.0),
+                    radius2: radius * radius,
+                })),
             }],
         },
         ctx,
@@ -431,7 +434,10 @@ pub fn generate_ico_sphere(
                 uv1: vec![],
                 mat: default_material,
                 mode: GL::TRIANGLES,
-                collider: None,
+                collider: Some(Box::new(SphereCollider {
+                    center: Point3::new(0.0, 0.0, 0.0),
+                    radius2: radius * radius,
+                })),
             }],
         },
         ctx,
@@ -711,7 +717,10 @@ pub fn generate_cube(
                 ],
                 mode: GL::TRIANGLES,
                 mat: default_material,
-                collider: None,
+                collider: Some(Box::new(AxisAlignedBoxCollider {
+                    maxes: Point3::new(1.0, 1.0, 1.0),
+                    mins: Point3::new(-1.0, -1.0, -1.0),
+                })),
             }],
         },
         ctx,
@@ -778,7 +787,10 @@ pub fn generate_plane(
                 ],
                 mode: GL::TRIANGLES,
                 mat: default_material,
-                collider: None,
+                collider: Some(Box::new(AxisAlignedBoxCollider {
+                    maxes: Point3::new(1.0, 1.0, 0.0),
+                    mins: Point3::new(-1.0, -1.0, 0.0),
+                })),
             }],
         },
         ctx,

@@ -169,9 +169,13 @@
 <!-- - UI manager or something that will draw the scene-independent UI, like top menus, debug menus, notifications, etc. -->
 - interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
     - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
-    - interface system will also draw top-level UI
+    <!-- - interface system will also draw top-level UI -->
+    - Get colliders from GLTF too, and make bounding boxes for them if they don't have them
+    - Need to set proper unique IDs on meshes now that the colliders rely on them
+    - Raycasting doesn't work on plane
 <!-- - Still no idea how to get UI to block raycasting
     - Looks like I can just traverse the Rects and Triangles emitted from all paint jobs -->
+    
 
 # Picking
 - Need to test the ray intersection functions

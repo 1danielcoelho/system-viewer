@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::JsCast;
 use web_sys::{WebGl2RenderingContext, WebGl2RenderingContext as GL, WebGlBuffer};
 
-use super::{Collider, Material, Mesh, Primitive, PrimitiveAttribute};
+use super::{Collider, CompoundCollider, Material, Mesh, Primitive, PrimitiveAttribute};
 
 pub struct IntermediateMesh {
     pub name: String,
@@ -70,11 +70,11 @@ pub fn fill_short_element_buffer(
     );
 }
 
-pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContext) -> Rc<Mesh> {
+pub fn intermediate_to_mesh(mut inter: IntermediateMesh, ctx: &WebGl2RenderingContext) -> Rc<Mesh> {
     let mut primitives: Vec<Primitive> = Vec::new();
     primitives.reserve(inter.primitives.len());
 
-    for prim in inter.primitives {
+    for prim in &inter.primitives {
         // Create VAO
         let vao = ctx.create_vertex_array();
         ctx.bind_vertex_array(vao.as_ref());
@@ -210,16 +210,34 @@ pub fn intermediate_to_mesh(inter: IntermediateMesh, ctx: &WebGl2RenderingContex
             index_count: prim.indices.len() as i32,
             vao: vao.unwrap(),
             mode: prim.mode,
-            default_material: prim.mat,
+            default_material: prim.mat.clone(),
             source_data: None,
         });
     }
+
+    let collider = {
+        if inter.primitives.len() == 1 {
+            inter.primitives[0].collider.take()
+        } else {
+            let mut compound = Box::new(CompoundCollider {
+                colliders: Vec::new(),
+            });
+
+            for prim in inter.primitives {
+                if let Some(prim_collider) = prim.collider {
+                    compound.colliders.push(prim_collider);
+                }
+            }
+
+            Some(compound as Box<dyn Collider>)
+        }
+    };
 
     let result = Rc::new(Mesh {
         id: 0,
         name: inter.name,
         primitives,
-        collider: None,
+        collider,
     });
 
     return result;

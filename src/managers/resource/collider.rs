@@ -70,11 +70,11 @@ impl Collider for CompoundCollider {
 }
 
 #[derive(Clone)]
-pub struct AxisAlignedCollider {
+pub struct AxisAlignedBoxCollider {
     pub mins: Point3<f32>,
     pub maxes: Point3<f32>,
 }
-impl Collider for AxisAlignedCollider {
+impl Collider for AxisAlignedBoxCollider {
     // Source: https://tavianator.com/2015/ray_box_nan.html
     fn intersects(&self, ray: &Ray) -> f32 {
         let mut t1: f32 = (self.mins[0] - ray.start[0]) / ray.direction[0];
@@ -83,7 +83,7 @@ impl Collider for AxisAlignedCollider {
         let mut tmin = t1.min(t2);
         let mut tmax = t1.max(t2);
 
-        for i in 1..=3 {
+        for i in 1..3 {
             t1 = (self.mins[i] - ray.start[i]) / ray.direction[i];
             t2 = (self.maxes[i] - ray.start[i]) / ray.direction[i];
 
