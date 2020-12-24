@@ -18,7 +18,7 @@ pub fn generate_lat_long_sphere(
     smooth_normals: bool,
     mut shared_vertices: bool,
     default_material: Option<Rc<RefCell<Material>>>,
-) -> Rc<Mesh> {
+) -> Rc<RefCell<Mesh>> {
     if !smooth_normals {
         shared_vertices = false;
     }
@@ -213,7 +213,7 @@ pub fn generate_lat_long_sphere(
     );
 
     return intermediate_to_mesh(
-        IntermediateMesh {
+        &IntermediateMesh {
             name: String::from("lat_long_sphere"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
@@ -247,7 +247,7 @@ pub fn generate_ico_sphere(
     num_subdiv: u32,
     smooth_normals: bool,
     default_material: Option<Rc<RefCell<Material>>>,
-) -> Rc<Mesh> {
+) -> Rc<RefCell<Mesh>> {
     let final_num_verts = (20 * 3 * 4u32.pow(num_subdiv)) as usize;
 
     log::info!(
@@ -421,7 +421,7 @@ pub fn generate_ico_sphere(
     );
 
     return intermediate_to_mesh(
-        IntermediateMesh {
+        &IntermediateMesh {
             name: String::from("ico_sphere"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
@@ -447,9 +447,9 @@ pub fn generate_ico_sphere(
 pub fn generate_cube(
     ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,
-) -> Rc<Mesh> {
+) -> Rc<RefCell<Mesh>> {
     intermediate_to_mesh(
-        IntermediateMesh {
+        &IntermediateMesh {
             name: String::from("cube"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
@@ -730,9 +730,9 @@ pub fn generate_cube(
 pub fn generate_plane(
     ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,
-) -> Rc<Mesh> {
+) -> Rc<RefCell<Mesh>> {
     intermediate_to_mesh(
-        IntermediateMesh {
+        &IntermediateMesh {
             name: String::from("plane"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
@@ -788,8 +788,8 @@ pub fn generate_plane(
                 mode: GL::TRIANGLES,
                 mat: default_material,
                 collider: Some(Box::new(AxisAlignedBoxCollider {
-                    maxes: Point3::new(1.0, 1.0, 0.0),
-                    mins: Point3::new(-1.0, -1.0, 0.0),
+                    maxes: Point3::new(1.0, 1.0, 0.00001), // @Hack. Maybe use a mesh collider for the plane?
+                    mins: Point3::new(-1.0, -1.0, -0.00001),
                 })),
             }],
         },
@@ -801,7 +801,7 @@ pub fn generate_grid(
     ctx: &WebGl2RenderingContext,
     num_lines: u32,
     default_material: Option<Rc<RefCell<Material>>>,
-) -> Rc<Mesh> {
+) -> Rc<RefCell<Mesh>> {
     assert!(num_lines > 2);
 
     let incr = 1.0 / (num_lines - 1) as f32;
@@ -839,7 +839,7 @@ pub fn generate_grid(
     }
 
     return intermediate_to_mesh(
-        IntermediateMesh {
+        &IntermediateMesh {
             name: String::from("grid"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),
@@ -862,9 +862,9 @@ pub fn generate_grid(
 pub fn generate_axes(
     ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,
-) -> Rc<Mesh> {
+) -> Rc<RefCell<Mesh>> {
     intermediate_to_mesh(
-        IntermediateMesh {
+        &IntermediateMesh {
             name: String::from("axes"),
             primitives: vec![IntermediatePrimitive {
                 name: String::from("0"),

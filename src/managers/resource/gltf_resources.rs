@@ -1,18 +1,18 @@
-use std::{cell::RefCell, rc::Rc};
-
-use cgmath::{Vector2, Vector3, Vector4};
+use super::{
+    intermediate_mesh::IntermediateMesh,
+    intermediate_mesh::{intermediate_to_mesh, IntermediatePrimitive},
+    AxisAlignedBoxCollider, Material, Mesh, MeshCollider, ResourceManager, Texture, TextureUnit,
+    UniformName, UniformValue,
+};
+use cgmath::*;
 use gltf::{
     image::Format,
     mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
 };
+use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
-use web_sys::WebGl2RenderingContext as GL;
 
-use super::{
-    intermediate_mesh::IntermediateMesh,
-    intermediate_mesh::{intermediate_to_mesh, IntermediatePrimitive},
-    Material, Mesh, ResourceManager, Texture, TextureUnit, UniformName, UniformValue,
-};
+type GL = web_sys::WebGl2RenderingContext;
 
 pub trait GltfResource {
     fn get_identifier(&self, identifier: &str) -> String;
@@ -228,7 +228,7 @@ impl ResourceManager {
         buffers: &Vec<gltf::buffer::Data>,
         mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
         ctx: &WebGl2RenderingContext,
-    ) -> Result<Rc<Mesh>, String> {
+    ) -> Result<Rc<RefCell<Mesh>>, String> {
         let identifier = mesh.get_identifier(file_identifier);
 
         log::info!(
@@ -412,9 +412,9 @@ impl ResourceManager {
                 }
             }
 
+            // Material
             let mut mat_instance: Rc<RefCell<Material>> =
                 self.get_material("gltf_metal_rough").unwrap();
-
             if let Some(mat_index) = prim.material().index() {
                 if let Some(mat) = &mat_index_to_parsed[mat_index] {
                     mat_instance = mat.clone();
@@ -449,13 +449,48 @@ impl ResourceManager {
             });
         }
 
-        return Ok(intermediate_to_mesh(
-            IntermediateMesh {
-                name: identifier,
-                primitives: inter_prims,
-            },
-            ctx,
-        ));
+        // AABB collider as early out
+        let mut mins: Point3<f32> =
+            Point3::new(std::f32::INFINITY, std::f32::INFINITY, std::f32::INFINITY);
+        let mut maxes: Point3<f32> = Point3::new(
+            -std::f32::INFINITY,
+            -std::f32::INFINITY,
+            -std::f32::INFINITY,
+        );
+        for prim in &inter_prims {
+            for pos in &prim.positions {
+                mins.x = mins.x.min(pos.x);
+                mins.y = mins.y.min(pos.y);
+                mins.z = mins.z.min(pos.z);
+
+                maxes.x = maxes.x.max(pos.x);
+                maxes.y = maxes.y.max(pos.y);
+                maxes.z = maxes.z.max(pos.z);
+            }
+        }
+
+        // We'll need to keep some of the mesh data on the CPU for raycasting though
+        let mut intermediate = IntermediateMesh {
+            name: identifier,
+            primitives: inter_prims,
+        };
+
+        let result = intermediate_to_mesh(&intermediate, ctx);
+
+        let mesh_collider = Box::new(MeshCollider {
+            mesh: Rc::downgrade(&result),
+            additional_outer_collider: Some(Box::new(AxisAlignedBoxCollider { mins, maxes })),
+        });
+
+        {
+            let mut mut_result = result.borrow_mut();
+            mut_result.collider = Some(mesh_collider);
+            for (prim, inter_prim) in mut_result.primitives.iter_mut().zip(intermediate.primitives.drain(..)) {
+                prim.source_data = Some(inter_prim);
+            }
+        }
+
+        return Ok(result);
     }
 
     pub fn load_meshes_from_gltf(
@@ -480,7 +515,8 @@ impl ResourceManager {
                 &self.gl,
             ) {
                 Ok(new_mesh) => {
-                    self.meshes.insert(new_mesh.name.clone(), new_mesh);
+                    let name = new_mesh.borrow().name.clone();
+                    self.meshes.insert(name, new_mesh);
                 }
                 Err(msg) => {
                     log::error!("Failed to load gltf mesh: {}", msg);

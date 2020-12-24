@@ -16,7 +16,7 @@ pub struct MeshComponent {
 
     pub raycasting_visible: bool,
     pub visible: bool,
-    mesh: Option<Rc<Mesh>>,
+    mesh: Option<Rc<RefCell<Mesh>>>,
     material_overrides: Vec<Option<Rc<RefCell<Material>>>>,
 }
 impl MeshComponent {
@@ -24,15 +24,15 @@ impl MeshComponent {
         return Self::default();
     }
 
-    pub fn get_mesh(&self) -> Option<Rc<Mesh>> {
+    pub fn get_mesh(&self) -> Option<Rc<RefCell<Mesh>>> {
         return self.mesh.clone();
     }
 
-    pub fn set_mesh(&mut self, mesh: Option<Rc<Mesh>>) {
+    pub fn set_mesh(&mut self, mesh: Option<Rc<RefCell<Mesh>>>) {
         self.mesh = mesh;
 
         if let Some(mesh) = &self.mesh {
-            self.material_overrides.resize(mesh.primitives.len(), None);
+            self.material_overrides.resize(mesh.borrow().primitives.len(), None);
         } else {
             self.material_overrides.resize(0, None);
         }
@@ -56,7 +56,7 @@ impl MeshComponent {
         } else if let Some(material_override) = self.get_material_override(index) {
             return Some(material_override);
         } else if let Some(mesh) = &self.mesh {
-            return mesh.primitives[index].default_material.clone();
+            return mesh.borrow().primitives[index].default_material.clone();
         }
         return None;
     }

@@ -1,6 +1,7 @@
+use crate::components::{MeshComponent, TransformComponent};
 use cgmath::*;
 
-use crate::components::{MeshComponent, TransformComponent};
+pub const INTERSECTION_EPSILON: f32 = 1e-6;
 
 #[derive(Debug)]
 pub struct Ray {
@@ -31,7 +32,7 @@ pub fn raycast(
         if mesh.is_none() {
             continue;
         }
-        let mesh = mesh.unwrap();
+        let mesh = mesh.as_ref().unwrap().borrow();
 
         if mesh.collider.is_none() {
             continue;
@@ -67,5 +68,92 @@ pub fn raycast(
         });
     }
 
+    return None;
+}
+
+// Source: https://tavianator.com/2015/ray_box_nan.html
+pub fn aabb_ray_intersection(mins: &Point3<f32>, maxes: &Point3<f32>, ray: &Ray) -> f32 {
+    let mut t1: f32 = (mins[0] - ray.start[0]) / ray.direction[0];
+    let mut t2: f32 = (maxes[0] - ray.start[0]) / ray.direction[0];
+
+    let mut tmin = t1.min(t2);
+    let mut tmax = t1.max(t2);
+
+    for i in 1..3 {
+        t1 = (mins[i] - ray.start[i]) / ray.direction[i];
+        t2 = (maxes[i] - ray.start[i]) / ray.direction[i];
+
+        tmin = tmin.max(t1.min(t2).min(tmax));
+        tmax = tmax.min(t1.max(t2).max(tmin));
+    }
+
+    if tmax <= tmin.max(0.0) {
+        return std::f32::INFINITY;
+    }
+
+    return tmin;
+}
+
+// Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+pub fn sphere_ray_intersection(center: &Point3<f32>, radius2: f32, ray: &Ray) -> f32 {
+    let start_to_center = center - ray.start;
+    let projection_on_dir = start_to_center.dot(ray.direction);
+
+    let dist2_center_nearest_pt = start_to_center.dot(start_to_center) - projection_on_dir.powi(2);
+    if dist2_center_nearest_pt > radius2 {
+        return std::f32::INFINITY;
+    }
+
+    let delta = (radius2 - dist2_center_nearest_pt).sqrt();
+    let mut t0 = projection_on_dir - delta;
+    let mut t1 = projection_on_dir + delta;
+
+    if t0 > t1 {
+        std::mem::swap(&mut t0, &mut t1);
+    }
+
+    if t0 < 0.0 {
+        t0 = t1;
+        if t0 < 0.0 {
+            return std::f32::INFINITY;
+        }
+    }
+
+    return t0;
+}
+
+// MT algorithm as described here: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
+pub fn triangle_ray_intersection(
+    p0: &Vector3<f32>,
+    p1: &Vector3<f32>,
+    p2: &Vector3<f32>,
+    ray: &Ray,
+) -> Option<f32> {
+    let p0p1 = p1 - p0;
+    let p0p2 = p2 - p0;
+    let pvec = ray.direction.cross(p0p2);
+    let det = p0p1.dot(pvec);
+    if det.abs() < INTERSECTION_EPSILON {
+        return None;
+    }
+
+    let inv_det = 1.0 / det;
+
+    let tvec = ray.start - p0;
+    let u = tvec.dot(pvec) * inv_det;
+    if u < 0.0 || u > 1.0 {
+        return None;
+    }
+
+    let qvec = tvec.to_vec().cross(p0p1);
+    let v = ray.direction.dot(qvec) * inv_det;
+    if v < 0.0 || u + v > 1.0 {
+        return None;
+    }
+
+    let t = p0p2.dot(qvec) * inv_det;
+    if t > INTERSECTION_EPSILON {
+        return Some(t);
+    }
     return None;
 }

@@ -70,7 +70,10 @@ pub fn fill_short_element_buffer(
     );
 }
 
-pub fn intermediate_to_mesh(mut inter: IntermediateMesh, ctx: &WebGl2RenderingContext) -> Rc<Mesh> {
+pub fn intermediate_to_mesh(
+    mut inter: &IntermediateMesh,
+    ctx: &WebGl2RenderingContext,
+) -> Rc<RefCell<Mesh>> {
     let mut primitives: Vec<Primitive> = Vec::new();
     primitives.reserve(inter.primitives.len());
 
@@ -217,15 +220,15 @@ pub fn intermediate_to_mesh(mut inter: IntermediateMesh, ctx: &WebGl2RenderingCo
 
     let collider = {
         if inter.primitives.len() == 1 {
-            inter.primitives[0].collider.take()
+            inter.primitives[0].collider.clone()
         } else {
             let mut compound = Box::new(CompoundCollider {
                 colliders: Vec::new(),
             });
 
-            for prim in inter.primitives {
-                if let Some(prim_collider) = prim.collider {
-                    compound.colliders.push(prim_collider);
+            for prim in &inter.primitives {
+                if let Some(prim_collider) = &prim.collider {
+                    compound.colliders.push(prim_collider.clone());
                 }
             }
 
@@ -233,12 +236,11 @@ pub fn intermediate_to_mesh(mut inter: IntermediateMesh, ctx: &WebGl2RenderingCo
         }
     };
 
-    let result = Rc::new(Mesh {
-        id: 0,
-        name: inter.name,
+    let result = Rc::new(RefCell::new(Mesh {
+        name: inter.name.clone(),
         primitives,
         collider,
-    });
+    }));
 
     return result;
 }

@@ -151,7 +151,7 @@ fn load_texture_from_bytes(
 }
 
 pub struct ResourceManager {
-    meshes: HashMap<String, Rc<Mesh>>,
+    meshes: HashMap<String, Rc<RefCell<Mesh>>>,
     textures: HashMap<String, Rc<Texture>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
 
@@ -180,7 +180,7 @@ impl ResourceManager {
         self.get_or_create_mesh("axes");
     }
 
-    pub fn get_mesh(&self, identifier: &str) -> Option<Rc<Mesh>> {
+    pub fn get_mesh(&self, identifier: &str) -> Option<Rc<RefCell<Mesh>>> {
         if let Some(mesh) = self.meshes.get(identifier) {
             return Some(mesh.clone());
         }
@@ -188,14 +188,14 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn get_or_create_mesh(&mut self, identifier: &str) -> Option<Rc<Mesh>> {
+    pub fn get_or_create_mesh(&mut self, identifier: &str) -> Option<Rc<RefCell<Mesh>>> {
         if let Some(mesh) = self.get_mesh(identifier) {
             return Some(mesh);
         }
 
         let default_mat = self.get_or_create_material("default");
 
-        let mesh: Option<Rc<Mesh>> = match identifier {
+        let mesh: Option<Rc<RefCell<Mesh>>> = match identifier {
             "cube" => Some(generate_cube(&self.gl, default_mat)),
             "plane" => Some(generate_plane(&self.gl, default_mat)),
             "grid" => Some(generate_grid(&self.gl, 200, default_mat)),
@@ -216,6 +216,9 @@ impl ResourceManager {
         match mesh {
             Some(ref mesh) => {
                 log::info!("Generated mesh '{}'", identifier);
+                assert!(!self.meshes.contains_key(identifier));
+
+                mesh.borrow_mut().name = identifier.to_owned();
                 self.meshes.insert(identifier.to_string(), mesh.clone());
             }
             None => log::warn!("Failed to find mesh with name '{}'", identifier),

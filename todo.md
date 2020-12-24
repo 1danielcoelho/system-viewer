@@ -170,9 +170,14 @@
 - interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
     - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
     <!-- - interface system will also draw top-level UI -->
-    - Get colliders from GLTF too, and make bounding boxes for them if they don't have them
-    - Need to set proper unique IDs on meshes now that the colliders rely on them
-    - Raycasting doesn't work on plane
+    <!-- - Get colliders from GLTF too, and make bounding boxes for them if they don't have them -->
+    <!-- - It's a really bad idea to have a Mesh -> Collider -> Mesh Rc cycle... it can't ever be destroyed -->
+    <!-- - Need to set proper unique IDs on meshes now that the colliders rely on them -->
+    <!-- - Maybe reshuffle it a bit so that the actual intersection math is on raytracing utils -->
+    <!-- - Raycasting doesn't work on plane -->
+    - Disable raycasting when we're dragging with right click, as it chugs a little bit somehow
+    - We don't need to keep all of the data like vertex colors and normals... make a dedicated struct for it and move just the pos/indices arrays
+    - It has a noticeable effect on framerate... hopefully we can always just use bounding boxes
 <!-- - Still no idea how to get UI to block raycasting
     - Looks like I can just traverse the Rects and Triangles emitted from all paint jobs -->
     

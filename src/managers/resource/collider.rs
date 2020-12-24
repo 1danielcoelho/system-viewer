@@ -1,9 +1,9 @@
 use super::Mesh;
-use crate::utils::Ray;
+use crate::utils::{
+    aabb_ray_intersection, sphere_ray_intersection, triangle_ray_intersection, Ray,
+};
 use cgmath::*;
-use std::rc::Rc;
-
-const RAY_TRIANGLE_EPSILON: f32 = 1e-6;
+use std::{cell::RefCell, rc::Weak};
 
 // Trick from https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object
 // to have clonable trait objects
@@ -75,27 +75,8 @@ pub struct AxisAlignedBoxCollider {
     pub maxes: Point3<f32>,
 }
 impl Collider for AxisAlignedBoxCollider {
-    // Source: https://tavianator.com/2015/ray_box_nan.html
     fn intersects(&self, ray: &Ray) -> f32 {
-        let mut t1: f32 = (self.mins[0] - ray.start[0]) / ray.direction[0];
-        let mut t2: f32 = (self.maxes[0] - ray.start[0]) / ray.direction[0];
-
-        let mut tmin = t1.min(t2);
-        let mut tmax = t1.max(t2);
-
-        for i in 1..3 {
-            t1 = (self.mins[i] - ray.start[i]) / ray.direction[i];
-            t2 = (self.maxes[i] - ray.start[i]) / ray.direction[i];
-
-            tmin = tmin.max(t1.min(t2).min(tmax));
-            tmax = tmax.min(t1.max(t2).max(tmin));
-        }
-
-        if tmax <= tmin.max(0.0) {
-            return std::f32::INFINITY;
-        }
-
-        return tmin;
+        return aabb_ray_intersection(&self.mins, &self.maxes, ray);
     }
 
     fn contains(&self, point: &Point3<f32>) -> bool {
@@ -114,33 +95,8 @@ pub struct SphereCollider {
     pub radius2: f32,
 }
 impl Collider for SphereCollider {
-    // Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
     fn intersects(&self, ray: &Ray) -> f32 {
-        let start_to_center = self.center - ray.start;
-        let projection_on_dir = start_to_center.dot(ray.direction);
-
-        let dist2_center_nearest_pt =
-            start_to_center.dot(start_to_center) - projection_on_dir.powi(2);
-        if dist2_center_nearest_pt > self.radius2 {
-            return std::f32::INFINITY;
-        }
-
-        let delta = (self.radius2 - dist2_center_nearest_pt).sqrt();
-        let mut t0 = projection_on_dir - delta;
-        let mut t1 = projection_on_dir + delta;
-
-        if t0 > t1 {
-            std::mem::swap(&mut t0, &mut t1);
-        }
-
-        if t0 < 0.0 {
-            t0 = t1;
-            if t0 < 0.0 {
-                return std::f32::INFINITY;
-            }
-        }
-
-        return t0;
+        return sphere_ray_intersection(&self.center, self.radius2, ray);
     }
 
     fn contains(&self, point: &Point3<f32>) -> bool {
@@ -148,24 +104,48 @@ impl Collider for SphereCollider {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct MeshCollider {
-    pub mesh: Rc<Mesh>,
+    // This can't be Rc as meshes can use themselves as their colliders
+    pub mesh: Weak<RefCell<Mesh>>,
+
+    // When we have a mesh use itself as a MeshCollider, we can use this additional member
+    // as an early-out check. In other cases, when we use another mesh as a collider the
+    // mesh's own collider will also be used as an early out
+    pub additional_outer_collider: Option<Box<dyn Collider>>,
 }
 impl Collider for MeshCollider {
     fn intersects(&self, ray: &Ray) -> f32 {
         let mut min_t: f32 = std::f32::INFINITY;
 
+        let mesh = self.mesh.upgrade();
+        if mesh.is_none() {
+            log::warn!(
+                "Failed to reach target mesh when calculating intersection for a MeshCollider!"
+            );
+            return min_t;
+        }
+
+        // Additional early out if we have one
+        if let Some(additional_collider) = &self.additional_outer_collider {
+            if additional_collider.intersects(&ray) == min_t {
+                return min_t;
+            }
+        }
+
         // Early out if our mesh has a collider and it's not just pointing back at the mesh
-        if let Some(collider) = &self.mesh.collider {
-            if self.as_mesh() != collider.as_mesh() {
+        if let Some(collider) = &mesh.as_ref().unwrap().borrow().collider {
+            let other_as_mesh = collider.as_mesh();
+
+            if other_as_mesh.is_none() || other_as_mesh.unwrap().mesh.upgrade() != mesh {
                 if collider.intersects(&ray) == min_t {
+                    log::warn!("Earlying out due to recursive MeshCollider!");
                     return min_t;
                 }
             }
         }
 
-        for primitive in &self.mesh.primitives {
+        for primitive in &mesh.unwrap().borrow().primitives {
             if let Some(ref source_data) = primitive.source_data {
                 for i in 0..source_data.indices.len() / 3 {
                     let p0 = source_data.positions[source_data.indices[i * 3 + 0] as usize];
@@ -183,13 +163,37 @@ impl Collider for MeshCollider {
     }
 
     fn contains(&self, point: &Point3<f32>) -> bool {
+        let mesh = self.mesh.upgrade();
+        if mesh.is_none() {
+            log::warn!("Failed to reach target mesh when calculating contains for a MeshCollider!");
+            return false;
+        }
+
+        // Additional early out if we have one
+        if let Some(additional_collider) = &self.additional_outer_collider {
+            if !additional_collider.contains(point) {
+                return false;
+            }
+        }
+
+        // Early out if our mesh has a collider and it's not just pointing back at the mesh
+        if let Some(collider) = &mesh.as_ref().unwrap().borrow().collider {
+            let other_as_mesh = collider.as_mesh();
+
+            if other_as_mesh.is_none() || other_as_mesh.unwrap().mesh.upgrade() != mesh {
+                if !collider.contains(point) {
+                    return false;
+                }
+            }
+        }
+
         let test_ray = Ray {
             start: *point,
             direction: Vector3::new(1.0, 0.0, 0.0),
         };
 
         let mut num_intersections = 0;
-        for primitive in &self.mesh.primitives {
+        for primitive in &mesh.unwrap().borrow().primitives {
             if let Some(ref source_data) = primitive.source_data {
                 for i in 0..source_data.indices.len() / 3 {
                     let p0 = source_data.positions[source_data.indices[i * 3 + 0] as usize];
@@ -209,37 +213,4 @@ impl Collider for MeshCollider {
     fn as_mesh(&self) -> Option<MeshCollider> {
         return Some(self.clone());
     }
-}
-
-// MT algorithm as described here: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
-fn triangle_ray_intersection(
-    p0: &Vector3<f32>,
-    p1: &Vector3<f32>,
-    p2: &Vector3<f32>,
-    ray: &Ray,
-) -> Option<f32> {
-    let p0p1 = p1 - p0;
-    let p0p2 = p2 - p0;
-    let pvec = ray.direction.cross(p0p2);
-    let det = p0p1.dot(pvec);
-    if det.abs() < RAY_TRIANGLE_EPSILON {
-        return None;
-    }
-
-    let inv_det = 1.0 / det;
-
-    let tvec = ray.start - p0;
-    let u = tvec.dot(pvec) * inv_det;
-    if u < 0.0 || u > 1.0 {
-        return None;
-    }
-
-    let qvec = tvec.to_vec().cross(p0p1);
-    let v = ray.direction.dot(qvec) * inv_det;
-    if v < 0.0 || u + v > 1.0 {
-        return None;
-    }
-
-    let t = p0p2.dot(qvec) * inv_det;
-    return Some(t);
 }

@@ -16,14 +16,13 @@ pub enum PrimitiveAttribute {
 }
 
 pub struct Mesh {
-    pub id: u32,
     pub name: String,
     pub primitives: Vec<Primitive>,
     pub collider: Option<Box<dyn Collider>>,
 }
 impl PartialEq for Mesh {
     fn eq(&self, other: &Self) -> bool {
-        return self.id == other.id;
+        return self.name == other.name;
     }
 }
 

@@ -142,7 +142,7 @@ impl RenderingSystem {
         let w_inv_trans_uniform_data: [f32; 16] = *w_inv_trans.as_ref();
 
         if let Some(mesh) = mc.get_mesh() {
-            for (primitive_index, primitive) in mesh.primitives.iter().enumerate() {
+            for (primitive_index, primitive) in mesh.borrow().primitives.iter().enumerate() {
                 let resolved_mat = mc.get_resolved_material(primitive_index);
 
                 if let Some(mat) = &resolved_mat {
