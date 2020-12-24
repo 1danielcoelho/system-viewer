@@ -163,10 +163,10 @@
 
 
 # UI refactor
-- Remove UI "components", as that doesn't seem like the best idea
-- Heavily refactor interface system into interface manager
-- Put egui context directly on the app state. Each component can draw anything, like you're supposed to in imgui
-- UI manager or something that will draw the scene-independent UI, like top menus, debug menus, notifications, etc.
+<!-- - Remove UI "components", as that doesn't seem like the best idea -->
+<!-- - Heavily refactor interface system into interface manager -->
+<!-- - Put egui context directly on the app state. Each component can draw anything, like you're supposed to in imgui -->
+<!-- - UI manager or something that will draw the scene-independent UI, like top menus, debug menus, notifications, etc. -->
 - interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
     - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
     - interface system will also draw top-level UI

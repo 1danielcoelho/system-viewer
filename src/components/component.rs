@@ -7,7 +7,6 @@ pub enum ComponentType {
     Transform,
     Mesh,
     Physics,
-    Ui,
     Light,
 }
 

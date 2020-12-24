@@ -4,7 +4,7 @@ use std::{cmp::Reverse, hash::Hash};
 
 use crate::components::{
     component::ComponentStorageType, Component, LightComponent, MeshComponent, PhysicsComponent,
-    TransformComponent, UIComponent,
+    TransformComponent,
 };
 
 #[derive(Debug, Copy, Clone, Eq, Hash)]
@@ -36,7 +36,6 @@ pub struct ECManager {
     pub physics: Vec<PhysicsComponent>,
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
-    pub interface: HashMap<Entity, UIComponent>,
     pub light: HashMap<Entity, LightComponent>,
 }
 
@@ -51,7 +50,6 @@ impl ECManager {
             physics: Vec::new(),
             mesh: Vec::new(),
             transform: Vec::new(),
-            interface: HashMap::new(),
             light: HashMap::new(),
         }
     }
@@ -461,11 +459,11 @@ impl ECManager {
         }
 
         // Move hashmap component data
-        for (other_ent, new_ent) in other_ent_to_new_ent.iter() {
-            if let Some(comp) = other_man.interface.remove(other_ent) {
-                self.interface.insert(*new_ent, comp);
-            }
-        }
+        // for (other_ent, new_ent) in other_ent_to_new_ent.iter() {
+        //     if let Some(comp) = other_man.interface.remove(other_ent) {
+        //         self.interface.insert(*new_ent, comp);
+        //     }
+        // }
 
         // TODO: Update entity references in components
     }
@@ -533,8 +531,8 @@ impl ECManager {
         }
 
         // Pretty sure I'm converting to and from entities at least once too many...
-        let ent_a = self.get_entity_from_index(index_a).unwrap();
-        let ent_b = self.get_entity_from_index(index_b).unwrap();
+        // let ent_a = self.get_entity_from_index(index_a).unwrap();
+        // let ent_b = self.get_entity_from_index(index_b).unwrap();
 
         let max_index = index_a.max(index_b);
         self.resize_components((max_index + 1) as usize);
@@ -543,14 +541,15 @@ impl ECManager {
         self.mesh.swap(index_a as usize, index_b as usize);
         self.transform.swap(index_a as usize, index_b as usize);
 
-        let int_a = self.interface.remove(&ent_a);
-        let int_b = self.interface.remove(&ent_b);
-        if let Some(int_a) = int_a {
-            self.interface.insert(ent_b, int_a);
-        }
-        if let Some(int_b) = int_b {
-            self.interface.insert(ent_a, int_b);
-        }
+        // Swap hashmap component storages
+        // let int_a = self.interface.remove(&ent_a);
+        // let int_b = self.interface.remove(&ent_b);
+        // if let Some(int_a) = int_a {
+        //     self.interface.insert(ent_b, int_a);
+        // }
+        // if let Some(int_b) = int_b {
+        //     self.interface.insert(ent_a, int_b);
+        // }
     }
 
     fn resize_components(&mut self, min_length: usize) {

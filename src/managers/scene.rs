@@ -4,8 +4,7 @@ use cgmath::{InnerSpace, UlpsEq, Vector3};
 
 use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
 use crate::components::{
-    light::LightType, transform::TransformType, ui::WidgetType, LightComponent, MeshComponent,
-    TransformComponent, UIComponent,
+    light::LightType, transform::TransformType, LightComponent, MeshComponent, TransformComponent,
 };
 
 #[derive(Clone)]
@@ -389,15 +388,6 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 3.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
-
-        // Debug UI
-        let ui_entity = scene.ent_man.new_entity(Some("debug_ui"));
-        scene.ent_man.add_component::<TransformComponent>(ui_entity);
-        let ui_comp = scene
-            .ent_man
-            .add_component::<UIComponent>(ui_entity)
-            .unwrap();
-        ui_comp.widget_type = WidgetType::TestWidget;
 
         self.loaded_scenes.insert(identifier.to_string(), scene);
     }

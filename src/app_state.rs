@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use egui::Ui;
 use web_sys::WebGl2RenderingContext;
 
 pub struct Camera {
@@ -47,6 +48,7 @@ pub struct AppState {
     pub input: Input,
     pub camera: Camera,
     pub gl: Option<WebGl2RenderingContext>,
+    pub ui: Option<Ui>,
 }
 impl AppState {
     pub fn new() -> Arc<Mutex<Self>> {
@@ -84,6 +86,7 @@ impl AppState {
                 far: 100000.0,
             },
             gl: None,
+            ui: None,
         }))
     }
 }
