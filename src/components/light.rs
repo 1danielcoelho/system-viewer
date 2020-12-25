@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::managers::{ECManager, Entity};
 
 use super::{
-    component::{ComponentType, ComponentStorageType},
+    component::{ComponentStorageType, ComponentType},
     Component,
 };
 

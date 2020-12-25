@@ -3,8 +3,7 @@ use web_sys::WebGl2RenderingContext;
 use crate::{
     app_state::AppState,
     managers::{
-        ECManager, EventManager, InputManager, InterfaceManager, ResourceManager, SceneManager,
-        SystemManager,
+        EventManager, InputManager, InterfaceManager, ResourceManager, SceneManager, SystemManager,
     },
 };
 
@@ -33,22 +32,32 @@ impl Engine {
     pub fn update(&mut self, state: &mut AppState) {
         self.input_man.run(state);
 
-        // Startup the UI frame
-        self.int_man.begin_frame(state);
+        // TODO: Figure out how to do this using the same ent_man ref...
 
-        // Get the scene's entity manager
-        let main_scene = self.scene_man.get_main_scene_mut();
-        let mut ent_man: Option<&mut ECManager> = match main_scene {
-            Some(scene) => Some(&mut scene.ent_man),
-            None => None,
-        };
+        // Startup the UI frame
+        self.int_man.begin_frame(
+            state,
+            self.scene_man
+                .get_main_scene_mut()
+                .and_then(|s| Some(&mut s.ent_man)),
+        );
+
+        let ent_man = self
+            .scene_man
+            .get_main_scene_mut()
+            .and_then(|s| Some(&mut s.ent_man));
 
         // Run all systems if we have a scene
-        if let Some(ref mut ent_man) = ent_man {
-            self.sys_man.run(state, *ent_man);
+        if let Some(ent_man) = ent_man {
+            self.sys_man.run(state, ent_man);
         }
 
         // Draw the UI, also handling mouse interaction if we have a scene
-        self.int_man.end_frame(state, ent_man);
+        self.int_man.end_frame(
+            state,
+            self.scene_man
+                .get_main_scene_mut()
+                .and_then(|s| Some(&mut s.ent_man)),
+        );
     }
 }

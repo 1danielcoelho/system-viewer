@@ -169,6 +169,7 @@
 <!-- - UI manager or something that will draw the scene-independent UI, like top menus, debug menus, notifications, etc. -->
 - interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
     - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
+    - Dragging a slider off the window is interpreted as a mouse down, and drops the selection
     <!-- - interface system will also draw top-level UI -->
     <!-- - Get colliders from GLTF too, and make bounding boxes for them if they don't have them -->
     <!-- - It's a really bad idea to have a Mesh -> Collider -> Mesh Rc cycle... it can't ever be destroyed -->

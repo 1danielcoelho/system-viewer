@@ -1,9 +1,10 @@
 use crate::{
     app_state::{AppState, ButtonState},
+    components::{Component, TransformComponent},
     utils::{raycast, Ray},
 };
 use cgmath::*;
-use egui::{Id, LayerId, Pos2, Response, Ui};
+use egui::{Align, Id, LayerId, Layout, Pos2, Response, Ui};
 use gui_backend::WebInput;
 use web_sys::WebGl2RenderingContext;
 
@@ -11,6 +12,7 @@ use super::ECManager;
 
 type GL = WebGl2RenderingContext;
 
+#[macro_export]
 macro_rules! handle_output {
     ($s:ident, $e:expr) => {{
         let result = $e;
@@ -18,7 +20,7 @@ macro_rules! handle_output {
     }};
 }
 
-fn handle_output_func(state: &mut AppState, output: Response) {
+pub fn handle_output_func(state: &mut AppState, output: Response) {
     if output.clicked && state.input.m0 == ButtonState::Pressed {
         state.input.m0 = ButtonState::Handled;
     }
@@ -45,10 +47,10 @@ impl InterfaceManager {
      * This runs before all systems, and starts collecting all the UI elements we'll draw, as
      * well as draws the main UI
      */
-    pub fn begin_frame(&mut self, state: &mut AppState) {
+    pub fn begin_frame(&mut self, state: &mut AppState, ent_man: Option<&mut ECManager>) {
         self.pre_draw(state);
 
-        InterfaceManager::draw_main_ui(state);
+        draw_main_ui(state, ent_man);
     }
 
     /** This runs after all systems, and draws the collected UI elements to the framebuffer */
@@ -90,12 +92,12 @@ impl InterfaceManager {
         let (_, paint_jobs) = self.backend.end_frame().unwrap();
         self.backend.paint(paint_jobs).expect("Failed to paint!");
     }
+}
 
-    fn draw_main_ui(state: &mut AppState) {
-        // TODO: Draw menus and toolbars and stuff
+fn draw_main_ui(state: &mut AppState, ent_man: Option<&mut ECManager>) {
+    // TODO: Draw menus and toolbars and stuff
 
-        draw_test_widget(state);
-    }
+    draw_test_widget(state, ent_man);
 }
 
 fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
@@ -148,134 +150,97 @@ fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
     }
 }
 
-fn draw_test_widget(state: &mut AppState) {
+fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
     // Have to take ui out of state or else we'll have aliasing issues passing ui into the closure below
     let ui = state.ui.take();
 
     let response = egui::Window::new("Debug").show(&ui.as_ref().unwrap().ctx(), |ui| {
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Simulated seconds since start:"));
-            handle_output!(
-                state,
-                cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0))
-            );
+            cols[0].label("Simulated seconds since start:");
+            cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0));
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Real seconds since start:"));
-            handle_output!(
-                state,
-                cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0))
-            );
+            cols[0].label("Real seconds since start:");
+            cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0));
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Frames per second:"));
-            handle_output!(
-                state,
-                cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms))
-            );
+            cols[0].label("Frames per second:");
+            cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms));
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Simulation speed:"));
-            handle_output!(
-                state,
-                cols[1].add(
-                    egui::DragValue::f64(&mut state.simulation_speed)
-                        .range(-100.0..=100.0)
-                        .speed(0.01),
-                )
+            cols[0].label("Simulation speed:");
+            cols[1].add(
+                egui::DragValue::f64(&mut state.simulation_speed)
+                    .range(-100.0..=100.0)
+                    .speed(0.01),
             );
         });
 
         ui.separator();
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Light intensity exponent:"));
-            handle_output!(
-                state,
-                cols[1].add(
-                    egui::DragValue::f32(&mut state.light_intensity)
-                        .range(-1000.0..=1000.0)
-                        .speed(0.01),
-                )
+            cols[0].label("Light intensity exponent:");
+            cols[1].add(
+                egui::DragValue::f32(&mut state.light_intensity)
+                    .range(-1000.0..=1000.0)
+                    .speed(0.01),
             );
         });
 
         ui.separator();
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Vertical FOV (deg):"));
-            handle_output!(
-                state,
-                cols[1].add(
-                    egui::DragValue::f32(&mut state.camera.fov_v.0)
-                        .range(0.1..=120.0)
-                        .speed(0.5),
-                )
+            cols[0].label("Vertical FOV (deg):");
+            cols[1].add(
+                egui::DragValue::f32(&mut state.camera.fov_v.0)
+                    .range(0.1..=120.0)
+                    .speed(0.5),
             );
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Near:"));
-            handle_output!(
-                state,
-                cols[1].add(
-                    egui::DragValue::f32(&mut state.camera.near)
-                        .range(0.01..=19.9)
-                        .speed(0.01),
-                )
+            cols[0].label("Near:");
+            cols[1].add(
+                egui::DragValue::f32(&mut state.camera.near)
+                    .range(0.01..=19.9)
+                    .speed(0.01),
             );
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Far:"));
-            handle_output!(
-                state,
-                cols[1].add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0))
-            );
+            cols[0].label("Far:");
+            cols[1].add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Camera pos:"));
-            handle_output!(
-                state,
-                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "))
-            );
-            handle_output!(
-                state,
-                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "))
-            );
-            handle_output!(
-                state,
-                cols[1].add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "))
-            );
+            cols[0].label("Camera pos:");
+            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));                
+            });
         });
 
         ui.separator();
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Move speed:"));
-            handle_output!(
-                state,
-                cols[1].add(
-                    egui::DragValue::f32(&mut state.move_speed)
-                        .range(1.0..=1000.0)
-                        .speed(0.1),
-                )
+            cols[0].label("Move speed:");
+            cols[1].add(
+                egui::DragValue::f32(&mut state.move_speed)
+                    .range(1.0..=1000.0)
+                    .speed(0.1),
             );
         });
 
         ui.columns(2, |cols| {
-            handle_output!(state, cols[0].label("Rotation speed:"));
-            handle_output!(
-                state,
-                cols[1].add(
-                    egui::DragValue::f32(&mut state.rotate_speed)
-                        .range(1.0..=10.0)
-                        .speed(0.1),
-                )
+            cols[0].label("Rotation speed:");
+            cols[1].add(
+                egui::DragValue::f32(&mut state.rotate_speed)
+                    .range(1.0..=10.0)
+                    .speed(0.1),
             );
         });
 
@@ -283,9 +248,24 @@ fn draw_test_widget(state: &mut AppState) {
             ui.separator();
 
             ui.columns(2, |cols| {
-                handle_output!(state, cols[0].label("Entity:"));
-                handle_output!(state, cols[1].label(format!("{:?}", selection)));
+                cols[0].label("Selected entity:");
+                cols[1].label(format!("{:?}", selection));
             });
+
+            if let Some(ent_man) = ent_man {
+                ui.columns(2, |cols| {
+                    cols[0].label("Name:");
+                    cols[1].label(format!(
+                        "{}",
+                        ent_man.get_entity_name(selection).unwrap_or_default()
+                    ));
+                });
+
+                if let Some(trans_comp) = ent_man.get_component::<TransformComponent>(selection) {
+                    ui.separator();
+                    trans_comp.draw_details_ui(ui);
+                }
+            }
         }
     });
 

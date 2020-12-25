@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use egui::Ui;
+
 use crate::managers::{ECManager, Entity};
 
 #[derive(Debug)]
@@ -33,5 +35,8 @@ pub trait Component: Default + Clone {
         _w: &'a mut ECManager,
     ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
         return None;
+    }
+
+    fn draw_details_ui(&mut self, ui: &mut Ui) {        
     }
 }

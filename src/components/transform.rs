@@ -1,11 +1,10 @@
-use crate::managers::ECManager;
-
-use cgmath::Transform;
-
 use super::{
-    component::{ComponentType, ComponentStorageType},
+    component::{ComponentStorageType, ComponentType},
     Component,
 };
+use crate::managers::ECManager;
+use cgmath::*;
+use egui::{Align, Layout, Ui};
 
 pub type TransformType = cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>;
 
@@ -70,5 +69,53 @@ impl Component for TransformComponent {
 
     fn get_enabled(&mut self) -> bool {
         return self.enabled;
+    }
+
+    fn draw_details_ui(&mut self, ui: &mut Ui) {
+        ui.label("Transform component:");
+
+        ui.columns(2, |cols| {
+            cols[0].label("Pos:");
+            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+                ui.add(egui::DragValue::f32(&mut self.local_transform.disp.x).prefix("x: "));
+                ui.add(egui::DragValue::f32(&mut self.local_transform.disp.y).prefix("y: "));
+                ui.add(egui::DragValue::f32(&mut self.local_transform.disp.z).prefix("z: "));
+            });
+        });
+
+        ui.columns(2, |cols| {
+            cols[0].label("Rot:");
+            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+                let euler: Euler<Rad<f32>> = self.local_transform.rot.into();
+                let mut euler: Euler<Deg<f32>> =
+                    Euler::new(Deg::from(euler.x), Deg::from(euler.y), Deg::from(euler.z));
+
+                ui.add(
+                    egui::DragValue::f32(&mut euler.x.0)
+                        .prefix("x: ")
+                        .suffix("deg"),
+                );
+                ui.add(
+                    egui::DragValue::f32(&mut euler.y.0)
+                        .prefix("y: ")
+                        .suffix("deg"),
+                );
+                ui.add(
+                    egui::DragValue::f32(&mut euler.z.0)
+                        .prefix("z: ")
+                        .suffix("deg"),
+                );
+
+                self.local_transform.rot = euler.into();
+                self.local_transform.rot.normalize();
+            });
+        });
+
+        ui.columns(2, |cols| {
+            cols[0].label("Scale:");
+            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+                ui.add(egui::DragValue::f32(&mut self.local_transform.scale).speed(0.1));
+            });
+        });
     }
 }
