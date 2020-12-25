@@ -24,12 +24,12 @@ macro_rules! handle_output {
 }
 
 pub fn handle_output_func(state: &mut AppState, output: Response) {
-    if output.clicked && state.input.m0 == ButtonState::Pressed {
-        state.input.m0 = ButtonState::Handled;
-    }
-
     if output.hovered {
         state.input.over_ui = true;
+
+        if state.input.m0 == ButtonState::Pressed {
+            state.input.m0 = ButtonState::Handled;
+        }
     }
 }
 
@@ -76,7 +76,9 @@ impl InterfaceManager {
             x: state.input.mouse_x as f32,
             y: state.input.mouse_y as f32,
         });
-        raw_input.mouse_down = state.input.m0 == ButtonState::Pressed;
+
+        // HACK: Currently the UI sets the button state to handled if mouse down happens over it...
+        raw_input.mouse_down = state.input.m0 != ButtonState::Depressed;
 
         self.backend.begin_frame(raw_input);
         let rect = self.backend.ctx.available_rect();

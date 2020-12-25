@@ -159,36 +159,35 @@
 <!-- # Update egui -->
 <!-- - I think the main reason why I need the custom backend is to prevent it from clearing the buffer before drawing. And now so that I can get the context from it -->
 <!-- - I think he fixed the column thing so I can probably make an aligned table for the debug widget -->
-
-
-
-# UI refactor
+<!-- # UI refactor -->
 <!-- - Remove UI "components", as that doesn't seem like the best idea -->
 <!-- - Heavily refactor interface system into interface manager -->
 <!-- - Put egui context directly on the app state. Each component can draw anything, like you're supposed to in imgui -->
 <!-- - UI manager or something that will draw the scene-independent UI, like top menus, debug menus, notifications, etc. -->
-- interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.)
-    - For debug we could even display arbitrary component data like mesh name, material uniforms, etc.
-    - Dragging a slider off the window is interpreted as a mouse down, and drops the selection
-    <!-- - interface system will also draw top-level UI -->
-    <!-- - Get colliders from GLTF too, and make bounding boxes for them if they don't have them -->
-    <!-- - It's a really bad idea to have a Mesh -> Collider -> Mesh Rc cycle... it can't ever be destroyed -->
-    <!-- - Need to set proper unique IDs on meshes now that the colliders rely on them -->
-    <!-- - Maybe reshuffle it a bit so that the actual intersection math is on raytracing utils -->
-    <!-- - Raycasting doesn't work on plane -->
-    <!-- - Disable raycasting when we're dragging with right click, as it chugs a little bit somehow -->
-    <!-- - We don't need to keep all of the data like vertex colors and normals... make a dedicated struct for it and move just the pos/indices arrays -->
-    <!-- - It has a noticeable effect on framerate... hopefully we can always just use bounding boxes -->
+<!-- - interface manager will raycast, find the hit entity and try to figure out what to display based on state (shift pressed, etc.) -->
+<!-- - For debug we could even display arbitrary component data like mesh name, material uniforms, etc. -->
+<!-- - Dragging a slider off the window is interpreted as a mouse down, and drops the selection -->
+<!-- - interface system will also draw top-level UI -->
+<!-- - Get colliders from GLTF too, and make bounding boxes for them if they don't have them -->
+<!-- - It's a really bad idea to have a Mesh -> Collider -> Mesh Rc cycle... it can't ever be destroyed -->
+<!-- - Need to set proper unique IDs on meshes now that the colliders rely on them -->
+<!-- - Maybe reshuffle it a bit so that the actual intersection math is on raytracing utils -->
+<!-- - Raycasting doesn't work on plane -->
+<!-- - Disable raycasting when we're dragging with right click, as it chugs a little bit somehow -->
+<!-- - We don't need to keep all of the data like vertex colors and normals... make a dedicated struct for it and move just the pos/indices arrays -->
+<!-- - It has a noticeable effect on framerate... hopefully we can always just use bounding boxes -->
 <!-- - Still no idea how to get UI to block raycasting
     - Looks like I can just traverse the Rects and Triangles emitted from all paint jobs -->
-    
-
-# Picking
+<!-- # Picking -->
 <!-- - Need to test the ray intersection functions -->
 <!-- - Maybe it would be neat to have a debug draw of bounding boxes -->
-- Showing different UI for the picked thing
-    - Expose some controls like material uniforms
+<!-- - Showing different UI for the picked thing
+    - Expose some controls like material uniforms -->
+
+
 # Try setting up a simple orbit scene on rails/with physics
+
+
 # Parsing of orbital elements
 # Cubemap texture for the skybox
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
@@ -208,6 +207,7 @@
 # I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
 # We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
+# Maybe use https://crates.io/crates/calloop for the event system instead
 
 # Docs link:
 - file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html

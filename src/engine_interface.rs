@@ -105,7 +105,12 @@ impl EngineInterface {
             let handler = move |event: web_sys::MouseEvent| {
                 let state = &mut *app_state_clone.lock().unwrap();
                 match event.button() as i16 {
-                    0 => state.input.m0 = ButtonState::Pressed,
+                    0 => {
+                        // Don't revert back to "pressed" if it's already handled
+                        if state.input.m0 == ButtonState::Depressed {
+                            state.input.m0 = ButtonState::Pressed;
+                        }
+                    }
 
                     // 1 is the mouse wheel click
                     2 => {
