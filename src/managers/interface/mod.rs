@@ -265,13 +265,15 @@ fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
                 });
 
                 if let Some(comp) = ent_man.get_component::<TransformComponent>(selection) {
-                    ui.separator();
-                    comp.draw_details_ui(ui);
+                    ui.collapsing("Transform component", |ui| {
+                        comp.draw_details_ui(ui);
+                    });
                 }
 
                 if let Some(comp) = ent_man.get_component::<MeshComponent>(selection) {
-                    ui.separator();
-                    comp.draw_details_ui(ui);
+                    ui.collapsing("Mesh component", |ui| {
+                        comp.draw_details_ui(ui);
+                    });
                 }
             }
         }

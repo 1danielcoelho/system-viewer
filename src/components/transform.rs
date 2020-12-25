@@ -74,8 +74,6 @@ impl Component for TransformComponent {
 
 impl DetailsUI for TransformComponent {
     fn draw_details_ui(&mut self, ui: &mut Ui) {
-        ui.label("Transform component:");
-
         ui.columns(2, |cols| {
             cols[0].label("Pos:");
             cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {

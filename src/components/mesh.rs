@@ -93,8 +93,6 @@ impl Component for MeshComponent {
 
 impl DetailsUI for MeshComponent {
     fn draw_details_ui(&mut self, ui: &mut Ui) {
-        ui.label("Mesh component:");
-
         ui.columns(2, |cols| {
             cols[0].label("Mesh:");
             cols[1].label(

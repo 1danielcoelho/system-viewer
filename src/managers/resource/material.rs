@@ -412,15 +412,9 @@ impl Material {
 
 impl DetailsUI for Material {
     fn draw_details_ui(&mut self, ui: &mut Ui) {
-        ui.columns(2, |cols| {
-            cols[0].label("Material:");
-            cols[1].label(&self.name);
-        });
-
-        ui.indent("material", |ui| {
-            ui.label("Uniforms:");
-            for (name, val) in &mut self.uniforms {
-                ui.indent("uniforms", |ui| {
+        ui.collapsing(format!("Material: {}", &self.name), |ui| {
+            ui.collapsing("Uniforms:", |ui| {
+                for (name, val) in &mut self.uniforms {
                     ui.columns(2, |cols| {
                         cols[0].label(name.as_str());
 
@@ -506,18 +500,17 @@ impl DetailsUI for Material {
                             UniformValue::Vec4Arr(_) => {}
                         };
                     });
-                });
-            }
+                }
+            });
 
-            ui.label("Textures:");
-            for (unit, tex) in &mut self.textures {
-                ui.indent("textures", |ui| {
+            ui.collapsing("Textures:", |ui| {
+                for (unit, tex) in &mut self.textures {
                     ui.columns(2, |cols| {
                         cols[0].label(format!("{:?}", unit));
-                        cols[1].label(&tex.name); 
+                        cols[1].label(&tex.name);
                     });
-                });
-            }
+                }
+            });
         });
     }
 }
