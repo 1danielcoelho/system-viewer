@@ -341,17 +341,17 @@ impl EngineInterface {
         //     )
         //     .expect("Failed to inject scene!");
 
-        self.engine
-            .scene_man
-            .inject_scene(
-                "./public/Duck.glb_scene_0",
-                Some(TransformType {
-                    scale: 3.0,
-                    disp: cgmath::Vector3::new(5.0, 0.0, -0.5),
-                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-                }),
-            )
-            .expect("Failed to inject scene!");
+        // self.engine
+        //     .scene_man
+        //     .inject_scene(
+        //         "./public/Duck.glb_scene_0",
+        //         Some(TransformType {
+        //             scale: 3.0,
+        //             disp: cgmath::Vector3::new(5.0, 0.0, -0.5),
+        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+        //         }),
+        //     )
+        //     .expect("Failed to inject scene!");
 
         // self.engine
         //     .scene_man
@@ -404,20 +404,20 @@ impl EngineInterface {
         //     )
         //     .expect("Failed to inject scene!");
 
-        self.engine
-            .scene_man
-            .inject_scene(
-                "./public/WaterBottle.glb_scene_0",
-                Some(TransformType {
-                    scale: 5.0,
-                    disp: cgmath::Vector3::new(-10.0, 0.0, 0.0),
-                    rot: cgmath::Rotation3::from_axis_angle(
-                        cgmath::Vector3::new(1.0, 0.0, 0.0),
-                        cgmath::Deg(45.0),
-                    ),
-                }),
-            )
-            .expect("Failed to inject scene!");
+        // self.engine
+        //     .scene_man
+        //     .inject_scene(
+        //         "./public/WaterBottle.glb_scene_0",
+        //         Some(TransformType {
+        //             scale: 5.0,
+        //             disp: cgmath::Vector3::new(-10.0, 0.0, 0.0),
+        //             rot: cgmath::Rotation3::from_axis_angle(
+        //                 cgmath::Vector3::new(1.0, 0.0, 0.0),
+        //                 cgmath::Deg(45.0),
+        //             ),
+        //         }),
+        //     )
+        //     .expect("Failed to inject scene!");
 
         // self.engine
         //     .scene_man

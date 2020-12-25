@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use cgmath::{InnerSpace, UlpsEq, Vector3};
 
-use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
+use super::{
+    resource::{gltf_resources::GltfResource, UniformName, UniformValue},
+    ECManager, Entity, ResourceManager,
+};
 use crate::components::{
     light::LightType, transform::TransformType, LightComponent, MeshComponent, TransformComponent,
 };
@@ -269,79 +272,66 @@ impl SceneManager {
         // light_comp.color = cgmath::Vector3::new(0.1, 0.1, 0.8);
         // light_comp.intensity = 1.0;
 
-        // Directional light
-        let dir_light = scene.ent_man.new_entity(Some("dir_light"));
+        // Point light
+        let dir_light = scene.ent_man.new_entity(Some("point_light"));
         let trans_comp = scene
             .ent_man
             .add_component::<TransformComponent>(dir_light)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.2, 0.0, -1.0);
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
         let light_comp = scene
             .ent_man
             .add_component::<LightComponent>(dir_light)
             .unwrap();
         light_comp.color = cgmath::Vector3::new(1.0, 1.0, 1.0);
-        light_comp.intensity = 100.0;
-        light_comp.light_type = LightType::Directional;
+        light_comp.intensity = 10000000.0;
+        light_comp.light_type = LightType::Point;
 
-        // let base_color = res_man
-        //     .get_texture("./public/WaterBottle_baseColor.png")
+        // // Directional light
+        // let dir_light = scene.ent_man.new_entity(Some("dir_light"));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(dir_light)
         //     .unwrap();
-        // let emissive = res_man
-        //     .get_texture("./public/WaterBottle_emissive.png")
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(0.2, 0.0, -1.0);
+        // let light_comp = scene
+        //     .ent_man
+        //     .add_component::<LightComponent>(dir_light)
         //     .unwrap();
-        // let normal = res_man
-        //     .get_texture("./public/WaterBottle_normal.png")
-        //     .unwrap();
-        // let orm = res_man
-        //     .get_texture("./public/WaterBottle_occlusionRoughnessMetallic.png")
-        //     .unwrap();
+        // light_comp.color = cgmath::Vector3::new(1.0, 1.0, 1.0);
+        // light_comp.intensity = 100.0;
+        // light_comp.light_type = LightType::Directional;
 
-        let test_mat1 = res_man.instantiate_material("gltf_metal_rough");
-        // test_mat1
-        //     .as_ref()
-        //     .unwrap()
-        //     .borrow_mut()
-        //     .set_texture(TextureUnit::BaseColor, Some(base_color));
-        // test_mat1
-        //     .as_ref()
-        //     .unwrap()
-        //     .borrow_mut()
-        //     .set_texture(TextureUnit::Emissive, Some(emissive));
-        // test_mat1
-        //     .as_ref()
-        //     .unwrap()
-        //     .borrow_mut()
-        //     .set_texture(TextureUnit::Normal, Some(normal));
-        // test_mat1
-        //     .as_ref()
-        //     .unwrap()
-        //     .borrow_mut()
-        //     .set_texture(TextureUnit::MetallicRoughness, Some(orm));
+        // // Plane
+        // let plane = scene.ent_man.new_entity(Some("plane"));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(plane)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = 2.0;
+        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
+        // mesh_comp.set_material_override(test_mat1.clone(), 0);
 
-        // Plane
-        let plane = scene.ent_man.new_entity(Some("plane"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(plane)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 2.0;
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
-        mesh_comp.set_material_override(test_mat1.clone(), 0);
+        // // Cube
+        // let cube = scene.ent_man.new_entity(Some("cube"));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(cube)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(-4.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = 1.0;
+        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        // mesh_comp.set_material_override(test_mat1.clone(), 0);
 
-        // Cube
-        let cube = scene.ent_man.new_entity(Some("cube"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(cube)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(-4.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 1.0;
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        mesh_comp.set_material_override(test_mat1.clone(), 0);
+        let sun_mat = res_man.instantiate_material("gltf_metal_rough");
+        sun_mat.as_ref().unwrap().borrow_mut().name = String::from("sun_mat");
+        sun_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::EmissiveFactor,
+            UniformValue::Vec3([1.0, 0.7, 0.0]),
+        );
 
         // Ico-sphere
         let ico = scene.ent_man.new_entity(Some("ico_sphere"));
@@ -349,11 +339,18 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(ico)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 6.0, 0.0);
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = 1.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-        mesh_comp.set_material_override(test_mat1.clone(), 0);
+        mesh_comp.set_material_override(sun_mat.clone(), 0);
+
+        let planet_mat = res_man.instantiate_material("gltf_metal_rough");
+        planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
+        planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
+        );
 
         // Lat-long sphere
         let lat_long = scene.ent_man.new_entity(Some("lat_long_sphere"));
@@ -361,13 +358,13 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(lat_long)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 6.0, 0.0);
+        trans_comp.get_local_transform_mut().disp = Vector3::new(10.0, 0.0, 0.0);
         let mesh_comp = scene
             .ent_man
             .add_component::<MeshComponent>(lat_long)
             .unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(test_mat1.clone(), 0);
+        mesh_comp.set_material_override(planet_mat.clone(), 0);
 
         // Grid
         let grid = scene.ent_man.new_entity(Some("grid"));
