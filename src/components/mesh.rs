@@ -1,14 +1,14 @@
-use std::{cell::RefCell, rc::Rc};
-
-use crate::managers::{
-    resource::{Material, Mesh},
-    ECManager,
-};
-
 use super::{
     component::{ComponentStorageType, ComponentType},
     Component,
 };
+use crate::managers::{
+    details_ui::DetailsUI,
+    resource::{Material, Mesh},
+    ECManager,
+};
+use egui::Ui;
+use std::{cell::RefCell, rc::Rc};
 
 #[derive(Clone)]
 pub struct MeshComponent {
@@ -32,7 +32,8 @@ impl MeshComponent {
         self.mesh = mesh;
 
         if let Some(mesh) = &self.mesh {
-            self.material_overrides.resize(mesh.borrow().primitives.len(), None);
+            self.material_overrides
+                .resize(mesh.borrow().primitives.len(), None);
         } else {
             self.material_overrides.resize(0, None);
         }
@@ -87,5 +88,27 @@ impl Component for MeshComponent {
 
     fn get_enabled(&mut self) -> bool {
         return self.enabled;
+    }
+}
+
+impl DetailsUI for MeshComponent {
+    fn draw_details_ui(&mut self, ui: &mut Ui) {
+        ui.label("Mesh component:");
+
+        ui.columns(2, |cols| {
+            cols[0].label("Mesh:");
+            cols[1].label(
+                self.mesh
+                    .as_ref()
+                    .and_then(|m| Some(m.borrow().name.clone()))
+                    .unwrap_or_default(),
+            );
+        });
+
+        for i in 0..self.material_overrides.len() {
+            if let Some(mat) = self.get_resolved_material(i) {
+                mat.borrow_mut().draw_details_ui(ui);
+            }
+        }
     }
 }

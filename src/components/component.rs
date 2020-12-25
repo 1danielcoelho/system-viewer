@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use egui::Ui;
-
-use crate::managers::{ECManager, Entity};
+use crate::managers::{details_ui::DetailsUI, ECManager, Entity};
 
 #[derive(Debug)]
 pub enum ComponentType {
@@ -17,7 +15,7 @@ pub enum ComponentStorageType {
     HashMap,
 }
 
-pub trait Component: Default + Clone {
+pub trait Component: Default + Clone + DetailsUI {
     type ComponentType;
     const STORAGE_TYPE: ComponentStorageType;
     const COMPONENT_TYPE: ComponentType;
@@ -35,8 +33,5 @@ pub trait Component: Default + Clone {
         _w: &'a mut ECManager,
     ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
         return None;
-    }
-
-    fn draw_details_ui(&mut self, ui: &mut Ui) {        
     }
 }

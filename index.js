@@ -29,7 +29,7 @@ rust.then(async (m) => {
   // Sync loading of all assets for now
   await load_gltf("./public/Duck.glb", engine);
   //   await load_gltf("./public/2CylinderEngine.glb", engine);
-  //   await load_gltf("./public/WaterBottle.glb", engine);
+  await load_gltf("./public/WaterBottle.glb", engine);
   //   await load_gltf("./public/DamagedHelmet.glb", engine);
   //   await load_gltf("./public/BoomBox.glb", engine);
   //   await load_gltf("./public/Box.glb", engine);

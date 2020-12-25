@@ -2,7 +2,7 @@ use super::{
     component::{ComponentStorageType, ComponentType},
     Component,
 };
-use crate::managers::ECManager;
+use crate::managers::{details_ui::DetailsUI, ECManager};
 use cgmath::*;
 use egui::{Align, Layout, Ui};
 
@@ -70,7 +70,9 @@ impl Component for TransformComponent {
     fn get_enabled(&mut self) -> bool {
         return self.enabled;
     }
+}
 
+impl DetailsUI for TransformComponent {
     fn draw_details_ui(&mut self, ui: &mut Ui) {
         ui.label("Transform component:");
 

@@ -1,6 +1,9 @@
+use self::details_ui::DetailsUI;
+
+use super::ECManager;
 use crate::{
     app_state::{AppState, ButtonState},
-    components::{Component, TransformComponent},
+    components::{MeshComponent, TransformComponent},
     utils::{raycast, Ray},
 };
 use cgmath::*;
@@ -8,9 +11,9 @@ use egui::{Align, Id, LayerId, Layout, Pos2, Response, Ui};
 use gui_backend::WebInput;
 use web_sys::WebGl2RenderingContext;
 
-use super::ECManager;
-
 type GL = WebGl2RenderingContext;
+
+pub mod details_ui;
 
 #[macro_export]
 macro_rules! handle_output {
@@ -220,7 +223,7 @@ fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
             cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
                 ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
                 ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));                
+                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
             });
         });
 
@@ -261,9 +264,14 @@ fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
                     ));
                 });
 
-                if let Some(trans_comp) = ent_man.get_component::<TransformComponent>(selection) {
+                if let Some(comp) = ent_man.get_component::<TransformComponent>(selection) {
                     ui.separator();
-                    trans_comp.draw_details_ui(ui);
+                    comp.draw_details_ui(ui);
+                }
+
+                if let Some(comp) = ent_man.get_component::<MeshComponent>(selection) {
+                    ui.separator();
+                    comp.draw_details_ui(ui);
                 }
             }
         }

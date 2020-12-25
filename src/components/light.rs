@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::managers::{ECManager, Entity};
+use crate::managers::{details_ui::DetailsUI, ECManager, Entity};
 
 use super::{
     component::{ComponentStorageType, ComponentType},
@@ -58,3 +58,4 @@ impl Component for LightComponent {
         return self.enabled;
     }
 }
+impl DetailsUI for LightComponent {}

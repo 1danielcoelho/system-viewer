@@ -1,14 +1,17 @@
-use std::{collections::HashMap, rc::Rc};
-
-use web_sys::WebGl2RenderingContext as GL;
-use web_sys::*;
-
 use crate::{
     app_state::AppState,
     components::light::LightType,
     managers::resource::shaders::*,
-    managers::resource::{PrimitiveAttribute, Texture, TextureUnit},
+    managers::{
+        details_ui::DetailsUI,
+        resource::{PrimitiveAttribute, Texture, TextureUnit},
+    },
 };
+use egui::{Align, Layout, Ui};
+use std::{collections::HashMap, rc::Rc};
+use web_sys::*;
+
+type GL = WebGl2RenderingContext;
 
 pub struct FrameUniformValues {
     pub vp: [f32; 16],
@@ -404,5 +407,117 @@ impl Material {
         }
 
         gl.use_program(None);
+    }
+}
+
+impl DetailsUI for Material {
+    fn draw_details_ui(&mut self, ui: &mut Ui) {
+        ui.columns(2, |cols| {
+            cols[0].label("Material:");
+            cols[1].label(&self.name);
+        });
+
+        ui.indent("material", |ui| {
+            ui.label("Uniforms:");
+            for (name, val) in &mut self.uniforms {
+                ui.indent("uniforms", |ui| {
+                    ui.columns(2, |cols| {
+                        cols[0].label(name.as_str());
+
+                        match &mut val.value {
+                            UniformValue::Float(ref mut f) => {
+                                cols[1].add(egui::DragValue::f32(f).speed(0.1));
+                            }
+                            UniformValue::Int(ref mut i) => {
+                                cols[1].add(egui::DragValue::i32(i));
+                            }
+                            UniformValue::Vec2(ref mut v2) => {
+                                cols[1].with_layout(
+                                    Layout::left_to_right().with_cross_align(Align::Min),
+                                    |ui| {
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v2[0])
+                                                .prefix("x: ")
+                                                .speed(0.1),
+                                        );
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v2[1])
+                                                .prefix("y: ")
+                                                .speed(0.1),
+                                        );
+                                    },
+                                );
+                            }
+                            UniformValue::Vec3(ref mut v3) => {
+                                cols[1].with_layout(
+                                    Layout::left_to_right().with_cross_align(Align::Min),
+                                    |ui| {
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v3[0])
+                                                .prefix("x: ")
+                                                .speed(0.1),
+                                        );
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v3[1])
+                                                .prefix("y: ")
+                                                .speed(0.1),
+                                        );
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v3[2])
+                                                .prefix("z: ")
+                                                .speed(0.1),
+                                        );
+                                    },
+                                );
+                            }
+                            UniformValue::Vec4(ref mut v4) => {
+                                cols[1].with_layout(
+                                    Layout::left_to_right().with_cross_align(Align::Min),
+                                    |ui| {
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v4[0])
+                                                .prefix("x: ")
+                                                .speed(0.1),
+                                        );
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v4[1])
+                                                .prefix("y: ")
+                                                .speed(0.1),
+                                        );
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v4[2])
+                                                .prefix("z: ")
+                                                .speed(0.1),
+                                        );
+                                        ui.add(
+                                            egui::DragValue::f32(&mut v4[3])
+                                                .prefix("w: ")
+                                                .speed(0.1),
+                                        );
+                                    },
+                                );
+                            }
+                            // TODO
+                            UniformValue::Matrix(_) => {}
+                            UniformValue::FloatArr(_) => {}
+                            UniformValue::IntArr(_) => {}
+                            UniformValue::Vec2Arr(_) => {}
+                            UniformValue::Vec3Arr(_) => {}
+                            UniformValue::Vec4Arr(_) => {}
+                        };
+                    });
+                });
+            }
+
+            ui.label("Textures:");
+            for (unit, tex) in &mut self.textures {
+                ui.indent("textures", |ui| {
+                    ui.columns(2, |cols| {
+                        cols[0].label(format!("{:?}", unit));
+                        cols[1].label(&tex.name); 
+                    });
+                });
+            }
+        });
     }
 }

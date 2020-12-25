@@ -1,11 +1,9 @@
-use cgmath::{Matrix3, Vector3};
-
-use crate::managers::ECManager;
-
 use super::{
-    component::{ComponentType, ComponentStorageType},
+    component::{ComponentStorageType, ComponentType},
     Component,
 };
+use crate::managers::{details_ui::DetailsUI, ECManager};
+use cgmath::*;
 
 #[derive(Clone)]
 pub struct PhysicsComponent {
@@ -60,3 +58,5 @@ impl Component for PhysicsComponent {
         return self.enabled;
     }
 }
+
+impl DetailsUI for PhysicsComponent {}
