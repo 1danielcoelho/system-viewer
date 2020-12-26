@@ -18,6 +18,12 @@ function load_texture(url, engine) {
   );
 }
 
+function load_text(url, engine) {
+  return fetch(url).then((response) =>
+    response.text().then((text) => engine.load_ephemerides(url, text))
+  );
+}
+
 rust.then(async (m) => {
   if (!gl) {
     alert("Failed to initialize WebGL");
@@ -27,6 +33,8 @@ rust.then(async (m) => {
   let engine = new m.EngineInterface(document.getElementById("rustCanvas"));
 
   // Sync loading of all assets for now
+  await load_text("./public/ephemerides/3@sun.txt", engine);
+
   //   await load_gltf("./public/Duck.glb", engine);
   //   await load_gltf("./public/2CylinderEngine.glb", engine);
   //   await load_gltf("./public/WaterBottle.glb", engine);

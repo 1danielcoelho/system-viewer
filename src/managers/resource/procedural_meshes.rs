@@ -859,6 +859,62 @@ pub fn generate_grid(
     );
 }
 
+pub fn generate_circle(
+    ctx: &WebGl2RenderingContext,
+    num_pts: u32,
+    default_material: Option<Rc<RefCell<Material>>>,
+) -> Rc<RefCell<Mesh>> {
+    assert!(num_pts > 2);
+
+    let mut positions: Vec<Vector3<f32>> = Vec::new();
+    positions.reserve((num_pts) as usize);
+
+    // TODO: Remove this and use a different shader
+    let mut colors: Vec<Vector4<f32>> = Vec::new();
+    colors.resize((num_pts) as usize, Vector4::new(1.0, 1.0, 1.0, 1.0));
+
+    // uv0.x gives angle to true anomaly 0 degrees
+    let mut uv0: Vec<Vector2<f32>> = Vec::new();
+    uv0.reserve((num_pts) as usize);
+
+    let mut indices: Vec<u16> = Vec::new();
+    indices.reserve((num_pts * 2) as usize);
+
+    let incr: f32 = 1.0 / num_pts as f32;
+    for i in 0..num_pts {
+        let sum_angle = (2.0 * std::f32::consts::PI) * incr * i as f32;
+
+        positions.push(Vector3::new(sum_angle.cos(), sum_angle.sin(), 0.0));
+        uv0.push(Vector2::new(incr, 0.0));
+
+        indices.push(i as u16);
+        indices.push((i + 1) as u16);
+    }
+
+    let last_index = indices.len() - 1;
+    indices[last_index] = 0;
+
+    return intermediate_to_mesh(
+        &IntermediateMesh {
+            name: String::from("circle"),
+            primitives: vec![IntermediatePrimitive {
+                name: String::from("0"),
+                indices,
+                positions,
+                normals: vec![],
+                tangents: vec![],
+                colors,
+                uv0,
+                uv1: vec![],
+                mat: default_material,
+                mode: GL::LINES,
+                collider: None,
+            }],
+        },
+        ctx,
+    );
+}
+
 pub fn generate_axes(
     ctx: &WebGl2RenderingContext,
     default_material: Option<Rc<RefCell<Material>>>,

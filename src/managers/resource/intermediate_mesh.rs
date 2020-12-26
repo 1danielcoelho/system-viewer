@@ -71,7 +71,7 @@ pub fn fill_short_element_buffer(
 }
 
 pub fn intermediate_to_mesh(
-    mut inter: &IntermediateMesh,
+    inter: &IntermediateMesh,
     ctx: &WebGl2RenderingContext,
 ) -> Rc<RefCell<Mesh>> {
     let mut primitives: Vec<Primitive> = Vec::new();

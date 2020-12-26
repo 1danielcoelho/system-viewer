@@ -1,11 +1,15 @@
+use crate::{
+    app_state::AppState,
+    components::{transform::TransformType, MeshComponent},
+    engine::Engine,
+    managers::resource::{UniformName, UniformValue},
+    utils::orbital_elements::parse_ephemerides,
+};
+use crate::{app_state::ButtonState, components::TransformComponent};
+use cgmath::*;
 use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-
-use crate::{app_state::AppState, engine::Engine};
-use crate::{app_state::ButtonState, components::transform::TransformType};
-
-use web_sys::WebGl2RenderingContext as GL;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
 use winit::{
     event::Event,
@@ -15,6 +19,8 @@ use winit::{
     platform::web::WindowExtWebSys,
     window::WindowBuilder,
 };
+
+type GL = WebGl2RenderingContext;
 
 /** Main interface between javascript and the inner Engine object */
 #[wasm_bindgen]
@@ -320,6 +326,70 @@ impl EngineInterface {
         }
     }
 
+    fn load_ephemerides_internal(
+        &mut self,
+        file_name: &str,
+        file_data: &str,
+    ) -> Result<(), String> {
+        let (elements, body) = parse_ephemerides(file_data)?;
+
+        let scene = self
+            .engine
+            .scene_man
+            .new_scene(file_name)
+            .ok_or("Failed to create new scene!")?;
+
+        let planet_mat = self.engine.res_man.instantiate_material("gltf_metal_rough");
+        planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
+        planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
+        );
+
+        // Lat-long sphere
+        let lat_long = scene.ent_man.new_entity(Some(&body.id));
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(lat_long)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(10.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = body.mean_radius.unwrap_or(1.0) as f32;
+        let mesh_comp = scene
+            .ent_man
+            .add_component::<MeshComponent>(lat_long)
+            .unwrap();
+        mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(planet_mat.clone(), 0);
+
+        // Orbit
+        let circle = scene.ent_man.new_entity(Some(&(body.id + "_orbit")));
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(circle)
+            .unwrap();
+        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = 10.0;
+        let mesh_comp = scene
+            .ent_man
+            .add_component::<MeshComponent>(circle)
+            .unwrap();
+        mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("circle"));
+
+        return Ok(());
+    }
+
+    #[wasm_bindgen]
+    pub fn load_ephemerides(&mut self, file_name: &str, file_data: &str) {
+        match self.load_ephemerides_internal(file_name, file_data) {
+            Ok(_) => {
+                log::info!("Loaded ephemerides from file '{}'", file_name);
+            }
+            Err(err) => {
+                log::error!("Error when loading ephemerides:\n{}", err);
+            }
+        }
+    }
+
     #[wasm_bindgen]
     pub fn begin_loop(mut self) {
         log::info!("Beginning engine loop...");
@@ -328,6 +398,18 @@ impl EngineInterface {
             .scene_man
             .load_test_scene("test", &mut self.engine.res_man);
         self.engine.scene_man.set_scene("test");
+
+        self.engine
+            .scene_man
+            .inject_scene(
+                "./public/ephemerides/3@sun.txt",
+                Some(TransformType {
+                    scale: 3.0,
+                    disp: cgmath::Vector3::new(0.0, 0.0, 0.0),
+                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                }),
+            )
+            .expect("Failed to inject scene!");
 
         // self.engine
         //     .scene_man

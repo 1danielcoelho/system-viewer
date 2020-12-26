@@ -186,9 +186,40 @@
 
 
 # Try setting up a simple orbit scene on rails/with physics
+- Rails movement
+    - Crudest level: J2000 orbital elements
+        - Present for all bodies (including asteroids)
+            - https://ssd.jpl.nasa.gov/?sb_elem
+    - utils file for handling orbital stuff
+        - Class to describe orbital elements
+        - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing)
+        - Generate ellipse data from orbital elements struct
+            - main.js::addEllipse
+        - Generate keypoints for ellipse
+            - I came up with a hacky algorithm to accumulate more points on the peri/apoapsis, but I think the best thing to do is to just generate a circle and reuse it for all ellipses, just converting the orbital elements into a single Matrix transform
+                - This may force me to support non-uniform scaling though, but I think it's worth it: I'd likely have many ellipses in the buffer for no reason
+        - Engine interface function to load ephemerides files during execution
+            - Generate a small scene for it
+            - Inject scene into current like for GLTF scenes
+        - Function to convert to and from state vectors from orbital elements
+        - There are alternative orbital elements for coments and asteroids, as well as a two-line element...
+        - Functions to compute other stuff like period, periapsis, apoapsis, location of ascending/descending nodes
+    - Draw ellipses with webgl lines for now
+    <!-- - https://en.wikipedia.org/wiki/Simplified_perturbations_models -->
+    <!-- - SPICE: Only for planets, moons and the missions
+        - Would need to wrap the C library or use this: https://github.com/rjpower4/spice-sys, I don't think I can get it below 10 MB for the library alone, let alone the kernels with data
+        - Maybe do this in the future for the mission data... although I'd likely need to have data for all solar system bodies or else the spacecraft trajectories wouldn't match the target body -->
+- Line drawing
+    - Line "tessellation" into triangles for thick lines
+        - Geometry shaders? Not in WebGL2...
+        - Will probably have to do a double-sided quad cross like old school foliage stuff
+            - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
+- Free body movement
+    - Gravity, force application
+    - Orbital trajectory prediction -> line drawing
 
-
-# Parsing of orbital elements
+# I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
+# Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater
 # Cubemap texture for the skybox
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 # Scene manager

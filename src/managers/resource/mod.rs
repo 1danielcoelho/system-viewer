@@ -200,6 +200,7 @@ impl ResourceManager {
             "plane" => Some(generate_plane(&self.gl, default_mat)),
             "grid" => Some(generate_grid(&self.gl, 200, default_mat)),
             "axes" => Some(generate_axes(&self.gl, default_mat)),
+            "circle" => Some(generate_circle(&self.gl, 100, default_mat)),
             "lat_long_sphere" => Some(generate_lat_long_sphere(
                 &self.gl,
                 32,

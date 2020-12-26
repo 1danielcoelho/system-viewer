@@ -38,6 +38,15 @@ impl SceneManager {
         };
     }
 
+    pub fn new_scene(&mut self, scene_name: &str) -> Option<&mut Scene> {
+        let scene = Scene::new(&scene_name);
+        self.loaded_scenes.insert(scene_name.to_string(), scene);
+
+        log::info!("Created scene '{}'", scene_name);
+
+        return self.loaded_scenes.get_mut(scene_name);
+    }
+
     pub fn get_main_scene(&self) -> Option<&Scene> {
         match self.main.as_ref() {
             Some(ident_ref) => self.get_scene(ident_ref),
@@ -170,7 +179,7 @@ impl SceneManager {
             let num_nodes = gltf_scene.nodes().len();
 
             let scene_identifier = gltf_scene.get_identifier(file_identifier);
-            let mut scene = Scene::new(&scene_identifier);
+            let mut scene = self.new_scene(&scene_identifier).unwrap();
 
             log::info!("\tScene '{}': {} root nodes", scene_identifier, num_nodes);
 
@@ -191,14 +200,11 @@ impl SceneManager {
 
                 scene.ent_man.set_entity_parent(root_ent, child_ent);
             }
-
-            self.loaded_scenes
-                .insert(scene_identifier.to_string(), scene);
         }
     }
 
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
-        let mut scene = Scene::new(identifier);
+        let scene = self.new_scene(&identifier).unwrap();
 
         // // Parent spinning around Z
         // let parent = scene.ent_man.new_entity();
@@ -345,26 +351,40 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         mesh_comp.set_material_override(sun_mat.clone(), 0);
 
-        let planet_mat = res_man.instantiate_material("gltf_metal_rough");
-        planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
-        planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
-            UniformName::BaseColorFactor,
-            UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
-        );
+        // let planet_mat = res_man.instantiate_material("gltf_metal_rough");
+        // planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
+        // planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+        //     UniformName::BaseColorFactor,
+        //     UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
+        // );
 
-        // Lat-long sphere
-        let lat_long = scene.ent_man.new_entity(Some("lat_long_sphere"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(lat_long)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(10.0, 0.0, 0.0);
-        let mesh_comp = scene
-            .ent_man
-            .add_component::<MeshComponent>(lat_long)
-            .unwrap();
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(planet_mat.clone(), 0);
+        // // Lat-long sphere
+        // let lat_long = scene.ent_man.new_entity(Some("lat_long_sphere"));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(lat_long)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(10.0, 0.0, 0.0);
+        // let mesh_comp = scene
+        //     .ent_man
+        //     .add_component::<MeshComponent>(lat_long)
+        //     .unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        // mesh_comp.set_material_override(planet_mat.clone(), 0);
+
+        // // Orbit
+        // let circle = scene.ent_man.new_entity(Some("orbit"));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(circle)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = 10.0;
+        // let mesh_comp = scene
+        //     .ent_man
+        //     .add_component::<MeshComponent>(circle)
+        //     .unwrap();
+        // mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
 
         // Grid
         let grid = scene.ent_man.new_entity(Some("grid"));
@@ -385,8 +405,6 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = 3.0;
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
-
-        self.loaded_scenes.insert(identifier.to_string(), scene);
     }
 
     pub fn set_scene(&mut self, identifier: &str) {
