@@ -1,9 +1,10 @@
-use super::{
-    intermediate_mesh::intermediate_to_mesh, intermediate_mesh::IntermediateMesh,
-    intermediate_mesh::IntermediatePrimitive, AxisAlignedBoxCollider, Material, Mesh,
-    SphereCollider,
+use crate::managers::resource::{
+    collider::{AxisAlignedBoxCollider, SphereCollider},
+    intermediate_mesh::{intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive},
+    material::Material,
+    mesh::Mesh,
 };
-use cgmath::*;
+use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
@@ -183,12 +184,12 @@ pub fn generate_lat_long_sphere(
             normals[i0] = p0.normalize();
             normals[i1] = p1.normalize();
             normals[i2] = p2.normalize();
-            tangents[i0] = normals[i0].cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
-            tangents[i1] = normals[i1].cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
-            tangents[i2] = normals[i2].cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i0] = normals[i0].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i1] = normals[i1].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i2] = normals[i2].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
         } else {
-            let normal = (p1 - p0).cross(p2 - p0).normalize();
-            let tangent = normal.cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
+            let normal = (p1 - p0).cross(&(p2 - p0)).normalize();
+            let tangent = normal.cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
             normals[i0] = normal;
             normals[i1] = normal;
             normals[i2] = normal;
@@ -381,17 +382,17 @@ pub fn generate_ico_sphere(
             normals[new_index + 1] = p1.normalize();
             normals[new_index + 2] = p2.normalize();
             tangents[new_index + 0] = normals[new_index + 0]
-                .cross(Vector3::new(0.0, 0.0, 1.0))
+                .cross(&Vector3::new(0.0, 0.0, 1.0))
                 .normalize();
             tangents[new_index + 1] = normals[new_index + 1]
-                .cross(Vector3::new(0.0, 0.0, 1.0))
+                .cross(&Vector3::new(0.0, 0.0, 1.0))
                 .normalize();
             tangents[new_index + 2] = normals[new_index + 2]
-                .cross(Vector3::new(0.0, 0.0, 1.0))
+                .cross(&Vector3::new(0.0, 0.0, 1.0))
                 .normalize();
         } else {
-            let normal = (p2 - p0).cross(p1 - p0).normalize();
-            let tangent = normal.cross(Vector3::new(0.0, 0.0, 1.0)).normalize();
+            let normal = (p2 - p0).cross(&(p1 - p0)).normalize();
+            let tangent = normal.cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
             normals[new_index + 0] = normal;
             normals[new_index + 1] = normal;
             normals[new_index + 2] = normal;

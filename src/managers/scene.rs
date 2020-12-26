@@ -1,14 +1,11 @@
+use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
+use crate::{
+    components::{light::LightType, LightComponent, MeshComponent, TransformComponent},
+    managers::resource::material::{UniformName, UniformValue},
+    utils::transform::Transform,
+};
+use na::{Quaternion, UnitQuaternion, Vector3};
 use std::collections::HashMap;
-
-use cgmath::{InnerSpace, UlpsEq, Vector3};
-
-use super::{
-    resource::{gltf_resources::GltfResource, UniformName, UniformValue},
-    ECManager, Entity, ResourceManager,
-};
-use crate::components::{
-    light::LightType, transform::TransformType, LightComponent, MeshComponent, TransformComponent,
-};
 
 #[derive(Clone)]
 pub struct Scene {
@@ -87,28 +84,14 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(ent)
             .unwrap();
-        let trans: &mut TransformType = trans_comp.get_local_transform_mut();
+        let trans = trans_comp.get_local_transform_mut();
         let (pos, quat, scale) = node.transform().decomposed();
-        trans.disp.x = pos[0];
-        trans.disp.y = -pos[2];
-        trans.disp.z = pos[1];
-        trans.rot.v = cgmath::Vector3::new(quat[0], -quat[2], quat[1]);
-        trans.rot.s = quat[3];
-        trans.rot = trans.rot.normalize();
-        trans.scale = scale[0];
-
-        if !scale[0].ulps_eq(&scale[1], f32::EPSILON, f32::default_max_ulps())
-            || !scale[0].ulps_eq(&scale[2], f32::EPSILON, f32::default_max_ulps())
-        {
-            log::warn!(
-                "Ignoring non-uniform scale '[{}, {}, {}]' for node '{}' of scene '{}'",
-                scale[0],
-                scale[1],
-                scale[2],
-                node.index(),
-                scene.identifier
-            );
-        }
+        trans.trans.x = pos[0];
+        trans.trans.y = -pos[2];
+        trans.trans.z = pos[1];
+        trans.rot =
+            UnitQuaternion::new_normalize(Quaternion::new(quat[0], -quat[2], quat[1], quat[3]));
+        trans.scale = Vector3::new(scale[0], scale[1], scale[2]);
 
         // Mesh
         // let mut mesh_str = String::new();
@@ -241,7 +224,7 @@ impl SceneManager {
         //     .ent_man
         //     .add_component::<LightComponent>(child)
         //     .unwrap();
-        // light_comp.color = cgmath::Vector3::new(0.1, 0.8, 0.2);
+        // light_comp.color = Vector3::new(0.1, 0.8, 0.2);
         // light_comp.intensity = 1.0;
 
         // // Parent spinning around Y
@@ -275,23 +258,8 @@ impl SceneManager {
         //     .ent_man
         //     .add_component::<LightComponent>(child)
         //     .unwrap();
-        // light_comp.color = cgmath::Vector3::new(0.1, 0.1, 0.8);
+        // light_comp.color = Vector3::new(0.1, 0.1, 0.8);
         // light_comp.intensity = 1.0;
-
-        // Point light
-        let dir_light = scene.ent_man.new_entity(Some("point_light"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(dir_light)
-            .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        let light_comp = scene
-            .ent_man
-            .add_component::<LightComponent>(dir_light)
-            .unwrap();
-        light_comp.color = cgmath::Vector3::new(1.0, 1.0, 1.0);
-        light_comp.intensity = 10000000.0;
-        light_comp.light_type = LightType::Point;
 
         // // Directional light
         // let dir_light = scene.ent_man.new_entity(Some("dir_light"));
@@ -304,7 +272,7 @@ impl SceneManager {
         //     .ent_man
         //     .add_component::<LightComponent>(dir_light)
         //     .unwrap();
-        // light_comp.color = cgmath::Vector3::new(1.0, 1.0, 1.0);
+        // light_comp.color = Vector3::new(1.0, 1.0, 1.0);
         // light_comp.intensity = 100.0;
         // light_comp.light_type = LightType::Directional;
 
@@ -345,11 +313,14 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(ico)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 1.0;
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         mesh_comp.set_material_override(sun_mat.clone(), 0);
+        let light_comp = scene.ent_man.add_component::<LightComponent>(ico).unwrap();
+        light_comp.color = Vector3::new(1.0, 1.0, 1.0);
+        light_comp.intensity = 10000000.0;
+        light_comp.light_type = LightType::Point;
 
         // let planet_mat = res_man.instantiate_material("gltf_metal_rough");
         // planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
@@ -392,7 +363,7 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(grid)
             .unwrap();
-        trans_comp.get_local_transform_mut().scale = 1000.0;
+        trans_comp.get_local_transform_mut().scale = Vector3::new(1000.0, 1000.0, 1000.0);
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(grid).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
@@ -402,7 +373,7 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(axes)
             .unwrap();
-        trans_comp.get_local_transform_mut().scale = 3.0;
+        trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
@@ -425,7 +396,7 @@ impl SceneManager {
     pub fn inject_scene(
         &mut self,
         identifier: &str,
-        target_transform: Option<TransformType>,
+        target_transform: Option<Transform>,
     ) -> Result<(), String> {
         // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
         let mut injected_scene_copy = self

@@ -1,12 +1,12 @@
 use crate::{
     app_state::AppState,
-    components::{transform::TransformType, MeshComponent},
+    components::MeshComponent,
     engine::Engine,
-    managers::resource::{UniformName, UniformValue},
-    utils::orbital_elements::parse_ephemerides,
+    managers::resource::material::{UniformName, UniformValue},
+    utils::{orbital_elements::parse_ephemerides, transform::Transform},
 };
 use crate::{app_state::ButtonState, components::TransformComponent};
-use cgmath::*;
+use na::{Quaternion, UnitQuaternion, Vector3};
 use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -352,8 +352,9 @@ impl EngineInterface {
             .ent_man
             .add_component::<TransformComponent>(lat_long)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(10.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = body.mean_radius.unwrap_or(1.0) as f32;
+        trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
+        let radius = body.mean_radius.unwrap_or(1.0) as f32;
+        trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
         let mesh_comp = scene
             .ent_man
             .add_component::<MeshComponent>(lat_long)
@@ -367,8 +368,8 @@ impl EngineInterface {
             .ent_man
             .add_component::<TransformComponent>(circle)
             .unwrap();
-        trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = 10.0;
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
         let mesh_comp = scene
             .ent_man
             .add_component::<MeshComponent>(circle)
@@ -403,10 +404,10 @@ impl EngineInterface {
             .scene_man
             .inject_scene(
                 "./public/ephemerides/3@sun.txt",
-                Some(TransformType {
-                    scale: 3.0,
-                    disp: cgmath::Vector3::new(0.0, 0.0, 0.0),
-                    rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+                Some(Transform {
+                    trans: Vector3::new(0.0, 0.0, 0.0),
+                    rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
+                    scale: Vector3::new(1.0, 1.0, 1.0),
                 }),
             )
             .expect("Failed to inject scene!");
@@ -427,10 +428,10 @@ impl EngineInterface {
         //     .scene_man
         //     .inject_scene(
         //         "./public/Duck.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 3.0,
-        //             disp: cgmath::Vector3::new(5.0, 0.0, -0.5),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
+        //         Some(Transform {
+        //             trans: Vector3::new(5.0, 0.0, -0.5),
+        //             rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
+        //             scale: Vector3::new(1.0, 1.0, 1.0),
         //         }),
         //     )
         //     .expect("Failed to inject scene!");

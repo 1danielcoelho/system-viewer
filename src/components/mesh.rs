@@ -4,7 +4,7 @@ use super::{
 };
 use crate::managers::{
     details_ui::DetailsUI,
-    resource::{Material, Mesh},
+    resource::{material::Material, mesh::Mesh},
     ECManager,
 };
 use egui::Ui;

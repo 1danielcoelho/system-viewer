@@ -1,28 +1,22 @@
-use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
-
+use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
+use crate::{
+    managers::resource::material::UniformName,
+    utils::string::{get_unique_name, remove_numbered_suffix},
+};
 use image::{io::Reader, DynamicImage, ImageFormat};
-use web_sys::WebGl2RenderingContext as GL;
+use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
-use crate::utils::{get_unique_name, remove_numbered_suffix};
+type GL = WebGl2RenderingContext;
 
-use self::procedural_meshes::*;
-
-pub use collider::*;
-pub use gltf_resources::*;
-pub use material::*;
-pub use mesh::*;
-pub use shaders::*;
-pub use texture::*;
-
-mod collider;
+pub mod collider;
 pub mod gltf_resources;
-mod intermediate_mesh;
-mod material;
-mod mesh;
-mod procedural_meshes;
-mod shaders;
-mod texture;
+pub mod intermediate_mesh;
+pub mod material;
+pub mod mesh;
+pub mod procedural_meshes;
+pub mod shaders;
+pub mod texture;
 
 fn load_texture_from_bytes(
     identifier: &str,

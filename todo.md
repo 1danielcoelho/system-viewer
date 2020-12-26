@@ -183,7 +183,13 @@
 <!-- - Maybe it would be neat to have a debug draw of bounding boxes -->
 <!-- - Showing different UI for the picked thing
     - Expose some controls like material uniforms -->
-
+<!-- # Switch to nalgebra, custom "decomposed" transform type using vec3 scale and an isometry -->
+<!-- # Global transform stored as a Matrix4 -->
+<!-- - Picking is broke -->
+<!-- - egui rotation is expecting degrees but really they're rads -->
+<!-- - It's again possible to get the weird behavior when pitch goes to 90 and -90 -->
+<!-- - Rotation angle doesn't nicely match the FOV anymore -->
+<!-- - Moving the sun didn't actually move the light position -->
 
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement
@@ -218,8 +224,10 @@
     - Gravity, force application
     - Orbital trajectory prediction -> line drawing
 
+# Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
+# Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
 # I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
-# Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater
+<!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
 # Cubemap texture for the skybox
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 # Scene manager

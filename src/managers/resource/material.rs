@@ -1,11 +1,10 @@
+use super::{
+    mesh::PrimitiveAttribute,
+    texture::{Texture, TextureUnit},
+};
 use crate::{
-    app_state::AppState,
-    components::light::LightType,
+    app_state::AppState, components::light::LightType, managers::details_ui::DetailsUI,
     managers::resource::shaders::*,
-    managers::{
-        details_ui::DetailsUI,
-        resource::{PrimitiveAttribute, Texture, TextureUnit},
-    },
 };
 use egui::{Align, Layout, Ui};
 use std::{collections::HashMap, rc::Rc};

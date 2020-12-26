@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-
-use crate::managers::{details_ui::DetailsUI, ECManager, Entity};
-
 use super::{
     component::{ComponentStorageType, ComponentType},
     Component,
 };
+use crate::managers::{details_ui::DetailsUI, ECManager, Entity};
+use na::Vector3;
+use std::collections::HashMap;
 
 #[derive(Clone, Copy)]
 pub enum LightType {
@@ -18,9 +17,9 @@ pub struct LightComponent {
     enabled: bool,
 
     pub light_type: LightType,
-    pub color: cgmath::Vector3<f32>,
+    pub color: Vector3<f32>,
     pub intensity: f32,
-    pub direction: Option<cgmath::Vector3<f32>>,
+    pub direction: Option<Vector3<f32>>,
 }
 impl LightComponent {
     fn new() -> Self {
@@ -33,9 +32,9 @@ impl Default for LightComponent {
             enabled: false,
 
             light_type: LightType::Point,
-            color: cgmath::Vector3::new(0.0, 0.0, 0.0), // Needs to be black so that unused lights don't affect the scene
+            color: Vector3::new(0.0, 0.0, 0.0), // Needs to be black so that unused lights don't affect the scene
             intensity: 0.0,
-            direction: Some(cgmath::Vector3::new(0.0, 0.0, -1.0)), // Pointing down
+            direction: Some(Vector3::new(0.0, 0.0, -1.0)), // Pointing down
         };
     }
 }

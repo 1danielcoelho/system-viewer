@@ -1,4 +1,4 @@
-use cgmath::{InnerSpace, Matrix, Matrix3, Quaternion, Vector3};
+use na::{Matrix3, Quaternion, UnitQuaternion, Vector3};
 
 use crate::{
     app_state::AppState,
@@ -58,12 +58,12 @@ impl PhysicsSystem {
         // Update velocities
         let lin_vel = phys_comp.lin_mom * phys_comp.inv_mass;
         let ang_vel: Vector3<f32> = inv_inertia_world * phys_comp.ang_mom;
-        let ang_vel_q: Quaternion<f32> = cgmath::Quaternion::from_sv(0.0, ang_vel);
+        let ang_vel_q = Quaternion::new(0.0, ang_vel.x, ang_vel.y, ang_vel.z);
 
         // Update position and rotation
-        trans.disp += lin_vel * dt;
-        trans.rot += 0.5 * ang_vel_q * trans.rot * dt; // todo
-        trans.rot = trans.rot.normalize();
+        trans.trans += lin_vel * dt;
+        let new_rot: Quaternion<f32> = trans.rot.quaternion() + 0.5 * ang_vel_q * trans.rot.quaternion() * dt; // todo
+        trans.rot = UnitQuaternion::new_normalize(new_rot);
 
         // Clear accumulators?
 

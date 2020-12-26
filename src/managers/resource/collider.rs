@@ -1,8 +1,8 @@
 use super::Mesh;
-use crate::utils::{
+use crate::utils::raycasting::{
     aabb_ray_intersection, sphere_ray_intersection, triangle_ray_intersection, Ray,
 };
-use cgmath::*;
+use na::{Point3, Vector3};
 use std::{cell::RefCell, rc::Weak};
 
 // Trick from https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object
@@ -100,7 +100,7 @@ impl Collider for SphereCollider {
     }
 
     fn contains(&self, point: &Point3<f32>) -> bool {
-        return self.center.distance2(*point) <= self.radius2;
+        return (self.center - point).magnitude_squared() <= self.radius2;
     }
 }
 

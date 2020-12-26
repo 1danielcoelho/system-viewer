@@ -1,14 +1,23 @@
 use super::{
     intermediate_mesh::IntermediateMesh,
     intermediate_mesh::{intermediate_to_mesh, IntermediatePrimitive},
-    AxisAlignedBoxCollider, Material, Mesh, MeshCollider, ResourceManager, Texture, TextureUnit,
-    UniformName, UniformValue,
+    material::UniformName,
+    texture::TextureUnit,
 };
-use cgmath::*;
+use crate::managers::{
+    resource::{
+        collider::{AxisAlignedBoxCollider, MeshCollider},
+        material::{Material, UniformValue},
+        mesh::Mesh,
+        texture::Texture,
+    },
+    ResourceManager,
+};
 use gltf::{
     image::Format,
     mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
 };
+use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
@@ -267,7 +276,7 @@ impl ResourceManager {
             }
 
             // Positions
-            let mut positions_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
+            let mut positions_vec: Vec<Vector3<f32>> = Vec::new();
             if let Some(positions) = reader.read_positions() {
                 positions_vec = positions
                     .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
@@ -275,7 +284,7 @@ impl ResourceManager {
             }
 
             // Normals
-            let mut normals_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
+            let mut normals_vec: Vec<Vector3<f32>> = Vec::new();
             if let Some(normals) = reader.read_normals() {
                 normals_vec = normals
                     .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
@@ -283,7 +292,7 @@ impl ResourceManager {
             }
 
             // Normals
-            let mut tangents_vec: Vec<cgmath::Vector3<f32>> = Vec::new();
+            let mut tangents_vec: Vec<Vector3<f32>> = Vec::new();
             if let Some(tangents) = reader.read_tangents() {
                 tangents_vec = tangents
                     .map(|arr| Vector3::new(arr[0], -arr[2], arr[1])) // Y-up right-handed to Z-up right-handed
@@ -291,7 +300,7 @@ impl ResourceManager {
             }
 
             // Colors
-            let mut colors_vec: Vec<cgmath::Vector4<f32>> = Vec::new();
+            let mut colors_vec: Vec<Vector4<f32>> = Vec::new();
             if let Some(colors) = reader.read_colors(0) {
                 // TODO: Set the proper webgl buffer values and don't do this conversion?
                 match colors {
@@ -353,7 +362,7 @@ impl ResourceManager {
             }
 
             // UV0
-            let mut uv0_vec: Vec<cgmath::Vector2<f32>> = Vec::new();
+            let mut uv0_vec: Vec<Vector2<f32>> = Vec::new();
             if let Some(uv0) = reader.read_tex_coords(0) {
                 match uv0 {
                     ReadTexCoords::U8(arr) => {
@@ -383,7 +392,7 @@ impl ResourceManager {
             }
 
             // UV1
-            let mut uv1_vec: Vec<cgmath::Vector2<f32>> = Vec::new();
+            let mut uv1_vec: Vec<Vector2<f32>> = Vec::new();
             if let Some(uv1) = reader.read_tex_coords(1) {
                 match uv1 {
                     ReadTexCoords::U8(arr) => {

@@ -1,15 +1,17 @@
-use cgmath::prelude::*;
-use cgmath::Matrix4;
-
-use web_sys::WebGl2RenderingContext;
-use web_sys::WebGl2RenderingContext as GL;
+use std::convert::TryInto;
 
 use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},
-    managers::resource::{FrameUniformValues, UniformName, UniformValue},
-    managers::ECManager,
+    managers::{
+        resource::material::{FrameUniformValues, UniformName, UniformValue},
+        ECManager,
+    },
 };
+use na::*;
+use web_sys::WebGl2RenderingContext;
+
+type GL = WebGl2RenderingContext;
 
 pub const NUM_LIGHTS: usize = 8;
 
@@ -61,16 +63,16 @@ impl RenderingSystem {
         glc!(gl, gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
         // Initialize VP transform for frame
-        let p = cgmath::perspective(
-            state.camera.fov_v,
+        let p = Matrix4::new_perspective(
             state.canvas_width as f32 / state.canvas_height as f32,
+            state.camera.fov_v.to_radians(),
             state.camera.near,
             state.camera.far,
         );
-        let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
+        let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
 
         let mut result = FrameUniformValues {
-            vp: *(p * v).as_ref(),
+            vp: (p * v).as_slice().try_into().unwrap(),
             light_types: Vec::new(),
             light_colors: Vec::new(),
             light_pos_or_dir: Vec::new(),
@@ -87,7 +89,7 @@ impl RenderingSystem {
         let mut index = 0;
         for (ent, light) in em.light.iter() {
             let ent_index = em.get_entity_index(*ent).unwrap();
-            let pos = &em.transform[ent_index as usize].get_world_transform().disp;
+            let pos = &em.transform[ent_index as usize].get_world_transform().trans;
 
             result.light_types.push(light.light_type as i32);
 
@@ -135,11 +137,11 @@ impl RenderingSystem {
         mc: &MeshComponent,
     ) {
         let trans = tc.get_world_transform();
-        let w: Matrix4<f32> = (*trans).into(); // TODO: Is this the right way of doing it?
-        let world_trans_uniform_data: [f32; 16] = *w.as_ref();
+        let w: Matrix4<f32> = trans.to_matrix4();
+        let world_trans_uniform_data: [f32; 16] = w.as_slice().try_into().unwrap();
 
-        let w_inv_trans: Matrix4<f32> = w.invert().unwrap_or(cgmath::One::one()).transpose();
-        let w_inv_trans_uniform_data: [f32; 16] = *w_inv_trans.as_ref();
+        let w_inv_trans: Matrix4<f32> = w.try_inverse().unwrap_or(Matrix4::identity()).transpose();
+        let w_inv_trans_uniform_data: [f32; 16] = w_inv_trans.as_slice().try_into().unwrap();
 
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.borrow().primitives.iter().enumerate() {

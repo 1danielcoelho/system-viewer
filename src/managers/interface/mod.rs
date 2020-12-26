@@ -1,14 +1,13 @@
 use self::details_ui::DetailsUI;
-
 use super::ECManager;
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
-    utils::{raycast, Ray},
+    utils::raycasting::{raycast, Ray},
 };
-use cgmath::*;
 use egui::{Align, Id, LayerId, Layout, Pos2, Response, Ui};
 use gui_backend::WebInput;
+use na::*;
 use web_sys::WebGl2RenderingContext;
 
 type GL = WebGl2RenderingContext;
@@ -106,25 +105,23 @@ fn draw_main_ui(state: &mut AppState, ent_man: Option<&mut ECManager>) {
 }
 
 fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
-    let p = cgmath::perspective(
-        state.camera.fov_v,
+    let p = Matrix4::new_perspective(
         state.canvas_width as f32 / state.canvas_height as f32,
+        state.camera.fov_v.to_radians(),
         state.camera.near,
         state.camera.far,
     );
-    let v = cgmath::Matrix4::look_at(state.camera.pos, state.camera.target, state.camera.up);
+    let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
 
-    let ndc_near_pos = Point3::new(
+    let ndc_near_pos = Point3::from(Vector3::new(
         -1.0 + 2.0 * state.input.mouse_x as f32 / (state.canvas_width - 1) as f32,
         1.0 - 2.0 * state.input.mouse_y as f32 / (state.canvas_height - 1) as f32,
         -1.0,
-    );
+    ));
 
-    let world_pos = v
-        .invert()
-        .unwrap()
-        .concat(&p.invert().unwrap())
-        .transform_point(ndc_near_pos);
+    let ndc_to_world: Matrix4<f32> = v.try_inverse().unwrap() * p.try_inverse().unwrap();
+
+    let world_pos = ndc_to_world.transform_point(&ndc_near_pos);
 
     let ray = Ray {
         start: state.camera.pos,
@@ -200,7 +197,7 @@ fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
         ui.columns(2, |cols| {
             cols[0].label("Vertical FOV (deg):");
             cols[1].add(
-                egui::DragValue::f32(&mut state.camera.fov_v.0)
+                egui::DragValue::f32(&mut state.camera.fov_v)
                     .range(0.1..=120.0)
                     .speed(0.5),
             );

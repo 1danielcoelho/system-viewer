@@ -3,7 +3,7 @@ use super::{
     Component,
 };
 use crate::managers::{details_ui::DetailsUI, ECManager};
-use cgmath::*;
+use na::{Matrix3, Vector3};
 
 #[derive(Clone)]
 pub struct PhysicsComponent {
@@ -33,11 +33,11 @@ impl Default for PhysicsComponent {
             enabled: false,
             collision_enabled: false,
             inv_mass: 1.0,
-            inv_inertia: cgmath::One::one(),
-            force_sum: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            torque_sum: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            lin_mom: cgmath::Vector3::new(0.0, 0.0, 0.0),
-            ang_mom: cgmath::Vector3::new(0.0, 0.0, 0.0),
+            inv_inertia: Matrix3::identity(),
+            force_sum: Vector3::new(0.0, 0.0, 0.0),
+            torque_sum: Vector3::new(0.0, 0.0, 0.0),
+            lin_mom: Vector3::new(0.0, 0.0, 0.0),
+            ang_mom: Vector3::new(0.0, 0.0, 0.0),
         };
     }
 }

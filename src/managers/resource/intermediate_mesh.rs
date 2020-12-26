@@ -1,10 +1,15 @@
-use cgmath::*;
+use super::{
+    collider::{Collider, CompoundCollider},
+    material::Material,
+    mesh::{Mesh, Primitive, PrimitiveAttribute},
+};
 use js_sys::WebAssembly;
+use na::{Vector2, Vector3, Vector4};
 use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGl2RenderingContext, WebGl2RenderingContext as GL, WebGlBuffer};
+use web_sys::{WebGl2RenderingContext, WebGlBuffer};
 
-use super::{Collider, CompoundCollider, Material, Mesh, Primitive, PrimitiveAttribute};
+type GL = WebGl2RenderingContext;
 
 pub struct IntermediateMesh {
     pub name: String,

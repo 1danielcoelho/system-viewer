@@ -1,12 +1,9 @@
-use crate::{
-    app_state::AppState, components::transform::TransformType,
-    managers::ECManager,
-};
+use crate::{app_state::AppState, managers::ECManager, utils::transform::Transform};
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
     pub fn run(&self, _state: &AppState, em: &mut ECManager) {
-        let identity: TransformType = cgmath::Transform::one();
+        let identity: Transform = Transform::identity();
 
         for entity_index in 0..em.get_num_entities() {
             // TODO: This has an indirection

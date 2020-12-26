@@ -1,4 +1,4 @@
-use cgmath::*;
+use na::Matrix4;
 use regex::Regex;
 
 lazy_static! {
@@ -103,5 +103,8 @@ pub fn parse_ephemerides(file_str: &str) -> Result<(OrbitalElements, BodyDescrip
 }
 
 pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Matrix4<f32> {
-    return One::one();
+    // let mat: Matrix4<f32> = Matrix4::from_angle_x(Rad(0.2));
+    //let rot: Quaternion<f32> = Quaternion::new(0.0, 0.0, 0.0, 0.0);
+
+    return Matrix4::identity();
 }

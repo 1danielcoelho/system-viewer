@@ -10,11 +10,7 @@ pub enum EventTransmitter {
 }
 
 pub enum EventData {
-    SetBoundingBox {
-        entity: u32,
-        mins: cgmath::Vector3<f32>,
-        maxs: cgmath::Vector3<f32>,
-    },
+    SetBoundingBox,
 }
 
 pub struct Event {

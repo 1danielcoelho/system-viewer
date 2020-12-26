@@ -1,5 +1,6 @@
+use na::{Point3, Vector3};
+
 use crate::components::{MeshComponent, TransformComponent};
-use cgmath::*;
 
 pub const INTERSECTION_EPSILON: f32 = 1e-6;
 
@@ -39,21 +40,21 @@ pub fn raycast(
         }
         let collider = mesh.collider.as_ref().unwrap();
 
-        let world_trans = trans_comp.get_world_transform();
-        let inv_world_trans = world_trans.inverse_transform().unwrap();
+        let world_trans = trans_comp.get_world_transform().to_matrix4();
+        let inv_world_trans = world_trans.try_inverse().unwrap();
 
         // @Performance: Maybe it would be faster to transform the collider instead?
         // But then we'd get some weirdness like AABB not really being axis-aligned anymore,
         // or spheres behaving weirdly on non-uniform scaling
         let bb_space_ray = Ray {
-            start: inv_world_trans.transform_point(ray.start),
-            direction: inv_world_trans.transform_vector(ray.direction).normalize(),
+            start: inv_world_trans.transform_point(&ray.start),
+            direction: inv_world_trans.transform_vector(&ray.direction).normalize(),
         };
 
         let bb_space_t = collider.intersects(&bb_space_ray);
         let bb_space_delta = bb_space_t * bb_space_ray.direction;
-        let world_space_delta = world_trans.transform_vector(bb_space_delta);
-        let world_space_t2 = world_space_delta.magnitude2();
+        let world_space_delta: Vector3<f32> = world_trans.transform_vector(&bb_space_delta);
+        let world_space_t2 = world_space_delta.magnitude_squared();
 
         if world_space_t2 < min_t2 {
             min_t2 = world_space_t2;
@@ -97,9 +98,9 @@ pub fn aabb_ray_intersection(mins: &Point3<f32>, maxes: &Point3<f32>, ray: &Ray)
 // Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
 pub fn sphere_ray_intersection(center: &Point3<f32>, radius2: f32, ray: &Ray) -> f32 {
     let start_to_center = center - ray.start;
-    let projection_on_dir = start_to_center.dot(ray.direction);
+    let projection_on_dir = start_to_center.dot(&ray.direction);
 
-    let dist2_center_nearest_pt = start_to_center.dot(start_to_center) - projection_on_dir.powi(2);
+    let dist2_center_nearest_pt = start_to_center.dot(&start_to_center) - projection_on_dir.powi(2);
     if dist2_center_nearest_pt > radius2 {
         return std::f32::INFINITY;
     }
@@ -131,27 +132,27 @@ pub fn triangle_ray_intersection(
 ) -> Option<f32> {
     let p0p1 = p1 - p0;
     let p0p2 = p2 - p0;
-    let pvec = ray.direction.cross(p0p2);
-    let det = p0p1.dot(pvec);
+    let pvec = ray.direction.cross(&p0p2);
+    let det = p0p1.dot(&pvec);
     if det.abs() < INTERSECTION_EPSILON {
         return None;
     }
 
     let inv_det = 1.0 / det;
 
-    let tvec = ray.start - p0;
-    let u = tvec.dot(pvec) * inv_det;
+    let tvec = (ray.start - p0).coords;
+    let u = tvec.dot(&pvec) * inv_det;
     if u < 0.0 || u > 1.0 {
         return None;
     }
 
-    let qvec = tvec.to_vec().cross(p0p1);
-    let v = ray.direction.dot(qvec) * inv_det;
+    let qvec = tvec.cross(&p0p1);
+    let v = ray.direction.dot(&qvec) * inv_det;
     if v < 0.0 || u + v > 1.0 {
         return None;
     }
 
-    let t = p0p2.dot(qvec) * inv_det;
+    let t = p0p2.dot(&qvec) * inv_det;
     if t > INTERSECTION_EPSILON {
         return Some(t);
     }

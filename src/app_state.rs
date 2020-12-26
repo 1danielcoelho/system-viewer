@@ -1,18 +1,17 @@
+use crate::managers::Entity;
+use egui::Ui;
+use na::*;
 use std::{
     collections::HashSet,
     sync::{Arc, Mutex},
 };
-
-use egui::Ui;
 use web_sys::WebGl2RenderingContext;
 
-use crate::managers::Entity;
-
 pub struct Camera {
-    pub pos: cgmath::Point3<f32>,
-    pub up: cgmath::Vector3<f32>,
-    pub target: cgmath::Point3<f32>,
-    pub fov_v: cgmath::Deg<f32>,
+    pub pos: Point3<f32>,
+    pub up: Unit<Vector3<f32>>,
+    pub target: Point3<f32>,
+    pub fov_v: f32,
     pub near: f32,
     pub far: f32,
 }
@@ -87,10 +86,10 @@ impl AppState {
             },
             selection: HashSet::new(),
             camera: Camera {
-                pos: cgmath::Point3::new(-4.0, -7.0, 8.0),
-                up: cgmath::Vector3::new(0.0, 0.0, 1.0),
-                target: cgmath::Point3::new(0.0, 0.0, 0.0),
-                fov_v: cgmath::Deg(60.0),
+                pos: Point3::new(-4.0, -7.0, 8.0),
+                up: Unit::new_unchecked(Vector3::z()),
+                target: Point3::new(0.0, 0.0, 0.0), 
+                fov_v: 60.0,
                 near: 0.1,
                 far: 100000.0,
             },
