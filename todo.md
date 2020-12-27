@@ -199,8 +199,12 @@
 - Need UI for it like some save/open menus
 - GLTF-like, index based json format 
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
-- What to do with resources like meshes and textures? Export a binary blob?
+<!-- - What to do with resources like meshes and textures? Export a binary blob?
+    - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?
+
+# Make a manifest file when compiling (similar to how I resolve includes)
+# JS reads the manifest file and loads all assets from there
 
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement
@@ -227,6 +231,7 @@
         - Would need to wrap the C library or use this: https://github.com/rjpower4/spice-sys, I don't think I can get it below 10 MB for the library alone, let alone the kernels with data
         - Maybe do this in the future for the mission data... although I'd likely need to have data for all solar system bodies or else the spacecraft trajectories wouldn't match the target body -->
 - Line drawing
+    - How did my JS app do it? The lines there seemed fine...
     - Line "tessellation" into triangles for thick lines
         - Geometry shaders? Not in WebGL2...
         - Will probably have to do a double-sided quad cross like old school foliage stuff

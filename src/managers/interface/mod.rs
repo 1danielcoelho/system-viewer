@@ -1,14 +1,20 @@
 use self::details_ui::DetailsUI;
 use super::ECManager;
+
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
-    utils::raycasting::{raycast, Ray},
+    utils::{
+        raycasting::{raycast, Ray},
+        web::read_string_from_file_prompt,
+        web::write_string_to_file_prompt,
+    },
 };
-use egui::{Align, Id, LayerId, Layout, Pos2, Response, Ui};
+use egui::{menu, Align, Button, Id, LayerId, Layout, Pos2, Response, TextStyle, TopPanel, Ui};
 use gui_backend::WebInput;
+use js_sys::encode_uri_component;
 use na::*;
-use web_sys::WebGl2RenderingContext;
+use web_sys::{HtmlElement, WebGl2RenderingContext};
 
 type GL = WebGl2RenderingContext;
 
@@ -99,7 +105,7 @@ impl InterfaceManager {
 }
 
 fn draw_main_ui(state: &mut AppState, ent_man: Option<&mut ECManager>) {
-    // TODO: Draw menus and toolbars and stuff
+    draw_main_toolbar(state);
 
     draw_test_widget(state, ent_man);
 }
@@ -150,6 +156,74 @@ fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
 
         // state.ui = ui;
     }
+}
+
+fn draw_main_toolbar(state: &mut AppState) {
+    let ui = state.ui.take();
+
+    TopPanel::top(Id::new("top panel")).show(&ui.as_ref().unwrap().ctx(), |ui| {
+        menu::bar(ui, |ui| {
+            menu::menu(ui, "File", |ui| {
+                if ui.button("New").clicked {
+                    log::info!("New");
+                }
+
+                if ui.button("Open").clicked {
+                    read_string_from_file_prompt();
+                }
+
+                if ui.button("Save").clicked {
+                    write_string_to_file_prompt("test.json", "my test data");
+                }
+
+                ui.separator();
+
+                if ui.button("Close").clicked {
+                    log::info!("Close");
+                }
+            });
+
+            menu::menu(ui, "Edit", |ui| {
+                if ui.button("New object...").clicked {
+                    log::info!("New object");
+                }
+            });
+
+            menu::menu(ui, "Tools", |ui| {
+                if ui.button("Organize windows").clicked {
+                    ui.ctx().memory().reset_areas();
+                }
+
+                if ui
+                    .button("Clear Egui memory")
+                    .on_hover_text("Forget scroll, collapsing headers etc")
+                    .clicked
+                {
+                    *ui.ctx().memory() = Default::default();
+                }
+            });
+
+            let time = state.real_time_ms / 1000.0;
+            let time = format!(
+                "{:02}:{:02}:{:02}.{:02}",
+                (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
+                (time % (60.0 * 60.0) / 60.0).floor(),
+                (time % 60.0).floor(),
+                (time % 1.0 * 100.0).floor()
+            );
+
+            ui.with_layout(Layout::right_to_left(), |ui| {
+                if ui
+                    .add(Button::new(time).text_style(TextStyle::Monospace))
+                    .clicked
+                {
+                    log::info!("Clicked on clock!");
+                }
+            });
+        });
+    });
+
+    state.ui = ui;
 }
 
 fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
