@@ -13,7 +13,10 @@ use crate::{
 };
 use crate::{app_state::ButtonState, components::TransformComponent};
 use na::{Quaternion, UnitQuaternion, Vector3};
-use std::sync::{Arc, Mutex};
+use std::{
+    cell::RefCell,
+    sync::{Arc, Mutex},
+};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
@@ -28,11 +31,24 @@ use winit::{
 
 type GL = WebGl2RenderingContext;
 
-/** Main interface between javascript and the inner Engine object */
-#[wasm_bindgen]
-pub struct EngineInterface {
-    canvas: HtmlCanvasElement,
+thread_local! {
+    pub static EI: RefCell<EngineInterface> = RefCell::new(EngineInterface::new());
+}
 
+#[wasm_bindgen]
+pub async fn run() {
+    begin_loop().await;
+}
+
+fn get_canvas() -> HtmlCanvasElement {
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+    let el = document.get_element_by_id("rustCanvas").unwrap();
+    let canvas: HtmlCanvasElement = el.dyn_into().unwrap();
+    return canvas;
+}
+
+pub struct EngineInterface {
     // TODO: This doesn't look like it belongs here
     start_ms: f64,
     last_frame_ms: f64,
@@ -41,11 +57,11 @@ pub struct EngineInterface {
     engine: Engine,
 }
 
-#[wasm_bindgen]
 impl EngineInterface {
-    #[wasm_bindgen(constructor)]
-    pub fn new(canvas: HtmlCanvasElement) -> Self {
+    pub fn new() -> Self {
         log::info!("Initializing...");
+
+        let canvas = get_canvas();
 
         let gl: WebGl2RenderingContext = canvas
             .get_context("webgl2")
@@ -101,7 +117,6 @@ impl EngineInterface {
         engine.res_man.initialize();
 
         return EngineInterface {
-            canvas,
             engine,
             app_state,
             start_ms: js_sys::Date::now(),
@@ -282,7 +297,6 @@ impl EngineInterface {
         }
     }
 
-    #[wasm_bindgen]
     pub fn load_texture(&mut self, file_identifier: &str, data: &mut [u8]) {
         log::info!(
             "Loading texture from file '{}' ({} bytes)",
@@ -295,7 +309,6 @@ impl EngineInterface {
             .create_texture(file_identifier, data, None);
     }
 
-    #[wasm_bindgen]
     pub fn load_gltf(&mut self, file_identifier: &str, data: &mut [u8]) {
         log::info!(
             "Loading GLTF from file '{}' ({} bytes)",
@@ -357,117 +370,122 @@ impl EngineInterface {
         file_name: &str,
         file_data: &str,
     ) -> Result<(), String> {
-        let (elements, body) = parse_ephemerides(file_data)?;
         log::info!(
-            "Loaded ephemerides '{}'\n{:#?}\n{:#?}",
+            "load_ephemerides_internal, name: {}, data: {}",
             file_name,
-            body,
-            elements
+            file_data
         );
 
-        let orbit_transform = elements_to_circle_transform(&elements);
+        // let (elements, body) = parse_ephemerides(file_data)?;
+        // log::info!(
+        //     "Loaded ephemerides '{}'\n{:#?}\n{:#?}",
+        //     file_name,
+        //     body,
+        //     elements
+        // );
 
-        let scene = self
-            .engine
-            .scene_man
-            .new_scene(file_name)
-            .ok_or("Failed to create new scene!")?;
+        // let orbit_transform = elements_to_circle_transform(&elements);
 
-        let planet_mat = self.engine.res_man.instantiate_material("gltf_metal_rough");
-        planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
-        planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
-            UniformName::BaseColorFactor,
-            UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
-        );
+        // let scene = self
+        //     .engine
+        //     .scene_man
+        //     .new_scene(file_name)
+        //     .ok_or("Failed to create new scene!")?;
 
-        // Lat-long sphere
-        let lat_long = scene.ent_man.new_entity(Some(&body.id));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(lat_long)
-            .unwrap();
-        trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(
-            body.mean_radius as f32,
-            body.mean_radius as f32,
-            body.mean_radius as f32,
-        );
-        let mesh_comp = scene
-            .ent_man
-            .add_component::<MeshComponent>(lat_long)
-            .unwrap();
-        mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(planet_mat.clone(), 0);
+        // let planet_mat = self.engine.res_man.instantiate_material("gltf_metal_rough");
+        // planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
+        // planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+        //     UniformName::BaseColorFactor,
+        //     UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
+        // );
 
-        self.temp_add_ellipse(
-            file_name,
-            "first",
-            &OrbitalElements {
-                semi_major_axis: 1000.0,
-                eccentricity: 0.0,
-                arg_periapsis: 0.0,
-                inclination: 0.0,
-                long_asc_node: 0.0,
-                true_anomaly: 0.0,
-            },
-        );
+        // // Lat-long sphere
+        // let lat_long = scene.ent_man.new_entity(Some(&body.id));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(lat_long)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = Vector3::new(
+        //     body.mean_radius as f32,
+        //     body.mean_radius as f32,
+        //     body.mean_radius as f32,
+        // );
+        // let mesh_comp = scene
+        //     .ent_man
+        //     .add_component::<MeshComponent>(lat_long)
+        //     .unwrap();
+        // mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("lat_long_sphere"));
+        // mesh_comp.set_material_override(planet_mat.clone(), 0);
 
-        self.temp_add_ellipse(
-            file_name,
-            "second",
-            &OrbitalElements {
-                semi_major_axis: 1000.0,
-                eccentricity: 0.9,
-                arg_periapsis: 0.0,
-                inclination: 0.0,
-                long_asc_node: 0.0,
-                true_anomaly: 0.0,
-            },
-        );
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "first",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.0,
+        //         arg_periapsis: 0.0,
+        //         inclination: 0.0,
+        //         long_asc_node: 0.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
 
-        self.temp_add_ellipse(
-            file_name,
-            "third",
-            &OrbitalElements {
-                semi_major_axis: 1000.0,
-                eccentricity: 0.9,
-                arg_periapsis: 0.0,
-                inclination: 30.0,
-                long_asc_node: 0.0,
-                true_anomaly: 0.0,
-            },
-        );
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "second",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 0.0,
+        //         inclination: 0.0,
+        //         long_asc_node: 0.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
 
-        self.temp_add_ellipse(
-            file_name,
-            "third",
-            &OrbitalElements {
-                semi_major_axis: 1000.0,
-                eccentricity: 0.9,
-                arg_periapsis: 0.0,
-                inclination: 30.0,
-                long_asc_node: 45.0,
-                true_anomaly: 0.0,
-            },
-        );
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "third",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 0.0,
+        //         inclination: 30.0,
+        //         long_asc_node: 0.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
 
-        self.temp_add_ellipse(
-            file_name,
-            "fourth",
-            &OrbitalElements {
-                semi_major_axis: 1000.0,
-                eccentricity: 0.9,
-                arg_periapsis: 30.0,
-                inclination: 30.0,
-                long_asc_node: 45.0,
-                true_anomaly: 0.0,
-            },
-        );
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "third",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 0.0,
+        //         inclination: 30.0,
+        //         long_asc_node: 45.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
+
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "fourth",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 30.0,
+        //         inclination: 30.0,
+        //         long_asc_node: 45.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
 
         return Ok(());
     }
 
-    #[wasm_bindgen]
     pub fn load_ephemerides(&mut self, file_name: &str, file_data: &str) {
         match self.load_ephemerides_internal(file_name, file_data) {
             Ok(_) => {
@@ -479,230 +497,157 @@ impl EngineInterface {
         }
     }
 
-    #[wasm_bindgen]
-    pub fn begin_loop(mut self) {
-        log::info!("Beginning engine loop...");
-
+    pub fn load_test_scene(&mut self) {
         self.engine
             .scene_man
             .load_test_scene("test", &mut self.engine.res_man);
         self.engine.scene_man.set_scene("test");
-
-        self.engine
-            .scene_man
-            .inject_scene(
-                "./public/ephemerides/3@sun.txt",
-                Some(Transform {
-                    trans: Vector3::new(0.0, 0.0, 0.0),
-                    rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
-                    scale: Vector3::new(1.0, 1.0, 1.0),
-                }),
-            )
-            .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/Box.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 3.0,
-        //             disp: cgmath::Vector3::new(5.0, 0.0, -0.5),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene("./public/Duck.glb_scene_0", Some(transform))
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/Duck.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 1.0,
-        //             disp: cgmath::Vector3::new(0.0, 0.0, 1.0),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/Duck.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 1.0,
-        //             disp: cgmath::Vector3::new(0.0, 0.0, 5.0),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/Duck.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 3.0,
-        //             disp: cgmath::Vector3::new(0.0, 5.0, 5.0),
-        //             rot: cgmath::Rotation3::from_axis_angle(
-        //                 cgmath::Vector3::new(1.0, 0.0, 0.0),
-        //                 cgmath::Deg(45.0),
-        //             ),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/2CylinderEngine.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 0.1,
-        //             disp: cgmath::Vector3::new(0.0, -100.0, 0.0),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/WaterBottle.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 5.0,
-        //             disp: cgmath::Vector3::new(-10.0, 0.0, 0.0),
-        //             rot: cgmath::Rotation3::from_axis_angle(
-        //                 cgmath::Vector3::new(1.0, 0.0, 0.0),
-        //                 cgmath::Deg(45.0),
-        //             ),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/BoomBox.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 100.0,
-        //             disp: cgmath::Vector3::new(0.0, -10.0, 0.0),
-        //             rot: cgmath::Rotation3::from_axis_angle(
-        //                 cgmath::Vector3::new(0.0, 0.0, 1.0),
-        //                 cgmath::Deg(30.0),
-        //             ),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        // self.engine
-        //     .scene_man
-        //     .inject_scene(
-        //         "./public/gltf_3_cubes.glb_scene_0",
-        //         Some(TransformType {
-        //             scale: 0.1,
-        //             disp: cgmath::Vector3::new(0.0, 5.0, 0.0),
-        //             rot: cgmath::Quaternion::new(1.0, 0.0, 0.0, 0.0),
-        //         }),
-        //     )
-        //     .expect("Failed to inject scene!");
-
-        let event_loop = EventLoop::new();
-
-        let window = WindowBuilder::new()
-            .with_title("Title")
-            .with_canvas(Some(self.canvas))
-            .build(&event_loop)
-            .expect("Failed to find window!");
-
-        // Get a new one as we need to move it into the window builder for some reason
-        self.canvas = window.canvas();
-
-        let style = self.canvas.style();
-        style
-            .set_property_with_priority("width", "100%", "")
-            .expect("Failed to set width!");
-        style
-            .set_property_with_priority("height", "100%", "")
-            .expect("Failed to set height!");
-
-        event_loop.run(move |event, _, control_flow| {
-            *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
-
-            match event {
-                Event::WindowEvent {
-                    event: WindowEvent::CloseRequested,
-                    window_id,
-                } if window_id == window.id() => *control_flow = ControlFlow::Exit,
-
-                Event::MainEventsCleared => {
-                    window.request_redraw();
-                }
-
-                Event::RedrawRequested(window_id) if window_id == window.id() => {
-                    let canvas_width_on_screen = self.canvas.client_width() as u32;
-                    let canvas_height_on_screen = self.canvas.client_height() as u32;
-
-                    // Check if we need to resize
-                    if window.inner_size().width != canvas_width_on_screen
-                        || window.inner_size().height != canvas_height_on_screen
-                    {
-                        // Sets canvas height and width, unfortunately also setting its style height and width
-                        window.set_inner_size(winit::dpi::LogicalSize::new(
-                            canvas_width_on_screen,
-                            canvas_height_on_screen,
-                        ));
-
-                        // #HACK: Restore the canvas width/height to 100% so they get driven by the window size
-                        let style = self.canvas.style();
-                        style
-                            .set_property_with_priority("width", "100%", "")
-                            .expect("Failed to set width!");
-                        style
-                            .set_property_with_priority("height", "100%", "")
-                            .expect("Failed to set height!");
-
-                        log::info!(
-                            "Resized to engine: {}, h: {}",
-                            canvas_width_on_screen,
-                            canvas_height_on_screen
-                        );
-                    }
-
-                    let mut app_state_mut = &mut *self.app_state.lock().unwrap();
-
-                    let now_ms = js_sys::Date::now() - self.start_ms;
-                    let real_delta_ms = now_ms - self.last_frame_ms;
-                    let phys_delta_ms = real_delta_ms * app_state_mut.simulation_speed;
-                    self.last_frame_ms = now_ms;
-
-                    app_state_mut.canvas_height = canvas_height_on_screen;
-                    app_state_mut.canvas_width = canvas_width_on_screen;
-                    app_state_mut.phys_time_ms += phys_delta_ms;
-                    app_state_mut.real_time_ms += real_delta_ms;
-                    app_state_mut.phys_delta_time_ms = phys_delta_ms;
-                    app_state_mut.real_delta_time_ms = real_delta_ms;
-
-                    self.engine.update(app_state_mut);
-                }
-
-                Event::NewEvents(_) => {}
-                Event::DeviceEvent {
-                    device_id: _,
-                    event: _,
-                } => {}
-                Event::UserEvent(_) => {}
-                Event::Suspended => {}
-                Event::Resumed => {}
-                Event::RedrawEventsCleared => {}
-                Event::LoopDestroyed => {}
-
-                // In case the window id doesn't match
-                _ => {}
-            }
-        });
     }
+
+    pub fn update(&mut self, width: u32, height: u32) {
+        let mut app_state_mut = &mut *self.app_state.lock().unwrap();
+
+        let now_ms = js_sys::Date::now() - self.start_ms;
+        let real_delta_ms = now_ms - self.last_frame_ms;
+        let phys_delta_ms = real_delta_ms * app_state_mut.simulation_speed;
+        self.last_frame_ms = now_ms;
+
+        app_state_mut.canvas_height = height;
+        app_state_mut.canvas_width = width;
+        app_state_mut.phys_time_ms += phys_delta_ms;
+        app_state_mut.real_time_ms += real_delta_ms;
+        app_state_mut.phys_delta_time_ms = phys_delta_ms;
+        app_state_mut.real_delta_time_ms = real_delta_ms;
+
+        self.engine.update(app_state_mut);
+    }
+}
+
+pub async fn begin_loop() {
+    log::info!("Beginning engine loop...");
+
+    // log::info!("Before fetch");
+    // crate::utils::web::test_fetch("./public/ephemerides/test.txt".to_owned()).await;
+    // log::info!("After fetch");
+
+    EI.with(|e| {
+        let mut e = e.borrow_mut();
+
+        e.load_test_scene();
+
+        // e.engine
+        //     .scene_man
+        //     .inject_scene(
+        //         "./public/ephemerides/3@sun.txt",
+        //         Some(Transform {
+        //             trans: Vector3::new(0.0, 0.0, 0.0),
+        //             rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
+        //             scale: Vector3::new(1.0, 1.0, 1.0),
+        //         }),
+        //     )
+        //     .expect("Failed to inject scene!");
+    });
+
+    let event_loop = EventLoop::new();
+
+    let canvas = get_canvas();
+
+    let window = WindowBuilder::new()
+        .with_title("Title")
+        .with_canvas(Some(canvas))
+        .build(&event_loop)
+        .expect("Failed to find window!");
+
+    // Get a new one as we need to move it into the window builder for some reason
+    let canvas = window.canvas();
+
+    let style = canvas.style();
+    style
+        .set_property_with_priority("width", "100%", "")
+        .expect("Failed to set width!");
+    style
+        .set_property_with_priority("height", "100%", "")
+        .expect("Failed to set height!");
+
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
+
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                window_id,
+            } if window_id == window.id() => *control_flow = ControlFlow::Exit,
+
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
+
+            Event::RedrawRequested(window_id) if window_id == window.id() => {
+                let canvas_width_on_screen = canvas.client_width() as u32;
+                let canvas_height_on_screen = canvas.client_height() as u32;
+
+                // Check if we need to resize
+                if window.inner_size().width != canvas_width_on_screen
+                    || window.inner_size().height != canvas_height_on_screen
+                {
+                    // Sets canvas height and width, unfortunately also setting its style height and width
+                    window.set_inner_size(winit::dpi::LogicalSize::new(
+                        canvas_width_on_screen,
+                        canvas_height_on_screen,
+                    ));
+
+                    // #HACK: Restore the canvas width/height to 100% so they get driven by the window size
+                    let style = canvas.style();
+                    style
+                        .set_property_with_priority("width", "100%", "")
+                        .expect("Failed to set width!");
+                    style
+                        .set_property_with_priority("height", "100%", "")
+                        .expect("Failed to set height!");
+
+                    log::info!(
+                        "Resized to engine: {}, h: {}",
+                        canvas_width_on_screen,
+                        canvas_height_on_screen
+                    );
+                }
+
+                EI.with(|e_inner| {
+                    let mut e_inner = e_inner.borrow_mut();
+
+                    e_inner.update(canvas_width_on_screen, canvas_height_on_screen);
+                });
+            }
+
+            Event::NewEvents(_) => {}
+            Event::DeviceEvent {
+                device_id: _,
+                event: _,
+            } => {}
+            Event::UserEvent(_) => {}
+            Event::Suspended => {}
+            Event::Resumed => {}
+            Event::RedrawEventsCleared => {}
+            Event::LoopDestroyed => {}
+
+            // In case the window id doesn't match
+            _ => {}
+        }
+    });
+}
+
+#[wasm_bindgen]
+pub fn load_ephemerides_external(file_name: &str, file_data: &str) {
+    EI.with(|e_inner| {
+        let mut e_inner = e_inner.borrow_mut();
+
+        match e_inner.load_ephemerides_internal(file_name, file_data) {
+            Ok(_) => {
+                log::info!("Loaded ephemerides from file '{}'", file_name);
+            }
+            Err(err) => {
+                log::error!("Error when loading ephemerides:\n{}", err);
+            }
+        }
+    });
 }

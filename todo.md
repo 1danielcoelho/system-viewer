@@ -195,6 +195,18 @@
 
 # Try offsetting periapsis before transformation and compare
 
+# Async stuff
+- I think the only way to get the async file prompt working is to spread the async virus all the way to the InterfaceManager so that it can defer from there and let js handle the request
+    - We can use this for loading the assets, yes, but it doesn't work for the "UI callback" stuff as the winit event loop is not compatible with async yet
+- The only way would be to make the entire thing async, otherwise we'd have to return from that function and somehow capture a static reference to the engine so that it can be filled with the fetched data whenever the future completes, which sounds like even more work
+- We can't even move the entire thing into a web worker because WebWorkers running WebAssembly cannot receive events from JS (e.g. canvas, click events) (https://rustwasm.github.io/docs/wasm-bindgen/examples/raytrace.html)
+- Think I can do this with a nasty hack by keeping track of the engine from javascript's side, and injecting the loaded stuff from there
+    - This would even allow it to load assets on-demand. I'd just have a fire and forget "load this asset" js function called from rust that would inject the asset into the engine
+    - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element
+
+# Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
+
+
 # Scene serialization with serde
 - Need UI for it like some save/open menus
 - GLTF-like, index based json format 
@@ -203,8 +215,10 @@
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?
 
-# Make a manifest file when compiling (similar to how I resolve includes)
-# JS reads the manifest file and loads all assets from there
+# Improve asset loading with file manifests
+- Explicit asset name to path text file that is manually kept and baked into the binary
+- When e.g. trying to load mesh 'my_mesh', if it can't find a mesh with that name it just looks at the manifest, finds './public/something.glb' and sync loads it via rust
+    - Will work great with scene serialization!
 
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement

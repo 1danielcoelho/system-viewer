@@ -12,7 +12,8 @@ module.exports = (env, args) => {
         entry: './index.js',
         output: {
             path: path.resolve(__dirname, 'dist'),
-            filename: isProductionMode ? '[name].[contenthash].js' : '[name].[hash].js',
+            // filename: isProductionMode ? '[name].[contenthash].js' : '[name].[hash].js',
+            filename: isProductionMode ? '[name].js' : '[name].js',
         },
         plugins: [
             new WriteFilePlugin(),

@@ -2,9 +2,9 @@
 
 #[macro_use(lazy_static)]
 extern crate lazy_static;
-extern crate wasm_bindgen;
-extern crate regex;
 extern crate nalgebra as na;
+extern crate regex;
+extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 
