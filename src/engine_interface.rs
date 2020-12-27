@@ -2,8 +2,14 @@ use crate::{
     app_state::AppState,
     components::MeshComponent,
     engine::Engine,
-    managers::resource::material::{UniformName, UniformValue},
-    utils::{orbital_elements::parse_ephemerides, transform::Transform},
+    managers::{
+        resource::material::{UniformName, UniformValue},
+        Scene,
+    },
+    utils::{
+        orbital_elements::{elements_to_circle_transform, parse_ephemerides, OrbitalElements},
+        transform::Transform,
+    },
 };
 use crate::{app_state::ButtonState, components::TransformComponent};
 use na::{Quaternion, UnitQuaternion, Vector3};
@@ -326,12 +332,40 @@ impl EngineInterface {
         }
     }
 
+    fn temp_add_ellipse(&mut self, scene_name: &str, name: &str, elements: &OrbitalElements) {
+        let scene = self.engine.scene_man.get_scene_mut(scene_name).unwrap();
+
+        let orbit_transform = elements_to_circle_transform(&elements);
+        log::warn!("orbit transform: {:#?}", orbit_transform);
+
+        // Orbit
+        let circle = scene.ent_man.new_entity(Some(&name));
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(circle)
+            .unwrap();
+        *trans_comp.get_local_transform_mut() = orbit_transform;
+        let mesh_comp = scene
+            .ent_man
+            .add_component::<MeshComponent>(circle)
+            .unwrap();
+        mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("circle"));
+    }
+
     fn load_ephemerides_internal(
         &mut self,
         file_name: &str,
         file_data: &str,
     ) -> Result<(), String> {
         let (elements, body) = parse_ephemerides(file_data)?;
+        log::info!(
+            "Loaded ephemerides '{}'\n{:#?}\n{:#?}",
+            file_name,
+            body,
+            elements
+        );
+
+        let orbit_transform = elements_to_circle_transform(&elements);
 
         let scene = self
             .engine
@@ -353,8 +387,11 @@ impl EngineInterface {
             .add_component::<TransformComponent>(lat_long)
             .unwrap();
         trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
-        let radius = body.mean_radius.unwrap_or(1.0) as f32;
-        trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(
+            body.mean_radius as f32,
+            body.mean_radius as f32,
+            body.mean_radius as f32,
+        );
         let mesh_comp = scene
             .ent_man
             .add_component::<MeshComponent>(lat_long)
@@ -362,19 +399,70 @@ impl EngineInterface {
         mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(planet_mat.clone(), 0);
 
-        // Orbit
-        let circle = scene.ent_man.new_entity(Some(&(body.id + "_orbit")));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(circle)
-            .unwrap();
-        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
-        let mesh_comp = scene
-            .ent_man
-            .add_component::<MeshComponent>(circle)
-            .unwrap();
-        mesh_comp.set_mesh(self.engine.res_man.get_or_create_mesh("circle"));
+        self.temp_add_ellipse(
+            file_name,
+            "first",
+            &OrbitalElements {
+                semi_major_axis: 1000.0,
+                eccentricity: 0.0,
+                arg_periapsis: 0.0,
+                inclination: 0.0,
+                long_asc_node: 0.0,
+                true_anomaly: 0.0,
+            },
+        );
+
+        self.temp_add_ellipse(
+            file_name,
+            "second",
+            &OrbitalElements {
+                semi_major_axis: 1000.0,
+                eccentricity: 0.9,
+                arg_periapsis: 0.0,
+                inclination: 0.0,
+                long_asc_node: 0.0,
+                true_anomaly: 0.0,
+            },
+        );
+
+        self.temp_add_ellipse(
+            file_name,
+            "third",
+            &OrbitalElements {
+                semi_major_axis: 1000.0,
+                eccentricity: 0.9,
+                arg_periapsis: 0.0,
+                inclination: 30.0,
+                long_asc_node: 0.0,
+                true_anomaly: 0.0,
+            },
+        );
+
+        self.temp_add_ellipse(
+            file_name,
+            "third",
+            &OrbitalElements {
+                semi_major_axis: 1000.0,
+                eccentricity: 0.9,
+                arg_periapsis: 0.0,
+                inclination: 30.0,
+                long_asc_node: 45.0,
+                true_anomaly: 0.0,
+            },
+        );
+
+        self.temp_add_ellipse(
+            file_name,
+            "fourth",
+            &OrbitalElements {
+                semi_major_axis: 1000.0,
+                eccentricity: 0.9,
+                arg_periapsis: 30.0,
+                inclination: 30.0,
+                long_asc_node: 45.0,
+                true_anomaly: 0.0,
+            },
+        );
 
         return Ok(());
     }
@@ -426,14 +514,7 @@ impl EngineInterface {
 
         // self.engine
         //     .scene_man
-        //     .inject_scene(
-        //         "./public/Duck.glb_scene_0",
-        //         Some(Transform {
-        //             trans: Vector3::new(5.0, 0.0, -0.5),
-        //             rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
-        //             scale: Vector3::new(1.0, 1.0, 1.0),
-        //         }),
-        //     )
+        //     .inject_scene("./public/Duck.glb_scene_0", Some(transform))
         //     .expect("Failed to inject scene!");
 
         // self.engine

@@ -363,7 +363,7 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(grid)
             .unwrap();
-        trans_comp.get_local_transform_mut().scale = Vector3::new(1000.0, 1000.0, 1000.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(100000.0, 100000.0, 100000.0);
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(grid).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
@@ -373,7 +373,7 @@ impl SceneManager {
             .ent_man
             .add_component::<TransformComponent>(axes)
             .unwrap();
-        trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(300.0, 300.0, 300.0);
         let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }

@@ -214,7 +214,7 @@ fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
 
         ui.columns(2, |cols| {
             cols[0].label("Far:");
-            cols[1].add(egui::DragValue::f32(&mut state.camera.far).range(20.0..=10000.0));
+            cols[1].add(egui::DragValue::f32(&mut state.camera.far));
         });
 
         ui.columns(2, |cols| {

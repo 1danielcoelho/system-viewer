@@ -935,7 +935,7 @@ pub fn generate_axes(
                 normals: vec![],
                 tangents: vec![],
                 colors: vec![
-                    Vector4::new(0.0, 0.0, 0.0, 1.0),
+                    Vector4::new(1.0, 1.0, 1.0, 1.0),
                     Vector4::new(1.0, 0.0, 0.0, 1.0),
                     Vector4::new(0.0, 1.0, 0.0, 1.0),
                     Vector4::new(0.0, 0.0, 1.0, 1.0),

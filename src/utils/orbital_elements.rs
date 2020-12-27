@@ -1,5 +1,7 @@
-use na::Matrix4;
+use na::{Matrix4, Quaternion, UnitQuaternion, Vector3};
 use regex::Regex;
+
+use crate::utils::transform::Transform;
 
 lazy_static! {
     static ref TARGET_BODY_NAME_RE: Regex = Regex::new(r"Target body name: ([^;]+?) \(").unwrap();
@@ -23,8 +25,8 @@ lazy_static! {
 #[derive(Debug)]
 pub struct BodyDescription {
     pub id: String,
-    pub mean_radius: Option<f64>, // Km, unavailable for e.g. barycenters
-                                  // Rotation, rotation axis?
+    pub mean_radius: f64, // Km, 0 for e.g. barycenters
+                          // Rotation, rotation axis?
 }
 
 #[derive(Debug)]
@@ -87,24 +89,73 @@ pub fn parse_ephemerides(file_str: &str) -> Result<(OrbitalElements, BodyDescrip
         "Failed to extract body name from this file!\n{}",
         file_str
     ))?;
-    let mean_radius = float_from_match(file_str, &MEAN_RADIUS_RE);
+    let mean_radius = float_from_match(file_str, &MEAN_RADIUS_RE).unwrap_or(0.0);
 
+    // We use 1000 km per unit
     return Ok((
         OrbitalElements {
-            semi_major_axis,
+            semi_major_axis: semi_major_axis * 149597.8707, // AU to 1000 km
             eccentricity,
             inclination,
             long_asc_node,
             arg_periapsis,
             true_anomaly,
         },
-        BodyDescription { id, mean_radius },
+        BodyDescription {
+            id,
+            mean_radius: mean_radius / 1000.0,
+        },
     ));
 }
 
-pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Matrix4<f32> {
-    // let mat: Matrix4<f32> = Matrix4::from_angle_x(Rad(0.2));
-    //let rot: Quaternion<f32> = Quaternion::new(0.0, 0.0, 0.0, 0.0);
+pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform {
+    let mut result = Transform::identity();
 
-    return Matrix4::identity();
+    let b = elements.semi_major_axis * (1.0 - elements.eccentricity.powi(2)).sqrt();
+
+    // Shaping transform for semi-major and minor axes
+    result.concat(&Transform {
+        scale: Vector3::new(elements.semi_major_axis as f32, b as f32, 1.0),
+        ..Transform::identity()
+    });
+
+    // Apply inclination around world axes
+    result = Transform {
+        rot: UnitQuaternion::from_axis_angle(
+            &Vector3::x_axis(),
+            elements.inclination.to_radians() as f32,
+        ),
+        ..Transform::identity()
+    }
+    .concat_clone(&result);
+
+    // Rotate for longitude of ascending node around world axes
+    result = Transform {
+        rot: UnitQuaternion::from_axis_angle(
+            &Vector3::z_axis(),
+            elements.long_asc_node.to_radians() as f32,
+        ),
+        ..Transform::identity()
+    }
+    .concat_clone(&result);
+
+    // Rotate for argument of periapsis around local axes
+    result.concat(&Transform {
+        rot: UnitQuaternion::from_axis_angle(
+            &Vector3::z_axis(),
+            elements.arg_periapsis.to_radians() as f32,
+        ),
+        ..Transform::identity()
+    });
+
+    result.concat(&Transform {
+        trans: Vector3::new(
+            -elements.eccentricity as f32, // This is a move by -a*e, but we already have our x axis scaled by 'a'
+            0.0,
+            0.0,
+        ),
+        ..Transform::identity()
+    });
+
+    return result;
 }

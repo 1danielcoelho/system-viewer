@@ -191,26 +191,37 @@
 <!-- - Rotation angle doesn't nicely match the FOV anymore -->
 <!-- - Moving the sun didn't actually move the light position -->
 
+# Note: Rotation3::from_matrix
+
+# Try offsetting periapsis before transformation and compare
+
+# Scene serialization with serde
+- Need UI for it like some save/open menus
+- GLTF-like, index based json format 
+- Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
+- What to do with resources like meshes and textures? Export a binary blob?
+- What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?
+
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement
     - Crudest level: J2000 orbital elements
         - Present for all bodies (including asteroids)
             - https://ssd.jpl.nasa.gov/?sb_elem
     - utils file for handling orbital stuff
-        - Class to describe orbital elements
-        - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing)
-        - Generate ellipse data from orbital elements struct
-            - main.js::addEllipse
-        - Generate keypoints for ellipse
+        <!-- - Class to describe orbital elements -->
+        <!-- - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing) -->
+        <!-- - Generate ellipse data from orbital elements struct
+            - main.js::addEllipse -->
+        <!-- - Generate keypoints for ellipse
             - I came up with a hacky algorithm to accumulate more points on the peri/apoapsis, but I think the best thing to do is to just generate a circle and reuse it for all ellipses, just converting the orbital elements into a single Matrix transform
-                - This may force me to support non-uniform scaling though, but I think it's worth it: I'd likely have many ellipses in the buffer for no reason
-        - Engine interface function to load ephemerides files during execution
+                - This may force me to support non-uniform scaling though, but I think it's worth it: I'd likely have many ellipses in the buffer for no reason -->
+        <!-- - Engine interface function to load ephemerides files during execution
             - Generate a small scene for it
-            - Inject scene into current like for GLTF scenes
-        - Function to convert to and from state vectors from orbital elements
+            - Inject scene into current like for GLTF scenes -->
+        <!-- - Function to convert to and from state vectors from orbital elements -->
         - There are alternative orbital elements for coments and asteroids, as well as a two-line element...
         - Functions to compute other stuff like period, periapsis, apoapsis, location of ascending/descending nodes
-    - Draw ellipses with webgl lines for now
+    <!-- - Draw ellipses with webgl lines for now -->
     <!-- - https://en.wikipedia.org/wiki/Simplified_perturbations_models -->
     <!-- - SPICE: Only for planets, moons and the missions
         - Would need to wrap the C library or use this: https://github.com/rjpower4/spice-sys, I don't think I can get it below 10 MB for the library alone, let alone the kernels with data
@@ -224,6 +235,7 @@
     - Gravity, force application
     - Orbital trajectory prediction -> line drawing
 
+# I kind of really need to use f64 everywhere
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
 # I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
