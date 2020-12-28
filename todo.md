@@ -87,10 +87,10 @@
 <!-- - Actually parent one node to the other -->
 <!-- - Construct unique identifiers for resources like meshes, materials and textures, because when parsing the nodes they'll be referred to directly -->
 <!-- - Splice at transform x -> set tarnsform to scene root -->
-<!-- - Flipped Y when going from blender to sv
+<!-- - Flipped Y when going from blender to sv 
 - Nested transforms are broken for the engine scene
     - They were both the same issue: I wasn't flipping the transforms from Y-up to Z-up -->
-<!-- - Make material/mesh names unique in some way -->
+<!-- - Make material/mesh names unique in some way --> 
 <!-- # Compile all engine materials up front -->
 <!-- # Cleanup resource manager -->
 <!-- # Honestly I may not even need the entity index inside Entity and always use just the uuid -->
@@ -126,7 +126,7 @@
 <!-- # I want to import a GLTF object -->
 <!-- - Get textures working
     - Import them from gltf
-    - Import from raw bytes
+    - Import from raw bytes    
     - Allow cloning materials so that we can set custom parameters (like textures) for each
     - Allow modifying materials so that we can change uniforms at runtime (RefCell?)
     - Actually use textures -->
@@ -200,119 +200,94 @@
 # Try offsetting periapsis before transformation and compare
 
 # Async stuff
-
 - I think the only way to get the async file prompt working is to spread the async virus all the way to the InterfaceManager so that it can defer from there and let js handle the request
-  - We can use this for loading the assets, yes, but it doesn't work for the "UI callback" stuff as the winit event loop is not compatible with async yet
+    - We can use this for loading the assets, yes, but it doesn't work for the "UI callback" stuff as the winit event loop is not compatible with async yet
 - The only way would be to make the entire thing async, otherwise we'd have to return from that function and somehow capture a static reference to the engine so that it can be filled with the fetched data whenever the future completes, which sounds like even more work
 - We can't even move the entire thing into a web worker because WebWorkers running WebAssembly cannot receive events from JS (e.g. canvas, click events) (https://rustwasm.github.io/docs/wasm-bindgen/examples/raytrace.html)
 - Think I can do this with a nasty hack by keeping track of the engine from javascript's side, and injecting the loaded stuff from there
-  - This would even allow it to load assets on-demand. I'd just have a fire and forget "load this asset" js function called from rust that would inject the asset into the engine
-  - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element
+    - This would even allow it to load assets on-demand. I'd just have a fire and forget "load this asset" js function called from rust that would inject the asset into the engine
+    - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element
 
 # Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
-
 - The on-demand stuff may still work if we make it so that we can e.g. use the duck 'Mesh' object even if it's not loaded yet: It will dispatch the JS call to fetch and load it, and in the meantime use some default asset. On every draw it will check if available, and whenever it is, it can swap it for the new asset.
 - I can probably just use build.rs to compile the manifest file automatically
 
 # Scene serialization with serde
-
 - Need UI for it like some save/open menus
-- GLTF-like, index based json format
+- GLTF-like, index based json format 
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
 <!-- - What to do with resources like meshes and textures? Export a binary blob?
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?
 
 # Improve asset loading with file manifests
-
 - Explicit asset name to path text file that is manually kept and baked into the binary
 - When e.g. trying to load mesh 'my_mesh', if it can't find a mesh with that name it just looks at the manifest, finds './public/something.glb' and sync loads it via rust
-  - Will work great with scene serialization!
+    - Will work great with scene serialization!
 
 # Try setting up a simple orbit scene on rails/with physics
-
 - Rails movement
-  - Crudest level: J2000 orbital elements
-    - Present for all bodies (including asteroids)
-      - https://ssd.jpl.nasa.gov/?sb_elem
-  - utils file for handling orbital stuff
-    <!-- - Class to describe orbital elements -->
-    <!-- - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing) -->
-    <!-- - Generate ellipse data from orbital elements struct
+    - Crudest level: J2000 orbital elements
+        - Present for all bodies (including asteroids)
+            - https://ssd.jpl.nasa.gov/?sb_elem
+    - utils file for handling orbital stuff
+        <!-- - Class to describe orbital elements -->
+        <!-- - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing) -->
+        <!-- - Generate ellipse data from orbital elements struct
             - main.js::addEllipse -->
-    <!-- - Generate keypoints for ellipse
+        <!-- - Generate keypoints for ellipse
             - I came up with a hacky algorithm to accumulate more points on the peri/apoapsis, but I think the best thing to do is to just generate a circle and reuse it for all ellipses, just converting the orbital elements into a single Matrix transform
                 - This may force me to support non-uniform scaling though, but I think it's worth it: I'd likely have many ellipses in the buffer for no reason -->
-    <!-- - Engine interface function to load ephemerides files during execution
+        <!-- - Engine interface function to load ephemerides files during execution
             - Generate a small scene for it
             - Inject scene into current like for GLTF scenes -->
-    <!-- - Function to convert to and from state vectors from orbital elements --> - There are alternative orbital elements for coments and asteroids, as well as a two-line element... - Functions to compute other stuff like period, periapsis, apoapsis, location of ascending/descending nodes
+        <!-- - Function to convert to and from state vectors from orbital elements -->
+        - There are alternative orbital elements for coments and asteroids, as well as a two-line element...
+        - Functions to compute other stuff like period, periapsis, apoapsis, location of ascending/descending nodes
     <!-- - Draw ellipses with webgl lines for now -->
     <!-- - https://en.wikipedia.org/wiki/Simplified_perturbations_models -->
     <!-- - SPICE: Only for planets, moons and the missions
         - Would need to wrap the C library or use this: https://github.com/rjpower4/spice-sys, I don't think I can get it below 10 MB for the library alone, let alone the kernels with data
         - Maybe do this in the future for the mission data... although I'd likely need to have data for all solar system bodies or else the spacecraft trajectories wouldn't match the target body -->
 - Line drawing
-  - How did my JS app do it? The lines there seemed fine...
-  - Line "tessellation" into triangles for thick lines
-    - Geometry shaders? Not in WebGL2...
-    - Will probably have to do a double-sided quad cross like old school foliage stuff
-      - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
+    - How did my JS app do it? The lines there seemed fine...
+    - Line "tessellation" into triangles for thick lines
+        - Geometry shaders? Not in WebGL2...
+        - Will probably have to do a double-sided quad cross like old school foliage stuff
+            - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
 - Free body movement
-  - Gravity, force application
-  - Orbital trajectory prediction -> line drawing
+    - Gravity, force application
+    - Orbital trajectory prediction -> line drawing
 
 # I kind of really need to use f64 everywhere
-
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
-
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
-
 # I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
-
 <!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
-
 # Cubemap texture for the skybox
-
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
-
 # Scene manager
-
 - Likely use Serde
 - Serialize the entity and component arrays in one go as byte buffers for now
-  - Maybe ASCII too to help debugging
-
+    - Maybe ASCII too to help debugging
 # Find a better way of handling component updates when sorting after reparenting
-
 # Testing
-
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
 - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe
-
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
-
 # I think I'll need wasm-bindgen-futures at some point for something?
-
 - https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs
-
 # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
-
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
-
 # I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
-
 - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
-
 # We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
-
 # Maybe use https://crates.io/crates/calloop for the event system instead
 
 # Docs link:
-
 - file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
 
 # Cool sources
-
 - https://github.com/bevyengine/bevy
 - https://github.com/not-fl3/macroquad
 - https://github.com/hecrj/coffee
@@ -324,7 +299,6 @@
 - https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/resources/shaders/phong_forward.frag
 
 # Physics
-
 - https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics
 - https://gafferongames.com/post/physics_in_3d/
 - https://github.com/DanielChappuis/reactphysics3d

@@ -3,7 +3,7 @@ use super::{
     Component,
 };
 use crate::{
-    managers::{details_ui::DetailsUI, scene::scene::Scene},
+    managers::{details_ui::DetailsUI, scene::Scene},
     utils::transform::Transform,
 };
 use egui::{Align, Layout, Ui};

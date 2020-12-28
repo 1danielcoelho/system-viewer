@@ -4,7 +4,7 @@ use super::{
 };
 use crate::managers::{
     details_ui::DetailsUI,
-    scene::scene::{Entity, Scene},
+    scene::{Entity, Scene},
 };
 use na::Vector3;
 use std::collections::HashMap;

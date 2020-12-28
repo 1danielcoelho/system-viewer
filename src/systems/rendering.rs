@@ -5,7 +5,7 @@ use crate::{
     managers::resource::material::{FrameUniformValues, UniformName, UniformValue},
     utils::gl::GL,
 };
-use crate::{managers::scene::scene::Scene, GLCTX};
+use crate::{managers::scene::Scene, GLCTX};
 use na::*;
 use std::convert::TryInto;
 use web_sys::WebGl2RenderingContext;

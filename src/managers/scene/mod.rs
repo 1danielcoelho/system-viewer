@@ -1,16 +1,14 @@
 use super::{resource::gltf_resources::GltfResource, ResourceManager};
 use crate::{
     components::{light::LightType, LightComponent, MeshComponent, TransformComponent},
-    managers::{
-        resource::material::{UniformName, UniformValue},
-        scene::scene::{Entity, Scene},
-    },
+    managers::resource::material::{UniformName, UniformValue},
     utils::transform::Transform,
 };
 use na::{Quaternion, UnitQuaternion, Vector3};
+pub use scene::*;
 use std::collections::HashMap;
 
-pub mod scene;
+mod scene;
 
 pub struct SceneManager {
     main: Option<String>,

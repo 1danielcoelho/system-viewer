@@ -2,7 +2,7 @@ use crate::{
     app_state::AppState,
     components::PhysicsComponent,
     components::{Component, TransformComponent},
-    managers::{scene::scene::Scene, EventReceiver},
+    managers::{scene::Scene, EventReceiver},
 };
 use na::{Matrix3, Quaternion, UnitQuaternion, Vector3};
 

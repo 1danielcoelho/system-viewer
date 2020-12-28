@@ -5,7 +5,7 @@ use super::{
 use crate::managers::{
     details_ui::DetailsUI,
     resource::{material::Material, mesh::Mesh},
-    scene::scene::Scene,
+    scene::Scene,
 };
 use egui::Ui;
 use std::{cell::RefCell, rc::Rc};

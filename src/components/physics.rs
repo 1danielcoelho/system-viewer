@@ -2,7 +2,7 @@ use super::{
     component::{ComponentStorageType, ComponentType},
     Component,
 };
-use crate::managers::{details_ui::DetailsUI, scene::scene::Scene};
+use crate::managers::{details_ui::DetailsUI, scene::Scene};
 use na::{Matrix3, Vector3};
 
 #[derive(Clone)]

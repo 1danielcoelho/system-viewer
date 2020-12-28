@@ -1,6 +1,6 @@
 use crate::{
     app_state::AppState,
-    managers::scene::scene::Scene,
+    managers::scene::Scene,
     systems::{PhysicsSystem, RenderingSystem, TransformUpdateSystem},
 };
 

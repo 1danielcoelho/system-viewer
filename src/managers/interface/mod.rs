@@ -8,7 +8,7 @@ use crate::{
         web::write_string_to_file_prompt,
     },
 };
-use crate::{managers::scene::scene::Scene, UICTX};
+use crate::{managers::scene::Scene, UICTX};
 use egui::{menu, Align, Button, Id, LayerId, Layout, Pos2, Response, TextStyle, TopPanel, Ui};
 use gui_backend::WebInput;
 use na::{Matrix4, Point3, Vector3};

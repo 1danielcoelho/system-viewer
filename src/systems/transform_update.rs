@@ -1,4 +1,4 @@
-use crate::{app_state::AppState, managers::scene::scene::Scene, utils::transform::Transform};
+use crate::{app_state::AppState, managers::scene::Scene, utils::transform::Transform};
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
