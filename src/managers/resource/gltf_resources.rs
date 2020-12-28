@@ -238,7 +238,6 @@ impl ResourceManager {
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
         mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
-        ctx: &WebGl2RenderingContext,
     ) -> Result<Rc<RefCell<Mesh>>, String> {
         let identifier = mesh.get_identifier(file_identifier);
 
@@ -536,28 +535,17 @@ impl ResourceManager {
             file_identifier
         );
 
-        GLCTX.with(|ctx| {
-            let ref_mut = ctx.borrow_mut();
-            let ctx = ref_mut.as_ref().unwrap();
-
-            for mesh in meshes {
-                match self.load_mesh_from_gltf(
-                    file_identifier,
-                    &mesh,
-                    &buffers,
-                    mat_index_to_parsed,
-                    &ctx,
-                ) {
-                    Ok(new_mesh) => {
-                        let name = new_mesh.borrow().name.clone();
-                        self.meshes.insert(name, new_mesh);
-                    }
-                    Err(msg) => {
-                        log::error!("Failed to load gltf mesh: {}", msg);
-                    }
+        for mesh in meshes {
+            match self.load_mesh_from_gltf(file_identifier, &mesh, &buffers, mat_index_to_parsed) {
+                Ok(new_mesh) => {
+                    let name = new_mesh.borrow().name.clone();
+                    self.meshes.insert(name, new_mesh);
+                }
+                Err(msg) => {
+                    log::error!("Failed to load gltf mesh: {}", msg);
                 }
             }
-        });
+        }
     }
 
     fn load_texture_from_gltf(

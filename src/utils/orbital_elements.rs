@@ -1,7 +1,6 @@
-use na::{Matrix4, Quaternion, UnitQuaternion, Vector3};
-use regex::Regex;
-
 use crate::utils::transform::Transform;
+use na::{UnitQuaternion, Vector3};
+use regex::Regex;
 
 lazy_static! {
     static ref TARGET_BODY_NAME_RE: Regex = Regex::new(r"Target body name: ([^;]+?) \(").unwrap();

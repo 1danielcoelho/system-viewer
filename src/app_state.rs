@@ -1,11 +1,6 @@
 use crate::managers::Entity;
-use egui::Ui;
 use na::*;
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
-use web_sys::WebGl2RenderingContext;
+use std::collections::HashSet;
 
 pub struct Camera {
     pub pos: Point3<f32>,

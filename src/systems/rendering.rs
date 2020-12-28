@@ -27,8 +27,8 @@ impl RenderingSystem {
             let gl = ref_mut.as_ref().unwrap();
 
             let mut uniform_data = self.pre_draw(state, gl, em);
-            self.draw(state, gl, &mut uniform_data, em);
-            self.post_draw(state, gl);
+            self.draw(gl, &mut uniform_data, em);
+            self.post_draw(gl);
         });
     }
 
@@ -105,24 +105,22 @@ impl RenderingSystem {
 
     fn draw(
         &self,
-        state: &AppState,
         gl: &WebGl2RenderingContext,
         uniform_data: &mut FrameUniformValues,
         em: &mut ECManager,
     ) {
         for (t, m) in em.transform.iter().zip(em.mesh.iter()) {
-            self.draw_one(state, gl, uniform_data, t, m);
+            self.draw_one(gl, uniform_data, t, m);
         }
     }
 
-    fn post_draw(&self, state: &AppState, gl: &WebGl2RenderingContext) {
+    fn post_draw(&self, gl: &WebGl2RenderingContext) {
         // Egui needs this disabled for now
         glc!(gl, gl.disable(GL::DEPTH_TEST));
     }
 
     fn draw_one(
         &self,
-        state: &AppState,
         gl: &WebGl2RenderingContext,
         uniform_data: &FrameUniformValues,
         tc: &TransformComponent,
@@ -177,13 +175,13 @@ impl RenderingSystem {
                     );
 
                     // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
-                    mat_mut.bind_for_drawing(state, gl);
+                    mat_mut.bind_for_drawing(gl);
                 }
 
                 primitive.draw(gl);
 
                 if let Some(mat) = &resolved_mat {
-                    mat.borrow().unbind_from_drawing(state, gl);
+                    mat.borrow().unbind_from_drawing(gl);
                 }
             }
         }

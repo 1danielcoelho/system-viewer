@@ -5,7 +5,6 @@ use crate::{
     utils::{
         gl::GL,
         string::{get_unique_name, remove_numbered_suffix},
-        web::{get_canvas, get_gl_context},
     },
 };
 use image::{io::Reader, DynamicImage, ImageFormat};

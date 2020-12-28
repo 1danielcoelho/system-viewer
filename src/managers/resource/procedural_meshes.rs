@@ -1,14 +1,14 @@
-use crate::managers::resource::{
-    collider::{AxisAlignedBoxCollider, SphereCollider},
-    intermediate_mesh::{intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive},
-    material::Material,
-    mesh::Mesh,
+use crate::{
+    managers::resource::{
+        collider::{AxisAlignedBoxCollider, SphereCollider},
+        intermediate_mesh::{intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive},
+        material::Material,
+        mesh::Mesh,
+    },
+    utils::gl::GL,
 };
 use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
-use web_sys::WebGl2RenderingContext;
-
-type GL = web_sys::WebGl2RenderingContext;
 
 // Praise songho: http://www.songho.ca/opengl/gl_sphere.html
 pub fn generate_lat_long_sphere(

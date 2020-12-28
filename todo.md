@@ -193,6 +193,9 @@
 <!-- # Maybe I can put the hack on the window and not the canvas? -->
 <!-- # Maybe I can delay initializing the engine until run is called? Is that useful? -->
 
+# Duality of being able to access the global state from the thread_local as well as passing it down the update chain
+# Pass scene around instead of EC manager
+
 # Note: Rotation3::from_matrix
 
 # Try offsetting periapsis before transformation and compare

@@ -3,8 +3,8 @@ use super::{
     texture::{Texture, TextureUnit},
 };
 use crate::{
-    app_state::AppState, components::light::LightType, managers::details_ui::DetailsUI,
-    managers::resource::shaders::*, utils::gl::GL,
+    components::light::LightType, managers::details_ui::DetailsUI, managers::resource::shaders::*,
+    utils::gl::GL,
 };
 use egui::{Align, Layout, Ui};
 use std::{collections::HashMap, rc::Rc};
@@ -332,7 +332,7 @@ impl Material {
         }
     }
 
-    pub fn bind_for_drawing(&mut self, state: &AppState, gl: &WebGl2RenderingContext) {
+    pub fn bind_for_drawing(&mut self, gl: &WebGl2RenderingContext) {
         if self.program.is_none() {
             // Prevent repeatedly trying to recompile something that doesn't work
             if self.failed_to_compile {
@@ -393,7 +393,7 @@ impl Material {
         }
     }
 
-    pub fn unbind_from_drawing(&self, state: &AppState, gl: &WebGl2RenderingContext) {
+    pub fn unbind_from_drawing(&self, gl: &WebGl2RenderingContext) {
         for (unit, _) in &self.textures {
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
             gl.bind_texture(GL::TEXTURE_2D, None);
