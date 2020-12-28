@@ -2,9 +2,7 @@
 export function load_text(url, content_type) {
   return fetch(url).then((response) =>
     response.text().then((text) => {
-      const canvas = document.getElementById("rustCanvas");
-      let wasm_module = canvas.hack;
-      wasm_module.receive_text(url, content_type, text);
+      window.wasm_module.receive_text(url, content_type, text);
     })
   );
 }
@@ -13,9 +11,11 @@ export function load_text(url, content_type) {
 export function load_bytes(url, content_type) {
   return fetch(url).then((response) =>
     response.arrayBuffer().then((buffer) => {
-      const canvas = document.getElementById("rustCanvas");
-      let wasm_module = canvas.hack;
-      wasm_module.receive_bytes(url, content_type, new Uint8Array(buffer));
+      window.wasm_module.receive_bytes(
+        url,
+        content_type,
+        new Uint8Array(buffer)
+      );
     })
   );
 }
@@ -34,9 +34,7 @@ export function prompt_for_text_file(content_type) {
       reader.onload = async (loadEvent) => {
         const data = loadEvent.target.result;
 
-        const canvas = document.getElementById("rustCanvas");
-        let wasm_module = canvas.hack;
-        wasm_module.receive_text(file.name, content_type, data);
+        window.wasm_module.receive_text(file.name, content_type, data);
       };
 
       reader.readAsText(file);

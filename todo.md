@@ -190,6 +190,8 @@
 <!-- - It's again possible to get the weird behavior when pitch goes to 90 and -90 -->
 <!-- - Rotation angle doesn't nicely match the FOV anymore -->
 <!-- - Moving the sun didn't actually move the light position -->
+<!-- # Maybe I can put the hack on the window and not the canvas? -->
+<!-- # Maybe I can delay initializing the engine until run is called? Is that useful? -->
 
 # Note: Rotation3::from_matrix
 
@@ -203,10 +205,6 @@
 - Think I can do this with a nasty hack by keeping track of the engine from javascript's side, and injecting the loaded stuff from there
     - This would even allow it to load assets on-demand. I'd just have a fire and forget "load this asset" js function called from rust that would inject the asset into the engine
     - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element
-
-# Maybe I can put the hack on the window and not the canvas?
-
-# Maybe I can delay initializing the engine until run is called? Is that useful?
 
 # Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
 - The on-demand stuff may still work if we make it so that we can e.g. use the duck 'Mesh' object even if it's not loaded yet: It will dispatch the JS call to fetch and load it, and in the meantime use some default asset. On every draw it will check if available, and whenever it is, it can swap it for the new asset.

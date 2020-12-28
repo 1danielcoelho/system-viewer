@@ -25,5 +25,5 @@ import("./pkg/index").then(async (wasm_module) => {
   // the wasm module (e.g. from a JS callback) it would just panic saying we tried to access a moved value.
   wasm_module.initialize();
   wasm_module.start_loop();  // Note how we don't await this async function here: This is impotant, but I don't know why...
-  canvas.hack = wasm_module;
+  window.wasm_module = wasm_module;
 });
