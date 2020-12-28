@@ -8,6 +8,7 @@ extern crate wasm_bindgen;
 
 use crate::{
     app_state::AppState,
+    asset_manifest::ASSET_MANIFEST,
     engine::Engine,
     utils::{
         gl::setup_gl_context,
@@ -26,6 +27,7 @@ use winit::{
 };
 
 mod app_state;
+mod asset_manifest;
 mod components;
 mod engine;
 mod managers;
@@ -82,11 +84,24 @@ pub fn initialize() {
         let mut e = e.borrow_mut();
         e.replace(Engine::new());
     });
+
+    ASSET_MANIFEST.with(|m| {
+        let m = m.borrow();
+        log::info!("Generated manifest:\n{:#?}", m);
+    });
 }
 
 #[wasm_bindgen]
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
+
+    ASSET_MANIFEST.with(|m| {
+        let m = m.borrow();
+
+        for entry in m.iter() {
+            // fetch_text
+        }
+    });
 
     let event_loop = EventLoop::new();
 

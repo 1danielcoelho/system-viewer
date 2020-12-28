@@ -194,19 +194,18 @@
 <!-- # Maybe I can delay initializing the engine until run is called? Is that useful? -->
 <!-- # Duality of being able to access the global state from the thread_local as well as passing it down the update chain -->
 <!-- # Pass scene around instead of EC manager -->
-
-# Note: Rotation3::from_matrix
-
-# Try offsetting periapsis before transformation and compare
-
-# Async stuff
+<!-- # Async stuff
 - I think the only way to get the async file prompt working is to spread the async virus all the way to the InterfaceManager so that it can defer from there and let js handle the request
     - We can use this for loading the assets, yes, but it doesn't work for the "UI callback" stuff as the winit event loop is not compatible with async yet
 - The only way would be to make the entire thing async, otherwise we'd have to return from that function and somehow capture a static reference to the engine so that it can be filled with the fetched data whenever the future completes, which sounds like even more work
 - We can't even move the entire thing into a web worker because WebWorkers running WebAssembly cannot receive events from JS (e.g. canvas, click events) (https://rustwasm.github.io/docs/wasm-bindgen/examples/raytrace.html)
 - Think I can do this with a nasty hack by keeping track of the engine from javascript's side, and injecting the loaded stuff from there
     - This would even allow it to load assets on-demand. I'd just have a fire and forget "load this asset" js function called from rust that would inject the asset into the engine
-    - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element
+    - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element -->
+
+# Note: Rotation3::from_matrix
+
+# Try offsetting periapsis before transformation and compare
 
 # Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
 - The on-demand stuff may still work if we make it so that we can e.g. use the duck 'Mesh' object even if it's not loaded yet: It will dispatch the JS call to fetch and load it, and in the meantime use some default asset. On every draw it will check if available, and whenever it is, it can swap it for the new asset.
