@@ -4,9 +4,9 @@ use super::ECManager;
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
+    engine_interface::prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
-        web::read_string_from_file_prompt,
         web::write_string_to_file_prompt,
     },
 };
@@ -169,7 +169,7 @@ fn draw_main_toolbar(state: &mut AppState) {
                 }
 
                 if ui.button("Open").clicked {
-                    read_string_from_file_prompt();
+                    prompt_for_text_file("ephemerides");
                 }
 
                 if ui.button("Save").clicked {

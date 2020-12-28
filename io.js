@@ -4,7 +4,7 @@ export function load_text(url, content_type) {
     response.text().then((text) => {
       const canvas = document.getElementById("rustCanvas");
       let wasm_module = canvas.hack;
-      wasm_module.receive_text_data(url, content_type, text);
+      wasm_module.receive_text(url, content_type, text);
     })
   );
 }
@@ -21,7 +21,7 @@ export function load_bytes(url, content_type) {
 }
 
 // Opens a file prompt for a json file and relays the data as text to the wasm module
-export function prompt_for_text_file(url, content_type) {
+export function prompt_for_text_file(content_type) {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
   fileInput.accept = ".json";
@@ -36,8 +36,9 @@ export function prompt_for_text_file(url, content_type) {
 
         const canvas = document.getElementById("rustCanvas");
         let wasm_module = canvas.hack;
-        wasm_module.receive_text_data(url, content_type, data);
+        wasm_module.receive_text(file.name, content_type, data);
       };
+
       reader.readAsText(file);
     }
   });

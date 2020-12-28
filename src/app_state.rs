@@ -42,6 +42,8 @@ pub struct Input {
 pub struct AppState {
     pub canvas_height: u32,
     pub canvas_width: u32,
+    pub start_ms: f64,
+    pub last_frame_ms: f64,
     pub phys_time_ms: f64,
     pub real_time_ms: f64,
     pub phys_delta_time_ms: f64, // Affected by simulation speed
@@ -61,6 +63,8 @@ impl AppState {
         Arc::new(Mutex::new(Self {
             canvas_height: 0,
             canvas_width: 0,
+            start_ms: 0.0,
+            last_frame_ms: 0.0,
             phys_time_ms: 0.,
             real_time_ms: 0.,
             phys_delta_time_ms: 0.,
@@ -88,7 +92,7 @@ impl AppState {
             camera: Camera {
                 pos: Point3::new(800.0, -1000.0, 777.0),
                 up: Unit::new_unchecked(Vector3::z()),
-                target: Point3::new(0.0, 0.0, 0.0), 
+                target: Point3::new(0.0, 0.0, 0.0),
                 fov_v: 60.0,
                 near: 0.1,
                 far: 100000000000.0,

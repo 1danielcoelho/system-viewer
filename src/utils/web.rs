@@ -1,53 +1,37 @@
-use crate::wasm_bindgen::JsCast;
-use futures::{
-    channel::oneshot::{self, channel},
-    executor::block_on,
+use std::sync::{Arc, Mutex};
+
+use crate::{
+    app_state::{AppState, ButtonState},
+    wasm_bindgen::JsCast,
 };
-use instant::Duration;
 use js_sys::{encode_uri_component, Promise};
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::{prelude::Closure, JsValue};
-use wasm_bindgen_futures::{spawn_local, JsFuture};
+use wasm_bindgen_futures::JsFuture;
 use web_sys::{
-    Event, File, FileReader, HtmlElement, HtmlInputElement, Request, RequestInit, RequestMode,
-    Response,
+    Event, File, FileReader, HtmlCanvasElement, HtmlElement, Request, RequestInit, RequestMode,
+    Response, WebGl2RenderingContext,
 };
 
-#[wasm_bindgen(module = "/garbage.js")]
-extern "C" {
-    fn test_garbage();
+const OUR_CANVAS_ID: &str = "rustCanvas";
+
+pub fn get_canvas() -> HtmlCanvasElement {
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+    let el = document.get_element_by_id(OUR_CANVAS_ID).unwrap();
+    let canvas: HtmlCanvasElement = el.dyn_into().unwrap();
+    return canvas;
 }
 
-pub fn load(event: &Event) -> Result<JsValue, JsValue> {
-    let target = match event.target() {
-        None => return Err(JsValue::NULL),
-        Some(t) => t,
-    };
-    let file_reader: FileReader = target.dyn_into()?;
-    let result = file_reader.result();
-    return result;
-}
+pub fn get_gl_context() -> WebGl2RenderingContext {
+    let canvas = get_canvas();
+    let gl: WebGl2RenderingContext = canvas
+        .get_context("webgl2")
+        .unwrap()
+        .unwrap()
+        .dyn_into()
+        .unwrap();
 
-pub fn read_file(file: &File) -> Promise {
-    return Promise::new(&mut |resolve, reject| {
-        let file_reader = match FileReader::new() {
-            Ok(r) => r,
-            Err(_) => return,
-        };
-        let onload = Closure::wrap(Box::new(move |event: Event| {
-            match load(&event) {
-                Ok(r) => {
-                    log::info!("Finished loading!");
-                    resolve.call1(&JsValue::NULL, &r)
-                }
-                Err(e) => reject.call1(&JsValue::NULL, &e),
-            }
-            .unwrap_or(JsValue::NULL);
-        }) as Box<dyn FnMut(_)>);
-        file_reader.set_onload(Some(onload.as_ref().unchecked_ref()));
-        onload.forget();
-        file_reader.read_as_text(&file).unwrap_or_default();
-    });
+    return gl;
 }
 
 pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
@@ -68,11 +52,7 @@ pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
     html_el.click();
 }
 
-async fn test(i: i32) {
-    log::info!("test ran {}", i);
-}
-
-pub async fn test_fetch(url: String) {
+pub async fn fetch_text(url: String) -> String {
     let mut opts = RequestInit::new();
     opts.method("GET");
     opts.mode(RequestMode::Cors);
@@ -94,139 +74,185 @@ pub async fn test_fetch(url: String) {
     let text = JsFuture::from(resp.text().unwrap()).await.unwrap();
     let actual_txt = format!("{}", text.as_string().unwrap());
     log::info!("Response text: {}", actual_txt);
+
+    return actual_txt;
 }
 
-fn start_http_call(url: String, tx: oneshot::Sender<String>) {
-    log::info!("start_http_call");
-    spawn_local(async move {
-        let mut opts = RequestInit::new();
-        opts.method("GET");
-        opts.mode(RequestMode::Cors);
+/** Sets up the canvas event handlers to change the app_state blackboard */
+pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<AppState>>) {
+    canvas.set_oncontextmenu(Some(&js_sys::Function::new_with_args(
+        "ev",
+        r"ev.preventDefault();return false;",
+    )));
 
-        let request = Request::new_with_str_and_init(&url, &opts).unwrap();
+    // mousedown
+    {
+        let app_state_clone = app_state.clone();
+        let canvas_clone = canvas.clone();
+        let handler = move |event: web_sys::MouseEvent| {
+            let state = &mut *app_state_clone.lock().unwrap();
+            match event.button() as i16 {
+                0 => {
+                    // Don't revert back to "pressed" if it's already handled
+                    if state.input.m0 == ButtonState::Depressed {
+                        state.input.m0 = ButtonState::Pressed;
+                    }
+                }
 
-        request.headers().set("Accept", "text/plain").unwrap();
-
-        let window = web_sys::window().unwrap();
-        let resp_value = JsFuture::from(window.fetch_with_request(&request))
-            .await
-            .unwrap();
-
-        // `resp_value` is a `Response` object.
-        assert!(resp_value.is_instance_of::<Response>());
-        let resp: Response = resp_value.dyn_into().unwrap();
-
-        // Convert this other `Promise` into a rust `Future`.
-        let text = JsFuture::from(resp.text().unwrap()).await.unwrap();
-        let actual_txt = format!("{}", text.as_string().unwrap());
-        log::info!("Response text: {}", actual_txt);
-        match tx.send(actual_txt) {
-            Ok(_) => log::info!("Sent text"),
-            Err(e) => log::error!("Error when sending: {}", e),
+                // 1 is the mouse wheel click
+                2 => {
+                    state.input.m1 = ButtonState::Pressed;
+                    canvas_clone.request_pointer_lock();
+                }
+                _ => {}
+            };
         };
-    });
-}
 
-pub fn read_string_from_file_prompt() -> String {
-    // let (sender, mut receiver) = channel();
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("mousedown", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mousedown event handler");
+        handler.forget();
+    }
 
-    test_garbage();
+    // mousemove
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::MouseEvent| {
+            let state = &mut *app_state_clone.lock().unwrap();
 
-    // log::info!("Before http call");
-    // start_http_call("./public/ephemerides/test.txt".to_owned(), sender);
-    // log::info!("After http call");
+            // With pointer lock client_x and client_y don't actually change, so we need movement_*
+            if state.input.m1 == ButtonState::Pressed {
+                state.input.mouse_x += event.movement_x();
+                state.input.mouse_y += event.movement_y();
+            } else {
+                state.input.mouse_x = event.client_x();
+                state.input.mouse_y = event.client_y();
+            }
+        };
 
-    // let fut = async move {
-    //     loop {
-    //         log::info!("Loop");
-    //         match receiver.try_recv() {
-    //             Ok(data) => {
-    //                 log::info!("Received data: {:?}", data);
-    //             }
-    //             Err(e) => {
-    //                 log::error!("Error receiving: {}", e);
-    //             }
-    //         };
-    //     }
-    // };
-    // spawn_local(fut);
-    // log::info!("After recev");
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("mousemove", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mousemove event handler");
+        handler.forget();
+    }
 
-    //wasm_bindgen_futures::spawn_local(async {});
+    // mouseup
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::MouseEvent| {
+            let state = &mut *app_state_clone.lock().unwrap();
+            match event.button() as i16 {
+                0 => state.input.m0 = ButtonState::Depressed,
 
-    // let window = web_sys::window().expect("no global `window` exists");
-    // let document = window.document().expect("should have a document on window");
+                // 1 is the mouse wheel click
+                2 => {
+                    state.input.m1 = ButtonState::Depressed;
 
-    // let el = document.create_element("input").unwrap();
-    // el.set_id("temp_input");
+                    // Release pointer lock
+                    let window = web_sys::window().unwrap();
+                    let doc = window.document().unwrap();
+                    doc.exit_pointer_lock();
+                }
+                _ => {}
+            };
+        };
 
-    // let html_el = el.dyn_ref::<HtmlInputElement>().unwrap();
-    // html_el.set_type("file");
-    // html_el.set_accept(".json");
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("mouseup", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mouseup event handler");
+        handler.forget();
+    }
 
-    // let (sender, receiver) = channel();
+    // wheel
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::WheelEvent| {
+            let state = &mut *app_state_clone.lock().unwrap();
 
-    // let on_load = move |event: web_sys::Event| {
-    //     log::info!(
-    //         "on_load called! {:?}",
-    //         event
-    //             .target()
-    //             .unwrap()
-    //             .dyn_ref::<FileReader>()
-    //             .unwrap()
-    //             .result()
-    //             .unwrap()
-    //             .as_string()
-    //             .unwrap()
-    //     );
+            if event.delta_y() < 0.0 {
+                state.move_speed *= 1.1;
+            } else {
+                state.move_speed *= 0.9;
+            }
+        };
 
-    //     match sender.send(2) {
-    //         Ok(_) => log::info!("Sent signal to channel"),
-    //         Err(e) => log::error!("Error when sending: {}", e),
-    //     }
-    // };
-    // let on_load_closure = Closure::wrap(Box::new(on_load) as Box<dyn FnMut(_)>);
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("wheel", handler.as_ref().unchecked_ref())
+            .expect("Failed to set mouseup event handler");
+        handler.forget();
+    }
 
-    // let handler = move |event: web_sys::Event| {
-    //     let window = web_sys::window().expect("no global `window` exists");
-    //     let document = window.document().expect("should have a document on window");
+    // keydown
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::KeyboardEvent| {
+            let state = &mut *app_state_clone.lock().unwrap();
+            match (event.code() as String).as_str() {
+                "KeyW" | "ArrowUp" => {
+                    state.input.forward = ButtonState::Pressed;
+                }
+                "KeyA" | "ArrowLeft" => {
+                    state.input.left = ButtonState::Pressed;
+                }
+                "KeyS" | "ArrowDown" => {
+                    state.input.back = ButtonState::Pressed;
+                }
+                "KeyD" | "ArrowRight" => {
+                    state.input.right = ButtonState::Pressed;
+                }
+                "KeyE" => {
+                    state.input.up = ButtonState::Pressed;
+                }
+                "KeyQ" => {
+                    state.input.down = ButtonState::Pressed;
+                }
+                _ => {}
+            };
+        };
 
-    //     let el = document
-    //         .get_element_by_id("temp_input")
-    //         .expect("should have temp_input element on the page");
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("keydown", handler.as_ref().unchecked_ref())
+            .expect("Failed to set keydown event handler");
+        handler.forget();
+    }
 
-    //     let input = el.dyn_ref::<HtmlInputElement>().unwrap();
-    //     if let Some(files) = input.files() {
-    //         for i in 0..files.length() {
-    //             let file = files.get(i).unwrap();
+    // keyup
+    {
+        let app_state_clone = app_state.clone();
+        let handler = move |event: web_sys::KeyboardEvent| {
+            let state = &mut *app_state_clone.lock().unwrap();
+            match (event.code() as String).as_str() {
+                "KeyW" | "ArrowUp" => {
+                    state.input.forward = ButtonState::Depressed;
+                }
+                "KeyA" | "ArrowLeft" => {
+                    state.input.left = ButtonState::Depressed;
+                }
+                "KeyS" | "ArrowDown" => {
+                    state.input.back = ButtonState::Depressed;
+                }
+                "KeyD" | "ArrowRight" => {
+                    state.input.right = ButtonState::Depressed;
+                }
+                "KeyE" => {
+                    state.input.up = ButtonState::Depressed;
+                }
+                "KeyQ" => {
+                    state.input.down = ButtonState::Depressed;
+                }
+                _ => {}
+            };
+        };
 
-    //             let reader = web_sys::FileReader::new().unwrap();
-    //             reader.set_onload(Some(on_load_closure.as_ref().unchecked_ref()));
-
-    //             reader.read_as_text(&file);
-    //         }
-    //     }
-    // };
-
-    // let body = document.body().expect("document should have a body");
-    // body.append_child(&html_el);
-
-    // let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-    // html_el
-    //     .add_event_listener_with_callback("change", handler.as_ref().unchecked_ref())
-    //     .expect("Failed to set mousedown event handler");
-    // handler.forget();
-
-    // html_el.click();
-
-    // log::info!("Before waiting");
-    // match receiver.recv() {
-    //     Ok(data) => log::info!("Received data {}", data),
-    //     Err(e) => log::error!("Error receiving: {}", e),
-    // }
-    // log::info!("After waiting");
-
-    // log::info!("After spawn local");
-
-    return String::new();
+        let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
+        canvas
+            .add_event_listener_with_callback("keyup", handler.as_ref().unchecked_ref())
+            .expect("Failed to set keyup event handler");
+        handler.forget();
+    }
 }
