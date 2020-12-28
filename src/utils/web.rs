@@ -1,15 +1,11 @@
-use std::sync::{Arc, Mutex};
-
-use crate::{
-    app_state::{AppState, ButtonState},
-    wasm_bindgen::JsCast,
-};
-use js_sys::{encode_uri_component, Promise};
-use wasm_bindgen::{prelude::Closure, JsValue};
+use crate::STATE;
+use crate::{app_state::ButtonState, wasm_bindgen::JsCast};
+use js_sys::encode_uri_component;
+use wasm_bindgen::prelude::Closure;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{
-    Event, File, FileReader, HtmlCanvasElement, HtmlElement, Request, RequestInit, RequestMode,
-    Response, WebGl2RenderingContext,
+    HtmlCanvasElement, HtmlElement, Request, RequestInit, RequestMode, Response,
+    WebGl2RenderingContext,
 };
 
 const OUR_CANVAS_ID: &str = "rustCanvas";
@@ -22,8 +18,7 @@ pub fn get_canvas() -> HtmlCanvasElement {
     return canvas;
 }
 
-pub fn get_gl_context() -> WebGl2RenderingContext {
-    let canvas = get_canvas();
+pub fn get_gl_context(canvas: &HtmlCanvasElement) -> WebGl2RenderingContext {
     let gl: WebGl2RenderingContext = canvas
         .get_context("webgl2")
         .unwrap()
@@ -32,6 +27,16 @@ pub fn get_gl_context() -> WebGl2RenderingContext {
         .unwrap();
 
     return gl;
+}
+
+pub fn force_full_canvas(canvas: &HtmlCanvasElement) {
+    let style = canvas.style();
+    style
+        .set_property_with_priority("width", "100%", "")
+        .expect("Failed to set width!");
+    style
+        .set_property_with_priority("height", "100%", "")
+        .expect("Failed to set height!");
 }
 
 pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
@@ -79,7 +84,7 @@ pub async fn fetch_text(url: String) -> String {
 }
 
 /** Sets up the canvas event handlers to change the app_state blackboard */
-pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<AppState>>) {
+pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
     canvas.set_oncontextmenu(Some(&js_sys::Function::new_with_args(
         "ev",
         r"ev.preventDefault();return false;",
@@ -87,25 +92,28 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
 
     // mousedown
     {
-        let app_state_clone = app_state.clone();
         let canvas_clone = canvas.clone();
         let handler = move |event: web_sys::MouseEvent| {
-            let state = &mut *app_state_clone.lock().unwrap();
-            match event.button() as i16 {
-                0 => {
-                    // Don't revert back to "pressed" if it's already handled
-                    if state.input.m0 == ButtonState::Depressed {
-                        state.input.m0 = ButtonState::Pressed;
-                    }
-                }
+            STATE.with(|s| {
+                let mut ref_mut = s.borrow_mut();
+                let s = ref_mut.as_mut().unwrap();
 
-                // 1 is the mouse wheel click
-                2 => {
-                    state.input.m1 = ButtonState::Pressed;
-                    canvas_clone.request_pointer_lock();
-                }
-                _ => {}
-            };
+                match event.button() as i16 {
+                    0 => {
+                        // Don't revert back to "pressed" if it's already handled
+                        if s.input.m0 == ButtonState::Depressed {
+                            s.input.m0 = ButtonState::Pressed;
+                        }
+                    }
+
+                    // 1 is the mouse wheel click
+                    2 => {
+                        s.input.m1 = ButtonState::Pressed;
+                        canvas_clone.request_pointer_lock();
+                    }
+                    _ => {}
+                };
+            });
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
@@ -117,18 +125,20 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
 
     // mousemove
     {
-        let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::MouseEvent| {
-            let state = &mut *app_state_clone.lock().unwrap();
+            STATE.with(|s| {
+                let mut ref_mut = s.borrow_mut();
+                let s = ref_mut.as_mut().unwrap();
 
-            // With pointer lock client_x and client_y don't actually change, so we need movement_*
-            if state.input.m1 == ButtonState::Pressed {
-                state.input.mouse_x += event.movement_x();
-                state.input.mouse_y += event.movement_y();
-            } else {
-                state.input.mouse_x = event.client_x();
-                state.input.mouse_y = event.client_y();
-            }
+                // With pointer lock client_x and client_y don't actually change, so we need movement_*
+                if s.input.m1 == ButtonState::Pressed {
+                    s.input.mouse_x += event.movement_x();
+                    s.input.mouse_y += event.movement_y();
+                } else {
+                    s.input.mouse_x = event.client_x();
+                    s.input.mouse_y = event.client_y();
+                }
+            });
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
@@ -140,23 +150,26 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
 
     // mouseup
     {
-        let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::MouseEvent| {
-            let state = &mut *app_state_clone.lock().unwrap();
-            match event.button() as i16 {
-                0 => state.input.m0 = ButtonState::Depressed,
+            STATE.with(|s| {
+                let mut ref_mut = s.borrow_mut();
+                let s = ref_mut.as_mut().unwrap();
 
-                // 1 is the mouse wheel click
-                2 => {
-                    state.input.m1 = ButtonState::Depressed;
+                match event.button() as i16 {
+                    0 => s.input.m0 = ButtonState::Depressed,
 
-                    // Release pointer lock
-                    let window = web_sys::window().unwrap();
-                    let doc = window.document().unwrap();
-                    doc.exit_pointer_lock();
-                }
-                _ => {}
-            };
+                    // 1 is the mouse wheel click
+                    2 => {
+                        s.input.m1 = ButtonState::Depressed;
+
+                        // Release pointer lock
+                        let window = web_sys::window().unwrap();
+                        let doc = window.document().unwrap();
+                        doc.exit_pointer_lock();
+                    }
+                    _ => {}
+                };
+            });
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
@@ -168,15 +181,17 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
 
     // wheel
     {
-        let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::WheelEvent| {
-            let state = &mut *app_state_clone.lock().unwrap();
+            STATE.with(|s| {
+                let mut ref_mut = s.borrow_mut();
+                let s = ref_mut.as_mut().unwrap();
 
-            if event.delta_y() < 0.0 {
-                state.move_speed *= 1.1;
-            } else {
-                state.move_speed *= 0.9;
-            }
+                if event.delta_y() < 0.0 {
+                    s.move_speed *= 1.1;
+                } else {
+                    s.move_speed *= 0.9;
+                }
+            });
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
@@ -188,30 +203,33 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
 
     // keydown
     {
-        let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::KeyboardEvent| {
-            let state = &mut *app_state_clone.lock().unwrap();
-            match (event.code() as String).as_str() {
-                "KeyW" | "ArrowUp" => {
-                    state.input.forward = ButtonState::Pressed;
-                }
-                "KeyA" | "ArrowLeft" => {
-                    state.input.left = ButtonState::Pressed;
-                }
-                "KeyS" | "ArrowDown" => {
-                    state.input.back = ButtonState::Pressed;
-                }
-                "KeyD" | "ArrowRight" => {
-                    state.input.right = ButtonState::Pressed;
-                }
-                "KeyE" => {
-                    state.input.up = ButtonState::Pressed;
-                }
-                "KeyQ" => {
-                    state.input.down = ButtonState::Pressed;
-                }
-                _ => {}
-            };
+            STATE.with(|s| {
+                let mut ref_mut = s.borrow_mut();
+                let s = ref_mut.as_mut().unwrap();
+
+                match (event.code() as String).as_str() {
+                    "KeyW" | "ArrowUp" => {
+                        s.input.forward = ButtonState::Pressed;
+                    }
+                    "KeyA" | "ArrowLeft" => {
+                        s.input.left = ButtonState::Pressed;
+                    }
+                    "KeyS" | "ArrowDown" => {
+                        s.input.back = ButtonState::Pressed;
+                    }
+                    "KeyD" | "ArrowRight" => {
+                        s.input.right = ButtonState::Pressed;
+                    }
+                    "KeyE" => {
+                        s.input.up = ButtonState::Pressed;
+                    }
+                    "KeyQ" => {
+                        s.input.down = ButtonState::Pressed;
+                    }
+                    _ => {}
+                };
+            });
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
@@ -223,30 +241,33 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement, app_state: Arc<Mutex<App
 
     // keyup
     {
-        let app_state_clone = app_state.clone();
         let handler = move |event: web_sys::KeyboardEvent| {
-            let state = &mut *app_state_clone.lock().unwrap();
-            match (event.code() as String).as_str() {
-                "KeyW" | "ArrowUp" => {
-                    state.input.forward = ButtonState::Depressed;
-                }
-                "KeyA" | "ArrowLeft" => {
-                    state.input.left = ButtonState::Depressed;
-                }
-                "KeyS" | "ArrowDown" => {
-                    state.input.back = ButtonState::Depressed;
-                }
-                "KeyD" | "ArrowRight" => {
-                    state.input.right = ButtonState::Depressed;
-                }
-                "KeyE" => {
-                    state.input.up = ButtonState::Depressed;
-                }
-                "KeyQ" => {
-                    state.input.down = ButtonState::Depressed;
-                }
-                _ => {}
-            };
+            STATE.with(|s| {
+                let mut ref_mut = s.borrow_mut();
+                let s = ref_mut.as_mut().unwrap();
+
+                match (event.code() as String).as_str() {
+                    "KeyW" | "ArrowUp" => {
+                        s.input.forward = ButtonState::Depressed;
+                    }
+                    "KeyA" | "ArrowLeft" => {
+                        s.input.left = ButtonState::Depressed;
+                    }
+                    "KeyS" | "ArrowDown" => {
+                        s.input.back = ButtonState::Depressed;
+                    }
+                    "KeyD" | "ArrowRight" => {
+                        s.input.right = ButtonState::Depressed;
+                    }
+                    "KeyE" => {
+                        s.input.up = ButtonState::Depressed;
+                    }
+                    "KeyQ" => {
+                        s.input.down = ButtonState::Depressed;
+                    }
+                    _ => {}
+                };
+            });
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);

@@ -1,10 +1,10 @@
 use self::details_ui::DetailsUI;
 use super::ECManager;
-
+use crate::UICTX;
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
-    engine_interface::prompt_for_text_file,
+    prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
         web::write_string_to_file_prompt,
@@ -12,11 +12,7 @@ use crate::{
 };
 use egui::{menu, Align, Button, Id, LayerId, Layout, Pos2, Response, TextStyle, TopPanel, Ui};
 use gui_backend::WebInput;
-use js_sys::encode_uri_component;
-use na::*;
-use web_sys::{HtmlElement, WebGl2RenderingContext};
-
-type GL = WebGl2RenderingContext;
+use na::{Matrix4, Point3, Vector3};
 
 pub mod details_ui;
 
@@ -87,13 +83,17 @@ impl InterfaceManager {
 
         self.backend.begin_frame(raw_input);
         let rect = self.backend.ctx.available_rect();
-        state.ui = Some(Ui::new(
-            self.backend.ctx.clone(),
-            LayerId::background(),
-            Id::new("interface"),
-            rect,
-            rect,
-        ));
+
+        UICTX.with(|ui| {
+            let mut ui = ui.borrow_mut();
+            ui.replace(Ui::new(
+                self.backend.ctx.clone(),
+                LayerId::background(),
+                Id::new("interface"),
+                rect,
+                rect,
+            ));
+        });
     }
 
     fn draw(&mut self) {
@@ -159,202 +159,203 @@ fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
 }
 
 fn draw_main_toolbar(state: &mut AppState) {
-    let ui = state.ui.take();
+    UICTX.with(|ui| {
+        let ref_mut = ui.borrow_mut();
+        let ui = ref_mut.as_ref().unwrap();
 
-    TopPanel::top(Id::new("top panel")).show(&ui.as_ref().unwrap().ctx(), |ui| {
-        menu::bar(ui, |ui| {
-            menu::menu(ui, "File", |ui| {
-                if ui.button("New").clicked {
-                    log::info!("New");
-                }
+        TopPanel::top(Id::new("top panel")).show(&ui.ctx(), |ui| {
+            menu::bar(ui, |ui| {
+                menu::menu(ui, "File", |ui| {
+                    if ui.button("New").clicked {
+                        log::info!("New");
+                    }
 
-                if ui.button("Open").clicked {
-                    prompt_for_text_file("ephemerides");
-                }
+                    if ui.button("Open").clicked {
+                        prompt_for_text_file("ephemerides");
+                    }
 
-                if ui.button("Save").clicked {
-                    write_string_to_file_prompt("test.json", "my test data");
-                }
+                    if ui.button("Save").clicked {
+                        write_string_to_file_prompt("test.json", "my test data");
+                    }
 
-                ui.separator();
+                    ui.separator();
 
-                if ui.button("Close").clicked {
-                    log::info!("Close");
-                }
-            });
+                    if ui.button("Close").clicked {
+                        log::info!("Close");
+                    }
+                });
 
-            menu::menu(ui, "Edit", |ui| {
-                if ui.button("New object...").clicked {
-                    log::info!("New object");
-                }
-            });
+                menu::menu(ui, "Edit", |ui| {
+                    if ui.button("New object...").clicked {
+                        log::info!("New object");
+                    }
+                });
 
-            menu::menu(ui, "Tools", |ui| {
-                if ui.button("Organize windows").clicked {
-                    ui.ctx().memory().reset_areas();
-                }
+                menu::menu(ui, "Tools", |ui| {
+                    if ui.button("Organize windows").clicked {
+                        ui.ctx().memory().reset_areas();
+                    }
 
-                if ui
-                    .button("Clear Egui memory")
-                    .on_hover_text("Forget scroll, collapsing headers etc")
-                    .clicked
-                {
-                    *ui.ctx().memory() = Default::default();
-                }
-            });
+                    if ui
+                        .button("Clear Egui memory")
+                        .on_hover_text("Forget scroll, collapsing headers etc")
+                        .clicked
+                    {
+                        *ui.ctx().memory() = Default::default();
+                    }
+                });
 
-            let time = state.real_time_ms / 1000.0;
-            let time = format!(
-                "{:02}:{:02}:{:02}.{:02}",
-                (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
-                (time % (60.0 * 60.0) / 60.0).floor(),
-                (time % 60.0).floor(),
-                (time % 1.0 * 100.0).floor()
-            );
+                let time = state.real_time_ms / 1000.0;
+                let time = format!(
+                    "{:02}:{:02}:{:02}.{:02}",
+                    (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
+                    (time % (60.0 * 60.0) / 60.0).floor(),
+                    (time % 60.0).floor(),
+                    (time % 1.0 * 100.0).floor()
+                );
 
-            ui.with_layout(Layout::right_to_left(), |ui| {
-                if ui
-                    .add(Button::new(time).text_style(TextStyle::Monospace))
-                    .clicked
-                {
-                    log::info!("Clicked on clock!");
-                }
+                ui.with_layout(Layout::right_to_left(), |ui| {
+                    if ui
+                        .add(Button::new(time).text_style(TextStyle::Monospace))
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+                });
             });
         });
     });
-
-    state.ui = ui;
 }
 
 fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
-    // Have to take ui out of state or else we'll have aliasing issues passing ui into the closure below
-    let ui = state.ui.take();
+    UICTX.with(|ui| {
+        let ref_mut = ui.borrow_mut();
+        let ui = ref_mut.as_ref().unwrap();
 
-    let response = egui::Window::new("Debug").show(&ui.as_ref().unwrap().ctx(), |ui| {
-        ui.columns(2, |cols| {
-            cols[0].label("Simulated seconds since start:");
-            cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0));
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Real seconds since start:");
-            cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0));
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Frames per second:");
-            cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms));
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Simulation speed:");
-            cols[1].add(
-                egui::DragValue::f64(&mut state.simulation_speed)
-                    .range(-100.0..=100.0)
-                    .speed(0.01),
-            );
-        });
-
-        ui.separator();
-
-        ui.columns(2, |cols| {
-            cols[0].label("Light intensity exponent:");
-            cols[1].add(
-                egui::DragValue::f32(&mut state.light_intensity)
-                    .range(-1000.0..=1000.0)
-                    .speed(0.01),
-            );
-        });
-
-        ui.separator();
-
-        ui.columns(2, |cols| {
-            cols[0].label("Vertical FOV (deg):");
-            cols[1].add(
-                egui::DragValue::f32(&mut state.camera.fov_v)
-                    .range(0.1..=120.0)
-                    .speed(0.5),
-            );
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Near:");
-            cols[1].add(
-                egui::DragValue::f32(&mut state.camera.near)
-                    .range(0.01..=19.9)
-                    .speed(0.01),
-            );
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Far:");
-            cols[1].add(egui::DragValue::f32(&mut state.camera.far));
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Camera pos:");
-            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
-                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+        let response = egui::Window::new("Debug").show(&ui.ctx(), |ui| {
+            ui.columns(2, |cols| {
+                cols[0].label("Simulated seconds since start:");
+                cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0));
             });
-        });
 
-        ui.separator();
+            ui.columns(2, |cols| {
+                cols[0].label("Real seconds since start:");
+                cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0));
+            });
 
-        ui.columns(2, |cols| {
-            cols[0].label("Move speed:");
-            cols[1].add(
-                egui::DragValue::f32(&mut state.move_speed)
-                    .range(1.0..=1000.0)
-                    .speed(0.1),
-            );
-        });
+            ui.columns(2, |cols| {
+                cols[0].label("Frames per second:");
+                cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms));
+            });
 
-        ui.columns(2, |cols| {
-            cols[0].label("Rotation speed:");
-            cols[1].add(
-                egui::DragValue::f32(&mut state.rotate_speed)
-                    .range(1.0..=10.0)
-                    .speed(0.1),
-            );
-        });
+            ui.columns(2, |cols| {
+                cols[0].label("Simulation speed:");
+                cols[1].add(
+                    egui::DragValue::f64(&mut state.simulation_speed)
+                        .range(-100.0..=100.0)
+                        .speed(0.01),
+                );
+            });
 
-        if let Some(selection) = state.selection.iter().next().cloned() {
             ui.separator();
 
             ui.columns(2, |cols| {
-                cols[0].label("Selected entity:");
-                cols[1].label(format!("{:?}", selection));
+                cols[0].label("Light intensity exponent:");
+                cols[1].add(
+                    egui::DragValue::f32(&mut state.light_intensity)
+                        .range(-1000.0..=1000.0)
+                        .speed(0.01),
+                );
             });
 
-            if let Some(ent_man) = ent_man {
+            ui.separator();
+
+            ui.columns(2, |cols| {
+                cols[0].label("Vertical FOV (deg):");
+                cols[1].add(
+                    egui::DragValue::f32(&mut state.camera.fov_v)
+                        .range(0.1..=120.0)
+                        .speed(0.5),
+                );
+            });
+
+            ui.columns(2, |cols| {
+                cols[0].label("Near:");
+                cols[1].add(
+                    egui::DragValue::f32(&mut state.camera.near)
+                        .range(0.01..=19.9)
+                        .speed(0.01),
+                );
+            });
+
+            ui.columns(2, |cols| {
+                cols[0].label("Far:");
+                cols[1].add(egui::DragValue::f32(&mut state.camera.far));
+            });
+
+            ui.columns(2, |cols| {
+                cols[0].label("Camera pos:");
+                cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+                    ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
+                    ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
+                    ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+                });
+            });
+
+            ui.separator();
+
+            ui.columns(2, |cols| {
+                cols[0].label("Move speed:");
+                cols[1].add(
+                    egui::DragValue::f32(&mut state.move_speed)
+                        .range(1.0..=1000.0)
+                        .speed(0.1),
+                );
+            });
+
+            ui.columns(2, |cols| {
+                cols[0].label("Rotation speed:");
+                cols[1].add(
+                    egui::DragValue::f32(&mut state.rotate_speed)
+                        .range(1.0..=10.0)
+                        .speed(0.1),
+                );
+            });
+
+            if let Some(selection) = state.selection.iter().next().cloned() {
+                ui.separator();
+
                 ui.columns(2, |cols| {
-                    cols[0].label("Name:");
-                    cols[1].label(format!(
-                        "{}",
-                        ent_man.get_entity_name(selection).unwrap_or_default()
-                    ));
+                    cols[0].label("Selected entity:");
+                    cols[1].label(format!("{:?}", selection));
                 });
 
-                if let Some(comp) = ent_man.get_component::<TransformComponent>(selection) {
-                    ui.collapsing("Transform component", |ui| {
-                        comp.draw_details_ui(ui);
+                if let Some(ent_man) = ent_man {
+                    ui.columns(2, |cols| {
+                        cols[0].label("Name:");
+                        cols[1].label(format!(
+                            "{}",
+                            ent_man.get_entity_name(selection).unwrap_or_default()
+                        ));
                     });
-                }
 
-                if let Some(comp) = ent_man.get_component::<MeshComponent>(selection) {
-                    ui.collapsing("Mesh component", |ui| {
-                        comp.draw_details_ui(ui);
-                    });
+                    if let Some(comp) = ent_man.get_component::<TransformComponent>(selection) {
+                        ui.collapsing("Transform component", |ui| {
+                            comp.draw_details_ui(ui);
+                        });
+                    }
+
+                    if let Some(comp) = ent_man.get_component::<MeshComponent>(selection) {
+                        ui.collapsing("Mesh component", |ui| {
+                            comp.draw_details_ui(ui);
+                        });
+                    }
                 }
             }
+        });
+
+        if let Some(response) = response {
+            handle_output!(state, response);
         }
     });
-
-    if let Some(response) = response {
-        handle_output!(state, response);
-    }
-
-    state.ui = ui;
 }

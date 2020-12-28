@@ -1,11 +1,12 @@
-use crate::managers::resource::{
-    collider::Collider, intermediate_mesh::IntermediatePrimitive, material::Material,
+use crate::{
+    managers::resource::{
+        collider::Collider, intermediate_mesh::IntermediatePrimitive, material::Material,
+    },
+    utils::gl::GL,
 };
 use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlVertexArrayObject;
-
-type GL = WebGl2RenderingContext;
 
 pub enum PrimitiveAttribute {
     Position = 0,

@@ -1,10 +1,10 @@
-use web_sys::WebGl2RenderingContext;
-
 use crate::{
     app_state::AppState,
+    components::{MeshComponent, TransformComponent},
     managers::{
         EventManager, InputManager, InterfaceManager, ResourceManager, SceneManager, SystemManager,
     },
+    utils::orbital_elements::{elements_to_circle_transform, OrbitalElements},
 };
 
 pub struct Engine {
@@ -16,17 +16,22 @@ pub struct Engine {
     pub scene_man: SceneManager,
 }
 impl Engine {
-    pub fn new(gl: WebGl2RenderingContext) -> Self {
-        let new_world = Self {
+    pub fn new() -> Self {
+        let mut new_engine = Self {
             scene_man: SceneManager::new(),
-            res_man: ResourceManager::new(gl),
+            res_man: ResourceManager::new(),
             sys_man: SystemManager::new(),
             event_man: EventManager::new(),
             input_man: InputManager::new(),
             int_man: InterfaceManager::new(),
         };
 
-        return new_world;
+        new_engine
+            .scene_man
+            .load_test_scene("test", &mut new_engine.res_man);
+        new_engine.scene_man.set_scene("test");
+
+        return new_engine;
     }
 
     pub fn update(&mut self, state: &mut AppState) {
@@ -59,5 +64,205 @@ impl Engine {
                 .get_main_scene_mut()
                 .and_then(|s| Some(&mut s.ent_man)),
         );
+    }
+
+    pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
+        match content_type {
+            "ephemerides" => self.receive_ephemerides_text(url, text),
+            _ => log::error!(
+                "Unexpected content_type for receive_text: '{}'. url: '{}'",
+                content_type,
+                url
+            ),
+        }
+    }
+
+    pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {
+        match content_type {
+            "texture" => self.receive_texture_bytes(url, data),
+            "gltf" => self.receive_gltf_bytes(url, data),
+            _ => log::error!(
+                "Unexpected content_type for receive bytes: '{}'. url: '{}'",
+                content_type,
+                url
+            ),
+        }
+    }
+
+    fn receive_ephemerides_text(&mut self, file_name: &str, file_data: &str) {
+        log::info!(
+            "receive_ephemerides_text, name: {}, data: {}",
+            file_name,
+            file_data
+        );
+
+        // let (elements, body) = parse_ephemerides(file_data)?;
+        // log::info!(
+        //     "Loaded ephemerides '{}'\n{:#?}\n{:#?}",
+        //     file_name,
+        //     body,
+        //     elements
+        // );
+
+        // let orbit_transform = elements_to_circle_transform(&elements);
+
+        // let scene = self
+        //
+        //     .scene_man
+        //     .new_scene(file_name)
+        //     .ok_or("Failed to create new scene!")?;
+
+        // let planet_mat = self.res_man.instantiate_material("gltf_metal_rough");
+        // planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
+        // planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+        //     UniformName::BaseColorFactor,
+        //     UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
+        // );
+
+        // // Lat-long sphere
+        // let lat_long = scene.ent_man.new_entity(Some(&body.id));
+        // let trans_comp = scene
+        //     .ent_man
+        //     .add_component::<TransformComponent>(lat_long)
+        //     .unwrap();
+        // trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
+        // trans_comp.get_local_transform_mut().scale = Vector3::new(
+        //     body.mean_radius as f32,
+        //     body.mean_radius as f32,
+        //     body.mean_radius as f32,
+        // );
+        // let mesh_comp = scene
+        //     .ent_man
+        //     .add_component::<MeshComponent>(lat_long)
+        //     .unwrap();
+        // mesh_comp.set_mesh(self.res_man.get_or_create_mesh("lat_long_sphere"));
+        // mesh_comp.set_material_override(planet_mat.clone(), 0);
+
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "first",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.0,
+        //         arg_periapsis: 0.0,
+        //         inclination: 0.0,
+        //         long_asc_node: 0.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
+
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "second",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 0.0,
+        //         inclination: 0.0,
+        //         long_asc_node: 0.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
+
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "third",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 0.0,
+        //         inclination: 30.0,
+        //         long_asc_node: 0.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
+
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "third",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 0.0,
+        //         inclination: 30.0,
+        //         long_asc_node: 45.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
+
+        // self.temp_add_ellipse(
+        //     file_name,
+        //     "fourth",
+        //     &OrbitalElements {
+        //         semi_major_axis: 1000.0,
+        //         eccentricity: 0.9,
+        //         arg_periapsis: 30.0,
+        //         inclination: 30.0,
+        //         long_asc_node: 45.0,
+        //         true_anomaly: 0.0,
+        //     },
+        // );
+    }
+
+    fn temp_add_ellipse(&mut self, scene_name: &str, name: &str, elements: &OrbitalElements) {
+        let scene = self.scene_man.get_scene_mut(scene_name).unwrap();
+
+        let orbit_transform = elements_to_circle_transform(&elements);
+        log::warn!("orbit transform: {:#?}", orbit_transform);
+
+        // Orbit
+        let circle = scene.ent_man.new_entity(Some(&name));
+        let trans_comp = scene
+            .ent_man
+            .add_component::<TransformComponent>(circle)
+            .unwrap();
+        *trans_comp.get_local_transform_mut() = orbit_transform;
+        let mesh_comp = scene
+            .ent_man
+            .add_component::<MeshComponent>(circle)
+            .unwrap();
+        mesh_comp.set_mesh(self.res_man.get_or_create_mesh("circle"));
+    }
+
+    pub fn receive_texture_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
+        log::info!(
+            "Loading texture from file '{}' ({} bytes)",
+            file_identifier,
+            data.len()
+        );
+
+        self.res_man.create_texture(file_identifier, data, None);
+    }
+
+    pub fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
+        log::info!(
+            "Loading GLTF from file '{}' ({} bytes)",
+            file_identifier,
+            data.len()
+        );
+
+        // TODO: Catch duplicate scenes
+
+        if let Ok((gltf_doc, gltf_buffers, gltf_images)) = gltf::import_slice(data) {
+            self.res_man.load_textures_from_gltf(
+                file_identifier,
+                gltf_doc.textures(),
+                &gltf_images,
+            );
+
+            let mat_index_to_parsed = self
+                .res_man
+                .load_materials_from_gltf(file_identifier, gltf_doc.materials());
+
+            self.res_man.load_meshes_from_gltf(
+                file_identifier,
+                gltf_doc.meshes(),
+                &gltf_buffers,
+                &mat_index_to_parsed,
+            );
+
+            self.scene_man
+                .load_scenes_from_gltf(file_identifier, gltf_doc.scenes(), &self.res_man);
+        }
     }
 }

@@ -23,6 +23,7 @@ import("./pkg/index").then(async (wasm_module) => {
   // wasm module now, because in order to do this "putting the engine in the canvas" trick it can't be fully
   // moved into the winit event loop closure. If it's moved in there, the next time we try accessing it from outside
   // the wasm module (e.g. from a JS callback) it would just panic saying we tried to access a moved value.
-  wasm_module.run();
+  wasm_module.initialize();
+  wasm_module.start_loop();  // Note how we don't await this async function here: This is impotant, but I don't know why...
   canvas.hack = wasm_module;
 });

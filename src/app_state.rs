@@ -55,12 +55,10 @@ pub struct AppState {
     pub input: Input,
     pub selection: HashSet<Entity>,
     pub camera: Camera,
-    pub gl: Option<WebGl2RenderingContext>,
-    pub ui: Option<Ui>,
 }
 impl AppState {
-    pub fn new() -> Arc<Mutex<Self>> {
-        Arc::new(Mutex::new(Self {
+    pub fn new() -> Self {
+        Self {
             canvas_height: 0,
             canvas_width: 0,
             start_ms: 0.0,
@@ -97,8 +95,6 @@ impl AppState {
                 near: 0.1,
                 far: 100000000000.0,
             },
-            gl: None,
-            ui: None,
-        }))
+        }
     }
 }

@@ -1,13 +1,16 @@
 use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
+use crate::GLCTX;
 use crate::{
     managers::resource::material::UniformName,
-    utils::string::{get_unique_name, remove_numbered_suffix},
+    utils::{
+        gl::GL,
+        string::{get_unique_name, remove_numbered_suffix},
+        web::{get_canvas, get_gl_context},
+    },
 };
 use image::{io::Reader, DynamicImage, ImageFormat};
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 use web_sys::WebGl2RenderingContext;
-
-type GL = WebGl2RenderingContext;
 
 pub mod collider;
 pub mod gltf_resources;
@@ -148,21 +151,22 @@ pub struct ResourceManager {
     meshes: HashMap<String, Rc<RefCell<Mesh>>>,
     textures: HashMap<String, Rc<Texture>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
-
-    gl: WebGl2RenderingContext,
 }
 impl ResourceManager {
-    pub fn new(gl: WebGl2RenderingContext) -> Self {
-        return Self {
+    pub fn new() -> Self {
+        let mut new_res_man = Self {
             meshes: HashMap::new(),
             textures: HashMap::new(),
             materials: HashMap::new(),
-            gl,
         };
+
+        new_res_man.preload_assets();
+
+        return new_res_man;
     }
 
     /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
-    pub fn initialize(&mut self) {
+    pub fn preload_assets(&mut self) {
         self.get_or_create_material("default");
         self.get_or_create_material("world_normals");
         self.get_or_create_material("world_tangents");
@@ -190,13 +194,12 @@ impl ResourceManager {
         let default_mat = self.get_or_create_material("default");
 
         let mesh: Option<Rc<RefCell<Mesh>>> = match identifier {
-            "cube" => Some(generate_cube(&self.gl, default_mat)),
-            "plane" => Some(generate_plane(&self.gl, default_mat)),
-            "grid" => Some(generate_grid(&self.gl, 200, default_mat)),
-            "axes" => Some(generate_axes(&self.gl, default_mat)),
-            "circle" => Some(generate_circle(&self.gl, 100, default_mat)),
+            "cube" => Some(generate_cube(default_mat)),
+            "plane" => Some(generate_plane(default_mat)),
+            "grid" => Some(generate_grid(200, default_mat)),
+            "axes" => Some(generate_axes(default_mat)),
+            "circle" => Some(generate_circle(100, default_mat)),
             "lat_long_sphere" => Some(generate_lat_long_sphere(
-                &self.gl,
                 32,
                 32,
                 0.8,
@@ -204,7 +207,7 @@ impl ResourceManager {
                 true,
                 default_mat,
             )),
-            "ico_sphere" => Some(generate_ico_sphere(&self.gl, 0.8, 2, false, default_mat)),
+            "ico_sphere" => Some(generate_ico_sphere(0.8, 2, false, default_mat)),
             _ => None,
         };
 
@@ -376,19 +379,24 @@ impl ResourceManager {
             return;
         }
 
-        match load_texture_from_bytes(identifier, bytes, image_format, &self.gl) {
-            Ok(tex) => {
-                log::info!("Generated texture '{}'", identifier);
-                self.textures.insert(identifier.to_string(), tex.clone());
-            }
-            Err(msg) => {
-                log::error!(
-                    "Error when trying to load texture '{}': {}",
-                    identifier,
-                    msg
-                );
-            }
-        };
+        GLCTX.with(|ctx| {
+            let ref_mut = ctx.borrow_mut();
+            let ctx = ref_mut.as_ref().unwrap();
+
+            match load_texture_from_bytes(identifier, bytes, image_format, &ctx) {
+                Ok(tex) => {
+                    log::info!("Generated texture '{}'", identifier);
+                    self.textures.insert(identifier.to_string(), tex.clone());
+                }
+                Err(msg) => {
+                    log::error!(
+                        "Error when trying to load texture '{}': {}",
+                        identifier,
+                        msg
+                    );
+                }
+            };
+        });
     }
 
     pub fn get_texture(&self, identifier: &str) -> Option<Rc<Texture>> {

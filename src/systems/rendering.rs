@@ -1,36 +1,19 @@
-use std::convert::TryInto;
-
+use crate::GLCTX;
 use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},
+    glc,
     managers::{
         resource::material::{FrameUniformValues, UniformName, UniformValue},
         ECManager,
     },
+    utils::gl::GL,
 };
 use na::*;
+use std::convert::TryInto;
 use web_sys::WebGl2RenderingContext;
 
-type GL = WebGl2RenderingContext;
-
 pub const NUM_LIGHTS: usize = 8;
-
-#[macro_export]
-macro_rules! glc {
-    ($ctx:expr, $any:expr) => {
-        #[cfg(debug_assertions)]
-        while $ctx.get_error() != 0 {} // Not sure why he did this
-        $any;
-        #[cfg(debug_assertions)]
-        while match $ctx.get_error() {
-            0 => false,
-            err => {
-                log::error!("[OpenGL Error] {}", err);
-                true
-            }
-        } {}
-    };
-}
 
 pub struct RenderingSystem {}
 impl RenderingSystem {
@@ -39,18 +22,22 @@ impl RenderingSystem {
     }
 
     pub fn run(&mut self, state: &AppState, em: &mut ECManager) {
-        if state.gl.is_none() {
-            return;
-        }
+        GLCTX.with(|gl| {
+            let ref_mut = gl.borrow_mut();
+            let gl = ref_mut.as_ref().unwrap();
 
-        let mut uniform_data = self.pre_draw(state, em);
-        self.draw(state, &mut uniform_data, em);
-        self.post_draw(state);
+            let mut uniform_data = self.pre_draw(state, gl, em);
+            self.draw(state, gl, &mut uniform_data, em);
+            self.post_draw(state, gl);
+        });
     }
 
-    fn pre_draw(&mut self, state: &AppState, em: &mut ECManager) -> FrameUniformValues {
-        let gl: &WebGl2RenderingContext = (state.gl.as_ref()).unwrap();
-
+    fn pre_draw(
+        &mut self,
+        state: &AppState,
+        gl: &WebGl2RenderingContext,
+        em: &mut ECManager,
+    ) -> FrameUniformValues {
         // Setup GL state
         glc!(gl, gl.enable(GL::CULL_FACE));
         glc!(gl, gl.disable(GL::SCISSOR_TEST));
@@ -116,15 +103,19 @@ impl RenderingSystem {
         return result;
     }
 
-    fn draw(&self, state: &AppState, uniform_data: &mut FrameUniformValues, em: &mut ECManager) {
+    fn draw(
+        &self,
+        state: &AppState,
+        gl: &WebGl2RenderingContext,
+        uniform_data: &mut FrameUniformValues,
+        em: &mut ECManager,
+    ) {
         for (t, m) in em.transform.iter().zip(em.mesh.iter()) {
-            self.draw_one(state, uniform_data, t, m);
+            self.draw_one(state, gl, uniform_data, t, m);
         }
     }
 
-    fn post_draw(&self, state: &AppState) {
-        let gl: &WebGl2RenderingContext = (state.gl.as_ref()).unwrap();
-
+    fn post_draw(&self, state: &AppState, gl: &WebGl2RenderingContext) {
         // Egui needs this disabled for now
         glc!(gl, gl.disable(GL::DEPTH_TEST));
     }
@@ -132,6 +123,7 @@ impl RenderingSystem {
     fn draw_one(
         &self,
         state: &AppState,
+        gl: &WebGl2RenderingContext,
         uniform_data: &FrameUniformValues,
         tc: &TransformComponent,
         mc: &MeshComponent,
@@ -185,13 +177,13 @@ impl RenderingSystem {
                     );
 
                     // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
-                    mat_mut.bind_for_drawing(state);
+                    mat_mut.bind_for_drawing(state, gl);
                 }
 
-                primitive.draw(state.gl.as_ref().unwrap());
+                primitive.draw(gl);
 
                 if let Some(mat) = &resolved_mat {
-                    mat.borrow().unbind_from_drawing(state);
+                    mat.borrow().unbind_from_drawing(state, gl);
                 }
             }
         }

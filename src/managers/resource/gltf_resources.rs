@@ -4,14 +4,18 @@ use super::{
     material::UniformName,
     texture::TextureUnit,
 };
-use crate::managers::{
-    resource::{
-        collider::{AxisAlignedBoxCollider, MeshCollider},
-        material::{Material, UniformValue},
-        mesh::Mesh,
-        texture::Texture,
+use crate::GLCTX;
+use crate::{
+    managers::{
+        resource::{
+            collider::{AxisAlignedBoxCollider, MeshCollider},
+            material::{Material, UniformValue},
+            mesh::Mesh,
+            texture::Texture,
+        },
+        ResourceManager,
     },
-    ResourceManager,
+    utils::gl::GL,
 };
 use gltf::{
     image::Format,
@@ -20,8 +24,6 @@ use gltf::{
 use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
-
-type GL = web_sys::WebGl2RenderingContext;
 
 pub trait GltfResource {
     fn get_identifier(&self, identifier: &str) -> String;
@@ -484,7 +486,7 @@ impl ResourceManager {
             primitives: inter_prims,
         };
 
-        let result = intermediate_to_mesh(&intermediate, ctx);
+        let result = intermediate_to_mesh(&intermediate);
 
         let mesh_collider = Box::new(MeshCollider {
             mesh: Rc::downgrade(&result),
@@ -534,23 +536,28 @@ impl ResourceManager {
             file_identifier
         );
 
-        for mesh in meshes {
-            match self.load_mesh_from_gltf(
-                file_identifier,
-                &mesh,
-                &buffers,
-                mat_index_to_parsed,
-                &self.gl,
-            ) {
-                Ok(new_mesh) => {
-                    let name = new_mesh.borrow().name.clone();
-                    self.meshes.insert(name, new_mesh);
-                }
-                Err(msg) => {
-                    log::error!("Failed to load gltf mesh: {}", msg);
+        GLCTX.with(|ctx| {
+            let ref_mut = ctx.borrow_mut();
+            let ctx = ref_mut.as_ref().unwrap();
+
+            for mesh in meshes {
+                match self.load_mesh_from_gltf(
+                    file_identifier,
+                    &mesh,
+                    &buffers,
+                    mat_index_to_parsed,
+                    &ctx,
+                ) {
+                    Ok(new_mesh) => {
+                        let name = new_mesh.borrow().name.clone();
+                        self.meshes.insert(name, new_mesh);
+                    }
+                    Err(msg) => {
+                        log::error!("Failed to load gltf mesh: {}", msg);
+                    }
                 }
             }
-        }
+        });
     }
 
     fn load_texture_from_gltf(
@@ -627,20 +634,25 @@ impl ResourceManager {
             file_identifier
         );
 
-        for texture in textures {
-            match ResourceManager::load_texture_from_gltf(
-                file_identifier,
-                &texture,
-                &images[texture.source().index()],
-                &self.gl,
-            ) {
-                Ok(new_tex) => {
-                    self.textures.insert(new_tex.name.clone(), new_tex);
-                }
-                Err(msg) => {
-                    log::error!("Failed to load gltf texture: {}", msg);
+        GLCTX.with(|ctx| {
+            let ref_mut = ctx.borrow_mut();
+            let ctx = ref_mut.as_ref().unwrap();
+
+            for texture in textures {
+                match ResourceManager::load_texture_from_gltf(
+                    file_identifier,
+                    &texture,
+                    &images[texture.source().index()],
+                    ctx,
+                ) {
+                    Ok(new_tex) => {
+                        self.textures.insert(new_tex.name.clone(), new_tex);
+                    }
+                    Err(msg) => {
+                        log::error!("Failed to load gltf texture: {}", msg);
+                    }
                 }
             }
-        }
+        });
     }
 }

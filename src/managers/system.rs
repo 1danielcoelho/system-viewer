@@ -1,9 +1,8 @@
 use crate::{
     app_state::AppState,
+    managers::ECManager,
     systems::{PhysicsSystem, RenderingSystem, TransformUpdateSystem},
 };
-
-use super::ECManager;
 
 pub struct SystemManager {
     render: RenderingSystem,
