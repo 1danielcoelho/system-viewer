@@ -202,14 +202,13 @@
 - Think I can do this with a nasty hack by keeping track of the engine from javascript's side, and injecting the loaded stuff from there
     - This would even allow it to load assets on-demand. I'd just have a fire and forget "load this asset" js function called from rust that would inject the asset into the engine
     - Crap, when begin_loop is called the object is "moved into the function" and so I can't access it anymore even using JS hacks like putting the engine inside an html element -->
+<!-- # Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
+- The on-demand stuff may still work if we make it so that we can e.g. use the duck 'Mesh' object even if it's not loaded yet: It will dispatch the JS call to fetch and load it, and in the meantime use some default asset. On every draw it will check if available, and whenever it is, it can swap it for the new asset.
+- I can probably just use build.rs to compile the manifest file automatically -->
 
 # Note: Rotation3::from_matrix
 
 # Try offsetting periapsis before transformation and compare
-
-# Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
-- The on-demand stuff may still work if we make it so that we can e.g. use the duck 'Mesh' object even if it's not loaded yet: It will dispatch the JS call to fetch and load it, and in the meantime use some default asset. On every draw it will check if available, and whenever it is, it can swap it for the new asset.
-- I can probably just use build.rs to compile the manifest file automatically
 
 # Scene serialization with serde
 - Need UI for it like some save/open menus
@@ -219,10 +218,8 @@
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?
 
-# Improve asset loading with file manifests
-- Explicit asset name to path text file that is manually kept and baked into the binary
-- When e.g. trying to load mesh 'my_mesh', if it can't find a mesh with that name it just looks at the manifest, finds './public/something.glb' and sync loads it via rust
-    - Will work great with scene serialization!
+# Delayed asset loading
+- Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it
 
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement

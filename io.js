@@ -1,5 +1,5 @@
 // Fetches some file at `url` and relays the data as text to the wasm module
-export function load_text(url, content_type) {
+export function fetch_text(url, content_type) {
   return fetch(url).then((response) =>
     response.text().then((text) => {
       window.wasm_module.receive_text(url, content_type, text);
@@ -8,7 +8,7 @@ export function load_text(url, content_type) {
 }
 
 // Fetches some file at `url` and relays the data as bytes to the wasm module
-export function load_bytes(url, content_type) {
+export function fetch_bytes(url, content_type) {
   return fetch(url).then((response) =>
     response.arrayBuffer().then((buffer) => {
       window.wasm_module.receive_bytes(

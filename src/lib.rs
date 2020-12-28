@@ -8,7 +8,6 @@ extern crate wasm_bindgen;
 
 use crate::{
     app_state::AppState,
-    asset_manifest::ASSET_MANIFEST,
     engine::Engine,
     utils::{
         gl::setup_gl_context,
@@ -27,7 +26,6 @@ use winit::{
 };
 
 mod app_state;
-mod asset_manifest;
 mod components;
 mod engine;
 mod managers;
@@ -84,24 +82,14 @@ pub fn initialize() {
         let mut e = e.borrow_mut();
         e.replace(Engine::new());
     });
-
-    ASSET_MANIFEST.with(|m| {
-        let m = m.borrow();
-        log::info!("Generated manifest:\n{:#?}", m);
-    });
 }
 
 #[wasm_bindgen]
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
-    ASSET_MANIFEST.with(|m| {
-        let m = m.borrow();
-
-        for entry in m.iter() {
-            // fetch_text
-        }
-    });
+    fetch_text("public/ephemerides/test.txt", "ephemerides");
+    fetch_bytes("public/Duck.glb", "gltf");
 
     let event_loop = EventLoop::new();
 
@@ -202,5 +190,7 @@ pub fn receive_bytes(url: &str, content_type: &str, data: &mut [u8]) {
 
 #[wasm_bindgen(module = "/io.js")]
 extern "C" {
+    pub fn fetch_text(url: &str, content_type: &str);
+    pub fn fetch_bytes(url: &str, content_type: &str);
     pub fn prompt_for_text_file(content_type: &str);
 }
