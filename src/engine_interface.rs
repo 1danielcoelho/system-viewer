@@ -35,11 +35,6 @@ thread_local! {
     pub static EI: RefCell<EngineInterface> = RefCell::new(EngineInterface::new());
 }
 
-#[wasm_bindgen]
-pub async fn run() {
-    begin_loop().await;
-}
-
 fn get_canvas() -> HtmlCanvasElement {
     let window = web_sys::window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");
@@ -523,7 +518,8 @@ impl EngineInterface {
     }
 }
 
-pub async fn begin_loop() {
+#[wasm_bindgen]
+pub async fn run() {
     log::info!("Beginning engine loop...");
 
     // log::info!("Before fetch");
