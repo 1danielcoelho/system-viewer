@@ -2,7 +2,10 @@ use super::{
     component::{ComponentStorageType, ComponentType},
     Component,
 };
-use crate::managers::{details_ui::DetailsUI, ECManager, Entity};
+use crate::managers::{
+    details_ui::DetailsUI,
+    scene::scene::{Entity, Scene},
+};
 use na::Vector3;
 use std::collections::HashMap;
 
@@ -44,7 +47,7 @@ impl Component for LightComponent {
     const COMPONENT_TYPE: ComponentType = ComponentType::Light;
 
     fn get_components_map<'a>(
-        w: &'a mut ECManager,
+        w: &'a mut Scene,
     ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
         return Some(&mut w.light);
     }

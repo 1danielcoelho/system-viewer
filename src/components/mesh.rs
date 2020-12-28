@@ -5,7 +5,7 @@ use super::{
 use crate::managers::{
     details_ui::DetailsUI,
     resource::{material::Material, mesh::Mesh},
-    ECManager,
+    scene::scene::Scene,
 };
 use egui::Ui;
 use std::{cell::RefCell, rc::Rc};
@@ -78,7 +78,7 @@ impl Component for MeshComponent {
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
     const COMPONENT_TYPE: ComponentType = ComponentType::Mesh;
 
-    fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<MeshComponent>> {
+    fn get_components_vector<'a>(w: &'a mut Scene) -> Option<&'a mut Vec<MeshComponent>> {
         return Some(&mut w.mesh);
     }
 

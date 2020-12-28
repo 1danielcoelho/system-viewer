@@ -1,14 +1,11 @@
-use crate::GLCTX;
 use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},
     glc,
-    managers::{
-        resource::material::{FrameUniformValues, UniformName, UniformValue},
-        ECManager,
-    },
+    managers::resource::material::{FrameUniformValues, UniformName, UniformValue},
     utils::gl::GL,
 };
+use crate::{managers::scene::scene::Scene, GLCTX};
 use na::*;
 use std::convert::TryInto;
 use web_sys::WebGl2RenderingContext;
@@ -21,13 +18,13 @@ impl RenderingSystem {
         return Self::default();
     }
 
-    pub fn run(&mut self, state: &AppState, em: &mut ECManager) {
+    pub fn run(&mut self, state: &AppState, scene: &mut Scene) {
         GLCTX.with(|gl| {
             let ref_mut = gl.borrow_mut();
             let gl = ref_mut.as_ref().unwrap();
 
-            let mut uniform_data = self.pre_draw(state, gl, em);
-            self.draw(gl, &mut uniform_data, em);
+            let mut uniform_data = self.pre_draw(state, gl, scene);
+            self.draw(gl, &mut uniform_data, scene);
             self.post_draw(gl);
         });
     }
@@ -36,7 +33,7 @@ impl RenderingSystem {
         &mut self,
         state: &AppState,
         gl: &WebGl2RenderingContext,
-        em: &mut ECManager,
+        scene: &mut Scene,
     ) -> FrameUniformValues {
         // Setup GL state
         glc!(gl, gl.enable(GL::CULL_FACE));
@@ -74,9 +71,11 @@ impl RenderingSystem {
 
         // Pick lights that will affect the scene (randomly for now)
         let mut index = 0;
-        for (ent, light) in em.light.iter() {
-            let ent_index = em.get_entity_index(*ent).unwrap();
-            let pos = &em.transform[ent_index as usize].get_world_transform().trans;
+        for (ent, light) in scene.light.iter() {
+            let ent_index = scene.get_entity_index(*ent).unwrap();
+            let pos = &scene.transform[ent_index as usize]
+                .get_world_transform()
+                .trans;
 
             result.light_types.push(light.light_type as i32);
 
@@ -107,9 +106,9 @@ impl RenderingSystem {
         &self,
         gl: &WebGl2RenderingContext,
         uniform_data: &mut FrameUniformValues,
-        em: &mut ECManager,
+        scene: &mut Scene,
     ) {
-        for (t, m) in em.transform.iter().zip(em.mesh.iter()) {
+        for (t, m) in scene.transform.iter().zip(scene.mesh.iter()) {
             self.draw_one(gl, uniform_data, t, m);
         }
     }

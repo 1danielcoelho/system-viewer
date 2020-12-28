@@ -2,7 +2,7 @@ use crate::{engine::Engine};
 use std::collections::VecDeque;
 
 pub enum EventTransmitter {
-    ECManager,
+    Scene,
     ResourceManager,
     SceneManager,
     EventManager,
@@ -47,8 +47,8 @@ impl EventManager {
 
     fn deliver_event(_event: Event, _engine: &mut Engine) {
         // match event.dest {
-        //     EventTransmitter::ECManager(_) => engine.comp_man.receive_event(event),
-        //     EventTransmitter::ECManager => {}
+        //     EventTransmitter::Scene(_) => engine.comp_man.receive_event(event),
+        //     EventTransmitter::Scene => {}
         //     EventTransmitter::ResourceManager => {}
         //     EventTransmitter::SceneManager => {}
         //     EventTransmitter::EventManager => {}

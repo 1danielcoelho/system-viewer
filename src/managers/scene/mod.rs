@@ -1,27 +1,16 @@
-use super::{resource::gltf_resources::GltfResource, ECManager, Entity, ResourceManager};
+use super::{resource::gltf_resources::GltfResource, ResourceManager};
 use crate::{
     components::{light::LightType, LightComponent, MeshComponent, TransformComponent},
-    managers::resource::material::{UniformName, UniformValue},
+    managers::{
+        resource::material::{UniformName, UniformValue},
+        scene::scene::{Entity, Scene},
+    },
     utils::transform::Transform,
 };
 use na::{Quaternion, UnitQuaternion, Vector3};
 use std::collections::HashMap;
 
-#[derive(Clone)]
-pub struct Scene {
-    pub identifier: String,
-    pub ent_man: ECManager,
-    _private: (),
-}
-impl Scene {
-    fn new(identifier: &str) -> Scene {
-        Scene {
-            identifier: identifier.to_string(),
-            ent_man: ECManager::new(),
-            _private: (),
-        }
-    }
-}
+pub mod scene;
 
 pub struct SceneManager {
     main: Option<String>,
@@ -75,15 +64,10 @@ impl SceneManager {
     ) -> Entity {
         // let indent = "\t".repeat(indent_level as usize);
 
-        let ent: Entity = scene
-            .ent_man
-            .new_entity(Some(&node.get_identifier(file_identifier)));
+        let ent: Entity = scene.new_entity(Some(&node.get_identifier(file_identifier)));
 
         // Transform
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(ent)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(ent).unwrap();
         let trans = trans_comp.get_local_transform_mut();
         let (pos, quat, scale) = node.transform().decomposed();
         trans.trans.x = pos[0];
@@ -96,7 +80,7 @@ impl SceneManager {
         // Mesh
         // let mut mesh_str = String::new();
         if let Some(mesh) = node.mesh() {
-            let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ent).unwrap();
+            let mesh_comp = scene.add_component::<MeshComponent>(ent).unwrap();
 
             let mesh_identifier = mesh.get_identifier(&file_identifier);
             // mesh_str = mesh_identifier.to_owned();
@@ -139,7 +123,7 @@ impl SceneManager {
                 resources,
             );
 
-            scene.ent_man.set_entity_parent(ent, child_ent);
+            scene.set_entity_parent(ent, child_ent);
         }
 
         return ent;
@@ -166,11 +150,9 @@ impl SceneManager {
 
             log::info!("\tScene '{}': {} root nodes", scene_identifier, num_nodes);
 
-            scene
-                .ent_man
-                .reserve_space_for_entities((num_nodes + 1) as u32);
+            scene.reserve_space_for_entities((num_nodes + 1) as u32);
 
-            let root_ent: Entity = scene.ent_man.new_entity(Some(&scene_identifier));
+            let root_ent: Entity = scene.new_entity(Some(&scene_identifier));
 
             for child_node in gltf_scene.nodes() {
                 let child_ent = SceneManager::load_gltf_node(
@@ -181,7 +163,7 @@ impl SceneManager {
                     &resources,
                 );
 
-                scene.ent_man.set_entity_parent(root_ent, child_ent);
+                scene.set_entity_parent(root_ent, child_ent);
             }
         }
     }
@@ -190,86 +172,86 @@ impl SceneManager {
         let scene = self.new_scene(&identifier).unwrap();
 
         // // Parent spinning around Z
-        // let parent = scene.ent_man.new_entity();
+        // let parent = scene.new_entity();
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(parent)
         //     .unwrap();
         // let phys_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<PhysicsComponent>(parent)
         //     .unwrap();
         // phys_comp.ang_mom = Vector3::new(0.0, 0.0, 1.0);
         // let mesh_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<MeshComponent>(parent)
         //     .unwrap();
 
         // // Light rotating around Z
-        // let child = scene.ent_man.new_entity();
-        // scene.ent_man.set_entity_parent(parent, child);
+        // let child = scene.new_entity();
+        // scene.set_entity_parent(parent, child);
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(child)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(4.0, 0.0, 0.0);
         // trans_comp.get_local_transform_mut().scale = 0.1;
         // let phys_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<PhysicsComponent>(child)
         //     .unwrap();
-        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
+        // let mesh_comp = scene.add_component::<MeshComponent>(child).unwrap();
         // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         // let light_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<LightComponent>(child)
         //     .unwrap();
         // light_comp.color = Vector3::new(0.1, 0.8, 0.2);
         // light_comp.intensity = 1.0;
 
         // // Parent spinning around Y
-        // let parent = scene.ent_man.new_entity();
+        // let parent = scene.new_entity();
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(parent)
         //     .unwrap();
         // let phys_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<PhysicsComponent>(parent)
         //     .unwrap();
         // phys_comp.ang_mom = Vector3::new(0.0, 1.0, 0.0);
 
         // // Light rotating around Y
-        // let child = scene.ent_man.new_entity();
-        // scene.ent_man.set_entity_parent(parent, child);
+        // let child = scene.new_entity();
+        // scene.set_entity_parent(parent, child);
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(child)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(2.0, 0.0, 0.0);
         // trans_comp.get_local_transform_mut().scale = 0.1;
         // let phys_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<PhysicsComponent>(child)
         //     .unwrap();
-        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(child).unwrap();
+        // let mesh_comp = scene.add_component::<MeshComponent>(child).unwrap();
         // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         // let light_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<LightComponent>(child)
         //     .unwrap();
         // light_comp.color = Vector3::new(0.1, 0.1, 0.8);
         // light_comp.intensity = 1.0;
 
         // // Directional light
-        // let dir_light = scene.ent_man.new_entity(Some("dir_light"));
+        // let dir_light = scene.new_entity(Some("dir_light"));
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(dir_light)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(0.2, 0.0, -1.0);
         // let light_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<LightComponent>(dir_light)
         //     .unwrap();
         // light_comp.color = Vector3::new(1.0, 1.0, 1.0);
@@ -277,26 +259,26 @@ impl SceneManager {
         // light_comp.light_type = LightType::Directional;
 
         // // Plane
-        // let plane = scene.ent_man.new_entity(Some("plane"));
+        // let plane = scene.new_entity(Some("plane"));
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(plane)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
         // trans_comp.get_local_transform_mut().scale = 2.0;
-        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(plane).unwrap();
+        // let mesh_comp = scene.add_component::<MeshComponent>(plane).unwrap();
         // mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
         // mesh_comp.set_material_override(test_mat1.clone(), 0);
 
         // // Cube
-        // let cube = scene.ent_man.new_entity(Some("cube"));
+        // let cube = scene.new_entity(Some("cube"));
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(cube)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(-4.0, 0.0, 0.0);
         // trans_comp.get_local_transform_mut().scale = 1.0;
-        // let mesh_comp = scene.ent_man.add_component::<MeshComponent>(cube).unwrap();
+        // let mesh_comp = scene.add_component::<MeshComponent>(cube).unwrap();
         // mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
         // mesh_comp.set_material_override(test_mat1.clone(), 0);
 
@@ -308,16 +290,13 @@ impl SceneManager {
         );
 
         // Ico-sphere
-        let ico = scene.ent_man.new_entity(Some("ico_sphere"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(ico)
-            .unwrap();
+        let ico = scene.new_entity(Some("ico_sphere"));
+        let trans_comp = scene.add_component::<TransformComponent>(ico).unwrap();
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(ico).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(ico).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         mesh_comp.set_material_override(sun_mat.clone(), 0);
-        let light_comp = scene.ent_man.add_component::<LightComponent>(ico).unwrap();
+        let light_comp = scene.add_component::<LightComponent>(ico).unwrap();
         light_comp.color = Vector3::new(1.0, 1.0, 1.0);
         light_comp.intensity = 10000000.0;
         light_comp.light_type = LightType::Point;
@@ -330,51 +309,45 @@ impl SceneManager {
         // );
 
         // // Lat-long sphere
-        // let lat_long = scene.ent_man.new_entity(Some("lat_long_sphere"));
+        // let lat_long = scene.new_entity(Some("lat_long_sphere"));
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(lat_long)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(10.0, 0.0, 0.0);
         // let mesh_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<MeshComponent>(lat_long)
         //     .unwrap();
         // mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         // mesh_comp.set_material_override(planet_mat.clone(), 0);
 
         // // Orbit
-        // let circle = scene.ent_man.new_entity(Some("orbit"));
+        // let circle = scene.new_entity(Some("orbit"));
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(circle)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().disp = Vector3::new(0.0, 0.0, 0.0);
         // trans_comp.get_local_transform_mut().scale = 10.0;
         // let mesh_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<MeshComponent>(circle)
         //     .unwrap();
         // mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
 
         // Grid
-        let grid = scene.ent_man.new_entity(Some("grid"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(grid)
-            .unwrap();
+        let grid = scene.new_entity(Some("grid"));
+        let trans_comp = scene.add_component::<TransformComponent>(grid).unwrap();
         trans_comp.get_local_transform_mut().scale = Vector3::new(100000.0, 100000.0, 100000.0);
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(grid).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(grid).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
         // Axes
-        let axes = scene.ent_man.new_entity(Some("axes"));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(axes)
-            .unwrap();
+        let axes = scene.new_entity(Some("axes"));
+        let trans_comp = scene.add_component::<TransformComponent>(axes).unwrap();
         trans_comp.get_local_transform_mut().scale = Vector3::new(300.0, 300.0, 300.0);
-        let mesh_comp = scene.ent_man.add_component::<MeshComponent>(axes).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(axes).unwrap();
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
@@ -412,20 +385,17 @@ impl SceneManager {
             "Injecting scene '{}' into current '{}' ({} entities)",
             injected_scene_copy.identifier,
             current_scene.identifier,
-            injected_scene_copy.ent_man.get_num_entities()
+            injected_scene_copy.get_num_entities()
         );
 
         // Update the position of the root scene node to the target transform
         if let Some(target_transform) = target_transform {
-            let scene_root_trans =
-                injected_scene_copy.ent_man.transform[0].get_local_transform_mut();
+            let scene_root_trans = injected_scene_copy.transform[0].get_local_transform_mut();
             *scene_root_trans = target_transform;
         }
 
         // Inject entities into current_scene, and keep track of where they ended up
-        current_scene
-            .ent_man
-            .move_from_other(injected_scene_copy.ent_man);
+        current_scene.move_from_other(injected_scene_copy);
 
         return Ok(());
     }

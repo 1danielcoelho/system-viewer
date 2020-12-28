@@ -1,15 +1,14 @@
-use self::details_ui::DetailsUI;
-use super::ECManager;
-use crate::UICTX;
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
+    managers::details_ui::DetailsUI,
     prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
         web::write_string_to_file_prompt,
     },
 };
+use crate::{managers::scene::scene::Scene, UICTX};
 use egui::{menu, Align, Button, Id, LayerId, Layout, Pos2, Response, TextStyle, TopPanel, Ui};
 use gui_backend::WebInput;
 use na::{Matrix4, Point3, Vector3};
@@ -51,20 +50,18 @@ impl InterfaceManager {
      * This runs before all systems, and starts collecting all the UI elements we'll draw, as
      * well as draws the main UI
      */
-    pub fn begin_frame(&mut self, state: &mut AppState, ent_man: Option<&mut ECManager>) {
+    pub fn begin_frame(&mut self, state: &mut AppState, scene: &mut Scene) {
         self.pre_draw(state);
 
-        draw_main_ui(state, ent_man);
+        draw_main_ui(state, scene);
     }
 
     /** This runs after all systems, and draws the collected UI elements to the framebuffer */
-    pub fn end_frame(&mut self, state: &mut AppState, ent_man: Option<&mut ECManager>) {
+    pub fn end_frame(&mut self, state: &mut AppState, scene: &mut Scene) {
         self.draw();
 
-        if let Some(ent_man) = ent_man {
-            if !state.input.over_ui && state.input.m1 == ButtonState::Depressed {
-                handle_mouse_on_scene(state, ent_man);
-            }
+        if !state.input.over_ui && state.input.m1 == ButtonState::Depressed {
+            handle_mouse_on_scene(state, scene);
         }
     }
 
@@ -104,13 +101,13 @@ impl InterfaceManager {
     }
 }
 
-fn draw_main_ui(state: &mut AppState, ent_man: Option<&mut ECManager>) {
+fn draw_main_ui(state: &mut AppState, scene: &mut Scene) {
     draw_main_toolbar(state);
 
-    draw_test_widget(state, ent_man);
+    draw_test_widget(state, scene);
 }
 
-fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
+fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
     let p = Matrix4::new_perspective(
         state.canvas_width as f32 / state.canvas_height as f32,
         state.camera.fov_v.to_radians(),
@@ -135,8 +132,8 @@ fn handle_mouse_on_scene(state: &mut AppState, ent_man: &mut ECManager) {
     };
 
     if state.input.m0 == ButtonState::Pressed {
-        if let Some(hit) = raycast(&ray, &ent_man.mesh, &ent_man.transform) {
-            if let Some(entity) = ent_man.get_entity_from_index(hit.entity_index) {
+        if let Some(hit) = raycast(&ray, &scene.mesh, &scene.transform) {
+            if let Some(entity) = scene.get_entity_from_index(hit.entity_index) {
                 state.selection.clear();
                 state.selection.insert(entity);
             }
@@ -227,7 +224,7 @@ fn draw_main_toolbar(state: &mut AppState) {
     });
 }
 
-fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
+fn draw_test_widget(state: &mut AppState, scene: &mut Scene) {
     UICTX.with(|ui| {
         let ref_mut = ui.borrow_mut();
         let ui = ref_mut.as_ref().unwrap();
@@ -330,26 +327,24 @@ fn draw_test_widget(state: &mut AppState, ent_man: Option<&mut ECManager>) {
                     cols[1].label(format!("{:?}", selection));
                 });
 
-                if let Some(ent_man) = ent_man {
-                    ui.columns(2, |cols| {
-                        cols[0].label("Name:");
-                        cols[1].label(format!(
-                            "{}",
-                            ent_man.get_entity_name(selection).unwrap_or_default()
-                        ));
+                ui.columns(2, |cols| {
+                    cols[0].label("Name:");
+                    cols[1].label(format!(
+                        "{}",
+                        scene.get_entity_name(selection).unwrap_or_default()
+                    ));
+                });
+
+                if let Some(comp) = scene.get_component::<TransformComponent>(selection) {
+                    ui.collapsing("Transform component", |ui| {
+                        comp.draw_details_ui(ui);
                     });
+                }
 
-                    if let Some(comp) = ent_man.get_component::<TransformComponent>(selection) {
-                        ui.collapsing("Transform component", |ui| {
-                            comp.draw_details_ui(ui);
-                        });
-                    }
-
-                    if let Some(comp) = ent_man.get_component::<MeshComponent>(selection) {
-                        ui.collapsing("Mesh component", |ui| {
-                            comp.draw_details_ui(ui);
-                        });
-                    }
+                if let Some(comp) = scene.get_component::<MeshComponent>(selection) {
+                    ui.collapsing("Mesh component", |ui| {
+                        comp.draw_details_ui(ui);
+                    });
                 }
             }
         });

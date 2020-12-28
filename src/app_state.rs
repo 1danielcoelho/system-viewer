@@ -1,4 +1,4 @@
-use crate::managers::Entity;
+use crate::managers::scene::scene::Entity;
 use na::*;
 use std::collections::HashSet;
 

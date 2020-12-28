@@ -1,19 +1,17 @@
-use na::{Matrix3, Quaternion, UnitQuaternion, Vector3};
-
 use crate::{
     app_state::AppState,
     components::PhysicsComponent,
     components::{Component, TransformComponent},
-    managers::ECManager,
-    managers::EventReceiver,
+    managers::{scene::scene::Scene, EventReceiver},
 };
+use na::{Matrix3, Quaternion, UnitQuaternion, Vector3};
 
 pub struct PhysicsSystem {}
 impl PhysicsSystem {
-    pub fn run(&self, state: &AppState, ent_man: &mut ECManager) {
-        for entity_index in 0..ent_man.transform.len() {
+    pub fn run(&self, state: &AppState, scene: &mut Scene) {
+        for entity_index in 0..scene.transform.len() {
             // TODO: Indirection on the hot path...
-            if ent_man
+            if scene
                 .get_parent_index_from_index(entity_index as u32)
                 .is_some()
             {
@@ -22,8 +20,8 @@ impl PhysicsSystem {
 
             PhysicsSystem::update(
                 state,
-                &mut ent_man.transform[entity_index],
-                &mut ent_man.physics[entity_index],
+                &mut scene.transform[entity_index],
+                &mut scene.physics[entity_index],
             );
         }
     }
@@ -62,7 +60,8 @@ impl PhysicsSystem {
 
         // Update position and rotation
         trans.trans += lin_vel * dt;
-        let new_rot: Quaternion<f32> = trans.rot.quaternion() + 0.5 * ang_vel_q * trans.rot.quaternion() * dt; // todo
+        let new_rot: Quaternion<f32> =
+            trans.rot.quaternion() + 0.5 * ang_vel_q * trans.rot.quaternion() * dt; // todo
         trans.rot = UnitQuaternion::new_normalize(new_rot);
 
         // Clear accumulators?

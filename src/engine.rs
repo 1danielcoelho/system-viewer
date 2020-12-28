@@ -2,7 +2,8 @@ use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},
     managers::{
-        EventManager, InputManager, InterfaceManager, ResourceManager, SceneManager, SystemManager,
+        scene::SceneManager, EventManager, InputManager, InterfaceManager, ResourceManager,
+        SystemManager,
     },
     utils::orbital_elements::{elements_to_circle_transform, OrbitalElements},
 };
@@ -37,33 +38,16 @@ impl Engine {
     pub fn update(&mut self, state: &mut AppState) {
         self.input_man.run(state);
 
-        // TODO: Figure out how to do this using the same ent_man ref...
+        if let Some(scene) = self.scene_man.get_main_scene_mut() {
+            // Startup the UI frame, collecting UI elements
+            self.int_man.begin_frame(state, scene);
 
-        // Startup the UI frame
-        self.int_man.begin_frame(
-            state,
-            self.scene_man
-                .get_main_scene_mut()
-                .and_then(|s| Some(&mut s.ent_man)),
-        );
+            // Run all systems
+            self.sys_man.run(state, scene);
 
-        let ent_man = self
-            .scene_man
-            .get_main_scene_mut()
-            .and_then(|s| Some(&mut s.ent_man));
-
-        // Run all systems if we have a scene
-        if let Some(ent_man) = ent_man {
-            self.sys_man.run(state, ent_man);
+            // Draw the UI elements
+            self.int_man.end_frame(state, scene);
         }
-
-        // Draw the UI, also handling mouse interaction if we have a scene
-        self.int_man.end_frame(
-            state,
-            self.scene_man
-                .get_main_scene_mut()
-                .and_then(|s| Some(&mut s.ent_man)),
-        );
     }
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
@@ -120,9 +104,9 @@ impl Engine {
         // );
 
         // // Lat-long sphere
-        // let lat_long = scene.ent_man.new_entity(Some(&body.id));
+        // let lat_long = scene.new_entity(Some(&body.id));
         // let trans_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<TransformComponent>(lat_long)
         //     .unwrap();
         // trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
@@ -132,7 +116,7 @@ impl Engine {
         //     body.mean_radius as f32,
         // );
         // let mesh_comp = scene
-        //     .ent_man
+        //
         //     .add_component::<MeshComponent>(lat_long)
         //     .unwrap();
         // mesh_comp.set_mesh(self.res_man.get_or_create_mesh("lat_long_sphere"));
@@ -211,16 +195,10 @@ impl Engine {
         log::warn!("orbit transform: {:#?}", orbit_transform);
 
         // Orbit
-        let circle = scene.ent_man.new_entity(Some(&name));
-        let trans_comp = scene
-            .ent_man
-            .add_component::<TransformComponent>(circle)
-            .unwrap();
+        let circle = scene.new_entity(Some(&name));
+        let trans_comp = scene.add_component::<TransformComponent>(circle).unwrap();
         *trans_comp.get_local_transform_mut() = orbit_transform;
-        let mesh_comp = scene
-            .ent_man
-            .add_component::<MeshComponent>(circle)
-            .unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(circle).unwrap();
         mesh_comp.set_mesh(self.res_man.get_or_create_mesh("circle"));
     }
 

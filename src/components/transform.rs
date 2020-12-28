@@ -3,7 +3,7 @@ use super::{
     Component,
 };
 use crate::{
-    managers::{details_ui::DetailsUI, ECManager},
+    managers::{details_ui::DetailsUI, scene::scene::Scene},
     utils::transform::Transform,
 };
 use egui::{Align, Layout, Ui};
@@ -60,7 +60,7 @@ impl Component for TransformComponent {
     const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
     const COMPONENT_TYPE: ComponentType = ComponentType::Transform;
 
-    fn get_components_vector<'a>(w: &'a mut ECManager) -> Option<&'a mut Vec<TransformComponent>> {
+    fn get_components_vector<'a>(w: &'a mut Scene) -> Option<&'a mut Vec<TransformComponent>> {
         return Some(&mut w.transform);
     }
 

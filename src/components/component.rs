@@ -1,6 +1,8 @@
+use crate::managers::{
+    details_ui::DetailsUI,
+    scene::scene::{Entity, Scene},
+};
 use std::collections::HashMap;
-
-use crate::managers::{details_ui::DetailsUI, ECManager, Entity};
 
 #[derive(Debug)]
 pub enum ComponentType {
@@ -23,14 +25,12 @@ pub trait Component: Default + Clone + DetailsUI {
     fn set_enabled(&mut self, enabled: bool);
     fn get_enabled(&mut self) -> bool;
 
-    fn get_components_vector<'a>(
-        _w: &'a mut ECManager,
-    ) -> Option<&'a mut Vec<Self::ComponentType>> {
+    fn get_components_vector<'a>(_s: &'a mut Scene) -> Option<&'a mut Vec<Self::ComponentType>> {
         return None;
     }
 
     fn get_components_map<'a>(
-        _w: &'a mut ECManager,
+        _s: &'a mut Scene,
     ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
         return None;
     }

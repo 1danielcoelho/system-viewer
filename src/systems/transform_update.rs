@@ -1,26 +1,27 @@
-use crate::{app_state::AppState, managers::ECManager, utils::transform::Transform};
+use crate::{app_state::AppState, managers::scene::scene::Scene, utils::transform::Transform};
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
-    pub fn run(&self, _state: &AppState, em: &mut ECManager) {
+    pub fn run(&self, _state: &AppState, scene: &mut Scene) {
         let identity: Transform = Transform::identity();
 
-        for entity_index in 0..em.get_num_entities() {
+        for entity_index in 0..scene.get_num_entities() {
             // TODO: This has an indirection
-            let parent_index = em.get_parent_index_from_index(entity_index);
+            let parent_index = scene.get_parent_index_from_index(entity_index);
 
             // Note that we go only one parent level: We guarantee that we'll
             // update our transforms in order, so that parents always come before children
             match parent_index {
                 Some(parent_index) => {
                     // TODO: Indirection
-                    let parent_transform = em.transform[parent_index as usize]
+                    let parent_transform = scene.transform[parent_index as usize]
                         .get_world_transform()
                         .clone();
-                    em.transform[entity_index as usize].update_world_transform(&parent_transform);
+                    scene.transform[entity_index as usize]
+                        .update_world_transform(&parent_transform);
                 }
                 None => {
-                    em.transform[entity_index as usize].update_world_transform(&identity);
+                    scene.transform[entity_index as usize].update_world_transform(&identity);
                 }
             }
         }

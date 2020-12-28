@@ -1,11 +1,9 @@
-use std::collections::{BinaryHeap, HashMap, HashSet};
-
-use std::{cmp::Reverse, hash::Hash};
-
 use crate::components::{
     component::ComponentStorageType, Component, LightComponent, MeshComponent, PhysicsComponent,
     TransformComponent,
 };
+use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::{cmp::Reverse, hash::Hash};
 
 #[derive(Debug, Copy, Clone, Eq, Hash)]
 pub struct Entity(u32);
@@ -26,7 +24,9 @@ pub struct EntityEntry {
 }
 
 #[derive(Clone)]
-pub struct ECManager {
+pub struct Scene {
+    pub identifier: String,
+
     entity_storage: Vec<EntityEntry>,
     free_indices: BinaryHeap<Reverse<u32>>,
     pub entity_to_index: HashMap<Entity, u32>,
@@ -37,11 +37,13 @@ pub struct ECManager {
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
     pub light: HashMap<Entity, LightComponent>,
-}
 
-impl ECManager {
-    pub fn new() -> Self {
-        Self {
+    _private: (),
+}
+impl Scene {
+    pub(super) fn new(identifier: &str) -> Scene {
+        Scene {
+            identifier: identifier.to_string(),
             entity_storage: Vec::new(),
             free_indices: BinaryHeap::new(),
             entity_to_index: HashMap::new(),
@@ -51,6 +53,7 @@ impl ECManager {
             mesh: Vec::new(),
             transform: Vec::new(),
             light: HashMap::new(),
+            _private: (),
         }
     }
 
@@ -470,7 +473,7 @@ impl ECManager {
 }
 
 // Component interface
-impl ECManager {
+impl Scene {
     pub fn get_component<T>(&mut self, entity: Entity) -> Option<&mut T>
     where
         T: Default + Component + Component<ComponentType = T>,
