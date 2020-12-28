@@ -205,15 +205,17 @@
 <!-- # Being able to do fetches and stuff from begin_loop allows us to load files from the manifest (even if on-demand loading doesn't work)
 - The on-demand stuff may still work if we make it so that we can e.g. use the duck 'Mesh' object even if it's not loaded yet: It will dispatch the JS call to fetch and load it, and in the meantime use some default asset. On every draw it will check if available, and whenever it is, it can swap it for the new asset.
 - I can probably just use build.rs to compile the manifest file automatically -->
-
-# Note: Rotation3::from_matrix
-
-# Try offsetting periapsis before transformation and compare
+<!-- # Note: Rotation3::from_matrix -->
+<!-- # Try offsetting periapsis before transformation and compare -->
 
 # Scene serialization with serde
 - Need UI for it like some save/open menus
-- GLTF-like, index based json format 
+    - Some scene browser UI thing with a list of loaded scenes, allowing injecting/opening them
+- GLTF-like, index based RON
+<!-- - Don't need to keep re-parsing the ephemerides every time, just do it once to spit out ephemerides and data
+    - Store it in some kind of csv: One for planets, one for moons, asteroids, comets, etc. -->
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
+    - Also store other stuff like mass, magnitude, rotation info
 <!-- - What to do with resources like meshes and textures? Export a binary blob?
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?

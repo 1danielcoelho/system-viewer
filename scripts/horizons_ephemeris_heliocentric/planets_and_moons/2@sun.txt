@@ -1,0 +1,108 @@
+n
+ 
+Horizons> 2
+[?1h=*******************************************************************************
+ Revised: Jul 31, 2013              Venus                               299 / 2
+ 
+ GEOPHYSICAL DATA (updated 2014-Mar-13):
+  Mean radius (km)      =   6051.8(4+-1)  Density (g cm^-3)     =  5.204 
+  Mass (10^23 kg )      =     48.685      Flattening, f         =  
+  Volume (x10^10 km^3)  =     92.843      Semi-major axis       =  
+  Sidereal rot. period  =   -243.0185 d   Rot. Rate (x10^5 s)   = -0.029924 
+  Mean solar day        =    116.7490 d   Polar gravity ms^-2   =   
+  Mom. of Inertia       =      0.33       Equ. gravity  ms^-2   =  8.870 
+  Core radius (km)      =  ~3200          Potential Love # k2   = ~0.25 
+
+  Grav spectral fact u  =      1.5        Topo. spectral fact t =  23       
+  Fig. offset (Rcf-Rcm) =      0.19+-01   Offset (lat./long.)   = 11/102 dg/dg 
+  GM (km^3 s^-2)        = 324858.63       Equatorial Radius, Re = 6051.893 km 
+  GM 1-sigma (km^3 s^-2)=    +-0.04       Mass ratio (Sun/Venus)= 408523.72
+  
+  Atmos. pressure (bar) =    90           Max. angular diam.    =   60.2" 
+  Mean Temperature (K)  =  735            Visual mag. V(1,0)    =   -4.40 
+  Geometric albedo      =    0.65         Obliquity to orbit    =  177.3 deg 
+  Sidereal orb. per.    =    0.61519726 y Orbit vel.  km/s      =   35.0214 
+  Sidereal orb. per.    =  224.70079922 d Escape vel. km/s      =   10.361 
+  Hill's sphere rad. Rp =  167.1          Planetary Solar Const = 2613.9 (Wm^2) 
+*******************************************************************************
+[K[?1l> Select ... [E]phemeris, [F]tp, [M]ail, [R]edisplay, ?, <cr>: 
+
+
+ y
+ Working ...   \  
+[?1h=*******************************************************************************
+Ephemeris / PORT_LOGIN Sat Feb 24 23:38:18 2018 Pasadena, USA    / Horizons    
+*******************************************************************************
+Target body name: Venus Barycenter (299)          {source: DE431mx}
+Center body name: Sun (10)                        {source: DE431mx}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2000-Jan-01 12:00:00.0000 TDB
+Stop  time      : A.D. 2000-Jan-01 12:01:00.0000 TDB
+Step-size       : 1440 minutes
+*******************************************************************************
+Center geodetic : 0.00000000,0.00000000,0.0000000 {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.00000000,0.00000000,0.0000000 {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : 696000.0 x 696000.0 x 696000.0 k{Equator, meridian, pole}    
+Keplerian GM    : 2.9591293263082414E-04 au^3/d^2
+Output units    : AU-D, deg, Julian Day Number (Tp)                            
+Output type     : GEOMETRIC osculating elements
+Output format   : 10
+Reference frame : ICRF/J2000.0                                                 
+Coordinate systm: Ecliptic and Mean Equinox of Reference Epoch                 
+*******************************************************************************
+JDTDB
+   EC    QR   IN
+   OM    W    Tp
+   N     MA   TA
+   A     AD   PR
+*******************************************************************************
+$$SOE
+2451545.000000000 = A.D. 2000-Jan-01 12:00:00.0000 TDB 
+ EC= 6.755786250503024E-03 QR= 7.184402853677290E-01 IN= 3.394589648659516E+00
+ OM= 7.667837463924961E+01 W = 5.518596653686583E+01 Tp=  2451513.720262355637
+ N = 1.602148088424120E+00 MA= 5.011477187351476E+01 TA= 5.071202823894325E+01
+ A = 7.233269274790103E-01 AD= 7.282135695902917E-01 PR= 2.246983300739057E+02
+$$EOE
+*******************************************************************************
+Coordinate system description:
+
+  Ecliptic and Mean Equinox of Reference Epoch
+
+    Reference epoch: J2000.0
+    XY-plane: plane of the Earth's orbit at the reference epoch
+              Note: obliquity of 84381.448 arcseconds wrt ICRF equator (IAU76)
+    X-axis  : out along ascending node of instantaneous plane of the Earth's
+              orbit and the Earth's mean equator at the reference epoch
+    Z-axis  : perpendicular to the xy-plane in the directional (+ or -) sense
+              of Earth's north pole at the reference epoch.
+
+  Symbol meaning [1 au= 149597870.700 km, 1 day= 86400.0 s]:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      EC     Eccentricity, e                                                   
+      QR     Periapsis distance, q (au)                                        
+      IN     Inclination w.r.t XY-plane, i (degrees)                           
+      OM     Longitude of Ascending Node, OMEGA, (degrees)                     
+      W      Argument of Perifocus, w (degrees)                                
+      Tp     Time of periapsis (Julian Day Number)                             
+      N      Mean motion, n (degrees/day)                                      
+      MA     Mean anomaly, M (degrees)                                         
+      TA     True anomaly, nu (degrees)                                        
+      A      Semi-major axis, a (au)                                           
+      AD     Apoapsis distance (au)                                            
+      PR     Sidereal orbit period (day)                                       
+
+Geometric states/elements have no aberrations applied.
+
+ Computations by ...
+     Solar System Dynamics Group, Horizons On-Line Ephemeris System
+     4800 Oak Grove Drive, Jet Propulsion Laboratory
+     Pasadena, CA  91109   USA
+     Information: http://ssd.jpl.nasa.gov/
+     Connect    : telnet://ssd.jpl.nasa.gov:6775  (via browser)
+                  http://ssd.jpl.nasa.gov/?horizons
+                  telnet ssd.jpl.nasa.gov 6775    (via command-line)
+     Author     : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************
+[K[?1l> >>> Select... [A]gain, [N]ew-case, [F]tp, [K]ermit, [M]ail, [R]edisplay, ? : 
