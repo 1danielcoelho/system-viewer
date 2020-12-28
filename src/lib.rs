@@ -88,8 +88,8 @@ pub fn initialize() {
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
-    fetch_text("public/ephemerides/test.txt", "ephemerides");
-    fetch_bytes("public/Duck.glb", "gltf");
+    // fetch_text("public/ephemerides/test.txt", "ephemerides");
+    // fetch_bytes("public/Duck.glb", "gltf");
 
     let event_loop = EventLoop::new();
 

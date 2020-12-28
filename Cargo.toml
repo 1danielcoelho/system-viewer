@@ -12,7 +12,6 @@ console_error_panic_hook = "=0.1.5"
 console_log = "0.2"
 futures = "0.3"
 egui = "0.5.0"
-gltf = "0.15.2"
 gui_backend = { path = "gui_backend" }
 image = "0.23.12"
 instant = { version = "0.1", features = [ "wasm-bindgen", "now" ] }
@@ -20,10 +19,15 @@ js-sys = "0.3.19"
 lazy_static = "1.3.0"
 log = "0.4"
 nalgebra = "0.23.2"
+serde = "1.0.118"
 regex = "1.4.2"
 wasm-bindgen = "0.2.44"
 wasm-bindgen-futures = "0.4"
 winit = { version = "0.22", features = ["web-sys"] }
+
+[dependencies.gltf]
+version = "0.15.2"
+features = ["extras", "names"]
 
 [dependencies.web-sys]
 version = "0.3.44"

@@ -223,6 +223,8 @@
 # Delayed asset loading
 - Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it
 
+# Store camera/app state to local storage so that it reloads facing the same location
+
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement
     - Crudest level: J2000 orbital elements

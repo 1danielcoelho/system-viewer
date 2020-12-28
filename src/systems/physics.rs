@@ -11,12 +11,13 @@ impl PhysicsSystem {
     pub fn run(&self, state: &AppState, scene: &mut Scene) {
         for entity_index in 0..scene.transform.len() {
             // TODO: Indirection on the hot path...
-            if scene
-                .get_parent_index_from_index(entity_index as u32)
-                .is_some()
-            {
-                continue;
-            }
+            // TODO: Disable physics calculations for child entities for free bodies (rails should be OK though)
+            // if scene
+            //     .get_parent_index_from_index(entity_index as u32)
+            //     .is_some()
+            // {
+            //     continue;
+            // }
 
             PhysicsSystem::update(
                 state,
