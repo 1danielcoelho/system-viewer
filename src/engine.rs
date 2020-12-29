@@ -57,6 +57,9 @@ impl Engine {
             "ephemerides" => self.receive_ephemerides_text(url, text),
             "scene" => {
                 let scene = self.scene_man.deserialize_scene(text);
+                let name = scene.unwrap().identifier.to_owned();
+
+                self.scene_man.set_scene(&name, &mut self.res_man);
             }
             _ => log::error!(
                 "Unexpected content_type for receive_text: '{}'. url: '{}'",

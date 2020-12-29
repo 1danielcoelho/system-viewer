@@ -190,8 +190,8 @@ impl ResourceManager {
         mat: &mut Rc<RefCell<Material>>,
     ) -> Option<Rc<RefCell<Material>>> {
         let mut mat_mut = mat.borrow_mut();
-        if let Some(existing_mat) = self.get_or_create_material(&mat_mut.name) {
-            log::info!("Reusing existing material '{}'", existing_mat.borrow().name);
+        if let Some(existing_mat) = self.get_or_create_material(&mat_mut.get_name()) {
+            log::info!("Reusing existing material '{}'", mat_mut.get_name());
             return Some(existing_mat);
         }
 
@@ -206,8 +206,9 @@ impl ResourceManager {
             mat_mut.set_texture(*unit, Some(tex.clone()));
         }
 
-        log::info!("Keeping material '{}'", mat_mut.name);
-        self.materials.insert(mat_mut.name.clone(), mat.clone());
+        log::info!("Keeping material '{}'", mat_mut.get_name());
+        self.materials
+            .insert(mat_mut.get_name().to_owned(), mat.clone());
         return None;
     }
 
@@ -215,7 +216,7 @@ impl ResourceManager {
     fn provision_mesh(&mut self, mesh: &mut Rc<RefCell<Mesh>>) -> Option<Rc<RefCell<Mesh>>> {
         let mesh_mut = mesh.borrow_mut();
         if let Some(existing_mesh) = self.get_or_create_mesh(&mesh_mut.name) {
-            log::info!("Reusing existing mesh '{}'", existing_mesh.borrow().name);
+            log::info!("Reusing existing mesh '{}'", mesh_mut.name);
             return Some(existing_mesh);
         }
 
@@ -314,18 +315,27 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn instantiate_material(&mut self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
-        let master_mat = self.get_or_create_material(identifier);
+    pub fn instantiate_material(
+        &mut self,
+        master: &str,
+        name: &str,
+    ) -> Option<Rc<RefCell<Material>>> {
+        let master_mat = self.get_or_create_material(master);
         if master_mat.is_none() {
             return None;
         };
 
         let instance = Rc::new(RefCell::new(master_mat.unwrap().borrow().clone()));
 
-        let new_name = get_unique_name(remove_numbered_suffix(identifier), &self.materials);
-        instance.borrow_mut().name = new_name.clone();
+        let new_name = get_unique_name(remove_numbered_suffix(name), &self.materials);
+        instance.borrow_mut().name = new_name.to_owned();
 
-        log::info!("Generated material instance '{}'", new_name);
+        log::info!(
+            "Generated material instance '{}' from master '{}'",
+            new_name,
+            master
+        );
+
         self.materials
             .insert(new_name.to_string(), instance.clone());
         return Some(instance);
@@ -434,7 +444,11 @@ impl ResourceManager {
             _ => None,
         };
         if mat.is_none() {
-            log::error!("Invalid material identifier '{}'", identifier);
+            log::error!(
+                "Invalid material identifier '{}'. Current valid identifiers:\n{:#?}",
+                identifier,
+                self.materials.keys()
+            );
             return None;
         }
 

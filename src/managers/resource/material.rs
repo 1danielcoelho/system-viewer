@@ -207,7 +207,7 @@ fn compile_shader(
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Material {
-    pub name: String,
+    pub(super) name: String,
 
     // These and defines could technically be &'static str, but being owned simplifies serialization
     master: String,
@@ -252,6 +252,10 @@ impl Material {
             defines: Vec::new(),
             failed_to_compile: false,
         }
+    }
+
+    pub fn get_name(&self) -> &str {
+        return &self.name;
     }
 
     pub fn recompile_program(&mut self, gl: &WebGl2RenderingContext) {

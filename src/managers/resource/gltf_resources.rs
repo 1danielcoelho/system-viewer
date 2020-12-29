@@ -94,7 +94,7 @@ impl ResourceManager {
         let identifier = material.get_identifier(file_identifier);
         log::info!("\tLoading gltf material '{}'", identifier);
 
-        let mat = self.instantiate_material("gltf_metal_rough").unwrap();
+        let mat = self.instantiate_material("gltf_metal_rough", &identifier).unwrap();
         let mut mat_mut = mat.borrow_mut();
 
         let pbr = material.pbr_metallic_roughness();

@@ -202,8 +202,7 @@ impl SceneManager {
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         let scene = self.new_scene(&identifier).unwrap();
 
-        let sun_mat = res_man.instantiate_material("gltf_metal_rough");
-        sun_mat.as_ref().unwrap().borrow_mut().name = String::from("sun_mat");
+        let sun_mat = res_man.instantiate_material("gltf_metal_rough", "sun_mat");
         sun_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
             UniformName::EmissiveFactor,
             UniformValue::Vec3([1.0, 0.7, 0.0]),
@@ -221,8 +220,7 @@ impl SceneManager {
         light_comp.intensity = 10000000.0;
         light_comp.light_type = LightType::Point;
 
-        let planet_mat = res_man.instantiate_material("gltf_metal_rough");
-        planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
+        let planet_mat = res_man.instantiate_material("gltf_metal_rough", "planet_mat");
         planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
             UniformName::BaseColorFactor,
             UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
@@ -264,8 +262,7 @@ impl SceneManager {
         physics.ang_mom = Vector3::new(0.0, 0.0, 0.86);
         scene.set_entity_parent(planet, planet_bary);
 
-        let moon_mat = res_man.instantiate_material("gltf_metal_rough");
-        moon_mat.as_ref().unwrap().borrow_mut().name = String::from("moon_mat");
+        let moon_mat = res_man.instantiate_material("gltf_metal_rough", "moon_mat");
         moon_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
             UniformName::BaseColorFactor,
             UniformValue::Vec4([0.8, 0.8, 0.7, 1.0]),
