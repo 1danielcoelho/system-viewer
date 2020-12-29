@@ -8,7 +8,7 @@ use crate::{
 };
 use egui::{Align, Layout, Ui};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
 pub struct FrameUniformValues {
@@ -217,14 +217,14 @@ pub struct Material {
     #[serde(skip)]
     program: Option<WebGlProgram>,
 
-    textures: HashMap<TextureUnit, Rc<Texture>>,
+    textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,
     uniforms: HashMap<UniformName, Uniform>,
     defines: Vec<String>,
 
     failed_to_compile: bool,
 }
 impl Material {
-    pub fn new(
+    pub(super) fn new(
         master: &str,
         vert: &'static str,
         frag: &'static str,
@@ -296,13 +296,13 @@ impl Material {
         }
     }
 
-    pub fn set_texture(&mut self, unit: TextureUnit, tex: Option<Rc<Texture>>) {
+    pub fn set_texture(&mut self, unit: TextureUnit, tex: Option<Rc<RefCell<Texture>>>) {
         if let Some(tex) = tex {
             self.set_define(unit.get_define());
 
             log::info!(
-                "\t\t\tSet texture {} on unit {:?} of material {}. Defines: '{:?}'",
-                tex.name,
+                "\t\t\tSet texture '{}' on unit '{:?}' of material '{}'. Defines: '{:?}'",
+                tex.borrow().name,
                 unit,
                 self.name,
                 self.defines
@@ -313,7 +313,7 @@ impl Material {
             self.clear_define(unit.get_define());
 
             log::info!(
-                "\t\t\tRemoved texture on unit {:?} of material {}. Defines: '{:?}'",
+                "\t\t\tRemoved texture on unit '{:?}' of material '{}'. Defines: '{:?}'",
                 unit,
                 self.name,
                 self.defines
@@ -321,7 +321,7 @@ impl Material {
         }
     }
 
-    pub fn get_textures(&self) -> &HashMap<TextureUnit, Rc<Texture>> {
+    pub fn get_textures(&self) -> &HashMap<TextureUnit, Rc<RefCell<Texture>>> {
         return &self.textures;
     }
 
@@ -391,7 +391,7 @@ impl Material {
             // log::info!("\tBinding texture {} to unit {:?}", tex.name, unit);
 
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
-            gl.bind_texture(GL::TEXTURE_2D, tex.gl_handle.as_ref());
+            gl.bind_texture(GL::TEXTURE_2D, tex.borrow().gl_handle.as_ref());
         }
     }
 
@@ -502,7 +502,7 @@ impl DetailsUI for Material {
                 for (unit, tex) in &mut self.textures {
                     ui.columns(2, |cols| {
                         cols[0].label(format!("{:?}", unit));
-                        cols[1].label(&tex.name);
+                        cols[1].label(&tex.borrow().name);
                     });
                 }
             });

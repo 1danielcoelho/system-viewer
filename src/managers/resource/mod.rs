@@ -1,5 +1,6 @@
 use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
 use crate::{
+    fetch_bytes,
     managers::resource::{material::UniformName, texture::TextureUnit},
     utils::{
         gl::GL,
@@ -30,7 +31,7 @@ fn load_texture_from_bytes(
     bytes: &[u8],
     image_format: Option<ImageFormat>,
     ctx: &WebGl2RenderingContext,
-) -> Result<Rc<Texture>, String> {
+) -> Result<Rc<RefCell<Texture>>, String> {
     let mut reader = Reader::new(Cursor::new(bytes));
     match image_format {
         Some(format) => {
@@ -141,19 +142,19 @@ fn load_texture_from_bytes(
 
     ctx.bind_texture(GL::TEXTURE_2D, None);
 
-    return Ok(Rc::new(Texture {
+    return Ok(Rc::new(RefCell::new(Texture {
         name: identifier.to_owned(),
         width,
         height,
         gl_format: format,
         num_channels,
         gl_handle: Some(gl_tex),
-    }));
+    })));
 }
 
 pub struct ResourceManager {
     meshes: HashMap<String, Rc<RefCell<Mesh>>>,
-    textures: HashMap<String, Rc<Texture>>,
+    textures: HashMap<String, Rc<RefCell<Texture>>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
 }
 impl ResourceManager {
@@ -167,20 +168,28 @@ impl ResourceManager {
         return new_res_man;
     }
 
-    fn provision_texture(&mut self, tex: &Rc<Texture>) -> Option<Rc<Texture>> {
-        if let Some(existing_tex) = self.get_texture(&tex.name) {
-            log::info!("Reusing existing texture '{}'", existing_tex.name);
+    fn provision_texture(&mut self, tex: &Rc<RefCell<Texture>>) -> Option<Rc<RefCell<Texture>>> {
+        let tex_borrow = tex.borrow();
+        if let Some(existing_tex) = self.get_texture(&tex_borrow.name) {
+            log::info!("Reusing existing texture '{}'", existing_tex.borrow().name);
             return Some(existing_tex);
         }
 
         // TODO: Fetch for this texture data
-        if tex.gl_handle.is_none() {
-            log::info!("Creating fetch request for texture '{}'", tex.name);
-            todo!();
+        if tex_borrow.gl_handle.is_none() {
+            let scene_name = gltf_resources::get_scene_name(&tex_borrow.name);
+            log::info!(
+                "Creating fetch request for texture '{}', from file '{}'",
+                tex_borrow.name,
+                scene_name
+            );
+
+            // TODO: Restore asset manifest to keep track of the path instead of just assuming it's at public
+            fetch_bytes(&("public/".to_owned() + scene_name), "glb_resouce");
         }
 
-        log::info!("Keeping temporary texture '{}'", tex.name);
-        self.textures.insert(tex.name.clone(), tex.clone());
+        log::info!("Keeping temporary texture '{}'", tex_borrow.name);
+        self.textures.insert(tex_borrow.name.clone(), tex.clone());
         return None;
     }
 
@@ -196,7 +205,7 @@ impl ResourceManager {
         }
 
         // We're creating a new material. Let's request all the textures that it needs
-        let mut requested_textures: HashMap<TextureUnit, Rc<Texture>> = HashMap::new();
+        let mut requested_textures: HashMap<TextureUnit, Rc<RefCell<Texture>>> = HashMap::new();
         for (unit, tex) in mat_mut.get_textures().iter() {
             if let Some(new_tex) = self.provision_texture(&tex) {
                 requested_textures.insert(*unit, new_tex);
@@ -220,12 +229,16 @@ impl ResourceManager {
             return Some(existing_mesh);
         }
 
-        // TODO: fetch request for this mesh from its identifier to e.g. try loading it from GLB
-        // Likely will need to either cleave the glb path from the mesh name or start storing
-        // a mesh "source" path, that can be like "public/Duck.glb/0"
         if !mesh_mut.loaded {
-            log::info!("Creating fetch request for mesh '{}'", mesh_mut.name);
-            todo!();
+            let scene_name = gltf_resources::get_scene_name(&mesh_mut.name);
+            log::info!(
+                "Creating fetch request for mesh '{}', from file '{}'",
+                mesh_mut.name,
+                scene_name
+            );
+
+            // TODO: Restore asset manifest to keep track of the path instead of just assuming it's at public
+            fetch_bytes(&("public/".to_owned() + scene_name), "glb_resource");
         }
 
         // Note: We don't have to care about provisioning the default materials: They will be loaded with
@@ -315,7 +328,8 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn instantiate_material(
+    /** This is used so that the GLTF import code path can instantiate GLTF materials and swap those with existing temp materials we may have */
+    fn instantiate_material_without_inserting(
         &mut self,
         master: &str,
         name: &str,
@@ -325,20 +339,36 @@ impl ResourceManager {
             return None;
         };
 
-        let instance = Rc::new(RefCell::new(master_mat.unwrap().borrow().clone()));
+        let instance = Rc::new(RefCell::new(master_mat.as_ref().unwrap().borrow().clone()));
 
         let new_name = get_unique_name(remove_numbered_suffix(name), &self.materials);
         instance.borrow_mut().name = new_name.to_owned();
 
         log::info!(
             "Generated material instance '{}' from master '{}'",
-            new_name,
-            master
+            instance.borrow().name,
+            master_mat.unwrap().borrow().name
         );
 
-        self.materials
-            .insert(new_name.to_string(), instance.clone());
         return Some(instance);
+    }
+
+    pub fn instantiate_material(
+        &mut self,
+        master: &str,
+        name: &str,
+    ) -> Option<Rc<RefCell<Material>>> {
+        let instance = self.instantiate_material_without_inserting(master, name);
+        if instance.is_none() {
+            return None;
+        }
+        let instance = instance.unwrap();
+
+        let new_name = &instance.borrow().name;
+        assert!(!self.materials.contains_key(new_name));
+
+        self.materials.insert(new_name.to_owned(), instance.clone());
+        return Some(instance.clone());
     }
 
     pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
@@ -454,6 +484,8 @@ impl ResourceManager {
 
         let ref_mat = Rc::new(RefCell::new(mat.unwrap()));
 
+        assert!(!self.materials.contains_key(identifier));
+
         log::info!("Generated material '{}'", identifier);
         self.materials
             .insert(identifier.to_string(), ref_mat.clone());
@@ -466,14 +498,6 @@ impl ResourceManager {
         bytes: &[u8],
         image_format: Option<ImageFormat>,
     ) {
-        if let Some(_) = self.get_texture(identifier) {
-            log::warn!(
-                "Tried to overwrite a texture with identifier '{}'",
-                identifier
-            );
-            return;
-        }
-
         GLCTX.with(|ctx| {
             let ref_mut = ctx.borrow_mut();
             let ctx = ref_mut.as_ref().unwrap();
@@ -481,7 +505,20 @@ impl ResourceManager {
             match load_texture_from_bytes(identifier, bytes, image_format, &ctx) {
                 Ok(tex) => {
                     log::info!("Generated texture '{}'", identifier);
-                    self.textures.insert(identifier.to_string(), tex.clone());
+
+                    if let Some(existing_tex) = self.textures.get(identifier) {
+                        existing_tex.swap(&tex);
+
+                        log::info!(
+                            "Mutating existing texture resource '{}' with new data",
+                            identifier
+                        );
+                    } else if let Some(_) = self.textures.insert(identifier.to_owned(), tex) {
+                        log::info!(
+                            "Changing tracked material resource for name '{}'",
+                            identifier
+                        );
+                    }
                 }
                 Err(msg) => {
                     log::error!(
@@ -494,7 +531,7 @@ impl ResourceManager {
         });
     }
 
-    pub fn get_texture(&self, identifier: &str) -> Option<Rc<Texture>> {
+    pub fn get_texture(&self, identifier: &str) -> Option<Rc<RefCell<Texture>>> {
         if let Some(tex) = self.textures.get(identifier) {
             return Some(tex.clone());
         }

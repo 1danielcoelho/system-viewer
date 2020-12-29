@@ -37,3 +37,8 @@ impl Transform {
         }
     }
 }
+impl Default for Transform {
+    fn default() -> Self {
+        return Transform::identity();
+    }
+}

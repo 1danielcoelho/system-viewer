@@ -4,9 +4,9 @@
 extern crate lazy_static;
 extern crate nalgebra as na;
 extern crate regex;
+extern crate ron;
 extern crate serde;
 extern crate wasm_bindgen;
-extern crate ron;
 
 use crate::{
     app_state::AppState,
@@ -91,7 +91,7 @@ pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
     // fetch_text("public/ephemerides/test.txt", "ephemerides");
-    // fetch_bytes("public/Duck.glb", "gltf");
+    // fetch_bytes("public/Duck.glb", "glb_inject");
 
     let event_loop = EventLoop::new();
 
@@ -118,17 +118,23 @@ pub async fn start_loop() {
 
 fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
     STATE.with(|s| {
-        let mut ref_mut_s = s.borrow_mut();
-        let s = ref_mut_s.as_mut().unwrap();
+        if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
+            let s = ref_mut_s.as_mut().unwrap();
 
-        update_state(s, window, canvas);
+            update_state(s, window, canvas);
 
-        ENGINE.with(|e| {
-            let mut ref_mut_e = e.borrow_mut();
-            let e = ref_mut_e.as_mut().unwrap();
+            ENGINE.with(|e| {
+                if let Ok(mut ref_mut_e) = e.try_borrow_mut() {
+                    let e = ref_mut_e.as_mut().unwrap();
 
-            e.update(s);
-        });
+                    e.update(s);
+                } else {
+                    log::warn!("Failed to borrow engine for engine update!");
+                }
+            });
+        } else {
+            log::warn!("Failed to borrow app state for engine update!");
+        }
     });
 }
 
@@ -149,7 +155,7 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
         force_full_canvas(&canvas);
 
         log::info!(
-            "Resized to engine: {}, h: {}",
+            "Resized to w: {}, h: {}",
             canvas_width_on_screen,
             canvas_height_on_screen
         );
@@ -171,6 +177,13 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
 /** Synchronous function that JS calls to inject bytes data into the engine because we can't await for a JS promise from within the winit engine loop */
 #[wasm_bindgen]
 pub fn receive_text(url: &str, content_type: &str, text: &str) {
+    log::info!(
+        "Engine received text from url '{}', content type '{}', length: {}",
+        url,
+        content_type,
+        text.len()
+    );
+
     ENGINE.with(|e| {
         let mut ref_mut = e.borrow_mut();
         let e = ref_mut.as_mut().unwrap();
@@ -182,6 +195,13 @@ pub fn receive_text(url: &str, content_type: &str, text: &str) {
 /** Synchronous function that JS calls to inject text data into the engine because we can't await for a JS promise from within the winit engine loop */
 #[wasm_bindgen]
 pub fn receive_bytes(url: &str, content_type: &str, data: &mut [u8]) {
+    log::info!(
+        "Engine received bytes from url '{}', content type '{}', length: {}",
+        url,
+        content_type,
+        data.len()
+    );
+
     ENGINE.with(|e| {
         let mut ref_mut = e.borrow_mut();
         let e = ref_mut.as_mut().unwrap();
@@ -194,5 +214,6 @@ pub fn receive_bytes(url: &str, content_type: &str, data: &mut [u8]) {
 extern "C" {
     pub fn fetch_text(url: &str, content_type: &str);
     pub fn fetch_bytes(url: &str, content_type: &str);
-    pub fn prompt_for_text_file(content_type: &str);
+    pub fn prompt_for_text_file(content_type: &str, extension: &str);
+    pub fn prompt_for_bytes_file(content_type: &str, extension: &str);
 }

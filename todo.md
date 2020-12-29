@@ -211,9 +211,11 @@
 # Scene serialization with serde
 - Need UI for it like some save/open menus
     - Some scene browser UI thing with a list of loaded scenes, allowing injecting/opening them
+<!-- - Derp, I'm overwriting the Rc<Mesh> with a new Rc<Mesh>, but the old one is still alive and being used by the components... -->
 <!-- - GLTF-like, index based RON -->
-- Have to load resources that were serialized with the scene
-- Implement the fetch requests so that we actually receive the assets we requested
+<!-- - Have to load resources that were serialized with the scene -->
+<!-- - Implement the fetch requests so that we actually receive the assets we requested
+    - Have to also expand the "content_type" thing to also signal what to do with the asset when it arrives (e.g. inject it into the scene or not) -->
 <!-- - Don't need to keep re-parsing the ephemerides every time, just do it once to spit out ephemerides and data
     - Store it in some kind of csv: One for planets, one for moons, asteroids, comets, etc. -->
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
@@ -222,9 +224,12 @@
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 <!-- - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing? -->
 
-# Delayed asset loading
+# The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
+    - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
+
+<!-- # Delayed asset loading
 - Maybe I can use serde somehow? I mean, mesh will basically just serialize to the asset name...
-- Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it
+- Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it -->
 
 # Store camera/app state to local storage so that it reloads facing the same location
 

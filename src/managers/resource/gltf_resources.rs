@@ -31,9 +31,9 @@ pub trait GltfResource {
 
 impl GltfResource for gltf::Mesh<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        let mut result = file_identifier.to_owned() + "_mesh_" + &self.index().to_string();
+        let mut result = file_identifier.to_owned() + "/mesh_" + &self.index().to_string();
         if let Some(name) = self.name() {
-            result += &("_".to_owned() + name);
+            result += &("/".to_owned() + name);
         }
 
         return result;
@@ -43,9 +43,9 @@ impl GltfResource for gltf::Mesh<'_> {
 impl GltfResource for gltf::Material<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
         let mut result =
-            file_identifier.to_owned() + "_material_" + &self.index().unwrap().to_string();
+            file_identifier.to_owned() + "/material_" + &self.index().unwrap().to_string();
         if let Some(name) = self.name() {
-            result += &("_".to_owned() + name);
+            result += &("/".to_owned() + name);
         }
 
         return result;
@@ -54,9 +54,9 @@ impl GltfResource for gltf::Material<'_> {
 
 impl GltfResource for gltf::Texture<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        let mut result = file_identifier.to_owned() + "_texture_" + &self.index().to_string();
+        let mut result = file_identifier.to_owned() + "/texture_" + &self.index().to_string();
         if let Some(name) = self.name() {
-            result += &("_".to_owned() + name);
+            result += &("/".to_owned() + name);
         }
 
         return result;
@@ -65,9 +65,9 @@ impl GltfResource for gltf::Texture<'_> {
 
 impl GltfResource for gltf::Node<'_> {
     fn get_identifier(&self, scene_identifier: &str) -> String {
-        let mut result = scene_identifier.to_owned() + "_node_" + &self.index().to_string();
+        let mut result = scene_identifier.to_owned() + "/node_" + &self.index().to_string();
         if let Some(name) = self.name() {
-            result += &("_".to_owned() + name);
+            result += &("/".to_owned() + name);
         }
 
         return result;
@@ -76,13 +76,17 @@ impl GltfResource for gltf::Node<'_> {
 
 impl GltfResource for gltf::Scene<'_> {
     fn get_identifier(&self, file_identifier: &str) -> String {
-        let mut result = file_identifier.to_owned() + "_scene_" + &self.index().to_string();
+        let mut result = file_identifier.to_owned() + "/scene_" + &self.index().to_string();
         if let Some(name) = self.name() {
-            result += &("_".to_owned() + name);
+            result += &("/".to_owned() + name);
         }
 
         return result;
     }
+}
+
+pub fn get_scene_name(resource_name: &str) -> &str {
+    return &resource_name.split("/").take(1).collect::<Vec<&str>>()[0];
 }
 
 impl ResourceManager {
@@ -94,7 +98,9 @@ impl ResourceManager {
         let identifier = material.get_identifier(file_identifier);
         log::info!("\tLoading gltf material '{}'", identifier);
 
-        let mat = self.instantiate_material("gltf_metal_rough", &identifier).unwrap();
+        let mat = self
+            .instantiate_material_without_inserting("gltf_metal_rough", &identifier)
+            .unwrap();
         let mut mat_mut = mat.borrow_mut();
 
         let pbr = material.pbr_metallic_roughness();
@@ -208,7 +214,7 @@ impl ResourceManager {
         materials: gltf::iter::Materials,
     ) -> Vec<Option<Rc<RefCell<Material>>>> {
         log::info!(
-            "Loading {} materials from gltf file {}",
+            "Loading {} materials from gltf file '{}'",
             materials.len(),
             file_identifier
         );
@@ -218,9 +224,20 @@ impl ResourceManager {
 
         for (index, material) in materials.enumerate() {
             match self.load_material_from_gltf(file_identifier, &material) {
-                Ok(new_mat) => {
-                    self.materials
-                        .insert(new_mat.borrow().name.clone(), new_mat.clone());
+                Ok(mut new_mat) => {
+                    let name = new_mat.borrow().name.clone();
+                    if let Some(existing_mat) = self.materials.get(&name) {
+                        existing_mat.swap(&new_mat); // Crap, they're the same!
+                        new_mat = existing_mat.clone();
+                        log::info!(
+                            "Mutating existing material resource '{}' with new data from '{}'",
+                            name,
+                            file_identifier
+                        );
+                    } else if let Some(_) = self.materials.insert(name.clone(), new_mat.clone()) {
+                        log::info!("Changing tracked material resource for name '{}'", name);
+                    }
+
                     result[index] = Some(new_mat.clone());
                 }
                 Err(msg) => {
@@ -242,7 +259,7 @@ impl ResourceManager {
         let identifier = mesh.get_identifier(file_identifier);
 
         log::info!(
-            "\tMesh {}, num_prims: {}",
+            "\tMesh '{}', num_prims: {}",
             identifier,
             mesh.primitives().len()
         );
@@ -530,7 +547,7 @@ impl ResourceManager {
         mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
     ) {
         log::info!(
-            "Loading {} meshes from gltf file {}",
+            "Loading {} meshes from gltf file '{}'",
             meshes.len(),
             file_identifier
         );
@@ -539,7 +556,18 @@ impl ResourceManager {
             match self.load_mesh_from_gltf(file_identifier, &mesh, &buffers, mat_index_to_parsed) {
                 Ok(new_mesh) => {
                     let name = new_mesh.borrow().name.clone();
-                    self.meshes.insert(name, new_mesh);
+
+                    if let Some(existing_mesh) = self.meshes.get(&name) {
+                        existing_mesh.swap(&new_mesh);
+
+                        log::info!(
+                            "Mutating existing mesh resource '{}' with new data from '{}'",
+                            name,
+                            file_identifier
+                        );
+                    } else if let Some(_) = self.meshes.insert(name.clone(), new_mesh) {
+                        log::info!("Changing tracked mesh resource for name '{}'", name);
+                    }
                 }
                 Err(msg) => {
                     log::error!("Failed to load gltf mesh: {}", msg);
@@ -553,7 +581,7 @@ impl ResourceManager {
         texture: &gltf::Texture,
         image_data: &gltf::image::Data,
         ctx: &WebGl2RenderingContext,
-    ) -> Result<Rc<Texture>, String> {
+    ) -> Result<Rc<RefCell<Texture>>, String> {
         let identifier = texture.get_identifier(file_identifier);
         let width = image_data.width;
         let height = image_data.height;
@@ -600,14 +628,14 @@ impl ResourceManager {
 
         ctx.bind_texture(GL::TEXTURE_2D, None);
 
-        return Ok(Rc::new(Texture {
+        return Ok(Rc::new(RefCell::new(Texture {
             name: identifier,
             width,
             height,
             gl_format,
             num_channels,
             gl_handle: Some(gl_handle),
-        }));
+        })));
     }
 
     pub fn load_textures_from_gltf(
@@ -617,7 +645,7 @@ impl ResourceManager {
         images: &Vec<gltf::image::Data>,
     ) {
         log::info!(
-            "Loading {} textures from gltf file {}",
+            "Loading {} textures from gltf file '{}'",
             textures.len(),
             file_identifier
         );
@@ -634,7 +662,21 @@ impl ResourceManager {
                     ctx,
                 ) {
                     Ok(new_tex) => {
-                        self.textures.insert(new_tex.name.clone(), new_tex);
+                        let name = &new_tex.borrow().name;
+
+                        if let Some(existing_tex) = self.textures.get(name) {
+                            existing_tex.swap(&new_tex);
+
+                            log::info!(
+                                "Mutating existing texture resource '{}' with new data from '{}'",
+                                name,
+                                file_identifier
+                            );
+                        } else if let Some(_) =
+                            self.textures.insert(name.to_owned(), new_tex.clone())
+                        {
+                            log::info!("Changing tracked texture resource for name '{}'", name);
+                        }
                     }
                     Err(msg) => {
                         log::error!("Failed to load gltf texture: {}", msg);

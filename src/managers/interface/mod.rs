@@ -2,7 +2,7 @@ use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
     managers::details_ui::DetailsUI,
-    prompt_for_text_file,
+    prompt_for_bytes_file, prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
         web::write_string_to_file_prompt,
@@ -168,12 +168,15 @@ fn draw_main_toolbar(state: &mut AppState, scene: &mut Scene) {
                     }
 
                     if ui.button("Open").clicked {
-                        prompt_for_text_file("scene");
+                        prompt_for_text_file("scene", ".ron");
                     }
 
                     if ui.button("Save").clicked {
                         let ser_str = scene.serialize();
-                        write_string_to_file_prompt(&format!("{}.ron", &scene.identifier), &ser_str);
+                        write_string_to_file_prompt(
+                            &format!("{}.ron", &scene.identifier),
+                            &ser_str,
+                        );
                     }
 
                     ui.separator();
@@ -184,8 +187,8 @@ fn draw_main_toolbar(state: &mut AppState, scene: &mut Scene) {
                 });
 
                 menu::menu(ui, "Edit", |ui| {
-                    if ui.button("New object...").clicked {
-                        log::info!("New object");
+                    if ui.button("Inject GLB...").clicked {
+                        prompt_for_bytes_file("glb_inject", ".glb");
                     }
                 });
 

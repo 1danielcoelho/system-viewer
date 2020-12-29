@@ -72,7 +72,8 @@ impl Engine {
     pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {
         match content_type {
             "texture" => self.receive_texture_bytes(url, data),
-            "gltf" => self.receive_gltf_bytes(url, data),
+            "glb_inject" => self.receive_gltf_bytes(url, data, true),
+            "glb_resource" => self.receive_gltf_bytes(url, data, false),
             _ => log::error!(
                 "Unexpected content_type for receive bytes: '{}'. url: '{}'",
                 content_type,
@@ -220,7 +221,7 @@ impl Engine {
         self.res_man.create_texture(file_identifier, data, None);
     }
 
-    pub fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
+    pub fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8], inject: bool) {
         log::info!(
             "Loading GLTF from file '{}' ({} bytes)",
             file_identifier,
@@ -247,8 +248,17 @@ impl Engine {
                 &mat_index_to_parsed,
             );
 
-            self.scene_man
-                .load_scenes_from_gltf(file_identifier, gltf_doc.scenes(), &self.res_man);
+            let loaded_scenes = self.scene_man.load_scenes_from_gltf(
+                file_identifier,
+                gltf_doc.scenes(),
+                &self.res_man,
+            );
+
+            if inject {
+                for scene in loaded_scenes {
+                    self.scene_man.inject_scene(&scene, None, &mut self.res_man).unwrap();
+                }
+            }
         }
     }
 }

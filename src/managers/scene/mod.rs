@@ -49,6 +49,7 @@ impl SceneManager {
         );
         scene.identifier = unique_scene_name.clone();
 
+        assert!(!self.loaded_scenes.contains_key(&unique_scene_name));
         self.loaded_scenes.insert(unique_scene_name.clone(), scene);
         return self.loaded_scenes.get_mut(&unique_scene_name);
     }
@@ -59,6 +60,7 @@ impl SceneManager {
         let scene = Scene::new(&unique_scene_name);
         log::info!("Created scene '{}'", unique_scene_name);
 
+        assert!(!self.loaded_scenes.contains_key(&unique_scene_name));
         self.loaded_scenes
             .insert(unique_scene_name.to_string(), scene);
         return self.loaded_scenes.get_mut(&unique_scene_name);
@@ -165,7 +167,7 @@ impl SceneManager {
         file_identifier: &str,
         scenes: gltf::iter::Scenes,
         resources: &ResourceManager,
-    ) {
+    ) -> Vec<String> {
         let num_scenes = scenes.len();
         log::info!(
             "Loading {} scenes from gltf file '{}':",
@@ -173,13 +175,16 @@ impl SceneManager {
             file_identifier
         );
 
+        let mut loaded_scene_identifiers: Vec<String> = Vec::new();
+
         for gltf_scene in scenes {
             let num_nodes = gltf_scene.nodes().len();
 
             let scene_identifier = gltf_scene.get_identifier(file_identifier);
             let mut scene = self.new_scene(&scene_identifier).unwrap();
+            let scene_identifier = scene.identifier.clone();
 
-            log::info!("\tScene '{}': {} root nodes", scene_identifier, num_nodes);
+            log::info!("\tScene '{}': {} root nodes", &scene_identifier, num_nodes);
 
             scene.reserve_space_for_entities((num_nodes + 1) as u32);
 
@@ -196,7 +201,11 @@ impl SceneManager {
 
                 scene.set_entity_parent(root_ent, child_ent);
             }
+
+            loaded_scene_identifiers.push(scene_identifier);
         }
+
+        return loaded_scene_identifiers;
     }
 
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
@@ -329,7 +338,11 @@ impl SceneManager {
         // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
         let mut injected_scene_copy = self
             .get_scene(identifier)
-            .ok_or(format!("Failed to find scene to inject '{}'", identifier))?
+            .ok_or(format!(
+                "Failed to find scene to inject '{}'. Available scenes:\n{:#?}",
+                identifier,
+                self.loaded_scenes.keys()
+            ))?
             .clone();
 
         res_man.provision_scene_assets(&mut injected_scene_copy);

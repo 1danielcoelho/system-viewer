@@ -15,6 +15,8 @@ pub struct TransformComponent {
     enabled: bool,
 
     local_transform: Transform,
+
+    #[serde(skip)]
     world_transform: Transform,
 }
 impl TransformComponent {
