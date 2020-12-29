@@ -210,6 +210,7 @@ pub struct Material {
     pub name: String,
 
     // These and defines could technically be &'static str, but being owned simplifies serialization
+    master: String,
     vert: String,
     frag: String,
 
@@ -224,7 +225,7 @@ pub struct Material {
 }
 impl Material {
     pub fn new(
-        name: &str,
+        master: &str,
         vert: &'static str,
         frag: &'static str,
         uniform_names: &[UniformName],
@@ -241,7 +242,8 @@ impl Material {
         }
 
         Self {
-            name: name.to_owned(),
+            name: master.to_owned(),
+            master: master.to_owned(),
             vert: vert.to_owned(),
             frag: frag.to_owned(),
             program: None,
@@ -313,6 +315,10 @@ impl Material {
                 self.defines
             );
         }
+    }
+
+    pub fn get_textures(&self) -> &HashMap<TextureUnit, Rc<Texture>> {
+        return &self.textures;
     }
 
     pub fn set_uniform_value(&mut self, name: UniformName, value: UniformValue) {

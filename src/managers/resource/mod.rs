@@ -1,14 +1,19 @@
 use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
-use crate::GLCTX;
 use crate::{
-    managers::resource::material::UniformName,
+    managers::resource::{material::UniformName, texture::TextureUnit},
     utils::{
         gl::GL,
         string::{get_unique_name, remove_numbered_suffix},
     },
 };
+use crate::{managers::scene::Scene, GLCTX};
 use image::{io::Reader, DynamicImage, ImageFormat};
-use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
+use std::{
+    cell::{RefCell, RefMut},
+    collections::HashMap,
+    io::Cursor,
+    rc::Rc,
+};
 use web_sys::WebGl2RenderingContext;
 
 pub mod collider;
@@ -153,28 +158,105 @@ pub struct ResourceManager {
 }
 impl ResourceManager {
     pub fn new() -> Self {
-        let mut new_res_man = Self {
+        let new_res_man = Self {
             meshes: HashMap::new(),
             textures: HashMap::new(),
             materials: HashMap::new(),
         };
 
-        new_res_man.preload_assets();
-
         return new_res_man;
     }
 
-    /** Don't call this to generate engine meshes/materials on-demand. Call this to make sure they're all loaded in at some point and you can fetch what you need through non-mut refs. */
-    pub fn preload_assets(&mut self) {
-        self.get_or_create_material("default");
-        self.get_or_create_material("world_normals");
-        self.get_or_create_material("world_tangents");
-        self.get_or_create_material("phong");
+    fn provision_texture(&mut self, tex: &Rc<Texture>) -> Option<Rc<Texture>> {
+        if let Some(existing_tex) = self.get_texture(&tex.name) {
+            log::info!("Reusing existing texture '{}'", existing_tex.name);
+            return Some(existing_tex);
+        }
 
-        self.get_or_create_mesh("cube");
-        self.get_or_create_mesh("plane");
-        self.get_or_create_mesh("grid");
-        self.get_or_create_mesh("axes");
+        // TODO: Fetch for this texture data
+        if tex.gl_handle.is_none() {
+            log::info!("Creating fetch request for texture '{}'", tex.name);
+            todo!();
+        }
+
+        log::info!("Keeping temporary texture '{}'", tex.name);
+        self.textures.insert(tex.name.clone(), tex.clone());
+        return None;
+    }
+
+    /** If we have a material with this name already, return that material. Otherwise start tracking this material and provision its textures */
+    fn provision_material(
+        &mut self,
+        mat: &mut Rc<RefCell<Material>>,
+    ) -> Option<Rc<RefCell<Material>>> {
+        let mut mat_mut = mat.borrow_mut();
+        if let Some(existing_mat) = self.get_or_create_material(&mat_mut.name) {
+            log::info!("Reusing existing material '{}'", existing_mat.borrow().name);
+            return Some(existing_mat);
+        }
+
+        // We're creating a new material. Let's request all the textures that it needs
+        let mut requested_textures: HashMap<TextureUnit, Rc<Texture>> = HashMap::new();
+        for (unit, tex) in mat_mut.get_textures().iter() {
+            if let Some(new_tex) = self.provision_texture(&tex) {
+                requested_textures.insert(*unit, new_tex);
+            }
+        }
+        for (unit, tex) in requested_textures.iter() {
+            mat_mut.set_texture(*unit, Some(tex.clone()));
+        }
+
+        log::info!("Keeping material '{}'", mat_mut.name);
+        self.materials.insert(mat_mut.name.clone(), mat.clone());
+        return None;
+    }
+
+    /** Try getting/creating a mesh with the same name. If we have nothing, start tracking this mesh and provision its materials */
+    fn provision_mesh(&mut self, mesh: &mut Rc<RefCell<Mesh>>) -> Option<Rc<RefCell<Mesh>>> {
+        let mesh_mut = mesh.borrow_mut();
+        if let Some(existing_mesh) = self.get_or_create_mesh(&mesh_mut.name) {
+            log::info!("Reusing existing mesh '{}'", existing_mesh.borrow().name);
+            return Some(existing_mesh);
+        }
+
+        // TODO: fetch request for this mesh from its identifier to e.g. try loading it from GLB
+        // Likely will need to either cleave the glb path from the mesh name or start storing
+        // a mesh "source" path, that can be like "public/Duck.glb/0"
+        if !mesh_mut.loaded {
+            log::info!("Creating fetch request for mesh '{}'", mesh_mut.name);
+            todo!();
+        }
+
+        // Note: We don't have to care about provisioning the default materials: They will be loaded with
+        // the mesh, whether the mesh is already existing, or whether we'll load it from the fetch request.
+        // There is no way to specify different "default materials" for a mesh otherwise
+
+        log::info!("Keeping temporary mesh '{}'", mesh_mut.name);
+        self.meshes.insert(mesh_mut.name.clone(), mesh.clone());
+        return None;
+    }
+
+    /** Makes sure we have all the assets that `scene` requires, and that its reference to those assets are deduplicated */
+    pub fn provision_scene_assets(&mut self, scene: &mut Scene) {
+        log::info!("Provisioning assets for scene '{}'...", scene.identifier);
+        for mesh_comp in scene.mesh.iter_mut() {
+            if let Some(mut mesh) = mesh_comp.get_mesh() {
+                // Mesh
+                if let Some(other_mesh) = self.provision_mesh(&mut mesh) {
+                    mesh_comp.set_mesh(Some(other_mesh));
+                }
+
+                // Material overrides
+                let num_mats = mesh.borrow_mut().primitives.len();
+                for mat_index in 0..num_mats {
+                    if let Some(mut over) = mesh_comp.get_material_override(mat_index) {
+                        if let Some(other_mat) = self.provision_material(&mut over) {
+                            mesh_comp.set_material_override(Some(other_mat), mat_index);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn get_mesh(&self, identifier: &str) -> Option<Rc<RefCell<Mesh>>> {

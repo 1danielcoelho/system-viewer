@@ -57,31 +57,31 @@ pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
     html_el.click();
 }
 
-pub async fn fetch_text(url: String) -> String {
-    let mut opts = RequestInit::new();
-    opts.method("GET");
-    opts.mode(RequestMode::Cors);
+// pub async fn fetch_text(url: String) -> String {
+//     let mut opts = RequestInit::new();
+//     opts.method("GET");
+//     opts.mode(RequestMode::Cors);
 
-    let request = Request::new_with_str_and_init(&url, &opts).unwrap();
+//     let request = Request::new_with_str_and_init(&url, &opts).unwrap();
 
-    request.headers().set("Accept", "text/plain").unwrap();
+//     request.headers().set("Accept", "text/plain").unwrap();
 
-    let window = web_sys::window().unwrap();
-    let resp_value = JsFuture::from(window.fetch_with_request(&request))
-        .await
-        .unwrap();
+//     let window = web_sys::window().unwrap();
+//     let resp_value = JsFuture::from(window.fetch_with_request(&request))
+//         .await
+//         .unwrap();
 
-    // `resp_value` is a `Response` object.
-    assert!(resp_value.is_instance_of::<Response>());
-    let resp: Response = resp_value.dyn_into().unwrap();
+//     // `resp_value` is a `Response` object.
+//     assert!(resp_value.is_instance_of::<Response>());
+//     let resp: Response = resp_value.dyn_into().unwrap();
 
-    // Convert this other `Promise` into a rust `Future`.
-    let text = JsFuture::from(resp.text().unwrap()).await.unwrap();
-    let actual_txt = format!("{}", text.as_string().unwrap());
-    log::info!("Response text: {}", actual_txt);
+//     // Convert this other `Promise` into a rust `Future`.
+//     let text = JsFuture::from(resp.text().unwrap()).await.unwrap();
+//     let actual_txt = format!("{}", text.as_string().unwrap());
+//     log::info!("Response text: {}", actual_txt);
 
-    return actual_txt;
-}
+//     return actual_txt;
+// }
 
 /** Sets up the canvas event handlers to change the app_state blackboard */
 pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {

@@ -246,6 +246,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
 
     let result = Rc::new(RefCell::new(Mesh {
         name: inter.name.clone(),
+        loaded: true,
         primitives,
         collider,
     }));

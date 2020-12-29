@@ -213,6 +213,7 @@
     - Some scene browser UI thing with a list of loaded scenes, allowing injecting/opening them
 <!-- - GLTF-like, index based RON -->
 - Have to load resources that were serialized with the scene
+- Implement the fetch requests so that we actually receive the assets we requested
 <!-- - Don't need to keep re-parsing the ephemerides every time, just do it once to spit out ephemerides and data
     - Store it in some kind of csv: One for planets, one for moons, asteroids, comets, etc. -->
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import

@@ -22,6 +22,11 @@ pub enum PrimitiveAttribute {
 pub struct Mesh {
     pub name: String,
 
+    // Set to true when we fill in our primitives. Always initially false when deserializing,
+    // so that somebody tries loading a mesh with or name
+    #[serde(skip)]
+    pub loaded: bool,
+
     #[serde(skip)]
     pub primitives: Vec<Primitive>,
 

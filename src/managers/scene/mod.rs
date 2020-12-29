@@ -3,12 +3,16 @@ use crate::{
     components::{
         light::LightType, LightComponent, MeshComponent, PhysicsComponent, TransformComponent,
     },
-    managers::resource::material::{UniformName, UniformValue},
+    managers::resource::{
+        material::{Material, UniformName, UniformValue},
+        mesh::Mesh,
+        texture::Texture,
+    },
     utils::{string::get_unique_name, transform::Transform},
 };
 use na::{Quaternion, UnitQuaternion, Vector3};
 pub use scene::*;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 mod scene;
 mod serialization;
@@ -303,11 +307,6 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
-    /** Goes through the scene and tries loading/deduplicating all assets that are used by it */
-    fn require_scene_assets(&self, scene: &Scene, res_man: &mut ResourceManager) {
-        //todo!();
-    }
-
     pub fn set_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         if let Some(main) = &self.main {
             if &main[..] == identifier {
@@ -315,8 +314,8 @@ impl SceneManager {
             }
         };
 
-        if let Some(found_scene) = self.get_scene(identifier) {
-            self.require_scene_assets(found_scene, res_man);
+        if let Some(found_scene) = self.get_scene_mut(identifier) {
+            res_man.provision_scene_assets(found_scene);
             self.main = Some(identifier.to_string());
         } else {
             log::warn!("Scene with identifier {} not found!", identifier);
@@ -336,7 +335,7 @@ impl SceneManager {
             .ok_or(format!("Failed to find scene to inject '{}'", identifier))?
             .clone();
 
-        self.require_scene_assets(&injected_scene_copy, res_man);
+        res_man.provision_scene_assets(&mut injected_scene_copy);
 
         let current_scene = self
             .get_main_scene_mut()
