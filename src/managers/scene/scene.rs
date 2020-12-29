@@ -1,6 +1,9 @@
-use crate::components::{
-    component::ComponentStorageType, Component, LightComponent, MeshComponent, PhysicsComponent,
-    TransformComponent,
+use crate::{
+    components::{
+        component::ComponentStorageType, Component, LightComponent, MeshComponent,
+        PhysicsComponent, TransformComponent,
+    },
+    managers::scene::serialization::{EntityIndex, SerEntity, SerScene},
 };
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::{cmp::Reverse, hash::Hash};
@@ -40,9 +43,11 @@ pub struct Scene {
 
     _private: (),
 }
+
+// Main interface
 impl Scene {
-    pub(super) fn new(identifier: &str) -> Scene {
-        Scene {
+    pub(super) fn new(identifier: &str) -> Self {
+        Self {
             identifier: identifier.to_string(),
             entity_storage: Vec::new(),
             free_indices: BinaryHeap::new(),
@@ -57,11 +62,83 @@ impl Scene {
         }
     }
 
+    /** Used when injecting scenes into eachother */
+    pub fn move_from_other(&mut self, mut other_man: Self) {
+        // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
+        // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
+        // packing
+
+        log::info!("Moving from other");
+
+        // Allocate new entities, keep an array of their newly allocated indices
+        let num_other_ents = other_man.get_num_entities();
+        self.reserve_space_for_entities(num_other_ents);
+
+        // Create mapping... maps
+        let mut other_index_to_new_index: Vec<u32> = Vec::new();
+        let mut other_ent_to_new_ent: HashMap<Entity, Entity> = HashMap::new();
+        {
+            let mut other_index_to_new_ent: Vec<Entity> = Vec::new();
+            other_index_to_new_index.resize(num_other_ents as usize, 0);
+            other_index_to_new_ent.resize(num_other_ents as usize, Entity(0));
+
+            for other_index in 0..num_other_ents {
+                let other_name = other_man.get_entity_from_index(other_index).unwrap();
+                let new_ent = self.new_entity(other_man.get_entity_name(other_name));
+                other_index_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
+                other_index_to_new_ent[other_index as usize] = new_ent;
+            }
+
+            for (other_ent, other_index) in other_man.entity_to_index.iter() {
+                other_ent_to_new_ent
+                    .insert(*other_ent, other_index_to_new_ent[*other_index as usize]);
+            }
+        }
+
+        // Replicate parent-child relationships
+        for other_index in 0..num_other_ents {
+            if let Some(other_parent_index) = other_man.get_parent_index_from_index(other_index) {
+                let new_index = other_index_to_new_index[other_index as usize];
+                let new_parent_index = other_index_to_new_index[other_parent_index as usize];
+
+                // TODO: This could be optimized
+                let child_ent = self.get_entity_from_index(new_index).unwrap();
+                let parent_ent = self.get_entity_from_index(new_parent_index).unwrap();
+                self.set_entity_parent(parent_ent, child_ent);
+            }
+        }
+
+        // Move vec component data
+        let highest_new_id = other_index_to_new_index.iter().max().unwrap();
+        self.resize_components((highest_new_id + 1) as usize);
+        for this_index in other_index_to_new_index.iter().rev() {
+            self.physics[*this_index as usize] = other_man.physics.pop().unwrap();
+            self.mesh[*this_index as usize] = other_man.mesh.pop().unwrap();
+            self.transform[*this_index as usize] = other_man.transform.pop().unwrap();
+        }
+
+        // Move hashmap component data
+        // for (other_ent, new_ent) in other_ent_to_new_ent.iter() {
+        //     if let Some(comp) = other_man.interface.remove(other_ent) {
+        //         self.interface.insert(*new_ent, comp);
+        //     }
+        // }
+
+        // TODO: Update entity references in components
+    }
+}
+
+// Entity interface
+impl Scene {
     pub fn reserve_space_for_entities(&mut self, num_new_spaces_to_reserve: u32) {
         let num_missing =
             (num_new_spaces_to_reserve as i64 - self.free_indices.len() as i64).max(0);
 
         self.entity_storage.reserve(num_missing as usize);
+        self.physics.reserve(num_missing as usize);
+        self.transform.reserve(num_missing as usize);
+        self.mesh.reserve(num_missing as usize);
+        self.light.reserve(num_missing as usize);
     }
 
     fn new_entity_at_index(&mut self, entity_storage_index: u32, name: Option<&str>) -> Entity {
@@ -405,71 +482,6 @@ impl Scene {
         self.entity_storage
             .swap(source_index as usize, target_index as usize);
     }
-
-    /** Used when injecting scenes into eachother */
-    pub fn move_from_other(&mut self, mut other_man: Self) {
-        // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
-        // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
-        // packing
-
-        log::info!("Moving from other");
-
-        // Allocate new entities, keep an array of their newly allocated indices
-        let num_other_ents = other_man.get_num_entities();
-        self.reserve_space_for_entities(num_other_ents);
-
-        // Create mapping... maps
-        let mut other_index_to_new_index: Vec<u32> = Vec::new();
-        let mut other_ent_to_new_ent: HashMap<Entity, Entity> = HashMap::new();
-        {
-            let mut other_index_to_new_ent: Vec<Entity> = Vec::new();
-            other_index_to_new_index.resize(num_other_ents as usize, 0);
-            other_index_to_new_ent.resize(num_other_ents as usize, Entity(0));
-
-            for other_index in 0..num_other_ents {
-                let other_name = other_man.get_entity_from_index(other_index).unwrap();
-                let new_ent = self.new_entity(other_man.get_entity_name(other_name));
-                other_index_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
-                other_index_to_new_ent[other_index as usize] = new_ent;
-            }
-
-            for (other_ent, other_index) in other_man.entity_to_index.iter() {
-                other_ent_to_new_ent
-                    .insert(*other_ent, other_index_to_new_ent[*other_index as usize]);
-            }
-        }
-
-        // Replicate parent-child relationships
-        for other_index in 0..num_other_ents {
-            if let Some(other_parent_index) = other_man.get_parent_index_from_index(other_index) {
-                let new_index = other_index_to_new_index[other_index as usize];
-                let new_parent_index = other_index_to_new_index[other_parent_index as usize];
-
-                // TODO: This could be optimized
-                let child_ent = self.get_entity_from_index(new_index).unwrap();
-                let parent_ent = self.get_entity_from_index(new_parent_index).unwrap();
-                self.set_entity_parent(parent_ent, child_ent);
-            }
-        }
-
-        // Move vec component data
-        let highest_new_id = other_index_to_new_index.iter().max().unwrap();
-        self.resize_components((highest_new_id + 1) as usize);
-        for this_index in other_index_to_new_index.iter().rev() {
-            self.physics[*this_index as usize] = other_man.physics.pop().unwrap();
-            self.mesh[*this_index as usize] = other_man.mesh.pop().unwrap();
-            self.transform[*this_index as usize] = other_man.transform.pop().unwrap();
-        }
-
-        // Move hashmap component data
-        // for (other_ent, new_ent) in other_ent_to_new_ent.iter() {
-        //     if let Some(comp) = other_man.interface.remove(other_ent) {
-        //         self.interface.insert(*new_ent, comp);
-        //     }
-        // }
-
-        // TODO: Update entity references in components
-    }
 }
 
 // Component interface
@@ -563,5 +575,139 @@ impl Scene {
         self.physics.resize_with(min_length, Default::default);
         self.mesh.resize_with(min_length, Default::default);
         self.transform.resize_with(min_length, Default::default);
+    }
+}
+
+// Serialization interface
+impl Scene {
+    /** Internal use. Use SceneManager::deserialize_scene */
+    pub(super) fn deserialize(ron_str: &str) -> Result<Self, String> {
+        let mut ser_scene: SerScene = ron::de::from_str(ron_str)
+            .map_err(|e| format!("RON Deserialization error:\n{}", e).to_owned())?;
+
+        let mut new_scene = Self::new(ser_scene.identifier);
+        new_scene.reserve_space_for_entities(ser_scene.entities.len() as u32);
+
+        // First add entries for all entities
+        for ser_ent in ser_scene.entities.iter() {
+            new_scene.new_entity(ser_ent.name);
+        }
+
+        // Parent/child relationships
+        for (index, ser_ent) in ser_scene.entities.iter().enumerate() {
+            if ser_ent.parent.is_none() {
+                continue;
+            }
+
+            new_scene.set_entity_parent(
+                new_scene
+                    .get_entity_from_index(ser_ent.parent.unwrap().0)
+                    .unwrap(),
+                new_scene.get_entity_from_index(index as u32).unwrap(),
+            );
+        }
+
+        // Assume the entities are packed like the serialized version and just copy the vec components
+        new_scene.physics = ser_scene.physics;
+        new_scene.mesh = ser_scene.mesh;
+        new_scene.transform = ser_scene.transform;
+
+        // Move over hashmap components
+        new_scene.light = ser_scene
+            .light
+            .drain()
+            .map(|(index, comp)| (new_scene.get_entity_from_index(index.0).unwrap(), comp))
+            .collect();
+
+        return Ok(new_scene);
+    }
+
+    pub fn serialize(&self) -> String {
+        let mut ser_scene = SerScene {
+            identifier: &self.identifier,
+            entities: Vec::new(),
+            physics: self.physics.clone(),
+            mesh: self.mesh.clone(),
+            transform: self.transform.clone(),
+            light: HashMap::new(),
+        };
+
+        // TODO: Its probably more efficient to use live_indices for this and do a scan/rolling sum thing
+        let mut index_to_packed_index: HashMap<u32, u32> = HashMap::new();
+
+        let mut live_indices: Vec<bool> = Vec::new();
+        live_indices.resize(self.entity_storage.len(), true);
+
+        ser_scene.entities.reserve(self.entity_storage.len());
+
+        // Add packed entities, still carrying indices into the scene vecs/maps
+        let mut packed_entities = 0;
+        for (index, entry) in self.entity_storage.iter().enumerate() {
+            if !entry.live {
+                live_indices[index] = false;
+                continue;
+            }
+
+            let parent_index = entry.parent.and_then(|p| self.get_entity_index(p));
+            let child_indices: Vec<EntityIndex> = entry
+                .children
+                .iter()
+                .map(|c| EntityIndex(self.get_entity_index(*c).unwrap()))
+                .collect();
+
+            ser_scene.entities.push(SerEntity {
+                name: entry.name.as_ref().and_then(|n| Some(n.as_ref())),
+                index: EntityIndex(index as u32),
+                parent: parent_index.and_then(|p| Some(EntityIndex(p))),
+                children: child_indices,
+            });
+
+            index_to_packed_index.insert(index as u32, packed_entities);
+            packed_entities += 1;
+        }
+
+        // Now that entities are packed, update the indices stored on the entities as well
+        for ent in ser_scene.entities.iter_mut() {
+            ent.parent = ent
+                .parent
+                .and_then(|p| Some(EntityIndex(index_to_packed_index[&p.0])));
+
+            ent.children = ent
+                .children
+                .iter()
+                .map(|c| EntityIndex(index_to_packed_index[&c.0]))
+                .collect();
+        }
+
+        // Pack vec components
+        let mut index = 0;
+        ser_scene.physics.retain(|_| {
+            let keep = live_indices[index];
+            index += 1;
+            return keep;
+        });
+        let mut index = 0;
+        ser_scene.mesh.retain(|_| {
+            let keep = live_indices[index];
+            index += 1;
+            return keep;
+        });
+        let mut index = 0;
+        ser_scene.transform.retain(|_| {
+            let keep = live_indices[index];
+            index += 1;
+            return keep;
+        });
+
+        // Pack hashmap components
+        ser_scene.light.reserve(self.light.len());
+        for (ent, comp) in self.light.iter() {
+            let scene_index = self.get_entity_index(*ent).unwrap();
+            let ser_index = index_to_packed_index[&scene_index];
+
+            ser_scene.light.insert(EntityIndex(ser_index), comp.clone());
+        }
+
+        return ron::ser::to_string_pretty(&ser_scene, ron::ser::PrettyConfig::new()).unwrap();
     }
 }

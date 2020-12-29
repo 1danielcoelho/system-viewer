@@ -4,8 +4,9 @@ use super::{
 };
 use crate::managers::{details_ui::DetailsUI, scene::Scene};
 use na::{Matrix3, Vector3};
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PhysicsComponent {
     enabled: bool,
     pub collision_enabled: bool,

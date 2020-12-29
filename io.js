@@ -24,7 +24,7 @@ export function fetch_bytes(url, content_type) {
 export function prompt_for_text_file(content_type) {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
-  fileInput.accept = ".json";
+  fileInput.accept = ".ron";
 
   fileInput.addEventListener("change", (e) => {
     if (fileInput.files && fileInput.files[0]) {

@@ -8,8 +8,9 @@ use crate::{
 };
 use egui::{Align, Layout, Ui};
 use na::{Quaternion, UnitQuaternion, Vector3};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransformComponent {
     enabled: bool,
 

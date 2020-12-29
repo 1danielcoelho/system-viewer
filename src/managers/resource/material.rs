@@ -7,6 +7,7 @@ use crate::{
     utils::gl::GL,
 };
 use egui::{Align, Layout, Ui};
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Rc};
 use web_sys::*;
 
@@ -19,7 +20,7 @@ pub struct FrameUniformValues {
     pub camera_pos: [f32; 3],
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UniformName {
     WorldTrans,
     WorldTransInvTranspose,
@@ -102,7 +103,7 @@ impl UniformName {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UniformValue {
     Float(f32),
     Int(i32),
@@ -117,15 +118,17 @@ pub enum UniformValue {
     Vec4Arr(Vec<f32>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Uniform {
     pub value: UniformValue,
+
+    #[serde(skip)]
     pub location: Option<WebGlUniformLocation>,
 }
 
 fn link_program(
     gl: &WebGl2RenderingContext,
-    prefix_lines: &[&str],
+    prefix_lines: &[String],
     vert_source: &str,
     frag_source: &str,
 ) -> Result<WebGlProgram, String> {
@@ -174,7 +177,7 @@ fn link_program(
 fn compile_shader(
     gl: &WebGl2RenderingContext,
     shader_type: u32,
-    prefix_lines: &[&str],
+    prefix_lines: &[String],
     source: &str,
 ) -> Result<WebGlShader, String> {
     let final_source = "#version 300 es\n".to_owned() + &prefix_lines.join("\n") + "\n" + source;
@@ -202,34 +205,23 @@ fn compile_shader(
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Material {
     pub name: String,
 
-    vert: &'static str,
-    frag: &'static str,
+    // These and defines could technically be &'static str, but being owned simplifies serialization
+    vert: String,
+    frag: String,
+
+    #[serde(skip)]
     program: Option<WebGlProgram>,
+
     textures: HashMap<TextureUnit, Rc<Texture>>,
     uniforms: HashMap<UniformName, Uniform>,
-    defines: Vec<&'static str>,
+    defines: Vec<String>,
 
     failed_to_compile: bool,
 }
-
-impl Clone for Material {
-    fn clone(&self) -> Self {
-        Self {
-            name: self.name.clone(),
-            vert: self.vert,
-            frag: self.frag,
-            program: self.program.clone(),
-            textures: self.textures.clone(),
-            uniforms: self.uniforms.clone(),
-            defines: self.defines.clone(),
-            failed_to_compile: false, // Maybe the clone can do it somehow?
-        }
-    }
-}
-
 impl Material {
     pub fn new(
         name: &str,
@@ -250,8 +242,8 @@ impl Material {
 
         Self {
             name: name.to_owned(),
-            vert,
-            frag,
+            vert: vert.to_owned(),
+            frag: frag.to_owned(),
             program: None,
             textures: HashMap::new(),
             uniforms,
@@ -265,7 +257,7 @@ impl Material {
             return;
         }
 
-        let program = link_program(gl, &self.defines, self.vert, self.frag);
+        let program = link_program(gl, &self.defines, &self.vert, &self.frag);
         if program.is_err() {
             log::error!(
                 "Error compiling material '{}': '{}'",
@@ -285,7 +277,7 @@ impl Material {
     }
 
     pub fn set_define(&mut self, define: &'static str) {
-        self.defines.push(define);
+        self.defines.push(define.to_owned());
         self.program = None;
         self.failed_to_compile = false;
     }

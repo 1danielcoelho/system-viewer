@@ -7,15 +7,16 @@ use crate::managers::{
     scene::{Entity, Scene},
 };
 use na::Vector3;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum LightType {
     Point = 0,
     Directional = 1,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LightComponent {
     enabled: bool,
 

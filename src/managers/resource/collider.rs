@@ -3,7 +3,7 @@ use crate::utils::raycasting::{
     aabb_ray_intersection, sphere_ray_intersection, triangle_ray_intersection, Ray,
 };
 use na::{Point3, Vector3};
-use std::{cell::RefCell, rc::Weak};
+use std::{cell::RefCell, fmt, rc::Weak};
 
 // Trick from https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object
 // to have clonable trait objects
@@ -24,7 +24,7 @@ impl Clone for Box<dyn Collider> {
     }
 }
 
-pub trait Collider: ColliderClone {
+pub trait Collider: ColliderClone + fmt::Debug {
     fn intersects(&self, ray: &Ray) -> f32; // Distance along ray to the intersection point
     fn contains(&self, point: &Point3<f32>) -> bool;
 
@@ -44,7 +44,7 @@ pub trait Collider: ColliderClone {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CompoundCollider {
     pub colliders: Vec<Box<dyn Collider>>,
 }
@@ -69,7 +69,7 @@ impl Collider for CompoundCollider {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct AxisAlignedBoxCollider {
     pub mins: Point3<f32>,
     pub maxes: Point3<f32>,
@@ -89,7 +89,7 @@ impl Collider for AxisAlignedBoxCollider {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SphereCollider {
     pub center: Point3<f32>,
     pub radius2: f32,
@@ -104,7 +104,7 @@ impl Collider for SphereCollider {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct MeshCollider {
     // This can't be Rc as meshes can use themselves as their colliders
     pub mesh: Weak<RefCell<Mesh>>,

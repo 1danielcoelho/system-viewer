@@ -30,7 +30,9 @@ impl Engine {
         new_engine
             .scene_man
             .load_test_scene("test", &mut new_engine.res_man);
-        new_engine.scene_man.set_scene("test");
+        new_engine
+            .scene_man
+            .set_scene("test", &mut new_engine.res_man);
 
         return new_engine;
     }
@@ -53,6 +55,9 @@ impl Engine {
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
         match content_type {
             "ephemerides" => self.receive_ephemerides_text(url, text),
+            "scene" => {
+                let scene = self.scene_man.deserialize_scene(text);
+            }
             _ => log::error!(
                 "Unexpected content_type for receive_text: '{}'. url: '{}'",
                 content_type,

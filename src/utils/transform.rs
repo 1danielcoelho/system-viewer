@@ -1,8 +1,9 @@
 use na::{Isometry3, Matrix4, Translation3, UnitQuaternion, Vector3};
+use serde::{Deserialize, Serialize};
 
 // Heavily based off of how Amethyst has a custom wrapper over nalgebra stuff: https://docs.amethyst.rs/stable/src/amethyst_core/transform/components/transform.rs.html#500-508
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Transform {
     pub trans: Vector3<f32>,
     pub rot: UnitQuaternion<f32>,

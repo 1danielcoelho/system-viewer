@@ -8,9 +8,10 @@ use crate::managers::{
     scene::Scene,
 };
 use egui::Ui;
+use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeshComponent {
     enabled: bool,
 

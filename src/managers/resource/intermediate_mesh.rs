@@ -16,6 +16,7 @@ pub struct IntermediateMesh {
     pub primitives: Vec<IntermediatePrimitive>,
 }
 
+#[derive(Debug)]
 pub struct IntermediatePrimitive {
     pub name: String,
 

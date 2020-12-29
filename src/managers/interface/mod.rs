@@ -102,7 +102,7 @@ impl InterfaceManager {
 }
 
 fn draw_main_ui(state: &mut AppState, scene: &mut Scene) {
-    draw_main_toolbar(state);
+    draw_main_toolbar(state, scene);
 
     draw_test_widget(state, scene);
 }
@@ -155,7 +155,7 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
     }
 }
 
-fn draw_main_toolbar(state: &mut AppState) {
+fn draw_main_toolbar(state: &mut AppState, scene: &mut Scene) {
     UICTX.with(|ui| {
         let ref_mut = ui.borrow_mut();
         let ui = ref_mut.as_ref().unwrap();
@@ -168,11 +168,12 @@ fn draw_main_toolbar(state: &mut AppState) {
                     }
 
                     if ui.button("Open").clicked {
-                        prompt_for_text_file("ephemerides");
+                        prompt_for_text_file("scene");
                     }
 
                     if ui.button("Save").clicked {
-                        write_string_to_file_prompt("test.json", "my test data");
+                        let ser_str = scene.serialize();
+                        write_string_to_file_prompt(&format!("{}.ron", &scene.identifier), &ser_str);
                     }
 
                     ui.separator();

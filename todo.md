@@ -211,16 +211,18 @@
 # Scene serialization with serde
 - Need UI for it like some save/open menus
     - Some scene browser UI thing with a list of loaded scenes, allowing injecting/opening them
-- GLTF-like, index based RON
+<!-- - GLTF-like, index based RON -->
+- Have to load resources that were serialized with the scene
 <!-- - Don't need to keep re-parsing the ephemerides every time, just do it once to spit out ephemerides and data
     - Store it in some kind of csv: One for planets, one for moons, asteroids, comets, etc. -->
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
     - Also store other stuff like mass, magnitude, rotation info
 <!-- - What to do with resources like meshes and textures? Export a binary blob?
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
-- What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing?
+<!-- - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing? -->
 
 # Delayed asset loading
+- Maybe I can use serde somehow? I mean, mesh will basically just serialize to the asset name...
 - Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it
 
 # Store camera/app state to local storage so that it reloads facing the same location

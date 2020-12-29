@@ -4,13 +4,14 @@ use crate::{
         light::LightType, LightComponent, MeshComponent, PhysicsComponent, TransformComponent,
     },
     managers::resource::material::{UniformName, UniformValue},
-    utils::transform::Transform,
+    utils::{string::get_unique_name, transform::Transform},
 };
 use na::{Quaternion, UnitQuaternion, Vector3};
 pub use scene::*;
 use std::collections::HashMap;
 
 mod scene;
+mod serialization;
 
 pub struct SceneManager {
     main: Option<String>,
@@ -24,13 +25,39 @@ impl SceneManager {
         };
     }
 
+    pub fn deserialize_scene(&mut self, ron_str: &str) -> Option<&mut Scene> {
+        let scene = Scene::deserialize(ron_str);
+        if scene.is_err() {
+            log::error!(
+                "Failed to deserialize scene. Error:\n{}",
+                scene.err().unwrap()
+            );
+            return None;
+        }
+        let mut scene = scene.unwrap();
+
+        let unique_scene_name = get_unique_name(&scene.identifier, &self.loaded_scenes);
+
+        log::info!(
+            "Deserialized scene with name '{}'. New name: '{}'",
+            &scene.identifier,
+            unique_scene_name
+        );
+        scene.identifier = unique_scene_name.clone();
+
+        self.loaded_scenes.insert(unique_scene_name.clone(), scene);
+        return self.loaded_scenes.get_mut(&unique_scene_name);
+    }
+
     pub fn new_scene(&mut self, scene_name: &str) -> Option<&mut Scene> {
-        let scene = Scene::new(&scene_name);
-        self.loaded_scenes.insert(scene_name.to_string(), scene);
+        let unique_scene_name = get_unique_name(scene_name, &self.loaded_scenes);
 
-        log::info!("Created scene '{}'", scene_name);
+        let scene = Scene::new(&unique_scene_name);
+        log::info!("Created scene '{}'", unique_scene_name);
 
-        return self.loaded_scenes.get_mut(scene_name);
+        self.loaded_scenes
+            .insert(unique_scene_name.to_string(), scene);
+        return self.loaded_scenes.get_mut(&unique_scene_name);
     }
 
     pub fn get_main_scene(&self) -> Option<&Scene> {
@@ -214,7 +241,9 @@ impl SceneManager {
 
         // Planet orbit
         let planet_orbit = scene.new_entity(Some("orbit"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet_orbit).unwrap();
+        let trans_comp = scene
+            .add_component::<TransformComponent>(planet_orbit)
+            .unwrap();
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
         let mesh_comp = scene.add_component::<MeshComponent>(planet_orbit).unwrap();
@@ -222,8 +251,12 @@ impl SceneManager {
 
         // Moon orbit center
         let planet_bary = scene.new_entity(Some("center"));
-        scene.add_component::<TransformComponent>(planet_bary).unwrap();
-        let physics = scene.add_component::<PhysicsComponent>(planet_bary).unwrap();
+        scene
+            .add_component::<TransformComponent>(planet_bary)
+            .unwrap();
+        let physics = scene
+            .add_component::<PhysicsComponent>(planet_bary)
+            .unwrap();
         physics.ang_mom = Vector3::new(0.0, 0.0, 0.86);
         scene.set_entity_parent(planet, planet_bary);
 
@@ -270,14 +303,20 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
-    pub fn set_scene(&mut self, identifier: &str) {
+    /** Goes through the scene and tries loading/deduplicating all assets that are used by it */
+    fn require_scene_assets(&self, scene: &Scene, res_man: &mut ResourceManager) {
+        //todo!();
+    }
+
+    pub fn set_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         if let Some(main) = &self.main {
             if &main[..] == identifier {
                 return;
             }
         };
 
-        if let Some(_found_scene) = self.get_scene(identifier) {
+        if let Some(found_scene) = self.get_scene(identifier) {
+            self.require_scene_assets(found_scene, res_man);
             self.main = Some(identifier.to_string());
         } else {
             log::warn!("Scene with identifier {} not found!", identifier);
@@ -289,12 +328,15 @@ impl SceneManager {
         &mut self,
         identifier: &str,
         target_transform: Option<Transform>,
+        res_man: &mut ResourceManager,
     ) -> Result<(), String> {
         // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
         let mut injected_scene_copy = self
             .get_scene(identifier)
             .ok_or(format!("Failed to find scene to inject '{}'", identifier))?
             .clone();
+
+        self.require_scene_assets(&injected_scene_copy, res_man);
 
         let current_scene = self
             .get_main_scene_mut()

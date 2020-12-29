@@ -4,6 +4,7 @@ use crate::{
     },
     utils::gl::GL,
 };
+use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlVertexArrayObject;
@@ -17,9 +18,14 @@ pub enum PrimitiveAttribute {
     UV1 = 5,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Mesh {
     pub name: String,
+
+    #[serde(skip)]
     pub primitives: Vec<Primitive>,
+
+    #[serde(skip)]
     pub collider: Option<Box<dyn Collider>>,
 }
 impl PartialEq for Mesh {
@@ -28,6 +34,7 @@ impl PartialEq for Mesh {
     }
 }
 
+#[derive(Debug)]
 pub struct Primitive {
     pub name: String,
 

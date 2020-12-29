@@ -4,7 +4,9 @@
 extern crate lazy_static;
 extern crate nalgebra as na;
 extern crate regex;
+extern crate serde;
 extern crate wasm_bindgen;
+extern crate ron;
 
 use crate::{
     app_state::AppState,
