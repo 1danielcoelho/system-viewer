@@ -208,9 +208,22 @@
 <!-- # Note: Rotation3::from_matrix -->
 <!-- # Try offsetting periapsis before transformation and compare -->
 
+# Scene manager thing
+- Dedicated window that can list all loaded_scenes
+    - Show info like scene name, metadata, how many entities
+    - Button to inject the scene at some location
+    - Button to open the scene as a new scene
+    - Button to delete scene
+
+# Use this pattern to combine responses from egui widgets:
+ui.horizontal(|ui| {
+        let mut response = combo_box(ui, button_id, selected, menu_contents);
+        response |= ui.add(label);
+        response
+    })
+    .0
+
 # Scene serialization with serde
-- Need UI for it like some save/open menus
-    - Some scene browser UI thing with a list of loaded scenes, allowing injecting/opening them
 <!-- - Derp, I'm overwriting the Rc<Mesh> with a new Rc<Mesh>, but the old one is still alive and being used by the components... -->
 <!-- - GLTF-like, index based RON -->
 <!-- - Have to load resources that were serialized with the scene -->
@@ -232,6 +245,8 @@
 - Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it -->
 
 # Store camera/app state to local storage so that it reloads facing the same location
+
+# I can tweak the egui visuals a bit. Check out the demo app menus on the left
 
 # Try setting up a simple orbit scene on rails/with physics
 - Rails movement
@@ -270,6 +285,7 @@
 # I kind of really need to use f64 everywhere
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
+- Demo app has an x seconds per frame thing on the left which is just what I need
 # I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
 <!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
 # Cubemap texture for the skybox

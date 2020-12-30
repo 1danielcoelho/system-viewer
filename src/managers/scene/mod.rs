@@ -20,12 +20,16 @@ mod serialization;
 pub struct SceneManager {
     main: Option<String>,
     loaded_scenes: HashMap<String, Scene>,
+
+    // Used for UI, kept in sync with loaded_scenes
+    pub sorted_loaded_scene_names: Vec<String>,
 }
 impl SceneManager {
     pub fn new() -> Self {
         return Self {
             main: None,
             loaded_scenes: HashMap::new(),
+            sorted_loaded_scene_names: Vec::new(),
         };
     }
 
@@ -50,8 +54,14 @@ impl SceneManager {
         scene.identifier = unique_scene_name.clone();
 
         assert!(!self.loaded_scenes.contains_key(&unique_scene_name));
+
         self.loaded_scenes.insert(unique_scene_name.clone(), scene);
-        return self.loaded_scenes.get_mut(&unique_scene_name);
+        let scene_in_storage = self.loaded_scenes.get_mut(&unique_scene_name);
+
+        self.sorted_loaded_scene_names.push(unique_scene_name);
+        self.sorted_loaded_scene_names.sort();
+
+        return scene_in_storage;
     }
 
     pub fn new_scene(&mut self, scene_name: &str) -> Option<&mut Scene> {
@@ -61,13 +71,23 @@ impl SceneManager {
         log::info!("Created scene '{}'", unique_scene_name);
 
         assert!(!self.loaded_scenes.contains_key(&unique_scene_name));
+
         self.loaded_scenes
             .insert(unique_scene_name.to_string(), scene);
-        return self.loaded_scenes.get_mut(&unique_scene_name);
+        let scene_in_storage = self.loaded_scenes.get_mut(&unique_scene_name);
+
+        self.sorted_loaded_scene_names.push(unique_scene_name);
+        self.sorted_loaded_scene_names.sort();
+
+        return scene_in_storage;
+    }
+
+    pub fn get_main_scene_name(&self) -> &Option<String> {
+        return &self.main;
     }
 
     pub fn get_main_scene(&self) -> Option<&Scene> {
-        match self.main.as_ref() {
+        match self.get_main_scene_name() {
             Some(ident_ref) => self.get_scene(ident_ref),
             None => None,
         }

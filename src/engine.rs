@@ -40,10 +40,10 @@ impl Engine {
     pub fn update(&mut self, state: &mut AppState) {
         self.input_man.run(state);
 
-        if let Some(scene) = self.scene_man.get_main_scene_mut() {
-            // Startup the UI frame, collecting UI elements
-            self.int_man.begin_frame(state, scene);
+        // Startup the UI frame, collecting UI elements
+        self.int_man.begin_frame(state, &mut self.scene_man);
 
+        if let Some(scene) = self.scene_man.get_main_scene_mut() {
             // Run all systems
             self.sys_man.run(state, scene);
 
@@ -256,7 +256,9 @@ impl Engine {
 
             if inject {
                 for scene in loaded_scenes {
-                    self.scene_man.inject_scene(&scene, None, &mut self.res_man).unwrap();
+                    self.scene_man
+                        .inject_scene(&scene, None, &mut self.res_man)
+                        .unwrap();
                 }
             }
         }
