@@ -207,21 +207,16 @@
 - I can probably just use build.rs to compile the manifest file automatically -->
 <!-- # Note: Rotation3::from_matrix -->
 <!-- # Try offsetting periapsis before transformation and compare -->
-
-# Scene manager thing
+<!-- # Scene manager thing
 - Dedicated window that can list all loaded_scenes
     - Show info like scene name, metadata, how many entities
     - Button to inject the scene at some location
     - Button to open the scene as a new scene
-    - Button to delete scene
-
-# Use this pattern to combine responses from egui widgets:
-ui.horizontal(|ui| {
-        let mut response = combo_box(ui, button_id, selected, menu_contents);
-        response |= ui.add(label);
-        response
-    })
-    .0
+    - Button to delete scene -->
+<!-- # Note: Use this pattern to combine responses from egui widgets:
+let mut response = combo_box(ui, button_id, selected, menu_contents);
+response |= ui.add(label);
+-->
 
 # Scene serialization with serde
 <!-- - Derp, I'm overwriting the Rc<Mesh> with a new Rc<Mesh>, but the old one is still alive and being used by the components... -->

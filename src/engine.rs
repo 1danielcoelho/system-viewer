@@ -41,7 +41,8 @@ impl Engine {
         self.input_man.run(state);
 
         // Startup the UI frame, collecting UI elements
-        self.int_man.begin_frame(state, &mut self.scene_man);
+        self.int_man
+            .begin_frame(state, &mut self.scene_man, &mut self.res_man);
 
         if let Some(scene) = self.scene_man.get_main_scene_mut() {
             // Run all systems

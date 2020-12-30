@@ -1,7 +1,7 @@
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, TransformComponent},
-    managers::{details_ui::DetailsUI, scene::SceneManager},
+    managers::{details_ui::DetailsUI, scene::SceneManager, ResourceManager},
     prompt_for_bytes_file, prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
@@ -10,8 +10,8 @@ use crate::{
 };
 use crate::{managers::scene::Scene, UICTX};
 use egui::{
-    combo_box_with_label, menu, Align, Button, Id, LayerId, Layout, Pos2, Resize, Response,
-    ScrollArea, TextStyle, TopPanel, Ui,
+    combo_box_with_label, menu, Align, Button, CollapsingHeader, Frame, Id, LayerId, Layout, Pos2,
+    Resize, Response, ScrollArea, TextStyle, TopPanel, Ui,
 };
 use gui_backend::WebInput;
 use na::{Matrix4, Point3, Vector3};
@@ -65,10 +65,15 @@ impl InterfaceManager {
      * This runs before all systems, and starts collecting all the UI elements we'll draw, as
      * well as draws the main UI
      */
-    pub fn begin_frame(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
+    pub fn begin_frame(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
         self.pre_draw(state);
 
-        self.draw_main_ui(state, scene_man);
+        self.draw_main_ui(state, scene_man, res_man);
     }
 
     /** This runs after all systems, and draws the collected UI elements to the framebuffer */
@@ -115,10 +120,15 @@ impl InterfaceManager {
         self.backend.paint(paint_jobs).expect("Failed to paint!");
     }
 
-    fn draw_main_ui(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
+    fn draw_main_ui(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
         self.draw_main_toolbar(state, scene_man);
 
-        self.draw_open_windows(state, scene_man);
+        self.draw_open_windows(state, scene_man, res_man);
     }
 
     fn draw_main_toolbar(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -215,9 +225,14 @@ impl InterfaceManager {
         });
     }
 
-    fn draw_open_windows(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
+    fn draw_open_windows(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
         self.draw_debug_window(state, scene_man);
-        self.draw_scene_manager_window(state, scene_man);
+        self.draw_scene_manager_window(state, scene_man, res_man);
     }
 
     fn draw_debug_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -359,7 +374,12 @@ impl InterfaceManager {
         });
     }
 
-    fn draw_scene_manager_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
+    fn draw_scene_manager_window(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
@@ -374,17 +394,18 @@ impl InterfaceManager {
                 .show(&ui.ctx(), |ui| {
                     ui.columns(2, |cols| {
                         cols[0].set_min_height(300.0);
-                        cols[0].label("Loaded scenes: ");
+                        cols[1].set_min_height(300.0);
 
-                        ScrollArea::from_max_height(std::f32::INFINITY)
-                            .always_show_scroll(true)
-                            .show(&mut cols[0], |ui| {
-                                // TODO: This whole thing is terribly inefficient and filled with copies
-                                let main_name = scene_man
-                                    .get_main_scene_name()
-                                    .as_ref()
-                                    .and_then(|s| Some(s.clone()))
-                                    .unwrap_or_default();
+                        let main_name = scene_man
+                            .get_main_scene_name()
+                            .as_ref()
+                            .and_then(|s| Some(s.clone()))
+                            .unwrap_or_default();
+
+                        Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
+                            ui.set_min_height(ui.available_size().y);
+
+                            ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
                                 if self.selected_scene_name.is_empty() {
                                     self.selected_scene_name = main_name.clone();
                                 }
@@ -398,8 +419,53 @@ impl InterfaceManager {
                                     });
                                 }
                             });
+                        });
 
-                        cols[1].label("Selected scene details: ");
+                        if let Some(scene) = scene_man.get_scene(&self.selected_scene_name) {
+                            CollapsingHeader::new("Selected scene:")
+                                .default_open(true)
+                                .show(&mut cols[1], |ui| {
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Name:");
+                                        cols[1].label(&scene.identifier);
+                                    });
+
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Entities:");
+                                        cols[1].label(format!("{}", scene.get_num_entities()));
+                                    });
+                                });
+
+                            cols[1].with_layout(Layout::bottom_up(Align::right()), |ui| {
+                                ui.horizontal(|ui| {
+                                    if ui
+                                        .add(
+                                            Button::new("Delete")
+                                                .enabled(self.selected_scene_name != main_name),
+                                        )
+                                        .clicked
+                                    {
+                                        scene_man.delete_scene(&self.selected_scene_name);
+                                    }
+
+                                    if ui.button("Load").clicked {
+                                        scene_man.set_scene(&self.selected_scene_name, res_man);
+                                    }
+
+                                    if ui
+                                        .add(
+                                            Button::new("Add")
+                                                .enabled(self.selected_scene_name != main_name),
+                                        )
+                                        .clicked
+                                    {
+                                        scene_man
+                                            .inject_scene(&self.selected_scene_name, None, res_man)
+                                            .unwrap();
+                                    }
+                                });
+                            });
+                        }
                     });
                 });
 

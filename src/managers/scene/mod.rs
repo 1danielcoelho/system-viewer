@@ -8,7 +8,7 @@ use crate::{
         mesh::Mesh,
         texture::Texture,
     },
-    utils::{string::get_unique_name, transform::Transform},
+    utils::{string::get_unique_name, transform::Transform, vec::RemoveItem},
 };
 use na::{Quaternion, UnitQuaternion, Vector3};
 pub use scene::*;
@@ -388,5 +388,10 @@ impl SceneManager {
         current_scene.move_from_other(injected_scene_copy);
 
         return Ok(());
+    }
+
+    pub fn delete_scene(&mut self, identifier: &str) {
+        self.loaded_scenes.remove(identifier);
+        self.sorted_loaded_scene_names.remove_one_item(&identifier.to_owned());
     }
 }
