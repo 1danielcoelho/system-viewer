@@ -1,12 +1,11 @@
-use std::f64::consts::PI;
-
 use crate::utils::{
     transform::Transform,
-    units::{Au, Deg, Jdn, Mm, Rad, RadsPerDay},
+    units::{Au, Deg, Jdn, Mm, Rad},
 };
 use na::{Point3, UnitQuaternion, Vector3};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::f64::consts::PI;
 
 lazy_static! {
     static ref TARGET_BODY_NAME_RE: Regex = Regex::new(r"Target body name: ([^;]+?) \(").unwrap();
@@ -31,7 +30,7 @@ lazy_static! {
         Regex::new(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)").unwrap();
 }
 
-const GRAVITATION_CONSTANT: f64 = 
+const GRAVITATION_CONSTANT: f64 = 4.9823382528e-19; // Mm3 / (kg day2)
 const J2000_JDN: Jdn = Jdn(2451545.0);
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.000001;
@@ -370,22 +369,26 @@ pub fn orbital_elements_to_xyz(
 /// do the end of the calculation.
 pub fn bake_eccentric_anomaly_times(
     elements: &OrbitalElements,
-    gravitation_const: f64,
+    mass_of_reference_body_kg: f64,
     num_angles: u32,
 ) -> Vec<f64> {
-    let result: Vec<f64> = Vec::new();
+    let mut result: Vec<f64> = Vec::new();
 
-    let mean_motion = RadsPerDay((gravitation_const / elements.semi_major_axis.0.powi(3)).sqrt());
+    let gravitation_const = GRAVITATION_CONSTANT * mass_of_reference_body_kg; // Mm3/day2
+    let mean_motion = (gravitation_const / elements.semi_major_axis.0.powi(3)).sqrt(); // Rads/day
+    let time_of_periapsis: Jdn = time_of_prev_periapsis(elements.mean_anomaly_0, mean_motion);
 
     let incr = 360.0 / num_angles as f64;
     for i in 0..num_angles {
         let eccentric_anomaly = (i as f64 * incr).to_radians();
 
-        let mean_anomaly = eccentric_anomaly - elements.eccentricity * eccentric_anomaly.sin();
-        let t = (mean_anomaly + mean_motion * time_of_periapsis) / mean_motion;
+        let mean_anomaly = eccentric_anomaly - elements.eccentricity * eccentric_anomaly.sin(); // Rad
+        let t = (mean_anomaly + mean_motion * time_of_periapsis.0) / mean_motion; // day
+
+        result.push(t);
     }
 
-    todo!();
+    return result;
 }
 
 /// Returns the JDN time of the next periapsis crossing
@@ -398,15 +401,29 @@ pub fn time_of_prev_periapsis(mean_anomaly_at_epoch: Rad, mean_motion: f64) -> J
     return Jdn((0.0 - mean_anomaly_at_epoch.0) / mean_motion + J2000_JDN.0);
 }
 
-pub fn orbital_period(mean_motion: RadsPerDay) -> Jdn {
-    return Jdn(2.0 * PI / mean_motion.0);
+/// Receives mean motion in rads / day, returns orbital period in fractional days
+pub fn orbital_period(mean_motion: f64) -> f64 {
+    return 2.0 * PI / mean_motion;
 }
 
-pub fn mean_motion(orbital_period: Jdn) -> RadsPerDay {
-    return RadsPerDay(2.0 * PI / orbital_period.0);
+/// Receives orbital period in fractional days, returns mean motion in in rads / day
+pub fn mean_motion(orbital_period: f64) -> f64 {
+    return 2.0 * PI / orbital_period;
 }
 
-/// Returns u = GM, in units of (Mm^3 / day^2) so that it can be used with all other stuff
-pub fn get_gravitational_parameter(reference_mass_kg: f64) -> f64 {
-    
+mod tests {
+    extern crate wasm_bindgen_test;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);    
+    use super::*;
+
+    #[wasm_bindgen_test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_orbit() {
+        let res = orbital_period(2.0);
+    }
 }

@@ -1,7 +1,8 @@
 {
     "scripts": {
         "build": "webpack --mode production",
-        "dev": "webpack-dev-server --port 9000 --open"
+        "dev": "webpack-dev-server --port 9000 --open",
+        "test": "wasm-pack test --headless --firefox"
     },
     "devDependencies": {
         "@wasm-tool/wasm-pack-plugin": "1.3.1",

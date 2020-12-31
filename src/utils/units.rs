@@ -41,10 +41,6 @@ impl Au {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Jdn(pub f64);
 
-/// Mostly intended to be used for the mean motion orbital parameter, as we usually keep things in rads
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct RadsPerDay(pub f64);
-
 /// Returns the corresponding Julian Day Number (JDN) for an instant in time.
 /// See https://en.wikipedia.org/wiki/Julian_day
 pub fn date_to_julian_date_number(date: &chrono::DateTime<Utc>) -> Jdn {

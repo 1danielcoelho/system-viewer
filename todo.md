@@ -220,6 +220,9 @@ response |= ui.add(label);
 <!-- # Delayed asset loading
 - Maybe I can use serde somehow? I mean, mesh will basically just serialize to the asset name...
 - Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it -->
+<!-- # Testing
+- npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust -->
+<!-- - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe -->
 
 # Solar system scene
 <!-- - Implement new scene/close scene -->
@@ -308,9 +311,6 @@ response |= ui.add(label);
 - Serialize the entity and component arrays in one go as byte buffers for now
     - Maybe ASCII too to help debugging
 # Find a better way of handling component updates when sorting after reparenting
-# Testing
-- npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust
-- Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
 # I think I'll need wasm-bindgen-futures at some point for something?
 - https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs

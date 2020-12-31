@@ -47,7 +47,7 @@ thread_local! {
 }
 
 #[wasm_bindgen(start)]
-pub fn main() {
+pub fn main_js() {
     console_error_panic_hook::set_once();
     console_log::init_with_level(log::Level::Debug).expect("Unable to initialize console logging");
 }
@@ -217,3 +217,4 @@ extern "C" {
     pub fn prompt_for_text_file(content_type: &str, extension: &str);
     pub fn prompt_for_bytes_file(content_type: &str, extension: &str);
 }
+
