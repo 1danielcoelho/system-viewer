@@ -2,11 +2,7 @@ use crate::STATE;
 use crate::{app_state::ButtonState, wasm_bindgen::JsCast};
 use js_sys::encode_uri_component;
 use wasm_bindgen::prelude::Closure;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{
-    HtmlCanvasElement, HtmlElement, Request, RequestInit, RequestMode, Response,
-    WebGl2RenderingContext,
-};
+use web_sys::{HtmlCanvasElement, HtmlElement, WebGl2RenderingContext};
 
 const OUR_CANVAS_ID: &str = "rustCanvas";
 

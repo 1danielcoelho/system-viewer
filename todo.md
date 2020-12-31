@@ -217,6 +217,26 @@
 let mut response = combo_box(ui, button_id, selected, menu_contents);
 response |= ui.add(label);
 -->
+<!-- # Delayed asset loading
+- Maybe I can use serde somehow? I mean, mesh will basically just serialize to the asset name...
+- Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it -->
+
+# Solar system scene
+<!-- - Implement new scene/close scene -->
+<!-- - Implement loading orbital elements from CSV -->
+- Good reference for coordinate system conversion: https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
+    - Other way around: https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
+    - Checker calculator: http://orbitsimulator.com/formulas/OrbitalElements.html
+        - Other one: http://www2.arnes.si/~gljsentvid10/ele2vec.html
+    - http://www.bogan.ca/orbits/kepler/orbteqtn.html
+    - Maybe put this stuff in a separate crate, as I don't think there is a good one for it
+    - Probably best to just precalculate these because the math is rough (has some numerical method stuff in there even), and we'd probably even benefit from having as many points as our orbit geometry, or else the body may drift in and out of it's orbit path
+    - Need to have this code inside the engine (as opposed to a python script) because I want to be able to just type in orbital elements and see an orbit
+
+# Crazy slow (11 fps with all planets and moons loaded and it's not even updating positions yet)
+- Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
+- Use profiling crates (like tracing https://crates.io/crates/tracing)
+
 
 # Scene serialization with serde
 <!-- - Derp, I'm overwriting the Rc<Mesh> with a new Rc<Mesh>, but the old one is still alive and being used by the components... -->
@@ -233,11 +253,7 @@ response |= ui.add(label);
 <!-- - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing? -->
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
-    - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
-
-<!-- # Delayed asset loading
-- Maybe I can use serde somehow? I mean, mesh will basically just serialize to the asset name...
-- Right now we have to load all the assets we'll use up front. Later on when we have more assets and this becomes annoying, what we could do is just e.g. request -> foo.png texture -> dispatches call to fetch_bytes and immediately return a "temp texture" like source engine pink/black checkerboards -> Every time we draw, we check if our intended texture is ready. If its not, we use the checkerboard, but as soon as it's ready we start using it -->
+- I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
 
 # Store camera/app state to local storage so that it reloads facing the same location
 
@@ -278,7 +294,9 @@ response |= ui.add(label);
     - Orbital trajectory prediction -> line drawing
 
 # I kind of really need to use f64 everywhere
+- Argh WebGL2 doesn't really support it in the shaders, so there's likely not much point
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
+- It seems fine on Chrome so I think I'll jus tignore this for now
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
 - Demo app has an x seconds per frame thing on the left which is just what I need
 # I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html

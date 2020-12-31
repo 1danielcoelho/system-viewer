@@ -10,8 +10,8 @@ use crate::{
 };
 use crate::{managers::scene::Scene, UICTX};
 use egui::{
-    combo_box_with_label, menu, Align, Button, CollapsingHeader, Frame, Id, LayerId, Layout, Pos2,
-    Resize, Response, ScrollArea, TextStyle, TopPanel, Ui,
+    menu, Align, Button, CollapsingHeader, Frame, Id, LayerId, Layout, Pos2, Response, ScrollArea,
+    TextStyle, TopPanel, Ui,
 };
 use gui_backend::WebInput;
 use na::{Matrix4, Point3, Vector3};
@@ -126,12 +126,17 @@ impl InterfaceManager {
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
     ) {
-        self.draw_main_toolbar(state, scene_man);
+        self.draw_main_toolbar(state, scene_man, res_man);
 
         self.draw_open_windows(state, scene_man, res_man);
     }
 
-    fn draw_main_toolbar(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
+    fn draw_main_toolbar(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
@@ -140,7 +145,9 @@ impl InterfaceManager {
                 menu::bar(ui, |ui| {
                     menu::menu(ui, "File", |ui| {
                         if ui.button("New").clicked {
-                            log::info!("New");
+                            let new_scene_name =
+                                scene_man.new_scene("New scene").unwrap().identifier.clone();
+                            scene_man.set_scene(&new_scene_name, res_man);
                         }
 
                         if ui.button("Open").clicked {
@@ -162,13 +169,19 @@ impl InterfaceManager {
                         ui.separator();
 
                         if ui.button("Close").clicked {
-                            log::info!("Close");
+                            let new_scene_name =
+                                scene_man.new_scene("New scene").unwrap().identifier.clone();
+                            scene_man.set_scene(&new_scene_name, res_man);
                         }
                     });
 
                     menu::menu(ui, "Edit", |ui| {
                         if ui.button("Inject GLB...").clicked {
                             prompt_for_bytes_file("glb_inject", ".glb");
+                        }
+
+                        if ui.button("Inject orbital elements CSV...").clicked {
+                            prompt_for_text_file("csv_inject", ".csv");
                         }
                     });
 

@@ -58,7 +58,7 @@ class Body:
             self.inclination,
             self.long_asc_node,
             self.arg_periapsis,
-            self.true_anomaly,
+            self.mean_anomaly,
             self.mean_radius,
         ]])
 
@@ -161,9 +161,9 @@ for body in bodies.values():
         body.mean_radius = 0
 
     body.mean_radius /= 1000.0
-    body.periapsis_distance /= 149597.8707
-    body.semi_major_axis /= 149597.8707
-    body.apoapsis_distance /= 149597.8707
+    body.periapsis_distance *= 149597.8707
+    body.semi_major_axis *= 149597.8707
+    body.apoapsis_distance *= 149597.8707
 
 # Create a list in the best order for display
 # Sun, planet-bary, planet, moons, planet-bary, planet, moons, etc
@@ -192,5 +192,14 @@ for i in range(1, 10):
             del bodies[id]
 
 
-with open(out_path, 'w') as f:
-    f.write("\n".join([str(entry[1]) for entry in sorted_bodies]))
+for (body_id, body) in sorted_bodies:
+    try:
+        calc_tp = 2451545.0 - (body.mean_anomaly - 360) / body.mean_motion
+        print(body_id, calc_tp, body.time_of_periapsis, round((calc_tp - body.time_of_periapsis) / body.sidereal_orbit_period, 3), body.mean_anomaly > 180.0)
+    except ZeroDivisionError:
+        pass
+
+# with open(out_path, 'w') as f:
+#     print("Writing", str(len(sorted_bodies)), "bodies to", out_path)
+#     f.write("\n".join([str(entry[1]) for entry in sorted_bodies]))
+#     print("Done")

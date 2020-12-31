@@ -1,11 +1,10 @@
 use crate::{
     app_state::AppState,
-    components::{MeshComponent, TransformComponent},
     managers::{
         scene::SceneManager, EventManager, InputManager, InterfaceManager, ResourceManager,
         SystemManager,
     },
-    utils::orbital_elements::{elements_to_circle_transform, OrbitalElements},
+    utils::orbits::parse_csv_lines,
 };
 
 pub struct Engine {
@@ -55,7 +54,7 @@ impl Engine {
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
         match content_type {
-            "ephemerides" => self.receive_ephemerides_text(url, text),
+            "csv_inject" => self.receive_csv_inject(url, text),
             "scene" => {
                 let scene = self.scene_man.deserialize_scene(text);
                 let name = scene.unwrap().identifier.to_owned();
@@ -83,133 +82,25 @@ impl Engine {
         }
     }
 
-    fn receive_ephemerides_text(&mut self, file_name: &str, file_data: &str) {
-        log::info!(
-            "receive_ephemerides_text, name: {}, data: {}",
-            file_name,
-            file_data
-        );
+    fn receive_csv_inject(&mut self, url: &str, text: &str) {
+        match parse_csv_lines(text) {
+            Ok(mut results) => {
+                log::info!(
+                    "Loaded {} orbiting bodies from csv file '{}'",
+                    results.len(),
+                    url
+                );
 
-        // let (elements, body) = parse_ephemerides(file_data)?;
-        // log::info!(
-        //     "Loaded ephemerides '{}'\n{:#?}\n{:#?}",
-        //     file_name,
-        //     body,
-        //     elements
-        // );
+                // Make sure that parent bodies always come before their children
+                results.sort_by(|a, b| a.id.cmp(&b.id));
 
-        // let orbit_transform = elements_to_circle_transform(&elements);
-
-        // let scene = self
-        //
-        //     .scene_man
-        //     .new_scene(file_name)
-        //     .ok_or("Failed to create new scene!")?;
-
-        // let planet_mat = self.res_man.instantiate_material("gltf_metal_rough");
-        // planet_mat.as_ref().unwrap().borrow_mut().name = String::from("planet_mat");
-        // planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
-        //     UniformName::BaseColorFactor,
-        //     UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
-        // );
-
-        // // Lat-long sphere
-        // let lat_long = scene.new_entity(Some(&body.id));
-        // let trans_comp = scene
-        //
-        //     .add_component::<TransformComponent>(lat_long)
-        //     .unwrap();
-        // trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
-        // trans_comp.get_local_transform_mut().scale = Vector3::new(
-        //     body.mean_radius as f32,
-        //     body.mean_radius as f32,
-        //     body.mean_radius as f32,
-        // );
-        // let mesh_comp = scene
-        //
-        //     .add_component::<MeshComponent>(lat_long)
-        //     .unwrap();
-        // mesh_comp.set_mesh(self.res_man.get_or_create_mesh("lat_long_sphere"));
-        // mesh_comp.set_material_override(planet_mat.clone(), 0);
-
-        // self.temp_add_ellipse(
-        //     file_name,
-        //     "first",
-        //     &OrbitalElements {
-        //         semi_major_axis: 1000.0,
-        //         eccentricity: 0.0,
-        //         arg_periapsis: 0.0,
-        //         inclination: 0.0,
-        //         long_asc_node: 0.0,
-        //         true_anomaly: 0.0,
-        //     },
-        // );
-
-        // self.temp_add_ellipse(
-        //     file_name,
-        //     "second",
-        //     &OrbitalElements {
-        //         semi_major_axis: 1000.0,
-        //         eccentricity: 0.9,
-        //         arg_periapsis: 0.0,
-        //         inclination: 0.0,
-        //         long_asc_node: 0.0,
-        //         true_anomaly: 0.0,
-        //     },
-        // );
-
-        // self.temp_add_ellipse(
-        //     file_name,
-        //     "third",
-        //     &OrbitalElements {
-        //         semi_major_axis: 1000.0,
-        //         eccentricity: 0.9,
-        //         arg_periapsis: 0.0,
-        //         inclination: 30.0,
-        //         long_asc_node: 0.0,
-        //         true_anomaly: 0.0,
-        //     },
-        // );
-
-        // self.temp_add_ellipse(
-        //     file_name,
-        //     "third",
-        //     &OrbitalElements {
-        //         semi_major_axis: 1000.0,
-        //         eccentricity: 0.9,
-        //         arg_periapsis: 0.0,
-        //         inclination: 30.0,
-        //         long_asc_node: 45.0,
-        //         true_anomaly: 0.0,
-        //     },
-        // );
-
-        // self.temp_add_ellipse(
-        //     file_name,
-        //     "fourth",
-        //     &OrbitalElements {
-        //         semi_major_axis: 1000.0,
-        //         eccentricity: 0.9,
-        //         arg_periapsis: 30.0,
-        //         inclination: 30.0,
-        //         long_asc_node: 45.0,
-        //         true_anomaly: 0.0,
-        //     },
-        // );
-    }
-
-    fn temp_add_ellipse(&mut self, scene_name: &str, name: &str, elements: &OrbitalElements) {
-        let scene = self.scene_man.get_scene_mut(scene_name).unwrap();
-
-        let orbit_transform = elements_to_circle_transform(&elements);
-        log::warn!("orbit transform: {:#?}", orbit_transform);
-
-        // Orbit
-        let circle = scene.new_entity(Some(&name));
-        let trans_comp = scene.add_component::<TransformComponent>(circle).unwrap();
-        *trans_comp.get_local_transform_mut() = orbit_transform;
-        let mesh_comp = scene.add_component::<MeshComponent>(circle).unwrap();
-        mesh_comp.set_mesh(self.res_man.get_or_create_mesh("circle"));
+                self.scene_man
+                    .load_bodies_into_scene(&results, &mut self.res_man);
+            }
+            Err(msg) => {
+                log::error!("Error parsing csv file:\n{}", msg);
+            }
+        }
     }
 
     pub fn receive_texture_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {

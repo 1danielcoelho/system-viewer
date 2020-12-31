@@ -9,16 +9,11 @@ use crate::{
 };
 use crate::{managers::scene::Scene, GLCTX};
 use image::{io::Reader, DynamicImage, ImageFormat};
-use std::{
-    cell::{RefCell, RefMut},
-    collections::HashMap,
-    io::Cursor,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
 pub mod collider;
-pub mod gltf_resources;
+pub mod gltf;
 pub mod intermediate_mesh;
 pub mod material;
 pub mod mesh;
@@ -177,7 +172,7 @@ impl ResourceManager {
 
         // TODO: Fetch for this texture data
         if tex_borrow.gl_handle.is_none() {
-            let scene_name = gltf_resources::get_scene_name(&tex_borrow.name);
+            let scene_name = gltf::get_scene_name(&tex_borrow.name);
             log::info!(
                 "Creating fetch request for texture '{}', from file '{}'",
                 tex_borrow.name,
@@ -230,7 +225,7 @@ impl ResourceManager {
         }
 
         if !mesh_mut.loaded {
-            let scene_name = gltf_resources::get_scene_name(&mesh_mut.name);
+            let scene_name = gltf::get_scene_name(&mesh_mut.name);
             log::info!(
                 "Creating fetch request for mesh '{}', from file '{}'",
                 mesh_mut.name,

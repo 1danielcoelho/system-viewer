@@ -1,4 +1,4 @@
-use na::{Isometry3, Matrix4, Translation3, UnitQuaternion, Vector3};
+use na::{Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
 
 // Heavily based off of how Amethyst has a custom wrapper over nalgebra stuff: https://docs.amethyst.rs/stable/src/amethyst_core/transform/components/transform.rs.html#500-508
@@ -27,6 +27,21 @@ impl Transform {
         return Isometry3::from_parts(Translation3::from(self.trans), self.rot)
             .to_homogeneous()
             .prepend_nonuniform_scaling(&self.scale);
+    }
+
+    pub fn transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
+        return Point3::from(
+            self.trans
+                + self
+                    .rot
+                    .transform_vector(&self.scale.component_mul(&point.coords)),
+        );
+    }
+
+    pub fn transform_vector(&self, vector: &Vector3<f32>) -> Vector3<f32> {
+        return self
+            .rot
+            .transform_vector(&self.scale.component_mul(&vector));
     }
 
     pub fn identity() -> Self {
