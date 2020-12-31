@@ -342,19 +342,9 @@ pub fn orbital_elements_to_xyz(
         * ((1.0 + elements.eccentricity).sqrt() * (eccentric_anomaly * 0.5).sin())
             .atan2((1.0 - elements.eccentricity).sqrt() * (eccentric_anomaly * 0.5).cos());
 
-    log::info!(
-        "Mean deg: {}, Ecc deg: {}, True deg: {}, Motion deg/day: {}",
-        mean_anomaly.to_degrees(),
-        eccentric_anomaly.to_degrees(),
-        true_anomaly.to_degrees(),
-        mean_motion.to_degrees()
-    );
-
     // Find distance to central body
     let dist_to_body =
         elements.semi_major_axis.0 * (1.0 - elements.eccentricity * eccentric_anomaly.cos());
-
-    log::info!("Dist_to_body: {}", dist_to_body);
 
     // Body position in orbital frame (ellipse on XY plane, +X going from center to periapsis)
     let pos_temp = Point3::new(
@@ -449,9 +439,11 @@ pub mod tests {
     wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
 
+    const ACCEPTABLE_DELTA: f64 = 0.0000000001;
+
     #[wasm_bindgen_test]
     pub fn elements_to_cartesian_numerical() {
-        // Venus
+        // Venus heliocentric
         let elements = OrbitalElements {
             semi_major_axis: Au(7.233269274790103E-01).to_Mm(),
             eccentricity: 6.755786250503024E-03,
@@ -465,9 +457,49 @@ pub mod tests {
         let trans = elements_to_ellipse_rotation_transform(&elements);
         let (pos, vel) = orbital_elements_to_xyz(&elements, orbit_period, J2000_JDN, &trans);
 
-        log::info!("pos: {:?}\nvel: {:?}", pos, vel);
+        // Values from HORIZONS (converted to Mm from km):
+        let expected_pos: Point3<f64> = Point3::new(
+            -1.074564940489116E+05,
+            -4.885015029930510E+03,
+            6.135634314000621E+03,
+        );
+        let expected_vel: Vector3<f64> = Vector3::new(
+            1.193966825403014E+02,
+            -3.036121503211865E+03,
+            -4.838765653005392E+01,
+        );
 
-        assert_eq!(2 + 2, 4);
+        assert!((pos - expected_pos).magnitude() < ACCEPTABLE_DELTA);
+        assert!((vel - expected_vel).magnitude() < ACCEPTABLE_DELTA);
+
+        // Callisto vs Jupiter system barycenter
+        let elements = OrbitalElements {
+            semi_major_axis: Au(1.258537659089199E-02).to_Mm(),
+            eccentricity: 7.423685220918853E-03,
+            inclination: Deg(2.016919351362485E+00).to_rad(),
+            long_asc_node: Deg(3.379426810412668E+02).to_rad(),
+            arg_periapsis: Deg(1.619056899622573E+01).to_rad(),
+            mean_anomaly_0: Deg(8.505552940851534E+01).to_rad(),
+        };
+        let orbit_period = 1.669092070644565E+01;
+
+        let trans = elements_to_ellipse_rotation_transform(&elements);
+        let (pos, vel) = orbital_elements_to_xyz(&elements, orbit_period, J2000_JDN, &trans);
+
+        // Values from HORIZONS (converted to Mm from km):
+        let expected_pos: Point3<f64> = Point3::new(
+            3.251207975783225E+02,
+            1.852211480158530E+03,
+            6.475384249692666E+01,
+        );
+        let expected_vel: Vector3<f64> = Vector3::new(
+            -6.975067606364888E+02,
+            1.279422738733358E+02,
+            -5.048609078863432E+00,
+        );
+
+        assert!((pos - expected_pos).magnitude() < ACCEPTABLE_DELTA);
+        assert!((vel - expected_vel).magnitude() < ACCEPTABLE_DELTA);
     }
 
     #[wasm_bindgen_test]
