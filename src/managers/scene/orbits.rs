@@ -59,7 +59,7 @@ impl SceneManager {
         let trans_comp = scene.add_component::<TransformComponent>(body_ent).unwrap();
         if body.mean_radius.0 > 0.0 {
             trans_comp.get_local_transform_mut().trans =
-                Vector3::new(body.id as f32 * 10.0, 0.0, 0.0);
+                Vector3::new(body.id as f64 * 10.0, 0.0, 0.0);
 
             // trans_comp.get_local_transform_mut().scale = Vector3::new(
             //     body.mean_radius as f32,

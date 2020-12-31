@@ -1,15 +1,24 @@
-use na::{Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
+use na::{
+    one, Isometry3, Matrix4, Normed, Point3, RealField, Scalar, SimdRealField, Translation3,
+    UnitQuaternion, Vector3,
+};
 use serde::{Deserialize, Serialize};
 
 // Heavily based off of how Amethyst has a custom wrapper over nalgebra stuff: https://docs.amethyst.rs/stable/src/amethyst_core/transform/components/transform.rs.html#500-508
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Transform {
-    pub trans: Vector3<f32>,
-    pub rot: UnitQuaternion<f32>,
-    pub scale: Vector3<f32>,
+pub struct Transform<T>
+where
+    T: RealField + SimdRealField,
+{
+    pub trans: Vector3<T>,
+    pub rot: UnitQuaternion<T>,
+    pub scale: Vector3<T>,
 }
-impl Transform {
+impl<T> Transform<T>
+where
+    T: RealField + SimdRealField,
+{
     pub fn concat(&mut self, other: &Self) -> &mut Self {
         self.trans += self.rot * other.trans.component_mul(&self.scale);
         self.scale.component_mul_assign(&other.scale);
@@ -23,13 +32,13 @@ impl Transform {
         return result;
     }
 
-    pub fn to_matrix4(&self) -> Matrix4<f32> {
+    pub fn to_matrix4(&self) -> Matrix4<T> {
         return Isometry3::from_parts(Translation3::from(self.trans), self.rot)
             .to_homogeneous()
             .prepend_nonuniform_scaling(&self.scale);
     }
 
-    pub fn transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
+    pub fn transform_point(&self, point: &Point3<T>) -> Point3<T> {
         return Point3::from(
             self.trans
                 + self
@@ -38,7 +47,7 @@ impl Transform {
         );
     }
 
-    pub fn transform_vector(&self, vector: &Vector3<f32>) -> Vector3<f32> {
+    pub fn transform_vector(&self, vector: &Vector3<T>) -> Vector3<T> {
         return self
             .rot
             .transform_vector(&self.scale.component_mul(&vector));
@@ -46,13 +55,17 @@ impl Transform {
 
     pub fn identity() -> Self {
         Self {
-            trans: Vector3::new(0.0, 0.0, 0.0),
+            trans: Vector3::zeros(),
             rot: UnitQuaternion::identity(),
-            scale: Vector3::new(1.0, 1.0, 1.0),
+            scale: Vector3::new(T::one(), T::one(), T::one()),
         }
     }
 }
-impl Default for Transform {
+
+impl<T> Default for Transform<T>
+where
+    T: RealField + SimdRealField,
+{
     fn default() -> Self {
         return Transform::identity();
     }

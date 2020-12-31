@@ -14,29 +14,29 @@ use serde::{Deserialize, Serialize};
 pub struct TransformComponent {
     enabled: bool,
 
-    local_transform: Transform,
+    local_transform: Transform<f64>,
 
     #[serde(skip)]
-    world_transform: Transform,
+    world_transform: Transform<f64>,
 }
 impl TransformComponent {
     pub fn new() -> Self {
         return Self::default();
     }
 
-    pub fn get_local_transform(&self) -> &Transform {
+    pub fn get_local_transform(&self) -> &Transform<f64> {
         return &self.local_transform;
     }
 
-    pub fn get_local_transform_mut(&mut self) -> &mut Transform {
+    pub fn get_local_transform_mut(&mut self) -> &mut Transform<f64> {
         return &mut self.local_transform;
     }
 
-    pub fn update_world_transform(&mut self, parent_local_transform: &Transform) {
+    pub fn update_world_transform(&mut self, parent_local_transform: &Transform<f64>) {
         self.world_transform = parent_local_transform.concat_clone(&self.local_transform);
     }
 
-    pub fn get_world_transform(&self) -> &Transform {
+    pub fn get_world_transform(&self) -> &Transform<f64> {
         return &self.world_transform;
     }
 }
@@ -81,9 +81,9 @@ impl DetailsUI for TransformComponent {
         ui.columns(2, |cols| {
             cols[0].label("Pos:");
             cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
-                ui.add(egui::DragValue::f32(&mut self.local_transform.trans.x).prefix("x: "));
-                ui.add(egui::DragValue::f32(&mut self.local_transform.trans.y).prefix("y: "));
-                ui.add(egui::DragValue::f32(&mut self.local_transform.trans.z).prefix("z: "));
+                ui.add(egui::DragValue::f64(&mut self.local_transform.trans.x).prefix("x: "));
+                ui.add(egui::DragValue::f64(&mut self.local_transform.trans.y).prefix("y: "));
+                ui.add(egui::DragValue::f64(&mut self.local_transform.trans.z).prefix("z: "));
             });
         });
 
@@ -97,17 +97,17 @@ impl DetailsUI for TransformComponent {
                 euler_z = euler_z.to_degrees();
 
                 ui.add(
-                    egui::DragValue::f32(&mut euler_x)
+                    egui::DragValue::f64(&mut euler_x)
                         .prefix("x: ")
                         .suffix("deg"),
                 );
                 ui.add(
-                    egui::DragValue::f32(&mut euler_y)
+                    egui::DragValue::f64(&mut euler_y)
                         .prefix("y: ")
                         .suffix("deg"),
                 );
                 ui.add(
-                    egui::DragValue::f32(&mut euler_z)
+                    egui::DragValue::f64(&mut euler_z)
                         .prefix("z: ")
                         .suffix("deg"),
                 );
@@ -124,17 +124,17 @@ impl DetailsUI for TransformComponent {
             cols[0].label("Scale:");
             cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
                 ui.add(
-                    egui::DragValue::f32(&mut self.local_transform.scale.x)
+                    egui::DragValue::f64(&mut self.local_transform.scale.x)
                         .prefix("x: ")
                         .speed(0.1),
                 );
                 ui.add(
-                    egui::DragValue::f32(&mut self.local_transform.scale.y)
+                    egui::DragValue::f64(&mut self.local_transform.scale.y)
                         .prefix("y: ")
                         .speed(0.1),
                 );
                 ui.add(
-                    egui::DragValue::f32(&mut self.local_transform.scale.z)
+                    egui::DragValue::f64(&mut self.local_transform.scale.z)
                         .prefix("z: ")
                         .speed(0.1),
                 );

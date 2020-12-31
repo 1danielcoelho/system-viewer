@@ -24,12 +24,16 @@ impl SceneManager {
         let trans_comp = scene.add_component::<TransformComponent>(ent).unwrap();
         let trans = trans_comp.get_local_transform_mut();
         let (pos, quat, scale) = node.transform().decomposed();
-        trans.trans.x = pos[0];
-        trans.trans.y = -pos[2];
-        trans.trans.z = pos[1];
-        trans.rot =
-            UnitQuaternion::new_normalize(Quaternion::new(quat[0], -quat[2], quat[1], quat[3]));
-        trans.scale = Vector3::new(scale[0], scale[1], scale[2]);
+        trans.trans.x = pos[0] as f64;
+        trans.trans.y = -pos[2] as f64;
+        trans.trans.z = pos[1] as f64;
+        trans.rot = UnitQuaternion::new_normalize(Quaternion::new(
+            quat[0] as f64,
+            -quat[2] as f64,
+            quat[1] as f64,
+            quat[3] as f64,
+        ));
+        trans.scale = Vector3::new(scale[0] as f64, scale[1] as f64, scale[2] as f64);
 
         // Mesh
         // let mut mesh_str = String::new();

@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 
 const int MAX_LIGHTS = 8;
 

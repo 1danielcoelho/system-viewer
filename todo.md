@@ -224,6 +224,9 @@ response |= ui.add(label);
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust -->
 <!-- - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe -->
 
+# What is Vector3::identity()
+# Add tests for raycast intersections
+
 # Solar system scene
 <!-- - Implement new scene/close scene -->
 <!-- - Implement loading orbital elements from CSV -->
@@ -298,6 +301,7 @@ response |= ui.add(label);
 
 # I kind of really need to use f64 everywhere
 - Argh WebGL2 doesn't really support it in the shaders, so there's likely not much point
+    - https://prideout.net/emulating-double-precision
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
 - It seems fine on Chrome so I think I'll jus tignore this for now
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times

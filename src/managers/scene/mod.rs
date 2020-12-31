@@ -231,7 +231,7 @@ impl SceneManager {
     pub fn inject_scene(
         &mut self,
         identifier: &str,
-        target_transform: Option<Transform>,
+        target_transform: Option<Transform<f64>>,
         res_man: &mut ResourceManager,
     ) -> Result<(), String> {
         // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?

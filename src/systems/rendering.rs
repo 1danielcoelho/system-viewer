@@ -87,9 +87,9 @@ impl RenderingSystem {
                 .light_intensities
                 .push(light.intensity.powf(state.light_intensity));
 
-            result.light_pos_or_dir.push(pos.x);
-            result.light_pos_or_dir.push(pos.y);
-            result.light_pos_or_dir.push(pos.z);
+            result.light_pos_or_dir.push(pos.x as f32);
+            result.light_pos_or_dir.push(pos.y as f32);
+            result.light_pos_or_dir.push(pos.z as f32);
 
             // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
 
@@ -126,7 +126,7 @@ impl RenderingSystem {
         mc: &MeshComponent,
     ) {
         let trans = tc.get_world_transform();
-        let w: Matrix4<f32> = trans.to_matrix4();
+        let w: Matrix4<f32> = na::convert(trans.to_matrix4());
         let world_trans_uniform_data: [f32; 16] = w.as_slice().try_into().unwrap();
 
         let w_inv_trans: Matrix4<f32> = w.try_inverse().unwrap_or(Matrix4::identity()).transpose();

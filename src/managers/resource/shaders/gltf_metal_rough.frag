@@ -1,7 +1,7 @@
 // Reference for most of this file:
 // https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/pbr.frag
 
-precision mediump float;
+precision highp float;
 
 #include <brdf.glsl>
 #include <constants.glsl>

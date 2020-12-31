@@ -1,4 +1,4 @@
-use na::{Point3, Vector3};
+use na::{Matrix4, Point3, Vector3};
 
 use crate::components::{MeshComponent, TransformComponent};
 
@@ -40,7 +40,8 @@ pub fn raycast(
         }
         let collider = mesh.collider.as_ref().unwrap();
 
-        let world_trans = trans_comp.get_world_transform().to_matrix4();
+        // TODO: float conversion
+        let world_trans: Matrix4<f32> = na::convert(trans_comp.get_world_transform().to_matrix4());
         let inv_world_trans = world_trans.try_inverse().unwrap();
 
         // @Performance: Maybe it would be faster to transform the collider instead?
@@ -53,7 +54,7 @@ pub fn raycast(
 
         let bb_space_t = collider.intersects(&bb_space_ray);
         let bb_space_delta = bb_space_t * bb_space_ray.direction;
-        let world_space_delta: Vector3<f32> = world_trans.transform_vector(&bb_space_delta);
+        let world_space_delta = world_trans.transform_vector(&bb_space_delta);
         let world_space_t2 = world_space_delta.magnitude_squared();
 
         if world_space_t2 < min_t2 {

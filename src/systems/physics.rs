@@ -37,7 +37,7 @@ impl PhysicsSystem {
             return;
         }
 
-        let dt = (state.phys_delta_time_ms * 0.001) as f32;
+        let dt = state.phys_delta_time_ms * 0.001;
 
         // TODO: What if the object is scaled? Should that affect its linear/rotational motion?
 
@@ -52,17 +52,16 @@ impl PhysicsSystem {
         // Compute world-space inverse inertia tensor
         let trans = trans_comp.get_local_transform_mut();
         let rot_mat = Matrix3::from(trans.rot); // Assumes rot is normalized
-        let inv_inertia_world: Matrix3<f32> = rot_mat * phys_comp.inv_inertia * rot_mat.transpose();
+        let inv_inertia_world = rot_mat * phys_comp.inv_inertia * rot_mat.transpose();
 
         // Update velocities
         let lin_vel = phys_comp.lin_mom * phys_comp.inv_mass;
-        let ang_vel: Vector3<f32> = inv_inertia_world * phys_comp.ang_mom;
+        let ang_vel = inv_inertia_world * phys_comp.ang_mom;
         let ang_vel_q = Quaternion::new(0.0, ang_vel.x, ang_vel.y, ang_vel.z);
 
         // Update position and rotation
         trans.trans += lin_vel * dt;
-        let new_rot: Quaternion<f32> =
-            trans.rot.quaternion() + 0.5 * ang_vel_q * trans.rot.quaternion() * dt; // todo
+        let new_rot = trans.rot.quaternion() + 0.5 * ang_vel_q * trans.rot.quaternion() * dt; // todo
         trans.rot = UnitQuaternion::new_normalize(new_rot);
 
         // Clear accumulators?

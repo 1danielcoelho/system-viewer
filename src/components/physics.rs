@@ -4,7 +4,7 @@ use super::{
 };
 use crate::managers::{details_ui::DetailsUI, scene::Scene};
 use na::{Matrix3, Vector3};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PhysicsComponent {
@@ -12,16 +12,16 @@ pub struct PhysicsComponent {
     pub collision_enabled: bool,
 
     // Constants
-    pub inv_mass: f32,             // kg
-    pub inv_inertia: Matrix3<f32>, // Local space
+    pub inv_mass: f64,             // kg
+    pub inv_inertia: Matrix3<f64>, // Local space
 
     // Inputs/computed
-    pub force_sum: Vector3<f32>, // Sum of forces being applied to center of mass
-    pub torque_sum: Vector3<f32>, // Sum of torque being applied to center of mass
+    pub force_sum: Vector3<f64>, // Sum of forces being applied to center of mass
+    pub torque_sum: Vector3<f64>, // Sum of torque being applied to center of mass
 
     // State
-    pub lin_mom: Vector3<f32>, // kg * m/s
-    pub ang_mom: Vector3<f32>, // length is kg * m2 * rad/s, right-hand rule
+    pub lin_mom: Vector3<f64>, // kg * m/s
+    pub ang_mom: Vector3<f64>, // length is kg * m2 * rad/s, right-hand rule
 }
 impl PhysicsComponent {
     fn new() -> Self {

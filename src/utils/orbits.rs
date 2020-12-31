@@ -240,7 +240,7 @@ pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
     });
 }
 
-pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform {
+pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform<f64> {
     let mut result = Transform::identity();
 
     let b = elements.semi_major_axis.0 * (1.0 - elements.eccentricity.powi(2)).sqrt();
@@ -248,14 +248,14 @@ pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform {
     // Shaping transform for semi-major and minor axes
     result
         .concat(&Transform {
-            scale: Vector3::new(elements.semi_major_axis.0 as f32, b as f32, 1.0),
+            scale: Vector3::new(elements.semi_major_axis.0, b, 1.0),
             ..Transform::identity()
         })
         .concat(&elements_to_ellipse_rotation_transform(elements));
 
     result.concat(&Transform {
         trans: Vector3::new(
-            -elements.eccentricity as f32, // This is a move by -a*e, but we already have our x axis scaled by 'a'
+            -elements.eccentricity, // This is a move by -a*e, but we already have our x axis scaled by 'a'
             0.0,
             0.0,
         ),
@@ -273,26 +273,26 @@ pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform {
 ///
 /// Sources:
 /// - https://downloads.rene-schwarz.com/download/M001-Keplerian_Orbit_Elements_to_Cartesian_State_Vectors.pdf
-pub fn elements_to_ellipse_rotation_transform(elements: &OrbitalElements) -> Transform {
+pub fn elements_to_ellipse_rotation_transform(elements: &OrbitalElements) -> Transform<f64> {
     let mut result = Transform::identity();
 
     // Apply inclination around world axes
     result = Transform {
-        rot: UnitQuaternion::from_axis_angle(&Vector3::x_axis(), elements.inclination.0 as f32),
+        rot: UnitQuaternion::from_axis_angle(&Vector3::x_axis(), elements.inclination.0),
         ..Transform::identity()
     }
     .concat_clone(&result);
 
     // Rotate for longitude of ascending node around world axes
     result = Transform {
-        rot: UnitQuaternion::from_axis_angle(&Vector3::z_axis(), elements.long_asc_node.0 as f32),
+        rot: UnitQuaternion::from_axis_angle(&Vector3::z_axis(), elements.long_asc_node.0),
         ..Transform::identity()
     }
     .concat_clone(&result);
 
     // Rotate for argument of periapsis around local axes
     result.concat(&Transform {
-        rot: UnitQuaternion::from_axis_angle(&Vector3::z_axis(), elements.arg_periapsis.0 as f32),
+        rot: UnitQuaternion::from_axis_angle(&Vector3::z_axis(), elements.arg_periapsis.0),
         ..Transform::identity()
     });
 
@@ -308,7 +308,7 @@ pub fn orbital_elements_to_xyz(
     elements: &OrbitalElements,
     sidereal_orbit_period_days: f64,
     t: Jdn,
-    ellipse_rotation_transform: &Transform,
+    ellipse_rotation_transform: &Transform<f64>,
 ) -> (Point3<f64>, Vector3<f64>) {
     let mean_motion = 2.0 * PI / sidereal_orbit_period_days; // Rads/day
     let gravitation_const = mean_motion * mean_motion * elements.semi_major_axis.0.powi(3);

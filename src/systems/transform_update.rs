@@ -3,7 +3,7 @@ use crate::{app_state::AppState, managers::scene::Scene, utils::transform::Trans
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
     pub fn run(&self, _state: &AppState, scene: &mut Scene) {
-        let identity: Transform = Transform::identity();
+        let identity = Transform::identity();
 
         for entity_index in 0..scene.get_num_entities() {
             // TODO: This has an indirection

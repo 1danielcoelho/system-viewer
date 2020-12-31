@@ -22,7 +22,7 @@ use gltf::{
     mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
 };
 use na::{Point3, Vector2, Vector3, Vector4};
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f32::INFINITY, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
 pub trait GltfResource {
@@ -477,13 +477,8 @@ impl ResourceManager {
         }
 
         // AABB collider as early out
-        let mut mins: Point3<f32> =
-            Point3::new(std::f32::INFINITY, std::f32::INFINITY, std::f32::INFINITY);
-        let mut maxes: Point3<f32> = Point3::new(
-            -std::f32::INFINITY,
-            -std::f32::INFINITY,
-            -std::f32::INFINITY,
-        );
+        let mut mins = Point3::new(INFINITY, INFINITY, INFINITY);
+        let mut maxes = Point3::new(-INFINITY, -INFINITY, -INFINITY);
         for prim in &inter_prims {
             for pos in &prim.positions {
                 mins.x = mins.x.min(pos.x);
