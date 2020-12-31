@@ -223,28 +223,20 @@ response |= ui.add(label);
 <!-- # Testing
 - npm command like 'npm run test', which builds the js in the same way, except some switch on index.js detects that it's a "test run" and instead of following the regular engine init path, it just calls into some other wasm rust functions that run the tests inside rust -->
 <!-- - Rust has some testing stuff, but I'm not sure if I'll be able to use that.. I may need some regular function calls and stuff, which is not a catastrophe -->
-
-# What is Vector3::identity()
-# Add tests for raycast intersections
-
-# Solar system scene
+<!-- # What is Vector3::identity() -->
+<!-- # Solar system scene -->
 <!-- - Implement new scene/close scene -->
 <!-- - Implement loading orbital elements from CSV -->
-- Good reference for coordinate system conversion: https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
-    - Other way around: https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
-    - Checker calculator: http://orbitsimulator.com/formulas/OrbitalElements.html
-        - Other one: http://www2.arnes.si/~gljsentvid10/ele2vec.html
-    - http://www.bogan.ca/orbits/kepler/orbteqtn.html
-    - Maybe put this stuff in a separate crate, as I don't think there is a good one for it
-    - Probably best to just precalculate these because the math is rough (has some numerical method stuff in there even), and we'd probably even benefit from having as many points as our orbit geometry, or else the body may drift in and out of it's orbit path
-    - Need to have this code inside the engine (as opposed to a python script) because I want to be able to just type in orbital elements and see an orbit
-
-# Crazy slow (11 fps with all planets and moons loaded and it's not even updating positions yet)
-- Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
-- Use profiling crates (like tracing https://crates.io/crates/tracing)
-
-
-# Scene serialization with serde
+<!-- - Good reference for coordinate system conversion: https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors -->
+<!-- - Other way around: https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto -->
+<!-- - Checker calculator: http://orbitsimulator.com/formulas/OrbitalElements.html
+    - Other one: http://www2.arnes.si/~gljsentvid10/ele2vec.html
+    - Just use HORIZONS -->
+<!-- - http://www.bogan.ca/orbits/kepler/orbteqtn.html
+- Maybe put this stuff in a separate crate, as I don't think there is a good one for it -->
+<!-- - Probably best to just precalculate these because the math is rough (has some numerical method stuff in there even), and we'd probably even benefit from having as many points as our orbit geometry, or else the body may drift in and out of it's orbit path -->
+<!-- - Need to have this code inside the engine (as opposed to a python script) because I want to be able to just type in orbital elements and see an orbit -->
+<!-- # Scene serialization with serde -->
 <!-- - Derp, I'm overwriting the Rc<Mesh> with a new Rc<Mesh>, but the old one is still alive and being used by the components... -->
 <!-- - GLTF-like, index based RON -->
 <!-- - Have to load resources that were serialized with the scene -->
@@ -252,11 +244,54 @@ response |= ui.add(label);
     - Have to also expand the "content_type" thing to also signal what to do with the asset when it arrives (e.g. inject it into the scene or not) -->
 <!-- - Don't need to keep re-parsing the ephemerides every time, just do it once to spit out ephemerides and data
     - Store it in some kind of csv: One for planets, one for moons, asteroids, comets, etc. -->
-- Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
-    - Also store other stuff like mass, magnitude, rotation info
 <!-- - What to do with resources like meshes and textures? Export a binary blob?
     - Resources are largely going to be constant, so I can probably just export their name. When loading we preload all assets -->
 <!-- - What about leveraging the fact that component arrays are mostly already packed? Maybe I can use serde and just dump the whole thing? -->
+<!-- # Try setting up a simple orbit scene on rails/with physics -->
+<!-- - Rails movement
+- Crudest level: J2000 orbital elements
+- Present for all bodies (including asteroids)
+- https://ssd.jpl.nasa.gov/?sb_elem
+- utils file for handling orbital stuff
+<!-- - Class to describe orbital elements -->
+<!-- - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing) -->
+<!-- - Generate ellipse data from orbital elements struct
+- main.js::addEllipse -->
+<!-- - Generate keypoints for ellipse
+- I came up with a hacky algorithm to accumulate more points on the peri/apoapsis, but I think the best thing to do is to just generate a circle and reuse it for all ellipses, just converting the orbital elements into a single Matrix transform
+- This may force me to support non-uniform scaling though, but I think it's worth it: I'd likely have many ellipses in the buffer for no reason -->
+<!-- - Engine interface function to load ephemerides files during execution
+- Generate a small scene for it
+- Inject scene into current like for GLTF scenes -->
+<!-- - Function to convert to and from state vectors from orbital elements -->
+<!-- - There are alternative orbital elements for coments and asteroids, as well as a two-line element... -->
+<!-- - Functions to compute other stuff like period, periapsis, apoapsis, location of ascending/descending nodes -->
+<!-- - Draw ellipses with webgl lines for now -->
+<!-- - https://en.wikipedia.org/wiki/Simplified_perturbations_models -->
+<!-- - SPICE: Only for planets, moons and the missions
+- Would need to wrap the C library or use this: https://github.com/rjpower4/spice-sys, I don't think I can get it below 10 MB for the library alone, let alone the kernels with data
+- Maybe do this in the future for the mission data... although I'd likely need to have data for all solar system bodies or else the spacecraft trajectories wouldn't match the target body -->
+<!-- # Scene manager
+- Likely use Serde
+- Serialize the entity and component arrays in one go as byte buffers for now
+    - Maybe ASCII too to help debugging -->
+<!-- # I think I'll need wasm-bindgen-futures at some point for something?
+- https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs -->
+<!-- # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all... -->
+
+# Get some planets orbiting
+- Curate csv for only planets and main moons now since performance is junk
+- Orbits not parented to eachother
+- Some controls of orbital time (e.g. JDN per second)
+    - Separate to physics simulation time?
+- Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
+    - Also store other stuff like mass, magnitude, rotation info    
+
+# Crazy slow (11 fps with all planets and moons loaded and it's not even updating positions yet)
+- Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
+- Use profiling crates (like tracing https://crates.io/crates/tracing)
+
+# Add tests for raycast intersections
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
@@ -265,40 +300,16 @@ response |= ui.add(label);
 
 # I can tweak the egui visuals a bit. Check out the demo app menus on the left
 
-# Try setting up a simple orbit scene on rails/with physics
-- Rails movement
-    - Crudest level: J2000 orbital elements
-        - Present for all bodies (including asteroids)
-            - https://ssd.jpl.nasa.gov/?sb_elem
-    - utils file for handling orbital stuff
-        <!-- - Class to describe orbital elements -->
-        <!-- - Function to try to parse NASA ephemerides output to search for it (already do it with regex in my old thing) -->
-        <!-- - Generate ellipse data from orbital elements struct
-            - main.js::addEllipse -->
-        <!-- - Generate keypoints for ellipse
-            - I came up with a hacky algorithm to accumulate more points on the peri/apoapsis, but I think the best thing to do is to just generate a circle and reuse it for all ellipses, just converting the orbital elements into a single Matrix transform
-                - This may force me to support non-uniform scaling though, but I think it's worth it: I'd likely have many ellipses in the buffer for no reason -->
-        <!-- - Engine interface function to load ephemerides files during execution
-            - Generate a small scene for it
-            - Inject scene into current like for GLTF scenes -->
-        <!-- - Function to convert to and from state vectors from orbital elements -->
-        - There are alternative orbital elements for coments and asteroids, as well as a two-line element...
-        - Functions to compute other stuff like period, periapsis, apoapsis, location of ascending/descending nodes
-    <!-- - Draw ellipses with webgl lines for now -->
-    <!-- - https://en.wikipedia.org/wiki/Simplified_perturbations_models -->
-    <!-- - SPICE: Only for planets, moons and the missions
-        - Would need to wrap the C library or use this: https://github.com/rjpower4/spice-sys, I don't think I can get it below 10 MB for the library alone, let alone the kernels with data
-        - Maybe do this in the future for the mission data... although I'd likely need to have data for all solar system bodies or else the spacecraft trajectories wouldn't match the target body -->
-- Line drawing
-    - How did my JS app do it? The lines there seemed fine...
-    - Line "tessellation" into triangles for thick lines
-        - Geometry shaders? Not in WebGL2...
-        - Will probably have to do a double-sided quad cross like old school foliage stuff
-            - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
-- Free body movement
-    - Gravity, force application
-    - Orbital trajectory prediction -> line drawing
-
+# Better line drawing
+- How did my JS app do it? The lines there seemed fine...
+- Line "tessellation" into triangles for thick lines
+    - Geometry shaders? Not in WebGL2...
+    - Will probably have to do a double-sided quad cross like old school foliage stuff
+        - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
+# Free body movement
+- Gravity, force application
+- Orbital trajectory prediction -> line drawing
+# Put orbital mechanics stuff in another crate once it's big enough
 # I kind of really need to use f64 everywhere
 - Argh WebGL2 doesn't really support it in the shaders, so there's likely not much point
     - https://prideout.net/emulating-double-precision
@@ -310,17 +321,10 @@ response |= ui.add(label);
 <!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
 # Cubemap texture for the skybox
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
-# Scene manager
-- Likely use Serde
-- Serialize the entity and component arrays in one go as byte buffers for now
-    - Maybe ASCII too to help debugging
 # Find a better way of handling component updates when sorting after reparenting
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
-# I think I'll need wasm-bindgen-futures at some point for something?
-- https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs
-# I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all...
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
-# I think it should be possible to store the sharers in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
+# I think it should be possible to store the shaders in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
 # We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
 # Maybe use https://crates.io/crates/calloop for the event system instead
@@ -355,3 +359,10 @@ response |= ui.add(label);
 - Decouple simulation timestep from the actual passage of time so that it can be controlled
 - https://github.com/RandyGaul/qu3e/blob/a9dc0f37f58ccf1c65d74503deeb2bdfe0713ee0/src/dynamics/q3Island.cpp#L38
   - Another sample of semi-implicit Euler
+
+# Orbital mechanics:
+- https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
+    - https://downloads.rene-schwarz.com/download/M001-Keplerian_Orbit_Elements_to_Cartesian_State_Vectors.pdf
+- https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
+- http://www.bogan.ca/orbits/kepler/orbteqtn.html
+- https://ssd.jpl.nasa.gov/horizons.cgi

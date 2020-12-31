@@ -1,5 +1,5 @@
 use na::{
-    one, Isometry3, Matrix4, Normed, Point3, RealField, Scalar, SimdRealField, Translation3,
+    Isometry3, Matrix4, Point3, RealField, SimdRealField, Translation3,
     UnitQuaternion, Vector3,
 };
 use serde::{Deserialize, Serialize};

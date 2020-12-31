@@ -4,7 +4,7 @@ use crate::{
     components::{Component, TransformComponent},
     managers::{scene::Scene, EventReceiver},
 };
-use na::{Matrix3, Quaternion, UnitQuaternion, Vector3};
+use na::{Matrix3, Quaternion, UnitQuaternion};
 
 pub struct PhysicsSystem {}
 impl PhysicsSystem {

@@ -54,9 +54,6 @@ pub fn main_js() {
 
 #[wasm_bindgen]
 pub fn initialize() {
-    crate::utils::orbits::tests::elements_to_cartesian_numerical();
-    return;
-
     log::info!("Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
@@ -91,12 +88,7 @@ pub fn initialize() {
 
 #[wasm_bindgen]
 pub async fn start_loop() {
-    return;
-
     log::info!("Beginning engine loop...");
-
-    // fetch_text("public/ephemerides/test.txt", "ephemerides");
-    // fetch_bytes("public/Duck.glb", "glb_inject");
 
     let event_loop = EventLoop::new();
 
@@ -222,4 +214,3 @@ extern "C" {
     pub fn prompt_for_text_file(content_type: &str, extension: &str);
     pub fn prompt_for_bytes_file(content_type: &str, extension: &str);
 }
-

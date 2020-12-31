@@ -142,7 +142,7 @@ pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
         name,
         reference_id,
         body_type,
-        mass: todo!(),
+        mass: 0.0, // TODO
         mean_radius,
         orbital_elements: OrbitalElements {
             semi_major_axis,
@@ -227,7 +227,7 @@ pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
         mean_radius,
         name,
         reference_id,
-        mass: todo!(),
+        mass: 0.0, // TODO
         body_type,
         orbital_elements: OrbitalElements {
             semi_major_axis,
