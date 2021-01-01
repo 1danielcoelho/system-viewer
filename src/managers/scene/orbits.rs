@@ -65,10 +65,7 @@ impl SceneManager {
             // trans_comp.get_local_transform_mut().trans =
             //     Vector3::new(1000.0, 0.0, 0.0);
 
-            // Problem here is that the translation is being scaled... something like Pluto has a radius but also an orbit, and we 
-            // want it to be scaled so that it's sphere is the correct size, but it's orbit will also be scaled for some reason?
-
-            // If we scale the barycenter, anything we parent to it will be scaled
+            // Sun has scale of 695 and is a barycenter, so anything we parent to it will also get scaled (including orbits)
 
             trans_comp.get_local_transform_mut().scale = Vector3::new(
                 body.mean_radius.0,

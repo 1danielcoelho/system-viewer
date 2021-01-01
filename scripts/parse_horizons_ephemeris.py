@@ -68,13 +68,26 @@ class Body:
 
 orig_names = glob.glob(folder_path)
 
+# Fake a couple entries for the sun and the heliocenter
+# It's important to have separate entries here because we usually parent things (in a scene graph way) to barycenters,
+# and apply scaling to objects. We want to apply the sun radius scaling to the sun object, but we don't want to apply that scaling
+# to orbits that are reference to the heliocenter
+sun_center = Body()
+sun_center.id = 0
+sun_center.ref = 0
+sun_center.name = 'Sun body center'
+sun_center.mean_radius = 0.0
+
 sun = Body()
-sun.id = 0
+sun.id = 10
 sun.ref = 0
 sun.name = 'Sun'
 sun.mean_radius = 695500.0
 
-bodies = {sun.id: sun}
+bodies = {
+    sun_center.id: sun_center,
+    sun.id: sun
+}
 
 for filename in orig_names:
     name_no_ext = re.findall(r"([^\\]+)\.txt", filename)[0]
@@ -169,7 +182,9 @@ for body in bodies.values():
 # Sun, planet-bary, planet, moons, planet-bary, planet, moons, etc
 sorted_keys = sorted(bodies.keys())
 sorted_bodies = []
+sorted_bodies.append((sun_center.id, sun_center))
 sorted_bodies.append((sun.id, sun))
+del bodies[sun_center.id]
 del bodies[sun.id]
 for i in range(1, 10):
     # Bary
@@ -192,14 +207,14 @@ for i in range(1, 10):
             del bodies[id]
 
 
-for (body_id, body) in sorted_bodies:
-    try:
-        calc_tp = 2451545.0 - (body.mean_anomaly - 360) / body.mean_motion
-        print(body_id, calc_tp, body.time_of_periapsis, round((calc_tp - body.time_of_periapsis) / body.sidereal_orbit_period, 3), body.mean_anomaly > 180.0)
-    except ZeroDivisionError:
-        pass
+# for (body_id, body) in sorted_bodies:
+#     try:
+#         calc_tp = 2451545.0 - (body.mean_anomaly - 360) / body.mean_motion
+#         print(body_id, calc_tp, body.time_of_periapsis, round((calc_tp - body.time_of_periapsis) / body.sidereal_orbit_period, 3), body.mean_anomaly > 180.0)
+#     except ZeroDivisionError:
+#         pass
 
-# with open(out_path, 'w') as f:
-#     print("Writing", str(len(sorted_bodies)), "bodies to", out_path)
-#     f.write("\n".join([str(entry[1]) for entry in sorted_bodies]))
-#     print("Done")
+with open(out_path, 'w') as f:
+    print("Writing", str(len(sorted_bodies)), "bodies to", out_path)
+    f.write("\n".join([str(entry[1]) for entry in sorted_bodies]))
+    print("Done")
