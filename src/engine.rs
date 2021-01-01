@@ -37,11 +37,12 @@ impl Engine {
     }
 
     pub fn update(&mut self, state: &mut AppState) {
-        self.input_man.run(state);
-
         // Startup the UI frame, collecting UI elements
         self.int_man
             .begin_frame(state, &mut self.scene_man, &mut self.res_man);
+
+        // Run the input manager after begin frame to allow the UI a change to intercept input
+        self.input_man.run(state);
 
         if let Some(scene) = self.scene_man.get_main_scene_mut() {
             // Run all systems

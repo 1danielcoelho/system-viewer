@@ -23,6 +23,8 @@ pub struct Input {
     pub mouse_y: i32,  // Canvas pixels, (0,0) on top left
     pub delta_x: i32,  // Since last frame
     pub delta_y: i32,  // Since last frame
+    pub scroll_delta_x: i32,
+    pub scroll_delta_y: i32,
     pub over_ui: bool, // Prevents interaction with the scene
     pub m0: ButtonState,
     pub m1: ButtonState,
@@ -74,6 +76,8 @@ impl AppState {
                 mouse_y: 0,
                 delta_x: 0,
                 delta_y: 0,
+                scroll_delta_x: 0,
+                scroll_delta_y: 0,
                 over_ui: false,
                 m0: ButtonState::Depressed,
                 m1: ButtonState::Depressed,

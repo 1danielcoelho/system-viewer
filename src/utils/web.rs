@@ -203,7 +203,7 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
     if let Some(key) = egui_key {
         s.input.egui_keys.push(egui::Event::Key {
             key,
-            pressed: true,
+            pressed: pressed,
             modifiers: *modifiers,
         });
     }
@@ -312,11 +312,11 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
-                if event.delta_y() < 0.0 {
-                    s.move_speed *= 1.1;
-                } else {
-                    s.move_speed *= 0.9;
-                }
+                s.input.scroll_delta_x = event.delta_x().signum() as i32;
+                s.input.scroll_delta_y = event.delta_y().signum() as i32;
+
+                event.stop_propagation();
+                event.prevent_default();
             });
         };
 

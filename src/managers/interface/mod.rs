@@ -34,6 +34,32 @@ pub fn handle_output_func(state: &mut AppState, output: Response) {
             state.input.m0 = ButtonState::Handled;
         }
     }
+
+    if output.has_kb_focus {
+        if state.input.forward == ButtonState::Pressed {
+            state.input.forward = ButtonState::Handled;
+        }
+
+        if state.input.left == ButtonState::Pressed {
+            state.input.left = ButtonState::Handled;
+        }
+
+        if state.input.right == ButtonState::Pressed {
+            state.input.right = ButtonState::Handled;
+        }
+
+        if state.input.back == ButtonState::Pressed {
+            state.input.back = ButtonState::Handled;
+        }
+
+        if state.input.up == ButtonState::Pressed {
+            state.input.up = ButtonState::Handled;
+        }
+
+        if state.input.down == ButtonState::Pressed {
+            state.input.down = ButtonState::Handled;
+        }
+    }
 }
 
 struct OpenWindows {
@@ -295,56 +321,58 @@ impl InterfaceManager {
 
                     ui.separator();
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Vertical FOV (deg):");
                         cols[1].add(
                             egui::DragValue::f32(&mut state.camera.fov_v)
                                 .range(0.1..=120.0)
                                 .speed(0.5),
-                        );
+                        )
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Near:");
-                        cols[1].add(egui::DragValue::f32(&mut state.camera.near));
+                        cols[1].add(egui::DragValue::f32(&mut state.camera.near))
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Far:");
-                        cols[1].add(egui::DragValue::f32(&mut state.camera.far));
+                        cols[1].add(egui::DragValue::f32(&mut state.camera.far))
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Camera pos:");
-                        cols[1].with_layout(
-                            Layout::left_to_right().with_cross_align(Align::Min),
-                            |ui| {
-                                let mut r = ui.add(
-                                    egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "),
-                                );
-                                r |= ui.add(
-                                    egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "),
-                                );
-                                r |= ui.add(
-                                    egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "),
-                                );
-                                r
-                            },
-                        );
+                        cols[1]
+                            .with_layout(
+                                Layout::left_to_right().with_cross_align(Align::Min),
+                                |ui| {
+                                    let mut r = ui.add(
+                                        egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "),
+                                    );
+                                    r |= ui.add(
+                                        egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "),
+                                    );
+                                    r |= ui.add(
+                                        egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "),
+                                    );
+                                    r
+                                },
+                            )
+                            .1
                     });
 
                     ui.separator();
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Move speed:");
                         cols[1].add(
                             egui::DragValue::f32(&mut state.move_speed)
                                 .range(1.0..=1000.0)
                                 .speed(0.1),
-                        );
+                        )
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Rotation speed:");
                         cols[1].add(
                             egui::DragValue::f32(&mut state.rotate_speed)
@@ -357,43 +385,35 @@ impl InterfaceManager {
                         if let Some(scene) = scene_man.get_main_scene_mut() {
                             ui.separator();
 
-                            ui.columns(2, |cols| {
+                            response |= ui.columns(2, |cols| {
                                 cols[0].label("Selected entity:");
-                                cols[1].label(format!("{:?}", selection));
+                                cols[1].label(format!("{:?}", selection))
                             });
 
-                            ui.columns(2, |cols| {
+                            response |= ui.columns(2, |cols| {
                                 cols[0].label("Name:");
                                 cols[1].label(format!(
                                     "{}",
                                     scene.get_entity_name(selection).unwrap_or_default()
-                                ));
+                                ))
                             });
 
                             if let Some(comp) = scene.get_component::<TransformComponent>(selection)
                             {
-                                ui.collapsing("Transform component", |ui| {
-                                    comp.draw_details_ui(ui);
-                                });
+                                ui.collapsing("Transform component", |ui| comp.draw_details_ui(ui));
                             }
 
                             if let Some(comp) = scene.get_component::<MeshComponent>(selection) {
-                                ui.collapsing("Mesh component", |ui| {
-                                    comp.draw_details_ui(ui);
-                                });
+                                ui.collapsing("Mesh component", |ui| comp.draw_details_ui(ui));
                             }
 
                             if let Some(comp) = scene.get_component::<OrbitalComponent>(selection) {
-                                ui.collapsing("Orbital component", |ui| {
-                                    comp.draw_details_ui(ui);
-                                });
+                                ui.collapsing("Orbital component", |ui| comp.draw_details_ui(ui));
                             }
                         }
                     }
 
-                    log::info!("{:?}", response);
                     handle_output!(state, response);
-                    return response;
                 });
 
             if let Some(response) = response {

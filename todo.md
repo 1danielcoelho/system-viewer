@@ -279,12 +279,14 @@ response |= ui.add(label);
 <!-- # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all... -->
 <!-- # Note: I should not change coordinates to use SSB (solar system barycenter) instead of heliocentric:
 - Over years, the Sun slowly moves around by a few hundred thousand kilometers in response to the motion of the large outer planets Jupiter, Saturn, Uranus and Neptune. However, the inner planets keep fairly close to Kelperian orbits around the Sun wherever it happens to be at the time. (https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons) -->
-    
-
-# Can't type in egui slide fields
+> - Can't type in egui slide fields
 <!-- - Enter/Backspace stuff don't work -->
-- Typing WASD still moves
-- Maybe also handle wheel events and stuff while I'm at it?
+> - Typing WASD still moves
+> - Maybe also handle wheel events and stuff while I'm at it?
+
+
+
+
 
 # Get some planets orbiting
 - Curate csv for only planets and main moons now since performance is junk
@@ -296,7 +298,6 @@ response |= ui.add(label);
     - Separate to physics simulation time?
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
     - Also store other stuff like mass, magnitude, rotation info    
-
 
 # Actually what I really need is the conversion in the other direction: State vector -> osculating orbital elements. I can run this one on free bodies to do orbit prediction, maybe?
 - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
@@ -316,6 +317,7 @@ response |= ui.add(label);
 
 # I can tweak the egui visuals a bit. Check out the demo app menus on the left
 
+# What about that transform feedback thing? Maybe I can use that for line drawing or?
 # Better line drawing
 - How did my JS app do it? The lines there seemed fine...
 - Line "tessellation" into triangles for thick lines

@@ -29,6 +29,13 @@ impl InputManager {
 
         let lock_pitch = true;
 
+        if state.input.scroll_delta_y < 0 {
+            state.move_speed *= 1.1;
+        } else if state.input.scroll_delta_y > 0 {
+            state.move_speed *= 0.9;
+        }
+        state.input.scroll_delta_y = 0; // We have to "consume" this as it isn't cleared otherwise
+
         let move_speed = state.move_speed * 0.005;
         let rotate_speed = state.rotate_speed * 0.5;
 
@@ -55,7 +62,8 @@ impl InputManager {
         if state.input.m1 == ButtonState::Pressed
             && (state.input.delta_y.abs() > 0 || state.input.delta_x.abs() > 0)
         {
-            let half_canvas_height_world = state.camera.near * (state.camera.fov_v.to_radians() / 2.0).tan();
+            let half_canvas_height_world =
+                state.camera.near * (state.camera.fov_v.to_radians() / 2.0).tan();
             let half_canvas_width_world = aspect * half_canvas_height_world;
 
             let delta_x_world = -half_canvas_width_world
