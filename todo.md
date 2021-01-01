@@ -96,7 +96,6 @@
 <!-- # Honestly I may not even need the entity index inside Entity and always use just the uuid -->
 <!-- # Less dumb way of storing/reading shaders -->
 <!-- # Make it so that entity 0 is the "invalid entity". It's going to have some components, but who cares -->
-
 <!-- # Sparse component arrays -->
 <!-- - Likely wouldn't get any benefit from DOD if there are like 7 instances of the component in 2000 entities
 - Hash map from entity to component
@@ -278,14 +277,31 @@ response |= ui.add(label);
 <!-- # I think I'll need wasm-bindgen-futures at some point for something?
 - https://github.com/sotrh/wgpu-multiplatform/blob/41a46b01b6796b187bf051b7b0d68a7b0e4ab7f6/demo/src/lib.rs -->
 <!-- # I'm going to need some comprehensive logging to file functionality to help with debugging as I won't be able to step through at all... -->
+<!-- # Note: I should not change coordinates to use SSB (solar system barycenter) instead of heliocentric:
+- Over years, the Sun slowly moves around by a few hundred thousand kilometers in response to the motion of the large outer planets Jupiter, Saturn, Uranus and Neptune. However, the inner planets keep fairly close to Kelperian orbits around the Sun wherever it happens to be at the time. (https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons) -->
+    
+
+# Can't type in egui slide fields
+<!-- - Enter/Backspace stuff don't work -->
+- Typing WASD still moves
+- Maybe also handle wheel events and stuff while I'm at it?
 
 # Get some planets orbiting
 - Curate csv for only planets and main moons now since performance is junk
 - Orbits not parented to eachother
+<!-- - Weird aliasing/precision issue when drawing orbits as far away as jupiter
+- Weird issue where if we go far enough from origin everything disappears and we get NaN on camera position, even though clip space is much farther and 
+    - Flickering things was the camera near plane being too near and far being too far. I patched it with better numbers but later we'll want logarithmic depth buffers like in threejs -->
 - Some controls of orbital time (e.g. JDN per second)
     - Separate to physics simulation time?
 - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
     - Also store other stuff like mass, magnitude, rotation info    
+
+
+# Actually what I really need is the conversion in the other direction: State vector -> osculating orbital elements. I can run this one on free bodies to do orbit prediction, maybe?
+- https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
+
+# Logarithmic depth buffer
 
 # Crazy slow (11 fps with all planets and moons loaded and it's not even updating positions yet)
 - Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
@@ -361,8 +377,22 @@ response |= ui.add(label);
   - Another sample of semi-implicit Euler
 
 # Orbital mechanics:
-- https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
-    - https://downloads.rene-schwarz.com/download/M001-Keplerian_Orbit_Elements_to_Cartesian_State_Vectors.pdf
-- https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
-- http://www.bogan.ca/orbits/kepler/orbteqtn.html
+- Orbital mechanics equation cheat sheet even for non-elliptical orbits: http://www.bogan.ca/orbits/kepler/orbteqtn.html
 - https://ssd.jpl.nasa.gov/horizons.cgi
+- Great space SE threads:
+    - https://space.stackexchange.com/questions/19322/converting-orbital-elements-to-cartesian-state-vectors
+        - https://downloads.rene-schwarz.com/download/M001-Keplerian_Orbit_Elements_to_Cartesian_State_Vectors.pdf
+    - https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
+    - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
+        - On this one they recommend using heliocentric if I intend to use osculating orbital elements, as they tend to be more consistent
+    - https://space.stackexchange.com/questions/25218/why-is-the-sidereal-period-of-the-earth-362-392667-days
+    - https://space.stackexchange.com/questions/23408/how-to-calculate-the-planets-and-moons-beyond-newtonss-gravitational-force/23409#23409
+    - https://space.stackexchange.com/questions/15364/pythagorean-three-body-problem-need-some-points-from-an-accurate-solution-fo
+    - https://space.stackexchange.com/questions/23535/compatibility-of-osculating-elements-and-cartesian-vectors-given-by-jpl-horizons/23536#23536
+    - https://space.stackexchange.com/questions/22915/calculating-the-planets-and-moons-based-on-newtonss-gravitational-force/22960#22960
+        - Crap: Also, if you calculate their position relative to the Sun yo For Io, you have semi-major axis of 0.003 AU orbital radius, at distance of 5.2 AU from the Sun. This works poorly with floating point values as the fixed, large offset from center of the system of coordinates prevents them to increase precision by changing the mantisse and changes occur at the far tail of the base with a lot of precision lost behind its tail. 
+        - Also I would hold off on Jupiter's moons until you add higher order gravitational multiples (e.g. J2) due to oblateness.
+        - After that, there are two big corrections to simple point-mass to point-mass Newtonian gravity that I can think of; 1. General Relativity (GR), and 2. higher-order gravitational multipoles (e.g. J2 and beyond) and tidal forces. Mercury will show a big improvement with GR, and the Earth-Moon and moons of giant planets will show improvement with non-point gravity. 
+        - Aside from numerical issues, "With Sun as centre" may be part of your problem. Get all the data from Horizons relative to the Solar System Barycenter, not the Sun, which moves relative to the barycenter. That barycenter is an inertial frame of reference, whereas the center of the Sun is not. Also make sure that you are putting in the initial position and velocity of the Sun and letting it move, if you aren't already.
+    - https://scicomp.stackexchange.com/questions/29149/what-does-symplectic-mean-in-reference-to-numerical-integrators-and-does-scip
+    - https://space.stackexchange.com/questions/22948/where-to-find-the-best-values-for-standard-gravitational-parameters-of-solar-sys

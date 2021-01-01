@@ -32,6 +32,9 @@ pub struct Input {
     pub back: ButtonState,
     pub up: ButtonState,
     pub down: ButtonState,
+
+    pub modifiers: egui::Modifiers, // We can use this for the rest of the app too
+    pub egui_keys: Vec<egui::Event>, // Mostly for typing into UI
 }
 
 pub struct AppState {
@@ -80,6 +83,14 @@ impl AppState {
                 back: ButtonState::Depressed,
                 up: ButtonState::Depressed,
                 down: ButtonState::Depressed,
+                modifiers: egui::Modifiers {
+                    alt: false,
+                    ctrl: false,
+                    shift: false,
+                    mac_cmd: false,
+                    command: false,
+                },
+                egui_keys: Vec::new(),
             },
             selection: HashSet::new(),
             camera: Camera {
@@ -87,8 +98,8 @@ impl AppState {
                 up: Unit::new_unchecked(Vector3::z()),
                 target: Point3::new(0.0, 0.0, 0.0),
                 fov_v: 60.0,
-                near: 0.1,
-                far: 100000000000.0,
+                near: 5.0,
+                far: 100000000.0,
             },
         }
     }

@@ -7,9 +7,17 @@ use na::{Matrix3, Vector3};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum PhysicsBehavior {
+    Rails,
+    FreeBody,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PhysicsComponent {
     enabled: bool,
     pub collision_enabled: bool,
+
+    pub behavior: PhysicsBehavior,
 
     // Constants
     pub inv_mass: f64,             // kg
@@ -33,6 +41,7 @@ impl Default for PhysicsComponent {
         return Self {
             enabled: false,
             collision_enabled: false,
+            behavior: PhysicsBehavior::FreeBody,
             inv_mass: 1.0,
             inv_inertia: Matrix3::identity(),
             force_sum: Vector3::new(0.0, 0.0, 0.0),

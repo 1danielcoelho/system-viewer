@@ -1,5 +1,5 @@
 use crate::{
-    components::{MeshComponent, TransformComponent},
+    components::{MeshComponent, OrbitalComponent, TransformComponent},
     managers::{
         scene::{Entity, SceneManager},
         ResourceManager,
@@ -54,21 +54,33 @@ impl SceneManager {
     ) -> Entity {
         let scene = self.get_main_scene_mut().unwrap();
 
+        log::info!("{:#?}", body);
+
         // Body
         let body_ent = scene.new_entity(Some(&body.name));
         let trans_comp = scene.add_component::<TransformComponent>(body_ent).unwrap();
         if body.mean_radius.0 > 0.0 {
-            trans_comp.get_local_transform_mut().trans =
-                Vector3::new(body.id as f64 * 10.0, 0.0, 0.0);
+            // log::info!("Transform for planet body {:#?}", body);
 
-            // trans_comp.get_local_transform_mut().scale = Vector3::new(
-            //     body.mean_radius as f32,
-            //     body.mean_radius as f32,
-            //     body.mean_radius as f32,
-            // );
+            // trans_comp.get_local_transform_mut().trans =
+            //     Vector3::new(1000.0, 0.0, 0.0);
+
+            // Problem here is that the translation is being scaled... something like Pluto has a radius but also an orbit, and we 
+            // want it to be scaled so that it's sphere is the correct size, but it's orbit will also be scaled for some reason?
+
+            // If we scale the barycenter, anything we parent to it will be scaled
+
+            trans_comp.get_local_transform_mut().scale = Vector3::new(
+                body.mean_radius.0,
+                body.mean_radius.0,
+                body.mean_radius.0,
+            );
 
             let mesh_comp = scene.add_component::<MeshComponent>(body_ent).unwrap();
             mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+
+            let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent).unwrap();
+            orbit_comp.desc = body.clone();
 
             if let Some(parent) = parent_bary {
                 scene.set_entity_parent(parent, body_ent);
@@ -78,7 +90,7 @@ impl SceneManager {
         // Orbit
         if body.orbital_elements.semi_major_axis.0 > 0.0 {
             let orbit_trans = elements_to_circle_transform(&body.orbital_elements);
-            log::info!("Transform for body {:#?}: {:#?}", body, orbit_trans);
+            // log::info!("Transform for body {:#?}: {:#?}", body, orbit_trans);
 
             let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
             let trans_comp = scene.add_component::<TransformComponent>(orbit).unwrap();

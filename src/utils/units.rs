@@ -1,7 +1,9 @@
 use chrono::{TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub const J2000_JDN: Jdn = Jdn(2451545.0);
+
+#[derive(Clone, Copy, Default, Debug, Serialize, Deserialize)]
 pub struct Rad(pub f64);
 impl Rad {
     pub fn to_deg(&self) -> Deg {
@@ -9,7 +11,7 @@ impl Rad {
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, Serialize, Deserialize)]
 pub struct Deg(pub f64);
 impl Deg {
     pub fn to_rad(&self) -> Rad {
@@ -18,7 +20,7 @@ impl Deg {
 }
 
 /// 1000 km
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, Serialize, Deserialize)]
 pub struct Mm(pub f64);
 impl Mm {
     #[allow(non_snake_case)]
@@ -28,7 +30,7 @@ impl Mm {
 }
 
 /// 149597.8707 Mm
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Default, Debug, Serialize, Deserialize)]
 pub struct Au(pub f64);
 impl Au {
     #[allow(non_snake_case)]
@@ -40,6 +42,11 @@ impl Au {
 /// Julian Day Number, fractional number of days since noon of jan 1st, 4713 BC
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Jdn(pub f64);
+impl Default for Jdn {
+    fn default() -> Self {
+        J2000_JDN
+    }
+}
 
 /// Returns the corresponding Julian Day Number (JDN) for an instant in time.
 /// See https://en.wikipedia.org/wiki/Julian_day

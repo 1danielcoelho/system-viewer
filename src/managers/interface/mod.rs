@@ -1,6 +1,6 @@
 use crate::{
     app_state::{AppState, ButtonState},
-    components::{MeshComponent, TransformComponent},
+    components::{MeshComponent, OrbitalComponent, TransformComponent},
     managers::{details_ui::DetailsUI, scene::SceneManager, ResourceManager},
     prompt_for_bytes_file, prompt_for_text_file,
     utils::{
@@ -97,6 +97,8 @@ impl InterfaceManager {
 
         // HACK: Currently the UI sets the button state to handled if mouse down happens over it...
         raw_input.mouse_down = state.input.m0 != ButtonState::Depressed;
+        raw_input.events.append(&mut state.input.egui_keys);
+        raw_input.modifiers = state.input.modifiers;
 
         self.backend.begin_frame(raw_input);
         let rect = self.backend.ctx.available_rect();
@@ -256,39 +258,39 @@ impl InterfaceManager {
             let response = egui::Window::new("Debug")
                 .open(&mut self.open_windows.debug)
                 .show(&ui.ctx(), |ui| {
-                    ui.columns(2, |cols| {
+                    let mut response = ui.columns(2, |cols| {
                         cols[0].label("Simulated seconds since start:");
-                        cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0));
+                        cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0))
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Real seconds since start:");
-                        cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0));
+                        cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0))
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Frames per second:");
-                        cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms));
+                        cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms))
                     });
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Simulation speed:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.simulation_speed)
                                 .range(-100.0..=100.0)
                                 .speed(0.01),
-                        );
+                        )
                     });
 
                     ui.separator();
 
-                    ui.columns(2, |cols| {
+                    response |= ui.columns(2, |cols| {
                         cols[0].label("Light intensity exponent:");
                         cols[1].add(
                             egui::DragValue::f32(&mut state.light_intensity)
                                 .range(-1000.0..=1000.0)
                                 .speed(0.01),
-                        );
+                        )
                     });
 
                     ui.separator();
@@ -304,11 +306,7 @@ impl InterfaceManager {
 
                     ui.columns(2, |cols| {
                         cols[0].label("Near:");
-                        cols[1].add(
-                            egui::DragValue::f32(&mut state.camera.near)
-                                .range(0.01..=19.9)
-                                .speed(0.01),
-                        );
+                        cols[1].add(egui::DragValue::f32(&mut state.camera.near));
                     });
 
                     ui.columns(2, |cols| {
@@ -321,9 +319,16 @@ impl InterfaceManager {
                         cols[1].with_layout(
                             Layout::left_to_right().with_cross_align(Align::Min),
                             |ui| {
-                                ui.add(egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "));
-                                ui.add(egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "));
-                                ui.add(egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "));
+                                let mut r = ui.add(
+                                    egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "),
+                                );
+                                r |= ui.add(
+                                    egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "),
+                                );
+                                r |= ui.add(
+                                    egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "),
+                                );
+                                r
                             },
                         );
                     });
@@ -345,7 +350,7 @@ impl InterfaceManager {
                             egui::DragValue::f32(&mut state.rotate_speed)
                                 .range(1.0..=10.0)
                                 .speed(0.1),
-                        );
+                        )
                     });
 
                     if let Some(selection) = state.selection.iter().next().cloned() {
@@ -377,8 +382,18 @@ impl InterfaceManager {
                                     comp.draw_details_ui(ui);
                                 });
                             }
+
+                            if let Some(comp) = scene.get_component::<OrbitalComponent>(selection) {
+                                ui.collapsing("Orbital component", |ui| {
+                                    comp.draw_details_ui(ui);
+                                });
+                            }
                         }
                     }
+
+                    log::info!("{:?}", response);
+                    handle_output!(state, response);
+                    return response;
                 });
 
             if let Some(response) = response {

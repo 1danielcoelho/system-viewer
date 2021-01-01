@@ -1,7 +1,7 @@
 use crate::{
     components::{
         component::ComponentStorageType, Component, LightComponent, MeshComponent,
-        PhysicsComponent, TransformComponent,
+        OrbitalComponent, PhysicsComponent, TransformComponent,
     },
     managers::scene::serialization::{EntityIndex, SerEntity, SerScene},
 };
@@ -40,6 +40,7 @@ pub struct Scene {
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
     pub light: HashMap<Entity, LightComponent>,
+    pub orbital: HashMap<Entity, OrbitalComponent>,
 
     _private: (),
 }
@@ -58,6 +59,7 @@ impl Scene {
             mesh: Vec::new(),
             transform: Vec::new(),
             light: HashMap::new(),
+            orbital: HashMap::new(),
             _private: (),
         }
     }
@@ -139,6 +141,7 @@ impl Scene {
         self.transform.reserve(num_missing as usize);
         self.mesh.reserve(num_missing as usize);
         self.light.reserve(num_missing as usize);
+        self.orbital.reserve(num_missing as usize);
     }
 
     fn new_entity_at_index(&mut self, entity_storage_index: u32, name: Option<&str>) -> Entity {
@@ -618,6 +621,11 @@ impl Scene {
             .drain()
             .map(|(index, comp)| (new_scene.get_entity_from_index(index.0).unwrap(), comp))
             .collect();
+        new_scene.orbital = ser_scene
+            .orbital
+            .drain()
+            .map(|(index, comp)| (new_scene.get_entity_from_index(index.0).unwrap(), comp))
+            .collect();
 
         return Ok(new_scene);
     }
@@ -630,6 +638,7 @@ impl Scene {
             mesh: self.mesh.clone(),
             transform: self.transform.clone(),
             light: HashMap::new(),
+            orbital: HashMap::new(),
         };
 
         // TODO: Its probably more efficient to use live_indices for this and do a scan/rolling sum thing
@@ -706,6 +715,13 @@ impl Scene {
             let ser_index = index_to_packed_index[&scene_index];
 
             ser_scene.light.insert(EntityIndex(ser_index), comp.clone());
+        }
+        ser_scene.orbital.reserve(self.orbital.len());
+        for (ent, comp) in self.orbital.iter() {
+            let scene_index = self.get_entity_index(*ent).unwrap();
+            let ser_index = index_to_packed_index[&scene_index];
+
+            ser_scene.orbital.insert(EntityIndex(ser_index), comp.clone());
         }
 
         return ron::ser::to_string_pretty(&ser_scene, ron::ser::PrettyConfig::new()).unwrap();

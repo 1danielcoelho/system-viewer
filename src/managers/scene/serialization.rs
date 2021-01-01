@@ -1,4 +1,6 @@
-use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
+use crate::components::{
+    LightComponent, MeshComponent, OrbitalComponent, PhysicsComponent, TransformComponent,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -27,5 +29,5 @@ pub struct SerScene<'a> {
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,
     pub light: HashMap<EntityIndex, LightComponent>,
+    pub orbital: HashMap<EntityIndex, OrbitalComponent>,
 }
-

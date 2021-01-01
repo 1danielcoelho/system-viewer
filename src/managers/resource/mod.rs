@@ -375,7 +375,7 @@ impl ResourceManager {
             "default" => Some(Material::new(
                 identifier,
                 "relay_color.vert",
-                "color.frag",
+                "white.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "world_normals" => Some(Material::new(

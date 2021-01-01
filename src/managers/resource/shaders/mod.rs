@@ -19,6 +19,7 @@ lazy_static! {
         let shader_paths: HashMap<String, &str> = include_str_map![
             "basecolor.frag",
             "color.frag",
+            "white.frag",
             "brdf.glsl",
             "constants.glsl",
             "functions.glsl",

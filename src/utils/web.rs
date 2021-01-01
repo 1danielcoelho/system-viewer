@@ -1,4 +1,4 @@
-use crate::STATE;
+use crate::{app_state::AppState, STATE};
 use crate::{app_state::ButtonState, wasm_bindgen::JsCast};
 use js_sys::encode_uri_component;
 use wasm_bindgen::prelude::Closure;
@@ -79,7 +79,137 @@ pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
 //     return actual_txt;
 // }
 
-/** Sets up the canvas event handlers to change the app_state blackboard */
+/// From https://github.com/emilk/egui/blob/650450bc3a01f8fe44ba89781597c3c8f60c2777/egui_web/src/lib.rs#L516
+fn modifiers_from_event(event: &web_sys::KeyboardEvent) -> egui::Modifiers {
+    egui::Modifiers {
+        alt: event.alt_key(),
+        ctrl: event.ctrl_key(),
+        shift: event.shift_key(),
+
+        // Ideally we should know if we are running or mac or not,
+        // but this works good enough for now.
+        mac_cmd: event.meta_key(),
+
+        // Ideally we should know if we are running or mac or not,
+        // but this works good enough for now.
+        command: event.ctrl_key() || event.meta_key(),
+    }
+}
+
+/// From https://github.com/emilk/egui/blob/650450bc3a01f8fe44ba89781597c3c8f60c2777/egui_web/src/lib.rs#L272
+/// Web sends all keys as strings, so it is up to us to figure out if it is
+/// a real text input or the name of a key.
+fn should_ignore_key(key: &str) -> bool {
+    let is_function_key = key.starts_with('F') && key.len() > 1;
+    is_function_key
+        || matches!(
+            key,
+            "Alt"
+                | "ArrowDown"
+                | "ArrowLeft"
+                | "ArrowRight"
+                | "ArrowUp"
+                | "Backspace"
+                | "CapsLock"
+                | "ContextMenu"
+                | "Control"
+                | "Delete"
+                | "End"
+                | "Enter"
+                | "Esc"
+                | "Escape"
+                | "Help"
+                | "Home"
+                | "Insert"
+                | "Meta"
+                | "NumLock"
+                | "PageDown"
+                | "PageUp"
+                | "Pause"
+                | "ScrollLock"
+                | "Shift"
+                | "Tab"
+        )
+}
+
+fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pressed: bool) {
+    let button_state = if pressed {
+        ButtonState::Pressed
+    } else {
+        ButtonState::Depressed
+    };
+
+    let mut egui_key: Option<egui::Key> = None;
+    match key {
+        "ArrowUp" => {
+            s.input.forward = button_state;
+            egui_key = Some(egui::Key::ArrowUp);
+        }
+        "ArrowLeft" => {
+            s.input.left = button_state;
+            egui_key = Some(egui::Key::ArrowLeft);
+        }
+        "ArrowDown" => {
+            s.input.back = button_state;
+            egui_key = Some(egui::Key::ArrowDown);
+        }
+        "ArrowRight" => {
+            s.input.right = button_state;
+            egui_key = Some(egui::Key::ArrowRight);
+        }
+        "w" | "W" => {
+            s.input.forward = button_state;
+            egui_key = Some(egui::Key::W);
+        }
+        "Backspace" => egui_key = Some(egui::Key::Backspace),
+        "Delete" => egui_key = Some(egui::Key::Delete),
+        "End" => egui_key = Some(egui::Key::End),
+        "Enter" => egui_key = Some(egui::Key::Enter),
+        "Space" => egui_key = Some(egui::Key::Space),
+        "Esc" | "Escape" => egui_key = Some(egui::Key::Escape),
+        "Help" | "Insert" => egui_key = Some(egui::Key::Insert),
+        "Home" => egui_key = Some(egui::Key::Home),
+        "PageDown" => egui_key = Some(egui::Key::PageDown),
+        "PageUp" => egui_key = Some(egui::Key::PageUp),
+        "Tab" => egui_key = Some(egui::Key::Tab),
+        "a" | "A" => {
+            s.input.left = button_state;
+            egui_key = Some(egui::Key::A);
+        }
+        "s" | "S" => {
+            s.input.back = button_state;
+        }
+        "d" | "D" => {
+            s.input.right = button_state;
+        }
+        "e" | "E" => {
+            s.input.up = button_state;
+        }
+        "q" | "Q" => {
+            s.input.down = button_state;
+        }
+        "k" | "K" => {
+            egui_key = Some(egui::Key::K);
+        }
+        "u" | "U" => {
+            egui_key = Some(egui::Key::U);
+        }
+        "z" | "Z" => {
+            egui_key = Some(egui::Key::Z);
+        }
+        _ => {}
+    };
+
+    if let Some(key) = egui_key {
+        s.input.egui_keys.push(egui::Event::Key {
+            key,
+            pressed: true,
+            modifiers: *modifiers,
+        });
+    }
+}
+
+/// Sets up the canvas event handlers to change the app_state blackboard
 pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
     canvas.set_oncontextmenu(Some(&js_sys::Function::new_with_args(
         "ev",
@@ -197,34 +327,49 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
         handler.forget();
     }
 
-    // keydown
+    // keydown (some of this is copied from egui's web demo: https://github.com/emilk/egui/blob/650450bc3a01f8fe44ba89781597c3c8f60c2777/egui_web/src/lib.rs )
     {
         let handler = move |event: web_sys::KeyboardEvent| {
             STATE.with(|s| {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
-                match (event.code() as String).as_str() {
-                    "KeyW" | "ArrowUp" => {
-                        s.input.forward = ButtonState::Pressed;
-                    }
-                    "KeyA" | "ArrowLeft" => {
-                        s.input.left = ButtonState::Pressed;
-                    }
-                    "KeyS" | "ArrowDown" => {
-                        s.input.back = ButtonState::Pressed;
-                    }
-                    "KeyD" | "ArrowRight" => {
-                        s.input.right = ButtonState::Pressed;
-                    }
-                    "KeyE" => {
-                        s.input.up = ButtonState::Pressed;
-                    }
-                    "KeyQ" => {
-                        s.input.down = ButtonState::Pressed;
-                    }
-                    _ => {}
-                };
+                if event.is_composing() || event.key_code() == 229 {
+                    // https://www.fxsitecompat.dev/en-CA/docs/2018/keydown-and-keyup-events-are-now-fired-during-ime-composition/
+                    return;
+                }
+
+                let modifiers = modifiers_from_event(&event);
+                s.input.modifiers = modifiers;
+
+                let key = event.key();
+                handle_key_press(&key, &modifiers, s, true);
+
+                if !modifiers.ctrl && !modifiers.command && !should_ignore_key(&key) {
+                    s.input.egui_keys.push(egui::Event::Text(key.to_owned()));
+                }
+
+                // So, shall we call prevent_default?
+                // YES:
+                // * Tab  (move to next text field)
+                //
+                // SOMETIMES:
+                // * Backspace - when entering text we don't want to go back one page.
+                //
+                // NO:
+                // * F5 / cmd-R (refresh)
+                // * cmd-shift-C (debug tools)
+                // * ...
+                //
+                // NOTE: if we call prevent_default for cmd-c/v/x, we will prevent copy/paste/cut events.
+                // Let's do things manually for now:
+                if matches!(
+                    event.key().as_str(),
+                    "Backspace"  // so we don't go back to previous page when deleting text
+                    | "Tab" // so that e.g. tab doesn't move focus to url bar
+                ) {
+                    event.prevent_default();
+                }
             });
         };
 
@@ -242,27 +387,11 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
-                match (event.code() as String).as_str() {
-                    "KeyW" | "ArrowUp" => {
-                        s.input.forward = ButtonState::Depressed;
-                    }
-                    "KeyA" | "ArrowLeft" => {
-                        s.input.left = ButtonState::Depressed;
-                    }
-                    "KeyS" | "ArrowDown" => {
-                        s.input.back = ButtonState::Depressed;
-                    }
-                    "KeyD" | "ArrowRight" => {
-                        s.input.right = ButtonState::Depressed;
-                    }
-                    "KeyE" => {
-                        s.input.up = ButtonState::Depressed;
-                    }
-                    "KeyQ" => {
-                        s.input.down = ButtonState::Depressed;
-                    }
-                    _ => {}
-                };
+                let modifiers = modifiers_from_event(&event);
+                s.input.modifiers = modifiers;
+
+                let key = event.key();
+                handle_key_press(&key, &modifiers, s, false);
             });
         };
 

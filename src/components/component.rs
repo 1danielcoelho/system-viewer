@@ -10,6 +10,7 @@ pub enum ComponentType {
     Mesh,
     Physics,
     Light,
+    Orbital,
 }
 
 pub enum ComponentStorageType {

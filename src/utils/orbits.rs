@@ -1,6 +1,6 @@
 use crate::utils::{
     transform::Transform,
-    units::{Au, Deg, Jdn, Mm, Rad},
+    units::{Au, Deg, Jdn, Mm, Rad, J2000_JDN},
 };
 use na::{Point3, UnitQuaternion, Vector3};
 use regex::Regex;
@@ -31,11 +31,10 @@ lazy_static! {
 }
 
 const GRAVITATION_CONSTANT: f64 = 4.9823382528e-19; // Mm3 / (kg day2)
-const J2000_JDN: Jdn = Jdn(2451545.0);
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BodyType {
     Barycenter,
     Star,
@@ -46,8 +45,13 @@ pub enum BodyType {
     Artificial,
     Other,
 }
+impl Default for BodyType {
+    fn default() -> Self {
+        BodyType::Other
+    }
+}
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BodyDescription {
     pub id: u32,
     pub name: String,
@@ -59,7 +63,7 @@ pub struct BodyDescription {
     pub orbital_elements: OrbitalElements,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct OrbitalElements {
     pub semi_major_axis: Mm,
     pub eccentricity: f64,
@@ -437,6 +441,8 @@ pub mod tests {
     extern crate wasm_bindgen_test;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
+    use crate::utils::units::J2000_JDN;
+
     use super::*;
 
     const ACCEPTABLE_DELTA: f64 = 0.0000000001;
