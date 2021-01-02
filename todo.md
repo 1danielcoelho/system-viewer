@@ -287,9 +287,8 @@ response |= ui.add(label);
 # Get some planets orbiting
 - Curate csv for only planets and main moons now since performance is junk
 - Orbits not parented to eachother
-    - Current problem is that the sun barycenter doesn't have a mass (or something) so that no E samples get baked
-- I wonder if it's better to have the rails orbital element stuff on the OrbitalComponent and leave PhysicsComponent for free body? Would save some branching...
-    - It may also be better to introduce some new component type later for super packed computations like Nbody, and then use an index switchboard (maybe after I figure out generic component storage...)
+    - Current problem is that the sun barycenter doesn't have a mass (or something) so that no E samples get baked. Maybe I need to start using orbital period as a parameter
+        - Also would solve other annoyances like: What is the "mass" that I should put for the reference mass for a moon of jupiter? Jupiter's mass or the system's mass? etc.
 <!-- - Weird aliasing/precision issue when drawing orbits as far away as jupiter
 - Weird issue where if we go far enough from origin everything disappears and we get NaN on camera position, even though clip space is much farther and 
     - Flickering things was the camera near plane being too near and far being too far. I patched it with better numbers but later we'll want logarithmic depth buffers like in threejs -->
@@ -300,6 +299,12 @@ response |= ui.add(label);
 
 # Actually what I really need is the conversion in the other direction: State vector -> osculating orbital elements. I can run this one on free bodies to do orbit prediction, maybe?
 - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
+
+# N-body simulation
+- Separate component than the orbital component. Maybe even something separate to the physics component entirely
+- Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
+- Introduce packed component storage with index switchboards to speed things up
+- Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
 
 # Logarithmic depth buffer
 

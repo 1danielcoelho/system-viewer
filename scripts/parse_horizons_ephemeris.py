@@ -60,6 +60,7 @@ class Body:
             self.arg_periapsis,
             self.mean_anomaly,
             self.mean_radius,
+            self.sidereal_orbit_period,
         ]])
 
     def __repr__(self):

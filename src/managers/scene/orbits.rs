@@ -5,10 +5,7 @@ use crate::{
         ResourceManager,
     },
     utils::{
-        orbits::{
-            bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription,
-            GRAVITATION_CONSTANT,
-        },
+        orbits::{bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription},
         units::{Jdn, Rad},
     },
 };
@@ -60,74 +57,59 @@ impl SceneManager {
     ) -> Entity {
         let scene = self.get_main_scene_mut().unwrap();
 
-        let grav_constant = parent_bary
-            .and_then(|p| scene.get_component::<OrbitalComponent>(p))
-            .and_then(|c| Some(GRAVITATION_CONSTANT * c.desc.mass));
-
-        let mut parent_name = String::new();
-        if let Some(parent_bary) = parent_bary {
-            parent_name = scene.get_entity_name(parent_bary).unwrap().to_owned();
+        let body_ent = scene.new_entity(Some(&body.name));
+        if let Some(parent) = parent_bary {
+            scene.set_entity_parent(parent, body_ent);
         }
 
-        continue here
-        log::info!("parent grav constant for {}: {:?}. Parent bary: {}", body.name, grav_constant, parent_name);
-
-        // Body
-        let body_ent = scene.new_entity(Some(&body.name));
         let trans_comp = scene.add_component::<TransformComponent>(body_ent).unwrap();
+
+        // Sphere mesh
         if body.mean_radius.0 > 0.0 {
             trans_comp.get_local_transform_mut().scale =
                 Vector3::new(body.mean_radius.0, body.mean_radius.0, body.mean_radius.0);
 
             let mesh_comp = scene.add_component::<MeshComponent>(body_ent).unwrap();
             mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+        }
 
+        // Orbit
+        if body.orbital_elements.semi_major_axis.0 > 0.0 {
             let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent).unwrap();
-            orbit_comp.desc = body.clone();
+            orbit_comp.desc = body.clone(); // TODO: I could probably move this in
 
-            if let Some(grav_constant) = grav_constant {
-                let orbital_period =
-                    2.0 * PI / (grav_constant / body.orbital_elements.semi_major_axis.0).sqrt();
-
-                log::info!("Body {} has a period of {} days", body.name, orbital_period);
-
-                const NUM_ANGLES: u32 = 360;
+            // Bake eccentric anomalies into the body
+            if body.orbital_elements.sidereal_orbit_period_days > 0.0 {
+                const NUM_ANGLES: u32 = 5;
 
                 // Add angles for eccentric anomaly interpolation
                 orbit_comp
-                    .baked_eccentric_anomaly_times
-                    .resize((NUM_ANGLES + 1) as usize, Jdn(0.0));
+                    .baked_eccentric_anomaly_angles
+                    .resize((NUM_ANGLES + 1) as usize, Rad(0.0));
+
                 let incr = 2.0 * PI / NUM_ANGLES as f64;
                 for i in 0..=NUM_ANGLES {
                     orbit_comp.baked_eccentric_anomaly_angles[i as usize] = Rad(i as f64 * incr);
                 }
 
                 // Add eccentric anomaly interpolation values
-                orbit_comp.baked_eccentric_anomaly_times = bake_eccentric_anomaly_times(
-                    &body.orbital_elements,
-                    orbital_period,
-                    NUM_ANGLES,
-                );
+                orbit_comp.baked_eccentric_anomaly_times =
+                    bake_eccentric_anomaly_times(&body.orbital_elements, NUM_ANGLES);
             }
 
-            if let Some(parent) = parent_bary {
-                scene.set_entity_parent(parent, body_ent);
-            }
-        }
+            // Orbit mesh entity
+            {
+                let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
+                if let Some(parent) = parent_bary {
+                    scene.set_entity_parent(parent, orbit);
+                }
 
-        // Orbit
-        if body.orbital_elements.semi_major_axis.0 > 0.0 {
-            let orbit_trans = elements_to_circle_transform(&body.orbital_elements);
+                let trans_comp = scene.add_component::<TransformComponent>(orbit).unwrap();
+                *trans_comp.get_local_transform_mut() =
+                    elements_to_circle_transform(&body.orbital_elements);
 
-            let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
-            let trans_comp = scene.add_component::<TransformComponent>(orbit).unwrap();
-            *trans_comp.get_local_transform_mut() = orbit_trans;
-
-            let mesh_comp = scene.add_component::<MeshComponent>(orbit).unwrap();
-            mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
-
-            if let Some(parent) = parent_bary {
-                scene.set_entity_parent(parent, orbit);
+                let mesh_comp = scene.add_component::<MeshComponent>(orbit).unwrap();
+                mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
             }
         }
 

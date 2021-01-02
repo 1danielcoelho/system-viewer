@@ -71,6 +71,7 @@ pub struct OrbitalElements {
     pub long_asc_node: Rad,
     pub arg_periapsis: Rad,
     pub mean_anomaly_0: Rad,
+    pub sidereal_orbit_period_days: f64,
 }
 
 fn float_from_match(s: &str, regex: &Regex) -> Option<f64> {
@@ -108,7 +109,7 @@ pub fn parse_csv_lines(file_str: &str) -> Result<Vec<BodyDescription>, String> {
 pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
     let elements: Vec<&str> = line_str.split(",").collect();
 
-    const EXPECTED: usize = 11;
+    const EXPECTED: usize = 12;
     if elements.len() != EXPECTED {
         return Err(format!(
             "Incorrect number of elements in csv line! Expected: {}. Found: {}",
@@ -129,6 +130,7 @@ pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
         _ => BodyType::Other,
     };
     let mean_radius: Mm = Mm(elements[10].parse::<f64>().map_err(|err| err.to_string())?);
+    let sidereal_orbit_period_days: f64 = elements[11].parse::<f64>().map_err(|err| err.to_string())?;
 
     // Orbit data
     let semi_major_axis: Mm = Mm(elements[4].parse::<f64>().map_err(|err| err.to_string())?);
@@ -155,6 +157,7 @@ pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
             long_asc_node,
             arg_periapsis,
             mean_anomaly_0,
+            sidereal_orbit_period_days,
         },
     });
 }
@@ -213,6 +216,8 @@ pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
     ))?;
 
     let mean_radius = Mm(float_from_match(file_str, &MEAN_RADIUS_RE).unwrap_or(0.0) / 1000.0);
+    
+    let sidereal_orbit_period_days = float_from_match(file_str, &SIDERAL_ORBIT_PERIOD_RE).unwrap_or(0.0);
 
     let body_type = {
         if id == 0 {
@@ -240,6 +245,7 @@ pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
             long_asc_node,
             arg_periapsis,
             mean_anomaly_0,
+            sidereal_orbit_period_days
         },
     });
 }
@@ -310,11 +316,10 @@ pub fn elements_to_ellipse_rotation_transform(elements: &OrbitalElements) -> Tra
 /// Returns (position, velocity) in world space (cartesian coordinates), in Mm and Mm / day (86400 s)
 pub fn orbital_elements_to_xyz(
     elements: &OrbitalElements,
-    sidereal_orbit_period_days: f64,
     t: Jdn,
     ellipse_rotation_transform: &Transform<f64>,
 ) -> (Point3<f64>, Vector3<f64>) {
-    let mean_motion = 2.0 * PI / sidereal_orbit_period_days; // Rads/day
+    let mean_motion = 2.0 * PI / elements.sidereal_orbit_period_days; // Rads/day
     let gravitation_const = mean_motion * mean_motion * elements.semi_major_axis.0.powi(3);
 
     // Calculate mean anomaly at t
@@ -398,13 +403,12 @@ pub fn orbital_elements_to_xyz(
 /// Note: if num_angles is N, N+1 values will be returned, because we want the time for angle 0 and also for 2pi
 pub fn bake_eccentric_anomaly_times(
     elements: &OrbitalElements,
-    sidereal_orbit_period_days: f64,
     num_angles: u32,
 ) -> Vec<Jdn> {
     let mut result: Vec<Jdn> = Vec::new();
     result.reserve((num_angles + 1) as usize);
 
-    let mean_motion = 2.0 * PI / sidereal_orbit_period_days; // Rads/day
+    let mean_motion = 2.0 * PI / elements.sidereal_orbit_period_days; // Rads/day
     let time_of_periapsis: Jdn = time_of_prev_periapsis(elements.mean_anomaly_0, mean_motion);
 
     let incr = 360.0 / num_angles as f64;
@@ -452,11 +456,11 @@ pub mod tests {
             long_asc_node: Deg(7.667837463924961E+01).to_rad(),
             arg_periapsis: Deg(5.518596653686583E+01).to_rad(),
             mean_anomaly_0: Deg(5.011477187351476E+01).to_rad(),
+            sidereal_orbit_period_days: 2.246983300739057E+02,
         };
-        let orbit_period = 2.246983300739057E+02;
 
         let trans = elements_to_ellipse_rotation_transform(&elements);
-        let (pos, vel) = orbital_elements_to_xyz(&elements, orbit_period, J2000_JDN, &trans);
+        let (pos, vel) = orbital_elements_to_xyz(&elements, J2000_JDN, &trans);
 
         // Values from HORIZONS (converted to Mm from km):
         let expected_pos: Point3<f64> = Point3::new(
@@ -481,11 +485,11 @@ pub mod tests {
             long_asc_node: Deg(3.379426810412668E+02).to_rad(),
             arg_periapsis: Deg(1.619056899622573E+01).to_rad(),
             mean_anomaly_0: Deg(8.505552940851534E+01).to_rad(),
+            sidereal_orbit_period_days: 1.669092070644565E+01,
         };
-        let orbit_period = 1.669092070644565E+01;
 
         let trans = elements_to_ellipse_rotation_transform(&elements);
-        let (pos, vel) = orbital_elements_to_xyz(&elements, orbit_period, J2000_JDN, &trans);
+        let (pos, vel) = orbital_elements_to_xyz(&elements, J2000_JDN, &trans);
 
         // Values from HORIZONS (converted to Mm from km):
         let expected_pos: Point3<f64> = Point3::new(
@@ -513,8 +517,8 @@ pub mod tests {
             long_asc_node: Deg(48.3305373398104).to_rad(),
             arg_periapsis: Deg(29.12428280936123).to_rad(),
             mean_anomaly_0: Deg(174.7958829506606).to_rad(),
+            sidereal_orbit_period_days: 87.96909804182887,
         };
-        let orbit_period = 87.96909804182887;
         let expected = vec![
             Jdn(2451502.287121765),
             Jdn(2451502.48123539),
@@ -879,10 +883,10 @@ pub mod tests {
             Jdn(2451590.2562198066),
         ];
 
-        let res = bake_eccentric_anomaly_times(&elements, orbit_period, 1);
+        let res = bake_eccentric_anomaly_times(&elements, 1);
         assert_eq!(res, vec![expected[0], expected[expected.len() - 1]]);
 
-        let res = bake_eccentric_anomaly_times(&elements, orbit_period, 4);
+        let res = bake_eccentric_anomaly_times(&elements, 4);
         assert_eq!(
             res,
             vec![
@@ -894,7 +898,7 @@ pub mod tests {
             ]
         );
 
-        let res = bake_eccentric_anomaly_times(&elements, orbit_period, 360);
+        let res = bake_eccentric_anomaly_times(&elements, 360);
         assert_eq!(res, expected);
 
         // Charon
@@ -905,8 +909,8 @@ pub mod tests {
             long_asc_node: Deg(227.4012844469266).to_rad(),
             arg_periapsis: Deg(144.5907325672654).to_rad(),
             mean_anomaly_0: Deg(176.6725371869484).to_rad(),
+            sidereal_orbit_period_days: 6.362099643049675,
         };
-        let orbit_period = 6.362099643049675;
         let expected = vec![
             Jdn(2451541.877754762),
             Jdn(2451541.895390632),
@@ -1271,10 +1275,10 @@ pub mod tests {
             Jdn(2451548.239854405),
         ];
 
-        let res = bake_eccentric_anomaly_times(&elements, orbit_period, 1);
+        let res = bake_eccentric_anomaly_times(&elements, 1);
         assert_eq!(res, vec![expected[0], expected[expected.len() - 1]]);
 
-        let res = bake_eccentric_anomaly_times(&elements, orbit_period, 4);
+        let res = bake_eccentric_anomaly_times(&elements, 4);
         assert_eq!(
             res,
             vec![
@@ -1286,7 +1290,7 @@ pub mod tests {
             ]
         );
 
-        let res = bake_eccentric_anomaly_times(&elements, orbit_period, 360);
+        let res = bake_eccentric_anomaly_times(&elements, 360);
         assert_eq!(res, expected);
     }
 }
