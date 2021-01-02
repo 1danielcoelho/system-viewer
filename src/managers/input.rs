@@ -41,22 +41,22 @@ impl InputManager {
 
         let mut incr: Vector3<f32> = Vector3::new(0.0, 0.0, 0.0);
         if state.input.forward == ButtonState::Pressed {
-            incr += cam_forward * (state.real_delta_time_ms as f32) * move_speed;
+            incr += cam_forward * (state.real_delta_time_s as f32) * move_speed;
         }
         if state.input.back == ButtonState::Pressed {
-            incr -= cam_forward * (state.real_delta_time_ms as f32) * move_speed;
+            incr -= cam_forward * (state.real_delta_time_s as f32) * move_speed;
         }
         if state.input.left == ButtonState::Pressed {
-            incr -= cam_right * (state.real_delta_time_ms as f32) * move_speed;
+            incr -= cam_right * (state.real_delta_time_s as f32) * move_speed;
         }
         if state.input.right == ButtonState::Pressed {
-            incr += cam_right * (state.real_delta_time_ms as f32) * move_speed;
+            incr += cam_right * (state.real_delta_time_s as f32) * move_speed;
         }
         if state.input.up == ButtonState::Pressed {
-            incr += cam_up * (state.real_delta_time_ms as f32) * move_speed;
+            incr += cam_up * (state.real_delta_time_s as f32) * move_speed;
         }
         if state.input.down == ButtonState::Pressed {
-            incr -= cam_up * (state.real_delta_time_ms as f32) * move_speed;
+            incr -= cam_up * (state.real_delta_time_s as f32) * move_speed;
         }
 
         if state.input.m1 == ButtonState::Pressed

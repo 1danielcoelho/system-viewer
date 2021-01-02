@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::{
     app_state::{AppState, ButtonState},
     components::{MeshComponent, OrbitalComponent, TransformComponent},
@@ -5,6 +7,7 @@ use crate::{
     prompt_for_bytes_file, prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
+        units::{julian_date_number_to_date, Jdn, J2000_JDN},
         web::write_string_to_file_prompt,
     },
 };
@@ -72,6 +75,10 @@ pub struct InterfaceManager {
     web_input: WebInput,
     open_windows: OpenWindows,
     selected_scene_name: String,
+
+    frame_times: VecDeque<f64>,
+    time_of_last_update: f64,
+    last_frame_rate: f64,
 }
 impl InterfaceManager {
     pub fn new() -> Self {
@@ -84,6 +91,9 @@ impl InterfaceManager {
                 scene_man: false,
             },
             selected_scene_name: String::new(),
+            frame_times: vec![16.66; 15].into_iter().collect(),
+            time_of_last_update: -2.0,
+            last_frame_rate: 60.0, // Optimism
         };
     }
 
@@ -244,7 +254,7 @@ impl InterfaceManager {
                         }
                     });
 
-                    let time = state.real_time_ms / 1000.0;
+                    let time = state.real_time_s;
                     let time = format!(
                         "{:02}:{:02}:{:02}.{:02}",
                         (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
@@ -281,30 +291,53 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
+            // Always record our new frame times
+            self.frame_times.pop_back();
+            self.frame_times.push_front(state.real_delta_time_s);
+
+            // Update framerate display only once a second or else it's too hard to read
+            if state.real_time_s - self.time_of_last_update > 1.0 {
+                self.time_of_last_update = state.real_time_s;
+
+                let new_frame_rate: f64 =
+                    1.0 / (self.frame_times.iter().sum::<f64>() / (self.frame_times.len() as f64));
+                self.last_frame_rate = new_frame_rate;
+            }
+            let frame_rate = self.last_frame_rate;
+
             let response = egui::Window::new("Debug")
                 .open(&mut self.open_windows.debug)
                 .show(&ui.ctx(), |ui| {
                     let mut response = ui.columns(2, |cols| {
-                        cols[0].label("Simulated seconds since start:");
-                        cols[1].label(format!("{:.2}", state.phys_time_ms / 1000.0))
+                        cols[0].label("Simulation time since reference:");
+                        cols[1].label(format!("{:.2} days", state.sim_time))
                     });
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Real seconds since start:");
-                        cols[1].label(format!("{:.2}", state.real_time_ms / 1000.0))
+                        cols[0].label("Simulation date:");
+                        cols[1].label(format!(
+                            "{}",
+                            julian_date_number_to_date(Jdn(state.sim_time + J2000_JDN.0))
+                        ))
+                    });
+
+                    response |= ui.columns(2, |cols| {
+                        cols[0].label("Real time since start:");
+                        cols[1].label(format!("{:.2} s", state.real_time_s))
                     });
 
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Frames per second:");
-                        cols[1].label(format!("{:.2}", 1000.0 / state.real_delta_time_ms))
+                        cols[1].label(format!("{:.2}", frame_rate))
                     });
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Simulation speed:");
+                        cols[0].label("Simulation multiplier:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.simulation_speed)
                                 .range(-100.0..=100.0)
-                                .speed(0.01),
+                                .speed(0.01)
+                                .suffix(" days/s"),
                         )
                     });
 

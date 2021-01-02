@@ -60,10 +60,10 @@ pub fn initialize() {
         s.replace(AppState::new());
         let s = s.as_mut().unwrap();
 
-        s.phys_time_ms = 0.0;
-        s.real_time_ms = 0.0;
-        s.start_ms = js_sys::Date::now();
-        s.last_frame_ms = 0.0;
+        s.sim_time = 0.0;
+        s.real_time_s = 0.0;
+        s.start_s = js_sys::Date::now();
+        s.last_frame_s = 0.0;
     });
 
     log::info!("Initializing canvas...");
@@ -158,17 +158,17 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
         );
     }
 
-    let now_ms = js_sys::Date::now() - state.start_ms;
-    let real_delta_ms = now_ms - state.last_frame_ms;
-    let phys_delta_ms = real_delta_ms * state.simulation_speed;
-    state.last_frame_ms = now_ms;
+    let now_s = (js_sys::Date::now() - state.start_s) / 1000.0;
+    let real_delta_s = now_s - state.last_frame_s;
+    let phys_delta_s = real_delta_s * state.simulation_speed;
+    state.last_frame_s = now_s;
 
     state.canvas_height = canvas_height_on_screen;
     state.canvas_width = canvas_width_on_screen;
-    state.phys_time_ms += phys_delta_ms;
-    state.real_time_ms += real_delta_ms;
-    state.phys_delta_time_ms = phys_delta_ms;
-    state.real_delta_time_ms = real_delta_ms;
+    state.sim_time += phys_delta_s;
+    state.real_time_s += real_delta_s;
+    state.sim_delta_time = phys_delta_s;
+    state.real_delta_time_s = real_delta_s;
 }
 
 /** Synchronous function that JS calls to inject bytes data into the engine because we can't await for a JS promise from within the winit engine loop */
