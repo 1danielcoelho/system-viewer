@@ -37,7 +37,7 @@ impl PhysicsSystem {
             return;
         }
 
-        let dt = state.sim_delta_time * 0.001;
+        let dt = state.sim_delta_time_days * 0.001;
 
         // TODO: What if the object is scaled? Should that affect its linear/rotational motion?
 

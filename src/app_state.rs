@@ -44,9 +44,9 @@ pub struct AppState {
     pub canvas_width: u32,
     pub start_s: f64,
     pub last_frame_s: f64,
-    pub sim_time: f64,
+    pub sim_time_days: f64,
     pub real_time_s: f64,
-    pub sim_delta_time: f64,     // Affected by simulation speed
+    pub sim_delta_time_days: f64,     // Affected by simulation speed
     pub real_delta_time_s: f64, // Not affected by simulation speed
     pub simulation_speed: f64,
     pub move_speed: f32,
@@ -63,9 +63,9 @@ impl AppState {
             canvas_width: 0,
             start_s: 0.0,
             last_frame_s: 0.0,
-            sim_time: 0.,
+            sim_time_days: 0.,
             real_time_s: 0.,
-            sim_delta_time: 0.,
+            sim_delta_time_days: 0.,
             real_delta_time_s: 0.,
             simulation_speed: 1.,
             move_speed: 100.0,

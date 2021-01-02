@@ -60,7 +60,7 @@ pub fn initialize() {
         s.replace(AppState::new());
         let s = s.as_mut().unwrap();
 
-        s.sim_time = 0.0;
+        s.sim_time_days = 0.0;
         s.real_time_s = 0.0;
         s.start_s = js_sys::Date::now();
         s.last_frame_s = 0.0;
@@ -165,9 +165,9 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
 
     state.canvas_height = canvas_height_on_screen;
     state.canvas_width = canvas_width_on_screen;
-    state.sim_time += phys_delta_s;
+    state.sim_time_days += phys_delta_s;
     state.real_time_s += real_delta_s;
-    state.sim_delta_time = phys_delta_s;
+    state.sim_delta_time_days = phys_delta_s;
     state.real_delta_time_s = real_delta_s;
 }
 

@@ -287,15 +287,17 @@ response |= ui.add(label);
 # Get some planets orbiting
 - Curate csv for only planets and main moons now since performance is junk
 - Orbits not parented to eachother
-    - Current problem is that the sun barycenter doesn't have a mass (or something) so that no E samples get baked. Maybe I need to start using orbital period as a parameter
-        - Also would solve other annoyances like: What is the "mass" that I should put for the reference mass for a moon of jupiter? Jupiter's mass or the system's mass? etc.
+    - My previous JS code to calculate the position just seems flat out wrong to me
+    - Also why was I baking the eccentric anomaly and then doing a bunch of extra (wrong) calculations after it? If I'm baking anything I might as well just bake the final positions and interpolate them. I could even use the transformed ellipse vertices so that it always follows the trajectory nicely as well
+    > - Current problem is that the sun barycenter doesn't have a mass (or something) so that no E samples get baked. Maybe I need to start using orbital period as a parameter
+    >     - Also would solve other annoyances like: What is the "mass" that I should put for the reference mass for a moon of jupiter? Jupiter's mass or the system's mass? etc.
 <!-- - Weird aliasing/precision issue when drawing orbits as far away as jupiter
 - Weird issue where if we go far enough from origin everything disappears and we get NaN on camera position, even though clip space is much farther and 
     - Flickering things was the camera near plane being too near and far being too far. I patched it with better numbers but later we'll want logarithmic depth buffers like in threejs -->
-- Some controls of orbital time (e.g. JDN per second)
-    - Separate to physics simulation time?
-- Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
-    - Also store other stuff like mass, magnitude, rotation info    
+> - Some controls of orbital time (e.g. JDN per second)
+>     - Separate to physics simulation time?
+> - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
+>     - Also store other stuff like mass, magnitude, rotation info    
 
 # Actually what I really need is the conversion in the other direction: State vector -> osculating orbital elements. I can run this one on free bodies to do orbit prediction, maybe?
 - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons

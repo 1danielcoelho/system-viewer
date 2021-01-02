@@ -310,14 +310,14 @@ impl InterfaceManager {
                 .show(&ui.ctx(), |ui| {
                     let mut response = ui.columns(2, |cols| {
                         cols[0].label("Simulation time since reference:");
-                        cols[1].label(format!("{:.2} days", state.sim_time))
+                        cols[1].label(format!("{:.2} days", state.sim_time_days))
                     });
 
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Simulation date:");
                         cols[1].label(format!(
                             "{}",
-                            julian_date_number_to_date(Jdn(state.sim_time + J2000_JDN.0))
+                            julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
                         ))
                     });
 

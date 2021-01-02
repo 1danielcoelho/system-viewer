@@ -130,7 +130,8 @@ pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
         _ => BodyType::Other,
     };
     let mean_radius: Mm = Mm(elements[10].parse::<f64>().map_err(|err| err.to_string())?);
-    let sidereal_orbit_period_days: f64 = elements[11].parse::<f64>().map_err(|err| err.to_string())?;
+    let sidereal_orbit_period_days: f64 =
+        elements[11].parse::<f64>().map_err(|err| err.to_string())?;
 
     // Orbit data
     let semi_major_axis: Mm = Mm(elements[4].parse::<f64>().map_err(|err| err.to_string())?);
@@ -216,8 +217,9 @@ pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
     ))?;
 
     let mean_radius = Mm(float_from_match(file_str, &MEAN_RADIUS_RE).unwrap_or(0.0) / 1000.0);
-    
-    let sidereal_orbit_period_days = float_from_match(file_str, &SIDERAL_ORBIT_PERIOD_RE).unwrap_or(0.0);
+
+    let sidereal_orbit_period_days =
+        float_from_match(file_str, &SIDERAL_ORBIT_PERIOD_RE).unwrap_or(0.0);
 
     let body_type = {
         if id == 0 {
@@ -245,7 +247,7 @@ pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
             long_asc_node,
             arg_periapsis,
             mean_anomaly_0,
-            sidereal_orbit_period_days
+            sidereal_orbit_period_days,
         },
     });
 }
@@ -401,10 +403,7 @@ pub fn orbital_elements_to_xyz(
 /// do the end of the calculation.
 ///
 /// Note: if num_angles is N, N+1 values will be returned, because we want the time for angle 0 and also for 2pi
-pub fn bake_eccentric_anomaly_times(
-    elements: &OrbitalElements,
-    num_angles: u32,
-) -> Vec<Jdn> {
+pub fn bake_eccentric_anomaly_times(elements: &OrbitalElements, num_angles: u32) -> Vec<Jdn> {
     let mut result: Vec<Jdn> = Vec::new();
     result.reserve((num_angles + 1) as usize);
 
@@ -423,6 +422,32 @@ pub fn bake_eccentric_anomaly_times(
 
     log::info!("Baked {} samples for an orbit", result.len());
     return result;
+}
+
+pub fn get_eccentric_anomaly(
+    mut date: Jdn,
+    orbital_period: f64,
+    baked_angles: &Vec<Rad>,
+    baked_times: &Vec<Jdn>,
+) -> Rad {
+    while date > baked_times[baked_times.len() - 1] {
+        date.0 -= orbital_period;
+    }
+
+    match baked_times.binary_search_by(|p| p.partial_cmp(&date).unwrap()) {
+        Ok(exact_index) => baked_angles[exact_index],
+        Err(prev_index) => {
+            let next_index = (prev_index + 1) % baked_angles.len();
+
+            let prev_date = baked_times[prev_index];
+            let next_date = baked_times[next_index];
+            let prev_E = baked_angles[prev_index];
+            let next_E = baked_angles[next_index];
+
+            return Rad(prev_E.0
+                + (next_E.0 - prev_E.0) * ((date.0 - prev_date.0) / (next_date.0 - prev_date.0)));
+        }
+    }
 }
 
 /// Returns the JDN time of the next periapsis crossing
