@@ -7,7 +7,10 @@ use crate::{
         details_ui::DetailsUI,
         scene::{Entity, Scene},
     },
-    utils::orbits::BodyDescription,
+    utils::{
+        orbits::BodyDescription,
+        units::{Jdn, Rad},
+    },
 };
 use egui::Ui;
 use serde::{Deserialize, Serialize};
@@ -18,6 +21,8 @@ pub struct OrbitalComponent {
     enabled: bool,
 
     pub desc: BodyDescription,
+    pub baked_eccentric_anomaly_times: Vec<Jdn>,
+    pub baked_eccentric_anomaly_angles: Vec<Rad>,
 }
 impl OrbitalComponent {
     fn new() -> Self {

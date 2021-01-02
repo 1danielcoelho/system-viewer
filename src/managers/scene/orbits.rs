@@ -4,10 +4,16 @@ use crate::{
         scene::{Entity, SceneManager},
         ResourceManager,
     },
-    utils::orbits::{elements_to_circle_transform, BodyDescription},
+    utils::{
+        orbits::{
+            bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription,
+            GRAVITATION_CONSTANT,
+        },
+        units::{Jdn, Rad},
+    },
 };
 use na::Vector3;
-use std::collections::HashMap;
+use std::{collections::HashMap, f64::consts::PI};
 
 impl SceneManager {
     pub fn load_bodies_into_scene(
@@ -54,30 +60,55 @@ impl SceneManager {
     ) -> Entity {
         let scene = self.get_main_scene_mut().unwrap();
 
-        log::info!("{:#?}", body);
+        let grav_constant = parent_bary
+            .and_then(|p| scene.get_component::<OrbitalComponent>(p))
+            .and_then(|c| Some(GRAVITATION_CONSTANT * c.desc.mass));
+
+        let mut parent_name = String::new();
+        if let Some(parent_bary) = parent_bary {
+            parent_name = scene.get_entity_name(parent_bary).unwrap().to_owned();
+        }
+
+        continue here
+        log::info!("parent grav constant for {}: {:?}. Parent bary: {}", body.name, grav_constant, parent_name);
 
         // Body
         let body_ent = scene.new_entity(Some(&body.name));
         let trans_comp = scene.add_component::<TransformComponent>(body_ent).unwrap();
         if body.mean_radius.0 > 0.0 {
-            // log::info!("Transform for planet body {:#?}", body);
-
-            // trans_comp.get_local_transform_mut().trans =
-            //     Vector3::new(1000.0, 0.0, 0.0);
-
-            // Sun has scale of 695 and is a barycenter, so anything we parent to it will also get scaled (including orbits)
-
-            trans_comp.get_local_transform_mut().scale = Vector3::new(
-                body.mean_radius.0,
-                body.mean_radius.0,
-                body.mean_radius.0,
-            );
+            trans_comp.get_local_transform_mut().scale =
+                Vector3::new(body.mean_radius.0, body.mean_radius.0, body.mean_radius.0);
 
             let mesh_comp = scene.add_component::<MeshComponent>(body_ent).unwrap();
             mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
 
             let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent).unwrap();
             orbit_comp.desc = body.clone();
+
+            if let Some(grav_constant) = grav_constant {
+                let orbital_period =
+                    2.0 * PI / (grav_constant / body.orbital_elements.semi_major_axis.0).sqrt();
+
+                log::info!("Body {} has a period of {} days", body.name, orbital_period);
+
+                const NUM_ANGLES: u32 = 360;
+
+                // Add angles for eccentric anomaly interpolation
+                orbit_comp
+                    .baked_eccentric_anomaly_times
+                    .resize((NUM_ANGLES + 1) as usize, Jdn(0.0));
+                let incr = 2.0 * PI / NUM_ANGLES as f64;
+                for i in 0..=NUM_ANGLES {
+                    orbit_comp.baked_eccentric_anomaly_angles[i as usize] = Rad(i as f64 * incr);
+                }
+
+                // Add eccentric anomaly interpolation values
+                orbit_comp.baked_eccentric_anomaly_times = bake_eccentric_anomaly_times(
+                    &body.orbital_elements,
+                    orbital_period,
+                    NUM_ANGLES,
+                );
+            }
 
             if let Some(parent) = parent_bary {
                 scene.set_entity_parent(parent, body_ent);
@@ -87,7 +118,6 @@ impl SceneManager {
         // Orbit
         if body.orbital_elements.semi_major_axis.0 > 0.0 {
             let orbit_trans = elements_to_circle_transform(&body.orbital_elements);
-            // log::info!("Transform for body {:#?}: {:#?}", body, orbit_trans);
 
             let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
             let trans_comp = scene.add_component::<TransformComponent>(orbit).unwrap();

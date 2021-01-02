@@ -284,13 +284,12 @@ response |= ui.add(label);
 > - Typing WASD still moves
 > - Maybe also handle wheel events and stuff while I'm at it?
 
-
-
-
-
 # Get some planets orbiting
 - Curate csv for only planets and main moons now since performance is junk
 - Orbits not parented to eachother
+    - Current problem is that the sun barycenter doesn't have a mass (or something) so that no E samples get baked
+- I wonder if it's better to have the rails orbital element stuff on the OrbitalComponent and leave PhysicsComponent for free body? Would save some branching...
+    - It may also be better to introduce some new component type later for super packed computations like Nbody, and then use an index switchboard (maybe after I figure out generic component storage...)
 <!-- - Weird aliasing/precision issue when drawing orbits as far away as jupiter
 - Weird issue where if we go far enough from origin everything disappears and we get NaN on camera position, even though clip space is much farther and 
     - Flickering things was the camera near plane being too near and far being too far. I patched it with better numbers but later we'll want logarithmic depth buffers like in threejs -->
