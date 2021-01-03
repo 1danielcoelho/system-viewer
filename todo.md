@@ -297,16 +297,15 @@ response |= ui.add(label);
 >     - Separate to physics simulation time?
 > - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
 >     - Also store other stuff like mass, magnitude, rotation info    
-
-# Crazy slow (11 fps with all planets and moons loaded)
-- Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
+> - Crazy slow (11 fps with all planets and moons loaded)
+> - Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
 > - Use profiling crates (like tracing https://crates.io/crates/tracing)
 >     - https://github.com/storyscript/tracing-wasm
 >     - Chrome's performance tab already can fetch function names and do waterfall charts and stuff
-- Christ: For the full scene the OrbitalSystem takes 31.8ms/frame, the transform update system takes 11.95ms/frame and the rendering system 45.31ms/frame
+> - Christ: For the full scene the OrbitalSystem takes 31.8ms/frame, the transform update system takes 11.95ms/frame and the rendering system 45.31ms/frame
     > - OrbitalSystem takes 4ms/frame now, which is almost passable 
-    - A substantial ammount of this is nalgebra stuff, although I don't think I could do better: I need to just use it less
-
+    > - A substantial ammount of this is nalgebra stuff, although I don't think I could do better: I need to just use it less
+    > - Just change to opt-level 2 for now: It compiles about as fast and performance is miles better (pinned to 60fps, 5ms / frame)
 
 # Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back
     
