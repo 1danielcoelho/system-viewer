@@ -1,6 +1,6 @@
 use na::{
-    Isometry3, Matrix4, Point3, RealField, SimdRealField, Translation3,
-    UnitQuaternion, Vector3,
+    Isometry3, Matrix4, Point3, RealField, SimdRealField, Translation3, UnitQuaternion, Vector3,
+    Vector4,
 };
 use serde::{Deserialize, Serialize};
 
@@ -33,9 +33,23 @@ where
     }
 
     pub fn to_matrix4(&self) -> Matrix4<T> {
-        return Isometry3::from_parts(Translation3::from(self.trans), self.rot)
-            .to_homogeneous()
-            .prepend_nonuniform_scaling(&self.scale);
+        let mut mat = self.rot.to_homogeneous();
+        mat[(0, 0)] *= self.scale.x;
+        mat[(1, 0)] *= self.scale.x;
+        mat[(2, 0)] *= self.scale.x;
+
+        mat[(0, 1)] *= self.scale.y;
+        mat[(1, 1)] *= self.scale.y;
+        mat[(2, 1)] *= self.scale.y;
+
+        mat[(0, 2)] *= self.scale.z;
+        mat[(1, 2)] *= self.scale.z;
+        mat[(2, 2)] *= self.scale.z;
+
+        mat[(0, 3)] = self.trans.x;
+        mat[(1, 3)] = self.trans.y;
+        mat[(2, 3)] = self.trans.z;
+        return mat;
     }
 
     pub fn transform_point(&self, point: &Point3<T>) -> Point3<T> {

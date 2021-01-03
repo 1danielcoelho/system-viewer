@@ -433,6 +433,8 @@ pub fn get_eccentric_anomaly(mut date: Jdn, orbital_period: f64, baked_times: &V
     // so that if our binary search gives index 3 we just return 270
     let angle_incr = 1.0 / ((baked_times.len() - 1) as f64);
 
+    // TODO: We can probably speed up this search if we keep track of the last index we used, as it's likely
+    // the same one
     match baked_times.binary_search_by(|p| p.partial_cmp(&date).unwrap()) {
         Ok(exact_index) => {
             return Rad(angle_incr * exact_index as f64);

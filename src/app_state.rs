@@ -68,7 +68,7 @@ impl AppState {
             sim_delta_time_days: 0.,
             real_delta_time_s: 0.,
             simulation_speed: 1.,
-            move_speed: 100.0,
+            move_speed: 10000.0,
             rotate_speed: 5.0,
             light_intensity: 0.35,
             input: Input {
@@ -98,7 +98,7 @@ impl AppState {
             },
             selection: HashSet::new(),
             camera: Camera {
-                pos: Point3::new(800.0, -1000.0, 777.0),
+                pos: Point3::new(-34874.89, 144281.34, 614.11206),
                 up: Unit::new_unchecked(Vector3::z()),
                 target: Point3::new(0.0, 0.0, 0.0),
                 fov_v: 60.0,

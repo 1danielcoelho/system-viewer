@@ -7,10 +7,10 @@ use crate::{
     utils::transform::Transform,
 };
 use egui::{Align, Layout, Ui};
-use na::{Quaternion, UnitQuaternion, Vector3};
+use na::UnitQuaternion;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TransformComponent {
     enabled: bool,
 
@@ -38,24 +38,6 @@ impl TransformComponent {
 
     pub fn get_world_transform(&self) -> &Transform<f64> {
         return &self.world_transform;
-    }
-}
-impl Default for TransformComponent {
-    fn default() -> Self {
-        return Self {
-            enabled: false,
-
-            local_transform: Transform {
-                trans: Vector3::new(0.0, 0.0, 0.0),
-                rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
-                scale: Vector3::new(1.0, 1.0, 1.0),
-            },
-            world_transform: Transform {
-                trans: Vector3::new(0.0, 0.0, 0.0),
-                rot: UnitQuaternion::new_unchecked(Quaternion::identity()),
-                scale: Vector3::new(1.0, 1.0, 1.0),
-            },
-        };
     }
 }
 impl Component for TransformComponent {

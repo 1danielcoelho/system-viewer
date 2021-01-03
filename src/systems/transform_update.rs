@@ -13,7 +13,7 @@ impl TransformUpdateSystem {
             // update our transforms in order, so that parents always come before children
             match parent_index {
                 Some(parent_index) => {
-                    // TODO: Indirection
+                    // TODO: Indirection, clones TWICE (once inside update_world_transform)
                     let parent_transform = scene.transform[parent_index as usize]
                         .get_world_transform()
                         .clone();
@@ -21,6 +21,7 @@ impl TransformUpdateSystem {
                         .update_world_transform(&parent_transform);
                 }
                 None => {
+                    // What
                     scene.transform[entity_index as usize].update_world_transform(&identity);
                 }
             }

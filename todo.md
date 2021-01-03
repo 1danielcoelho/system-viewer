@@ -300,12 +300,15 @@ response |= ui.add(label);
 
 # Crazy slow (11 fps with all planets and moons loaded)
 - Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
-- Use profiling crates (like tracing https://crates.io/crates/tracing)
-    - https://github.com/storyscript/tracing-wasm
-    - Chrome's performance tab already can fetch function names and do waterfall charts and stuff
+> - Use profiling crates (like tracing https://crates.io/crates/tracing)
+>     - https://github.com/storyscript/tracing-wasm
+>     - Chrome's performance tab already can fetch function names and do waterfall charts and stuff
 - Christ: For the full scene the OrbitalSystem takes 31.8ms/frame, the transform update system takes 11.95ms/frame and the rendering system 45.31ms/frame
+    > - OrbitalSystem takes 4ms/frame now, which is almost passable 
     - A substantial ammount of this is nalgebra stuff, although I don't think I could do better: I need to just use it less
 
+
+# Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back
     
 # Body positioning on top of orbit is not exact: They're always slightly closer to center
 
