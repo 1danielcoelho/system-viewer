@@ -53,7 +53,21 @@ impl RenderingSystem {
             state.camera.near,
             state.camera.far,
         );
-        let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
+        let mut v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
+
+        if let Some(reference) = state.camera.reference_entity {
+            let world_to_reference: Matrix4<f32> = na::convert::<Matrix4<f64>, Matrix4<f32>>(
+                scene
+                    .get_component::<TransformComponent>(reference)
+                    .unwrap()
+                    .get_world_transform()
+                    .to_matrix4()
+                    .try_inverse()
+                    .unwrap(),
+            );
+
+            v = v * world_to_reference;
+        }
 
         let mut result = FrameUniformValues {
             vp: (p * v).as_slice().try_into().unwrap(),

@@ -307,14 +307,16 @@ response |= ui.add(label);
     > - A substantial ammount of this is nalgebra stuff, although I don't think I could do better: I need to just use it less
     > - Just change to opt-level 2 for now: It compiles about as fast and performance is miles better (pinned to 60fps, 5ms / frame)
 > - Body positioning on top of orbit is not exact: They're always slightly closer to center
+> - Set camera reference frame to a moving body
+> - It should be possible to click on a body to lock the camera to it
+> - Allow clicking on a "system barycenter" somehow
+    > - Not needed for now and users may not even know barycenters are meant to be entities
+
+# Movement speed needs to be scaled when resetting camera reference
 
 # Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back    
 
 # I'm not really sure if the planets are the right size, need to measure it somehow
-
-# Set camera reference frame to a moving body
-- It should be possible to click on a body to lock the camera to it
-- Allow clicking on a "system barycenter" somehow
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
@@ -370,6 +372,8 @@ response |= ui.add(label);
 - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
 # We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
 # Maybe use https://crates.io/crates/calloop for the event system instead
+# Maybe find a nicer way of having a generic component storage system
+- Expose a separate get_component and get_component_mut
 
 # Docs link:
 - file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html

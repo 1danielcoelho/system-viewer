@@ -1,9 +1,13 @@
 use std::collections::VecDeque;
 
 use crate::{
-    app_state::{AppState, ButtonState},
+    app_state::{AppState, ButtonState, ReferenceChange},
     components::{MeshComponent, OrbitalComponent, TransformComponent},
-    managers::{details_ui::DetailsUI, scene::SceneManager, ResourceManager},
+    managers::{
+        details_ui::DetailsUI,
+        scene::{Entity, SceneManager},
+        ResourceManager,
+    },
     prompt_for_bytes_file, prompt_for_text_file,
     utils::{
         raycasting::{raycast, Ray},
@@ -408,7 +412,8 @@ impl InterfaceManager {
                                             .button("🗑")
                                             .on_hover_text("Stop tracking this entity");
                                         if clear_resp.clicked {
-                                            state.camera.reference_entity = None;
+                                            state.camera.next_reference_entity =
+                                                Some(ReferenceChange::Clear);
                                         }
 
                                         r |= clear_resp;
@@ -453,7 +458,8 @@ impl InterfaceManager {
                                         let but_res =
                                             ui.button("🎥").on_hover_text("Track this entity");
                                         if but_res.clicked {
-                                            state.camera.reference_entity = Some(selection);
+                                            state.camera.next_reference_entity =
+                                                Some(ReferenceChange::NewEntity(selection));
                                         }
 
                                         but_res

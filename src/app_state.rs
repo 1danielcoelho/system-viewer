@@ -2,6 +2,11 @@ use crate::managers::scene::Entity;
 use na::*;
 use std::collections::HashSet;
 
+pub enum ReferenceChange {
+    NewEntity(Entity),
+    Clear,
+}
+
 pub struct Camera {
     pub pos: Point3<f32>,
     pub up: Unit<Vector3<f32>>,
@@ -10,6 +15,11 @@ pub struct Camera {
     pub near: f32,
     pub far: f32,
     pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. the entity's transform
+
+    // When we want to change reference, we set the new one here.
+    // The transform update system will fixup our pos/up/target to be wrt. to it and move it to reference_entity (setting this
+    // to None when done). We need this because our transforms are only finalized (due to physics and stuff) after it runs
+    pub next_reference_entity: Option<ReferenceChange>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -106,6 +116,7 @@ impl AppState {
                 near: 5.0,
                 far: 100000000.0,
                 reference_entity: None,
+                next_reference_entity: None,
             },
         }
     }
