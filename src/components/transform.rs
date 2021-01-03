@@ -62,7 +62,7 @@ impl DetailsUI for TransformComponent {
     fn draw_details_ui(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
             cols[0].label("Pos:");
-            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+            cols[1].horizontal(|ui| {
                 ui.add(egui::DragValue::f64(&mut self.local_transform.trans.x).prefix("x: "));
                 ui.add(egui::DragValue::f64(&mut self.local_transform.trans.y).prefix("y: "));
                 ui.add(egui::DragValue::f64(&mut self.local_transform.trans.z).prefix("z: "));
@@ -71,7 +71,7 @@ impl DetailsUI for TransformComponent {
 
         ui.columns(2, |cols| {
             cols[0].label("Rot:");
-            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+            cols[1].horizontal(|ui| {
                 let (mut euler_x, mut euler_y, mut euler_z) =
                     self.local_transform.rot.euler_angles();
                 euler_x = euler_x.to_degrees();
@@ -104,7 +104,7 @@ impl DetailsUI for TransformComponent {
 
         ui.columns(2, |cols| {
             cols[0].label("Scale:");
-            cols[1].with_layout(Layout::left_to_right().with_cross_align(Align::Min), |ui| {
+            cols[1].horizontal(|ui| {
                 ui.add(
                     egui::DragValue::f64(&mut self.local_transform.scale.x)
                         .prefix("x: ")

@@ -421,70 +421,43 @@ impl DetailsUI for Material {
                                 cols[1].add(egui::DragValue::i32(i));
                             }
                             UniformValue::Vec2(ref mut v2) => {
-                                cols[1].with_layout(
-                                    Layout::left_to_right().with_cross_align(Align::Min),
-                                    |ui| {
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v2[0])
-                                                .prefix("x: ")
-                                                .speed(0.1),
-                                        );
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v2[1])
-                                                .prefix("y: ")
-                                                .speed(0.1),
-                                        );
-                                    },
-                                );
+                                cols[1].horizontal(|ui| {
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v2[0]).prefix("x: ").speed(0.1),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v2[1]).prefix("y: ").speed(0.1),
+                                    );
+                                });
                             }
                             UniformValue::Vec3(ref mut v3) => {
-                                cols[1].with_layout(
-                                    Layout::left_to_right().with_cross_align(Align::Min),
-                                    |ui| {
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v3[0])
-                                                .prefix("x: ")
-                                                .speed(0.1),
-                                        );
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v3[1])
-                                                .prefix("y: ")
-                                                .speed(0.1),
-                                        );
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v3[2])
-                                                .prefix("z: ")
-                                                .speed(0.1),
-                                        );
-                                    },
-                                );
+                                cols[1].horizontal(|ui| {
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v3[0]).prefix("x: ").speed(0.1),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v3[1]).prefix("y: ").speed(0.1),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v3[2]).prefix("z: ").speed(0.1),
+                                    );
+                                });
                             }
                             UniformValue::Vec4(ref mut v4) => {
-                                cols[1].with_layout(
-                                    Layout::left_to_right().with_cross_align(Align::Min),
-                                    |ui| {
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v4[0])
-                                                .prefix("x: ")
-                                                .speed(0.1),
-                                        );
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v4[1])
-                                                .prefix("y: ")
-                                                .speed(0.1),
-                                        );
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v4[2])
-                                                .prefix("z: ")
-                                                .speed(0.1),
-                                        );
-                                        ui.add(
-                                            egui::DragValue::f32(&mut v4[3])
-                                                .prefix("w: ")
-                                                .speed(0.1),
-                                        );
-                                    },
-                                );
+                                cols[1].horizontal(|ui| {
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v4[0]).prefix("x: ").speed(0.1),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v4[1]).prefix("y: ").speed(0.1),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v4[2]).prefix("z: ").speed(0.1),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::f32(&mut v4[3]).prefix("w: ").speed(0.1),
+                                    );
+                                });
                             }
                             // TODO
                             UniformValue::Matrix(_) => {}

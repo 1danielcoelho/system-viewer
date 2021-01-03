@@ -9,6 +9,7 @@ pub struct Camera {
     pub fov_v: f32,
     pub near: f32,
     pub far: f32,
+    pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. the entity's transform
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -46,8 +47,8 @@ pub struct AppState {
     pub last_frame_s: f64,
     pub sim_time_days: f64,
     pub real_time_s: f64,
-    pub sim_delta_time_days: f64,     // Affected by simulation speed
-    pub real_delta_time_s: f64, // Not affected by simulation speed
+    pub sim_delta_time_days: f64, // Affected by simulation speed
+    pub real_delta_time_s: f64,   // Not affected by simulation speed
     pub simulation_speed: f64,
     pub move_speed: f32,
     pub rotate_speed: f32,
@@ -104,6 +105,7 @@ impl AppState {
                 fov_v: 60.0,
                 near: 5.0,
                 far: 100000000.0,
+                reference_entity: None,
             },
         }
     }

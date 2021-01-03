@@ -306,10 +306,15 @@ response |= ui.add(label);
     > - OrbitalSystem takes 4ms/frame now, which is almost passable 
     > - A substantial ammount of this is nalgebra stuff, although I don't think I could do better: I need to just use it less
     > - Just change to opt-level 2 for now: It compiles about as fast and performance is miles better (pinned to 60fps, 5ms / frame)
+> - Body positioning on top of orbit is not exact: They're always slightly closer to center
 
-# Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back
-    
-# Body positioning on top of orbit is not exact: They're always slightly closer to center
+# Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back    
+
+# I'm not really sure if the planets are the right size, need to measure it somehow
+
+# Set camera reference frame to a moving body
+- It should be possible to click on a body to lock the camera to it
+- Allow clicking on a "system barycenter" somehow
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations

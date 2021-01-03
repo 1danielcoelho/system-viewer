@@ -376,23 +376,50 @@ impl InterfaceManager {
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Camera pos:");
                         cols[1]
-                            .with_layout(
-                                Layout::left_to_right().with_cross_align(Align::Min),
-                                |ui| {
-                                    let mut r = ui.add(
-                                        egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "),
-                                    );
-                                    r |= ui.add(
-                                        egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "),
-                                    );
-                                    r |= ui.add(
-                                        egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "),
-                                    );
-                                    r
-                                },
-                            )
+                            .horizontal(|ui| {
+                                let mut r = ui.add(
+                                    egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "),
+                                );
+                                r |= ui.add(
+                                    egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "),
+                                );
+                                r |= ui.add(
+                                    egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "),
+                                );
+                                r
+                            })
                             .1
                     });
+
+                    if let Some(scene) = scene_man.get_main_scene_mut() {
+                        response |= ui.columns(2, |cols| {
+                            let mut res = cols[0].label("Reference:");
+
+                            if let Some(reference) = state.camera.reference_entity {
+                                res |= cols[1]
+                                    .horizontal(|ui| {
+                                        let mut r = ui.label(format!(
+                                            "{:?}: {}",
+                                            reference,
+                                            scene.get_entity_name(reference).unwrap_or_default()
+                                        ));
+
+                                        let clear_resp = ui
+                                            .button("🗑")
+                                            .on_hover_text("Stop tracking this entity");
+                                        if clear_resp.clicked {
+                                            state.camera.reference_entity = None;
+                                        }
+
+                                        r |= clear_resp;
+                                        r
+                                    })
+                                    .1;
+                            };
+
+                            res
+                        });
+                    };
 
                     ui.separator();
 
@@ -420,7 +447,18 @@ impl InterfaceManager {
 
                             response |= ui.columns(2, |cols| {
                                 cols[0].label("Selected entity:");
-                                cols[1].label(format!("{:?}", selection))
+                                cols[1]
+                                    .horizontal(|ui| {
+                                        ui.label(format!("{:?}", selection));
+                                        let but_res =
+                                            ui.button("🎥").on_hover_text("Track this entity");
+                                        if but_res.clicked {
+                                            state.camera.reference_entity = Some(selection);
+                                        }
+
+                                        but_res
+                                    })
+                                    .1
                             });
 
                             response |= ui.columns(2, |cols| {
