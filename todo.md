@@ -283,12 +283,11 @@ response |= ui.add(label);
 <!-- - Enter/Backspace stuff don't work -->
 > - Typing WASD still moves
 > - Maybe also handle wheel events and stuff while I'm at it?
-
-# Get some planets orbiting
-- Curate csv for only planets and main moons now since performance is junk
-- Orbits not parented to eachother
-    - My previous JS code to calculate the position just seems flat out wrong to me
-    - Also why was I baking the eccentric anomaly and then doing a bunch of extra (wrong) calculations after it? If I'm baking anything I might as well just bake the final positions and interpolate them. I could even use the transformed ellipse vertices so that it always follows the trajectory nicely as well
+> - Get some planets orbiting
+> - Curate csv for only planets and main moons now since performance is junk
+> - Orbits not parented to eachother
+    > - My previous JS code to calculate the position just seems flat out wrong to me
+    > - Also why was I baking the eccentric anomaly and then doing a bunch of extra (wrong) calculations after it? If I'm baking anything I might as well just bake the final positions and interpolate them. I could even use the transformed ellipse vertices so that it always follows the trajectory nicely as well
     > - Current problem is that the sun barycenter doesn't have a mass (or something) so that no E samples get baked. Maybe I need to start using orbital period as a parameter
     >     - Also would solve other annoyances like: What is the "mass" that I should put for the reference mass for a moon of jupiter? Jupiter's mass or the system's mass? etc.
 <!-- - Weird aliasing/precision issue when drawing orbits as far away as jupiter
@@ -299,8 +298,28 @@ response |= ui.add(label);
 > - Metadata dictionary HashMap component where orbital elements can be placed. If available we build and concatenate a transform for it on import
 >     - Also store other stuff like mass, magnitude, rotation info    
 
-# Actually what I really need is the conversion in the other direction: State vector -> osculating orbital elements. I can run this one on free bodies to do orbit prediction, maybe?
-- https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
+# Crazy slow (11 fps with all planets and moons loaded)
+- Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
+- Use profiling crates (like tracing https://crates.io/crates/tracing)
+    - https://github.com/storyscript/tracing-wasm
+    - Chrome's performance tab already can fetch function names and do waterfall charts and stuff
+- Christ: For the full scene the OrbitalSystem takes 31.8ms/frame, the transform update system takes 11.95ms/frame and the rendering system 45.31ms/frame
+    - A substantial ammount of this is nalgebra stuff, although I don't think I could do better: I need to just use it less
+
+    
+# Body positioning on top of orbit is not exact: They're always slightly closer to center
+
+# Improve design of orbit handling
+- One component for bulk N-body calculations
+- One component for on-rails orbit movement
+- Another component for osculating orbit prediction
+  - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
+
+# Floating point precision issues
+- Pluto wiggles severely. I think f64 is way more than fine for the orbital calculations, but it has to get cut down to f32 for WebGL
+  - https://prideout.net/emulating-double-precision
+
+# How to do integration-based orbit prediction? Run the simulation N steps forward?
 
 # N-body simulation
 - Separate component than the orbital component. Maybe even something separate to the physics component entirely
@@ -310,10 +329,6 @@ response |= ui.add(label);
 
 # Logarithmic depth buffer
 
-# Crazy slow (11 fps with all planets and moons loaded and it's not even updating positions yet)
-- Maybe because I set/unset GL state every time? Would mean it's unrelated to geometry tessellation level
-- Use profiling crates (like tracing https://crates.io/crates/tracing)
-
 # Add tests for raycast intersections
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
@@ -322,7 +337,6 @@ response |= ui.add(label);
 # Store camera/app state to local storage so that it reloads facing the same location
 
 # I can tweak the egui visuals a bit. Check out the demo app menus on the left
-
 # What about that transform feedback thing? Maybe I can use that for line drawing or?
 # Better line drawing
 - How did my JS app do it? The lines there seemed fine...
@@ -333,10 +347,7 @@ response |= ui.add(label);
 # Free body movement
 - Gravity, force application
 - Orbital trajectory prediction -> line drawing
-# Put orbital mechanics stuff in another crate once it's big enough
-# I kind of really need to use f64 everywhere
-- Argh WebGL2 doesn't really support it in the shaders, so there's likely not much point
-    - https://prideout.net/emulating-double-precision
+# Put orbital mechanics stuff in another crate once it's big enough    
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
 - It seems fine on Chrome so I think I'll jus tignore this for now
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times

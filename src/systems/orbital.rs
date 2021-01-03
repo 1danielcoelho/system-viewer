@@ -22,7 +22,6 @@ impl OrbitalSystem {
         }
     }
 
-    // Applies semi-implicit Euler integration to update `transform` and `physics` to time t
     pub fn update(
         state: &AppState,
         trans_comp: &mut TransformComponent,
@@ -33,23 +32,16 @@ impl OrbitalSystem {
         let eccentric_anomaly = get_eccentric_anomaly(
             current_time,
             orbit_comp.desc.orbital_elements.sidereal_orbit_period_days,
-            &orbit_comp.baked_eccentric_anomaly_angles,
             &orbit_comp.baked_eccentric_anomaly_times,
         );
 
-        let orb = &orbit_comp.desc.orbital_elements;
-        let b = orb.semi_major_axis.0 * (1.0 - orb.eccentricity.powi(2));
-
-        let planar_x = orb.semi_major_axis.0 * eccentric_anomaly.0.cos();
-        let planar_y = b * eccentric_anomaly.0.sin();
-
-        let transform = elements_to_ellipse_rotation_transform(orb).concat_clone(&Transform {
-            trans: Vector3::new(-orb.semi_major_axis.0 * orb.eccentricity, 0.0, 0.0),
-            ..Transform::identity()
-        });
-
-        trans_comp.get_local_transform_mut().trans = transform
-            .transform_point(&Point3::new(planar_x, planar_y, 0.0))
+        trans_comp.get_local_transform_mut().trans = orbit_comp
+            .circle_to_final_ellipse
+            .transform_point(&Point3::new(
+                eccentric_anomaly.0.cos(),
+                eccentric_anomaly.0.sin(),
+                0.0,
+            ))
             .coords;
     }
 }

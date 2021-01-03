@@ -75,22 +75,15 @@ impl SceneManager {
 
         // Orbit
         if body.orbital_elements.semi_major_axis.0 > 0.0 {
+            let trans = elements_to_circle_transform(&body.orbital_elements);
+
             let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent).unwrap();
             orbit_comp.desc = body.clone(); // TODO: I could probably move this in
+            orbit_comp.circle_to_final_ellipse = trans.clone();
 
             // Bake eccentric anomalies into the body
             if body.orbital_elements.sidereal_orbit_period_days > 0.0 {
-                const NUM_ANGLES: u32 = 5;
-
-                // Add angles for eccentric anomaly interpolation
-                orbit_comp
-                    .baked_eccentric_anomaly_angles
-                    .resize((NUM_ANGLES + 1) as usize, Rad(0.0));
-
-                let incr = 2.0 * PI / NUM_ANGLES as f64;
-                for i in 0..=NUM_ANGLES {
-                    orbit_comp.baked_eccentric_anomaly_angles[i as usize] = Rad(i as f64 * incr);
-                }
+                const NUM_ANGLES: u32 = 360;
 
                 // Add eccentric anomaly interpolation values
                 orbit_comp.baked_eccentric_anomaly_times =
@@ -105,8 +98,7 @@ impl SceneManager {
                 }
 
                 let trans_comp = scene.add_component::<TransformComponent>(orbit).unwrap();
-                *trans_comp.get_local_transform_mut() =
-                    elements_to_circle_transform(&body.orbital_elements);
+                *trans_comp.get_local_transform_mut() = trans;
 
                 let mesh_comp = scene.add_component::<MeshComponent>(orbit).unwrap();
                 mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));

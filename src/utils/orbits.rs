@@ -424,28 +424,30 @@ pub fn bake_eccentric_anomaly_times(elements: &OrbitalElements, num_angles: u32)
     return result;
 }
 
-pub fn get_eccentric_anomaly(
-    mut date: Jdn,
-    orbital_period: f64,
-    baked_angles: &Vec<Rad>,
-    baked_times: &Vec<Jdn>,
-) -> Rad {
+pub fn get_eccentric_anomaly(mut date: Jdn, orbital_period: f64, baked_times: &Vec<Jdn>) -> Rad {
     while date > baked_times[baked_times.len() - 1] {
         date.0 -= orbital_period;
     }
 
+    // We may have 5 angles: [0, 90, 180, 270, 360], so we want an incr of 90 deg
+    // so that if our binary search gives index 3 we just return 270
+    let angle_incr = 1.0 / ((baked_times.len() - 1) as f64);
+
     match baked_times.binary_search_by(|p| p.partial_cmp(&date).unwrap()) {
-        Ok(exact_index) => baked_angles[exact_index],
+        Ok(exact_index) => {
+            return Rad(angle_incr * exact_index as f64);
+        }
         Err(prev_index) => {
-            let next_index = (prev_index + 1) % baked_angles.len();
+            let next_index = (prev_index + 1) % baked_times.len();
 
             let prev_date = baked_times[prev_index];
             let next_date = baked_times[next_index];
-            let prev_E = baked_angles[prev_index];
-            let next_E = baked_angles[next_index];
+            let prev_E = angle_incr * prev_index as f64;
+            let next_E = angle_incr * next_index as f64;
 
-            return Rad(prev_E.0
-                + (next_E.0 - prev_E.0) * ((date.0 - prev_date.0) / (next_date.0 - prev_date.0)));
+            return Rad(
+                prev_E + (next_E - prev_E) * ((date.0 - prev_date.0) / (next_date.0 - prev_date.0))
+            );
         }
     }
 }
