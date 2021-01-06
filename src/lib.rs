@@ -160,7 +160,7 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
 
     let now_s = (js_sys::Date::now() - state.start_s) / 1000.0;
     let real_delta_s = now_s - state.last_frame_s;
-    let phys_delta_s = real_delta_s * state.simulation_speed;
+    let phys_delta_s = real_delta_s * state.simulation_speed * (!state.simulation_paused as i32 as f64);
     state.last_frame_s = now_s;
 
     state.canvas_height = canvas_height_on_screen;

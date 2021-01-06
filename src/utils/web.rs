@@ -165,7 +165,15 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
         "Delete" => egui_key = Some(egui::Key::Delete),
         "End" => egui_key = Some(egui::Key::End),
         "Enter" => egui_key = Some(egui::Key::Enter),
-        "Space" => egui_key = Some(egui::Key::Space),
+        "Space" | " " => {
+            if button_state == ButtonState::Pressed && s.input.spacebar == ButtonState::Depressed {
+                s.input.spacebar = ButtonState::Pressed;
+            } else if button_state == ButtonState::Depressed {
+                s.input.spacebar = ButtonState::Depressed;
+            }
+
+            egui_key = Some(egui::Key::Space);
+        }
         "Esc" | "Escape" => egui_key = Some(egui::Key::Escape),
         "Help" | "Insert" => egui_key = Some(egui::Key::Insert),
         "Home" => egui_key = Some(egui::Key::Home),

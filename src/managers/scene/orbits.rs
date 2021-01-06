@@ -66,8 +66,9 @@ impl SceneManager {
 
         // Sphere mesh
         if body.mean_radius.0 > 0.0 {
-            trans_comp.get_local_transform_mut().scale =
-                Vector3::new(body.mean_radius.0, body.mean_radius.0, body.mean_radius.0);
+            let radius = body.mean_radius.0.max(10.0);
+
+            trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
 
             let mesh_comp = scene.add_component::<MeshComponent>(body_ent).unwrap();
             mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));

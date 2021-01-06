@@ -311,10 +311,9 @@ response |= ui.add(label);
 > - It should be possible to click on a body to lock the camera to it
 > - Allow clicking on a "system barycenter" somehow
     > - Not needed for now and users may not even know barycenters are meant to be entities
-
-# Movement speed needs to be scaled when resetting camera reference
-
-# Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back    
+> - Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back    
+> - I think raycasting doesn't work if the camera has a reference
+> - Spacebar to pause?
 
 # I'm not really sure if the planets are the right size, need to measure it somehow
 
@@ -338,7 +337,11 @@ response |= ui.add(label);
 
 # Logarithmic depth buffer
 
+# I think it should be possible to use chrome to debug 
+
 # Add tests for raycast intersections
+
+# Movement speed needs to be scaled when resetting camera reference
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder

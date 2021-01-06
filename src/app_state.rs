@@ -45,6 +45,7 @@ pub struct Input {
     pub back: ButtonState,
     pub up: ButtonState,
     pub down: ButtonState,
+    pub spacebar: ButtonState,
 
     pub modifiers: egui::Modifiers, // We can use this for the rest of the app too
     pub egui_keys: Vec<egui::Event>, // Mostly for typing into UI
@@ -60,6 +61,7 @@ pub struct AppState {
     pub sim_delta_time_days: f64, // Affected by simulation speed
     pub real_delta_time_s: f64,   // Not affected by simulation speed
     pub simulation_speed: f64,
+    pub simulation_paused: bool, 
     pub move_speed: f32,
     pub rotate_speed: f32,
     pub light_intensity: f32,
@@ -79,6 +81,7 @@ impl AppState {
             sim_delta_time_days: 0.,
             real_delta_time_s: 0.,
             simulation_speed: 1.,
+            simulation_paused: false,
             move_speed: 10000.0,
             rotate_speed: 5.0,
             light_intensity: 0.35,
@@ -98,6 +101,7 @@ impl AppState {
                 back: ButtonState::Depressed,
                 up: ButtonState::Depressed,
                 down: ButtonState::Depressed,
+                spacebar: ButtonState::Depressed,
                 modifiers: egui::Modifiers {
                     alt: false,
                     ctrl: false,

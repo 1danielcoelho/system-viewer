@@ -15,6 +15,11 @@ impl InputManager {
     }
 
     pub fn run(&mut self, state: &mut AppState) {
+        if state.input.spacebar == ButtonState::Pressed {
+            state.simulation_paused = !state.simulation_paused;
+            state.input.spacebar = ButtonState::Handled;
+        }
+
         state.input.delta_x = state.input.mouse_x - self.last_mouse_x;
         state.input.delta_y = state.input.mouse_y - self.last_mouse_y;
 

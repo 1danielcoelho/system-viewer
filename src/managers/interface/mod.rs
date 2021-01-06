@@ -610,7 +610,22 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
         state.camera.near,
         state.camera.far,
     );
+
     let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
+
+    let reference = match state.camera.reference_entity {
+        Some(reference) => na::convert::<Matrix4<f64>, Matrix4<f32>>(
+            scene
+                .get_component::<TransformComponent>(reference)
+                .unwrap()
+                .get_world_transform()
+                .to_matrix4(),
+        ),
+        None => Matrix4::identity(),
+    };
+
+    let ndc_to_world: Matrix4<f32> =
+        reference * v.try_inverse().unwrap() * p.try_inverse().unwrap();
 
     let ndc_near_pos = Point3::from(Vector3::new(
         -1.0 + 2.0 * state.input.mouse_x as f32 / (state.canvas_width - 1) as f32,
@@ -618,13 +633,12 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
         -1.0,
     ));
 
-    let ndc_to_world: Matrix4<f32> = v.try_inverse().unwrap() * p.try_inverse().unwrap();
-
-    let world_pos = ndc_to_world.transform_point(&ndc_near_pos);
+    let end_world = ndc_to_world.transform_point(&ndc_near_pos);
+    let start_world = reference.transform_point(&state.camera.pos);
 
     let ray = Ray {
-        start: state.camera.pos,
-        direction: (world_pos - state.camera.pos).normalize(),
+        start: start_world,
+        direction: (end_world - start_world).normalize(),
     };
 
     if state.input.m0 == ButtonState::Pressed {
