@@ -22,7 +22,8 @@ pub struct Camera {
     pub far: f32,
 
     #[serde(skip)]
-    pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. the entity's transform
+    pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. reference_translation
+    pub reference_translation: Point3<f32>, // Updated every frame to match the final position of reference_entity
 
     // When we want to change reference, we set the new one here.
     // The transform update system will fixup our pos/up/target to be wrt. to it and move it to reference_entity (setting this

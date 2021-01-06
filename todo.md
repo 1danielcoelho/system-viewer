@@ -322,6 +322,8 @@ response |= ui.add(label);
 > - Need to have a "move to entity" button
 
 # Change how camera reference works to maybe just append the translation of the reference or something, because it's very annoying to have the scale of the target body affect the camera transform/precision issues
+- This would also fix the movement scaling issue when changing reference
+- It could be useful to have camera near/far adjust like this though.... although we likely need a more robust system as I always want near/far/speed to scale down when we're near a body, whether we're using it as a reference or not
 
 # Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
 
