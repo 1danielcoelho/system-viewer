@@ -58,13 +58,6 @@ pub fn initialize() {
     STATE.with(|s| {
         let mut s = s.borrow_mut();
         s.replace(AppState::load_or_new());
-        let s = s.as_mut().unwrap();
-
-        s.sim_time_days = 0.0;
-        s.real_time_s = 0.0;
-        s.start_s = js_sys::Date::now();
-        s.last_frame_s = 0.0;
-        s.time_of_last_save = 0.0;
     });
 
     log::info!("Initializing canvas...");
@@ -143,6 +136,10 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
 }
 
 fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElement) {
+    if state.pending_reset {
+        *state = AppState::new();
+    }
+
     let canvas_width_on_screen = canvas.client_width() as u32;
     let canvas_height_on_screen = canvas.client_height() as u32;
 
@@ -167,7 +164,8 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
 
     let now_s = (js_sys::Date::now() - state.start_s) / 1000.0;
     let real_delta_s = now_s - state.last_frame_s;
-    let phys_delta_s = real_delta_s * state.simulation_speed * (!state.simulation_paused as i32 as f64);
+    let phys_delta_s =
+        real_delta_s * state.simulation_speed * (!state.simulation_paused as i32 as f64);
     state.last_frame_s = now_s;
 
     state.canvas_height = canvas_height_on_screen;

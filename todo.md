@@ -316,6 +316,8 @@ response |= ui.add(label);
 > - Spacebar to pause?
 > - I'm not really sure if the planets are the right size, need to measure it somehow
 > - Store camera/app state to local storage so that it reloads facing the same location
+> - Movement speed needs to be scaled when resetting camera reference
+> - Don't want to waste time on this for now, because I'll probably change this anyway
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
@@ -340,8 +342,6 @@ response |= ui.add(label);
 # I think it should be possible to use chrome to debug 
 
 # Add tests for raycast intersections
-
-# Movement speed needs to be scaled when resetting camera reference
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder

@@ -256,6 +256,14 @@ impl InterfaceManager {
                         {
                             *ui.ctx().memory() = Default::default();
                         }
+
+                        if ui
+                            .button("Reset app state")
+                            .on_hover_text("Clears app state from local storage")
+                            .clicked
+                        {
+                            state.pending_reset = true;
+                        }
                     });
 
                     let time = state.real_time_s;

@@ -1,6 +1,6 @@
 use crate::{
     managers::scene::Entity,
-    utils::web::{local_storage_get, local_storage_set},
+    utils::web::{local_storage_get, local_storage_remove, local_storage_set},
 };
 use na::*;
 use serde::{Deserialize, Serialize};
@@ -72,6 +72,9 @@ pub struct Input {
 #[derive(Serialize, Deserialize)]
 pub struct AppState {
     #[serde(skip)]
+    pub pending_reset: bool, // Whether we want the state to be reset to default the next possible time
+
+    #[serde(skip)]
     pub canvas_height: u32,
 
     #[serde(skip)]
@@ -114,9 +117,10 @@ pub struct AppState {
 impl AppState {
     pub fn new() -> Self {
         Self {
+            pending_reset: false,
             canvas_height: 0,
             canvas_width: 0,
-            start_s: 0.0,
+            start_s: js_sys::Date::now(),
             last_frame_s: 0.0,
             sim_time_days: 0.,
             real_time_s: 0.,
@@ -126,7 +130,7 @@ impl AppState {
             simulation_speed: 1.,
             simulation_paused: false,
             move_speed: 10000.0,
-            rotate_speed: 5.0,
+            rotate_speed: 2.0,
             light_intensity: 1.0,
             input: Input::default(),
             selection: HashSet::new(),
@@ -148,10 +152,13 @@ impl AppState {
     pub fn load_or_new() -> Self {
         if let Some(serialized) = local_storage_get("app_state") {
             match ron::de::from_str::<AppState>(&serialized) {
-                Ok(state) => return state,
+                Ok(mut state) => {
+                    state.start_s = js_sys::Date::now();
+                    return state;
+                }
                 Err(error) => {
                     log::error!(
-                        "Error deserializing app state '{}': '{}'",
+                        "Error deserializing app state '{}': '{}'", 
                         serialized,
                         error
                     );

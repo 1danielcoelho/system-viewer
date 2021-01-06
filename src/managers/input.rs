@@ -41,8 +41,8 @@ impl InputManager {
         }
         state.input.scroll_delta_y = 0; // We have to "consume" this as it isn't cleared otherwise
 
-        let move_speed = state.move_speed * 0.005;
-        let rotate_speed = state.rotate_speed * 0.5;
+        let move_speed = state.move_speed;
+        let rotate_speed = state.rotate_speed;
 
         let mut incr: Vector3<f32> = Vector3::new(0.0, 0.0, 0.0);
         if state.input.forward == ButtonState::Pressed {
