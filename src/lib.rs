@@ -57,13 +57,14 @@ pub fn initialize() {
     log::info!("Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
-        s.replace(AppState::new());
+        s.replace(AppState::load_or_new());
         let s = s.as_mut().unwrap();
 
         s.sim_time_days = 0.0;
         s.real_time_s = 0.0;
         s.start_s = js_sys::Date::now();
         s.last_frame_s = 0.0;
+        s.time_of_last_save = 0.0;
     });
 
     log::info!("Initializing canvas...");
@@ -119,6 +120,12 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
             let s = ref_mut_s.as_mut().unwrap();
 
             update_state(s, window, canvas);
+
+            // Save state to local storage once in a while
+            if s.real_time_s - s.time_of_last_save > 3.0 {
+                s.save();
+                s.time_of_last_save = s.real_time_s;
+            }
 
             ENGINE.with(|e| {
                 if let Ok(mut ref_mut_e) = e.try_borrow_mut() {

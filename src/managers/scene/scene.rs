@@ -7,8 +7,9 @@ use crate::{
 };
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::{cmp::Reverse, hash::Hash};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Eq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
 pub struct Entity(u32);
 impl PartialEq for Entity {
     fn eq(&self, other: &Self) -> bool {

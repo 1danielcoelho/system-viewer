@@ -410,3 +410,20 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
         handler.forget();
     }
 }
+
+// From egui web backend 
+pub fn local_storage() -> Option<web_sys::Storage> {
+    web_sys::window()?.local_storage().ok()?
+}
+
+pub fn local_storage_get(key: &str) -> Option<String> {
+    local_storage().map(|storage| storage.get_item(key).ok())??
+}
+
+pub fn local_storage_set(key: &str, value: &str) {
+    local_storage().map(|storage| storage.set_item(key, value));
+}
+
+pub fn local_storage_remove(key: &str) {
+    local_storage().map(|storage| storage.remove_item(key));
+}

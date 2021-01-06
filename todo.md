@@ -315,8 +315,7 @@ response |= ui.add(label);
 > - I think raycasting doesn't work if the camera has a reference
 > - Spacebar to pause?
 > - I'm not really sure if the planets are the right size, need to measure it somehow
-
-# Store camera/app state to local storage so that it reloads facing the same location
+> - Store camera/app state to local storage so that it reloads facing the same location
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
