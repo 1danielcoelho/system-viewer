@@ -5,9 +5,9 @@ use crate::{
     },
     managers::scene::serialization::{EntityIndex, SerEntity, SerScene},
 };
+use serde::{Deserialize, Serialize};
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::{cmp::Reverse, hash::Hash};
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
 pub struct Entity(u32);
@@ -19,12 +19,12 @@ impl PartialEq for Entity {
 
 #[derive(Clone)]
 pub struct EntityEntry {
-    live: bool,
-    current: Entity,
+    pub live: bool,
+    pub current: Entity,
 
-    name: Option<String>,
-    parent: Option<Entity>,
-    children: Vec<Entity>,
+    pub name: Option<String>,
+    pub parent: Option<Entity>,
+    pub children: Vec<Entity>,
 }
 
 #[derive(Clone)]
@@ -63,6 +63,10 @@ impl Scene {
             orbital: HashMap::new(),
             _private: (),
         }
+    }
+
+    pub fn get_entity_entries(&self) -> &Vec<EntityEntry> {
+        return &self.entity_storage;
     }
 
     /** Used when injecting scenes into eachother */
@@ -722,7 +726,9 @@ impl Scene {
             let scene_index = self.get_entity_index(*ent).unwrap();
             let ser_index = index_to_packed_index[&scene_index];
 
-            ser_scene.orbital.insert(EntityIndex(ser_index), comp.clone());
+            ser_scene
+                .orbital
+                .insert(EntityIndex(ser_index), comp.clone());
         }
 
         return ron::ser::to_string_pretty(&ser_scene, ron::ser::PrettyConfig::new()).unwrap();

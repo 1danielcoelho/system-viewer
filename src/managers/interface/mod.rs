@@ -72,6 +72,7 @@ pub fn handle_output_func(state: &mut AppState, output: Response) {
 struct OpenWindows {
     debug: bool,
     scene_man: bool,
+    scene_hierarchy: bool,
 }
 
 pub struct InterfaceManager {
@@ -93,6 +94,7 @@ impl InterfaceManager {
             open_windows: OpenWindows {
                 debug: true,
                 scene_man: false,
+                scene_hierarchy: false,
             },
             selected_scene_name: String::new(),
             frame_times: vec![16.66; 15].into_iter().collect(),
@@ -236,6 +238,10 @@ impl InterfaceManager {
                             self.open_windows.scene_man = !self.open_windows.scene_man;
                         }
 
+                        if ui.button("Scene hierarchy").clicked {
+                            self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
+                        }
+
                         ui.separator();
 
                         if ui.button("Organize windows").clicked {
@@ -245,6 +251,7 @@ impl InterfaceManager {
                         if ui.button("Close all").clicked {
                             self.open_windows.debug = false;
                             self.open_windows.scene_man = false;
+                            self.open_windows.scene_hierarchy = false;
                         }
                     });
 
@@ -296,6 +303,10 @@ impl InterfaceManager {
     ) {
         self.draw_debug_window(state, scene_man);
         self.draw_scene_manager_window(state, scene_man, res_man);
+
+        if let Some(main_scene) = scene_man.get_main_scene() {
+            self.draw_scene_hierarchy_window(state, main_scene);
+        }
     }
 
     fn draw_debug_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -603,6 +614,49 @@ impl InterfaceManager {
                 });
 
             self.open_windows.scene_man = open_window;
+
+            if let Some(response) = response {
+                handle_output!(state, response);
+            }
+        });
+    }
+
+    fn draw_scene_hierarchy_window(&mut self, state: &mut AppState, scene: &Scene) {
+        UICTX.with(|ui| {
+            let ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_ref().unwrap();
+
+            let mut open_window = self.open_windows.scene_hierarchy;
+
+            let response = egui::Window::new("Scene hierarchy")
+                .open(&mut open_window)
+                .scroll(false)
+                .resizable(true)
+                .default_size(egui::vec2(300.0, 400.0))
+                .show(&ui.ctx(), |ui| {
+                    ui.set_min_height(300.0);
+
+                    Frame::dark_canvas(ui.style()).show(ui, |ui| {
+                        ui.set_min_height(ui.available_size().y);
+
+                        ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
+                            for entity in scene.get_entity_entries() {
+                                if !entity.live {
+                                    continue;
+                                }
+
+                                if let Some(name) = &entity.name {
+                                    if ui.button(name).clicked {
+                                        state.selection.clear();
+                                        state.selection.insert(entity.current);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+
+            self.open_windows.scene_hierarchy = open_window;
 
             if let Some(response) = response {
                 handle_output!(state, response);

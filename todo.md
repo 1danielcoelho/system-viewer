@@ -318,6 +318,11 @@ response |= ui.add(label);
 > - Store camera/app state to local storage so that it reloads facing the same location
 > - Movement speed needs to be scaled when resetting camera reference
 > - Don't want to waste time on this for now, because I'll probably change this anyway
+> - I need some kind of window to list of entities
+
+# Need to have a "move to entity" button
+
+# Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
