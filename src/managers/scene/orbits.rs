@@ -1,11 +1,15 @@
 use crate::{
-    components::{MeshComponent, OrbitalComponent, TransformComponent},
+    components::{
+        light::LightType, LightComponent, MeshComponent, OrbitalComponent, TransformComponent,
+    },
     managers::{
         scene::{Entity, SceneManager},
         ResourceManager,
     },
     utils::{
-        orbits::{bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription},
+        orbits::{
+            bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription, BodyType,
+        },
         units::{Jdn, Rad},
     },
 };
@@ -67,11 +71,19 @@ impl SceneManager {
         // Sphere mesh
         if body.mean_radius.0 > 0.0 {
             let radius = body.mean_radius.0;
-            
+
             trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
 
             let mesh_comp = scene.add_component::<MeshComponent>(body_ent).unwrap();
             mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+            mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        }
+
+        if body.body_type == BodyType::Star {
+            let light_comp = scene.add_component::<LightComponent>(body_ent).unwrap();
+            light_comp.color = Vector3::new(1.0, 1.0, 1.0);
+            light_comp.intensity = 5E10;
+            light_comp.light_type = LightType::Point;
         }
 
         // Orbit

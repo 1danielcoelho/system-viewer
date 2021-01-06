@@ -316,6 +316,8 @@ response |= ui.add(label);
 > - Spacebar to pause?
 > - I'm not really sure if the planets are the right size, need to measure it somehow
 
+# Store camera/app state to local storage so that it reloads facing the same location
+
 # Improve design of orbit handling
 - One component for bulk N-body calculations
 - One component for on-rails orbit movement
@@ -344,8 +346,6 @@ response |= ui.add(label);
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
-
-# Store camera/app state to local storage so that it reloads facing the same location
 
 # I can tweak the egui visuals a bit. Check out the demo app menus on the left
 # What about that transform feedback thing? Maybe I can use that for line drawing or?

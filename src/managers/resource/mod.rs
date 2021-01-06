@@ -286,8 +286,8 @@ impl ResourceManager {
         let mesh: Option<Rc<RefCell<Mesh>>> = match identifier {
             "cube" => Some(generate_cube(default_mat)),
             "plane" => Some(generate_plane(default_mat)),
-            "grid" => Some(generate_grid(200, default_mat)),
-            "axes" => Some(generate_axes(default_mat)),
+            "grid" => Some(generate_grid(11, default_mat)),
+            "axes" => Some(generate_axes(self.get_or_create_material("vertex_color"))),
             "circle" => Some(generate_circle(100, default_mat)),
             "lat_long_sphere" => Some(generate_lat_long_sphere(
                 32,
@@ -319,6 +319,12 @@ impl ResourceManager {
         if let Some(mat) = self.materials.get(identifier) {
             return Some(mat.clone());
         }
+
+        log::error!(
+            "Failed to find a material for identifier '{}'. Current valid identifiers:\n{:#?}",
+            identifier,
+            self.materials.keys()
+        );
 
         return None;
     }
@@ -367,8 +373,8 @@ impl ResourceManager {
     }
 
     pub fn get_or_create_material(&mut self, identifier: &str) -> Option<Rc<RefCell<Material>>> {
-        if let Some(mat) = self.get_material(identifier) {
-            return Some(mat);
+        if let Some(mat) = self.materials.get(identifier) {
+            return Some(mat.clone());
         }
 
         let mat = match identifier {
@@ -376,6 +382,12 @@ impl ResourceManager {
                 identifier,
                 "relay_color.vert",
                 "white.frag",
+                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+            )),
+            "vertex_color" => Some(Material::new(
+                identifier,
+                "relay_color.vert",
+                "color.frag",
                 &[UniformName::WorldTrans, UniformName::ViewProjTrans],
             )),
             "world_normals" => Some(Material::new(

@@ -22,7 +22,7 @@ vec3 calc_point_light(vec3 light_pos, vec3 light_color, float light_intensity)
 {
     vec3 frag_to_light = light_pos - v_world_pos;
     float dist_squared = dot(frag_to_light, frag_to_light);
-    float intensity = 10.0 * light_intensity / dist_squared;
+    float intensity = light_intensity / dist_squared;
 
     intensity *= dot(normalize(frag_to_light), v_world_normal);
     intensity = clamp(intensity, 0.0, 1.0);

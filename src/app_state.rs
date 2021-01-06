@@ -71,7 +71,7 @@ pub struct AppState {
 }
 impl AppState {
     pub fn new() -> Self {
-        Self {
+        Self { 
             canvas_height: 0,
             canvas_width: 0,
             start_s: 0.0,
@@ -84,7 +84,7 @@ impl AppState {
             simulation_paused: false,
             move_speed: 10000.0,
             rotate_speed: 5.0,
-            light_intensity: 0.35,
+            light_intensity: 1.0,
             input: Input {
                 mouse_x: 0,
                 mouse_y: 0,
