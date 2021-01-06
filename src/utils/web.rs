@@ -205,6 +205,9 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
         "z" | "Z" => {
             egui_key = Some(egui::Key::Z);
         }
+        "f" | "F" => {
+            s.input.f = button_state;
+        }
         _ => {}
     };
 
@@ -411,7 +414,7 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
     }
 }
 
-// From egui web backend 
+// From egui web backend
 pub fn local_storage() -> Option<web_sys::Storage> {
     web_sys::window()?.local_storage().ok()?
 }

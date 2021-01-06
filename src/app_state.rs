@@ -61,6 +61,7 @@ pub struct Input {
     pub up: ButtonState,
     pub down: ButtonState,
     pub spacebar: ButtonState,
+    pub f: ButtonState,
 
     #[serde(skip)]
     pub modifiers: egui::Modifiers, // We can use this for the rest of the app too
@@ -158,7 +159,7 @@ impl AppState {
                 }
                 Err(error) => {
                     log::error!(
-                        "Error deserializing app state '{}': '{}'", 
+                        "Error deserializing app state '{}': '{}'",
                         serialized,
                         error
                     );

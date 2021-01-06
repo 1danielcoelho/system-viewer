@@ -319,8 +319,9 @@ response |= ui.add(label);
 > - Movement speed needs to be scaled when resetting camera reference
 > - Don't want to waste time on this for now, because I'll probably change this anyway
 > - I need some kind of window to list of entities
+> - Need to have a "move to entity" button
 
-# Need to have a "move to entity" button
+# Change how camera reference works to maybe just append the translation of the reference or something, because it's very annoying to have the scale of the target body affect the camera transform/precision issues
 
 # Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
 

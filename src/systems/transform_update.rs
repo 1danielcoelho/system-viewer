@@ -1,5 +1,9 @@
-use crate::{app_state::AppState, managers::scene::Scene, utils::transform::Transform};
 use crate::{app_state::ReferenceChange, components::TransformComponent};
+use crate::{
+    app_state::{AppState, ButtonState},
+    managers::scene::Scene,
+    utils::transform::Transform,
+};
 use na::{Matrix4, Point3, Unit, Vector3};
 
 pub struct TransformUpdateSystem {}
@@ -30,6 +34,8 @@ impl TransformUpdateSystem {
         }
 
         rebase_camera_transform(state, scene);
+
+        focus_camera_on_selection(state, scene);
     }
 }
 
@@ -85,4 +91,25 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
         ReferenceChange::Clear => state.camera.reference_entity = None,
     };
     state.camera.next_reference_entity = None;
+}
+
+fn focus_camera_on_selection(state: &mut AppState, scene: &mut Scene) {
+    if state.input.f != ButtonState::Pressed {
+        return;
+    }
+
+    let target_entity = state.selection.iter().next();
+    if target_entity.is_none() {
+        return;
+    }
+    let target_entity = target_entity.unwrap();
+
+    // Set the target entity as our reference first
+    if state.camera.reference_entity != Some(*target_entity) {
+        state.camera.next_reference_entity = Some(ReferenceChange::NewEntity(*target_entity));
+        rebase_camera_transform(state, scene);
+    }
+
+    state.camera.pos = Point3::new(100.0, 100.0, 100.0);
+    state.camera.target = Point3::new(0.0, 0.0, 0.0);
 }
