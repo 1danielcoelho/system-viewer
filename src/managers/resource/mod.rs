@@ -292,12 +292,12 @@ impl ResourceManager {
             "lat_long_sphere" => Some(generate_lat_long_sphere(
                 32,
                 32,
-                0.8,
+                1.0,
                 true,
                 true,
                 default_mat,
             )),
-            "ico_sphere" => Some(generate_ico_sphere(0.8, 2, false, default_mat)),
+            "ico_sphere" => Some(generate_ico_sphere(1.0, 2, false, default_mat)),
             _ => None,
         };
 

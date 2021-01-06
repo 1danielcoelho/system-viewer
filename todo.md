@@ -314,8 +314,7 @@ response |= ui.add(label);
 > - Something is wrong: The moon doesn't fully orbit, it only moves like 1/5th of a rotation and snaps back    
 > - I think raycasting doesn't work if the camera has a reference
 > - Spacebar to pause?
-
-# I'm not really sure if the planets are the right size, need to measure it somehow
+> - I'm not really sure if the planets are the right size, need to measure it somehow
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
