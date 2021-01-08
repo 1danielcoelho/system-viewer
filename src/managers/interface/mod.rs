@@ -21,7 +21,7 @@ use egui::{
     TextStyle, TopPanel, Ui,
 };
 use gui_backend::WebInput;
-use na::{Matrix4, Point3, Vector3};
+use na::{Matrix4, Point3, Translation3, Vector3};
 
 pub mod details_ui;
 
@@ -676,13 +676,15 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
     let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
 
     let reference = match state.camera.reference_entity {
-        Some(reference) => na::convert::<Matrix4<f64>, Matrix4<f32>>(
-            scene
+        Some(reference) => {
+            let trans = scene
                 .get_component::<TransformComponent>(reference)
                 .unwrap()
                 .get_world_transform()
-                .to_matrix4(),
-        ),
+                .trans;
+
+            Translation3::new(trans.x as f32, trans.y as f32, trans.z as f32).to_homogeneous()
+        }
         None => Matrix4::identity(),
     };
 

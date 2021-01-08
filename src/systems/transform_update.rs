@@ -4,7 +4,7 @@ use crate::{
     managers::scene::Scene,
     utils::transform::Transform,
 };
-use na::{Matrix4, Point3, Unit, Vector3};
+use na::{Matrix4, Point3, Translation3, Unit, Vector3};
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
@@ -64,19 +64,20 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
     let up = na::convert::<Vector3<f32>, Vector3<f64>>(*state.camera.up);
 
     let old_to_world = match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
-        Some(old_comp) => old_comp.get_world_transform().to_matrix4(),
+        Some(old_comp) => Translation3::from(old_comp.get_world_transform().trans).to_homogeneous(),
         None => Matrix4::identity(),
     };
 
     // From world to new
     let world_to_new = match new_entity {
-        ReferenceChange::NewEntity(new_entity) => scene
-            .get_component::<TransformComponent>(*new_entity)
-            .unwrap()
-            .get_world_transform()
-            .to_matrix4()
-            .try_inverse()
-            .unwrap(),
+        ReferenceChange::NewEntity(new_entity) => Translation3::from(
+            -scene
+                .get_component::<TransformComponent>(*new_entity)
+                .unwrap()
+                .get_world_transform()
+                .trans,
+        )
+        .to_homogeneous(),
         ReferenceChange::Clear => Matrix4::identity(),
     };
 

@@ -320,22 +320,20 @@ response |= ui.add(label);
 > - Don't want to waste time on this for now, because I'll probably change this anyway
 > - I need some kind of window to list of entities
 > - Need to have a "move to entity" button
+> - Change how camera reference works to maybe just append the translation of the reference or something, because it's very annoying to have the scale of the target body affect the camera transform/precision issues
+> - This would also fix the movement scaling issue when changing reference
+> - It could be useful to have camera near/far adjust like this though.... although we likely need a more robust system as I always want near/far/speed to scale down when we're near a body, whether we're using it as a reference or not
 
-# Change how camera reference works to maybe just append the translation of the reference or something, because it's very annoying to have the scale of the target body affect the camera transform/precision issues
-- This would also fix the movement scaling issue when changing reference
-- It could be useful to have camera near/far adjust like this though.... although we likely need a more robust system as I always want near/far/speed to scale down when we're near a body, whether we're using it as a reference or not
-
-# Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
+# Floating point precision issues
+- Pluto wiggles severely. I think f64 is way more than fine for the orbital calculations, but it has to get cut down to f32 for WebGL
+  - https://prideout.net/emulating-double-precision
+- I can't even move if the move around pluto's orbit if the move speed is below some amount 
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
 - One component for on-rails orbit movement
 - Another component for osculating orbit prediction
   - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
-
-# Floating point precision issues
-- Pluto wiggles severely. I think f64 is way more than fine for the orbital calculations, but it has to get cut down to f32 for WebGL
-  - https://prideout.net/emulating-double-precision
 
 # How to do integration-based orbit prediction? Run the simulation N steps forward?
 
@@ -348,6 +346,8 @@ response |= ui.add(label);
 # Logarithmic depth buffer
 
 # I think it should be possible to use chrome to debug 
+
+# Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
 
 # Add tests for raycast intersections
 
