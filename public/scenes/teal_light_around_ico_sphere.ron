@@ -1,0 +1,558 @@
+(
+    identifier: "test",
+    entities: [
+        (
+            name: Some("floor"),
+            index: (0),
+            parent: None,
+            children: [],
+        ),
+        (
+            name: Some("cube"),
+            index: (1),
+            parent: None,
+            children: [],
+        ),
+        (
+            name: Some("light_center"),
+            index: (2),
+            parent: None,
+            children: [
+                (3),
+            ],
+        ),
+        (
+            name: Some("Mega-sun"),
+            index: (3),
+            parent: Some((2)),
+            children: [],
+        ),
+        (
+            name: Some("axes"),
+            index: (4),
+            parent: None,
+            children: [],
+        ),
+    ],
+    physics: [
+        (
+            enabled: false,
+            collision_enabled: false,
+            behavior: FreeBody,
+            inv_mass: 1,
+            inv_inertia: [
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+            ],
+            force_sum: [
+                0,
+                0,
+                0,
+            ],
+            torque_sum: [
+                0,
+                0,
+                0,
+            ],
+            lin_mom: [
+                0,
+                0,
+                0,
+            ],
+            ang_mom: [
+                0,
+                0,
+                0,
+            ],
+        ),
+        (
+            enabled: false,
+            collision_enabled: false,
+            behavior: FreeBody,
+            inv_mass: 1,
+            inv_inertia: [
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+            ],
+            force_sum: [
+                0,
+                0,
+                0,
+            ],
+            torque_sum: [
+                0,
+                0,
+                0,
+            ],
+            lin_mom: [
+                0,
+                0,
+                0,
+            ],
+            ang_mom: [
+                0,
+                0,
+                0,
+            ],
+        ),
+        (
+            enabled: true,
+            collision_enabled: false,
+            behavior: FreeBody,
+            inv_mass: 1,
+            inv_inertia: [
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+            ],
+            force_sum: [
+                0,
+                0,
+                0,
+            ],
+            torque_sum: [
+                0,
+                0,
+                0,
+            ],
+            lin_mom: [
+                0,
+                0,
+                0,
+            ],
+            ang_mom: [
+                0,
+                0,
+                300,
+            ],
+        ),
+        (
+            enabled: false,
+            collision_enabled: false,
+            behavior: FreeBody,
+            inv_mass: 1,
+            inv_inertia: [
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+            ],
+            force_sum: [
+                0,
+                0,
+                0,
+            ],
+            torque_sum: [
+                0,
+                0,
+                0,
+            ],
+            lin_mom: [
+                0,
+                0,
+                0,
+            ],
+            ang_mom: [
+                0,
+                0,
+                0,
+            ],
+        ),
+        (
+            enabled: false,
+            collision_enabled: false,
+            behavior: FreeBody,
+            inv_mass: 1,
+            inv_inertia: [
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+            ],
+            force_sum: [
+                0,
+                0,
+                0,
+            ],
+            torque_sum: [
+                0,
+                0,
+                0,
+            ],
+            lin_mom: [
+                0,
+                0,
+                0,
+            ],
+            ang_mom: [
+                0,
+                0,
+                0,
+            ],
+        ),
+    ],
+    mesh: [
+        (
+            enabled: true,
+            raycasting_visible: true,
+            visible: true,
+            mesh: Some((
+                name: "plane",
+            )),
+            material_overrides: [
+                Some((
+                    name: "phong",
+                    master: "phong",
+                    vert: "relay_all.vert",
+                    frag: "phong.frag",
+                    textures: {},
+                    uniforms: {
+                        WVTrans: (
+                            value: Matrix((-0.4348748, -0.1462971, 0.88852745, 0, 0.90049094, -0.070651375, 0.42909727, 0, 0, 0.98671454, 0.16246371, 0, 1.1754874, -0.30259648, -14.379145, 1)),
+                        ),
+                        LightIntensities: (
+                            value: FloatArr([
+                                14.125376,
+                            ]),
+                        ),
+                        LightPosDir: (
+                            value: Vec3Arr([
+                                2.5587022,
+                                -1.0832125,
+                                -9.638116,
+                            ]),
+                        ),
+                        LightColors: (
+                            value: Vec3Arr([
+                                0,
+                                1,
+                                1,
+                            ]),
+                        ),
+                        LightTypes: (
+                            value: IntArr([
+                                0,
+                            ]),
+                        ),
+                        WVPTrans: (
+                            value: Matrix((-0.39583555, -0.253394, -0.8885275, -0.88852745, 0.81965274, -0.12237177, -0.4290973, -0.42909727, 0, 1.7090397, -0.16246371, -0.16246371, 1.0699624, -0.52411246, 12.379146, 14.379145)),
+                        ),
+                        WVInvTranspTrans: (
+                            value: Matrix((-0.4348748, -0.1462971, 0.88852745, 13.243186, 0.90049094, -0.070651375, 0.42909727, 5.0901575, 0, 0.98671454, 0.16246371, 2.6346657, 0, 0, 0, 1)),
+                        ),
+                    },
+                    defines: [],
+                    failed_to_compile: false,
+                )),
+            ],
+        ),
+        (
+            enabled: true,
+            raycasting_visible: true,
+            visible: true,
+            mesh: Some((
+                name: "ico_sphere",
+            )),
+            material_overrides: [
+                Some((
+                    name: "phong",
+                    master: "phong",
+                    vert: "relay_all.vert",
+                    frag: "phong.frag",
+                    textures: {},
+                    uniforms: {
+                        WVTrans: (
+                            value: Matrix((-0.4348748, -0.1462971, 0.88852745, 0, 0.90049094, -0.070651375, 0.42909727, 0, 0, 0.98671454, 0.16246371, 0, 1.1754874, -0.30259648, -14.379145, 1)),
+                        ),
+                        LightIntensities: (
+                            value: FloatArr([
+                                14.125376,
+                            ]),
+                        ),
+                        LightPosDir: (
+                            value: Vec3Arr([
+                                2.5587022,
+                                -1.0832125,
+                                -9.638116,
+                            ]),
+                        ),
+                        LightColors: (
+                            value: Vec3Arr([
+                                0,
+                                1,
+                                1,
+                            ]),
+                        ),
+                        LightTypes: (
+                            value: IntArr([
+                                0,
+                            ]),
+                        ),
+                        WVPTrans: (
+                            value: Matrix((-0.39583555, -0.253394, -0.8885275, -0.88852745, 0.81965274, -0.12237177, -0.4290973, -0.42909727, 0, 1.7090397, -0.16246371, -0.16246371, 1.0699624, -0.52411246, 12.379146, 14.379145)),
+                        ),
+                        WVInvTranspTrans: (
+                            value: Matrix((-0.4348748, -0.1462971, 0.88852745, 13.243186, 0.90049094, -0.070651375, 0.42909727, 5.0901575, 0, 0.98671454, 0.16246371, 2.6346657, 0, 0, 0, 1)),
+                        ),
+                    },
+                    defines: [],
+                    failed_to_compile: false,
+                )),
+            ],
+        ),
+        (
+            enabled: false,
+            raycasting_visible: true,
+            visible: true,
+            mesh: None,
+            material_overrides: [],
+        ),
+        (
+            enabled: true,
+            raycasting_visible: true,
+            visible: true,
+            mesh: Some((
+                name: "lat_long_sphere",
+            )),
+            material_overrides: [
+                Some((
+                    name: "mega_sun_mat",
+                    master: "gltf_metal_rough",
+                    vert: "relay_all.vert",
+                    frag: "gltf_metal_rough.frag",
+                    textures: {},
+                    uniforms: {
+                        LightTypes: (
+                            value: IntArr([
+                                0,
+                            ]),
+                        ),
+                        MetallicFactor: (
+                            value: Float(1),
+                        ),
+                        RoughnessFactor: (
+                            value: Float(1),
+                        ),
+                        Normal: (
+                            value: Int(2),
+                        ),
+                        BaseColorFactor: (
+                            value: Vec4((1, 1, 1, 1)),
+                        ),
+                        WVInvTranspTrans: (
+                            value: Matrix((1.3832148, -0.78061604, 4.741029, 41.30978, 4.804864, 0.22472222, -1.3648381, -25.205263, 0.00000000000000005421011, 4.933573, 0.81231856, 13.173328, 0, 0, 0, 1)),
+                        ),
+                        Emissive: (
+                            value: Int(3),
+                        ),
+                        LightColors: (
+                            value: Vec3Arr([
+                                0,
+                                1,
+                                1,
+                            ]),
+                        ),
+                        BaseColor: (
+                            value: Int(0),
+                        ),
+                        Occlusion: (
+                            value: Int(4),
+                        ),
+                        LightPosDir: (
+                            value: Vec3Arr([
+                                2.5587022,
+                                -1.0832125,
+                                -9.638116,
+                            ]),
+                        ),
+                        EmissiveFactor: (
+                            value: Vec3((0, 1, 1)),
+                        ),
+                        WVTrans: (
+                            value: Matrix((0.055328593, -0.031224642, 0.18964116, 0, 0.19219455, 0.008988889, -0.054593526, 0, 0, 0.1973429, 0.032492742, 0, 2.5587022, -1.0832125, -9.638116, 1)),
+                        ),
+                        WVPTrans: (
+                            value: Matrix((0.050361678, -0.054082666, -0.18964116, -0.18964116, 0.17494102, 0.015569212, 0.054593526, 0.054593526, 0, 0.34180793, -0.032492742, -0.032492742, 2.3290043, -1.8761791, 7.6381164, 9.638116)),
+                        ),
+                        MetallicRoughness: (
+                            value: Int(1),
+                        ),
+                        LightIntensities: (
+                            value: FloatArr([
+                                14.125376,
+                            ]),
+                        ),
+                    },
+                    defines: [],
+                    failed_to_compile: false,
+                )),
+            ],
+        ),
+        (
+            enabled: true,
+            raycasting_visible: true,
+            visible: true,
+            mesh: Some((
+                name: "axes",
+            )),
+            material_overrides: [
+                None,
+            ],
+        ),
+    ],
+    transform: [
+        (
+            enabled: true,
+            local_transform: (
+                trans: [
+                    0,
+                    0,
+                    -2,
+                ],
+                rot: [
+                    0,
+                    0,
+                    0,
+                    1,
+                ],
+                scale: [
+                    50,
+                    50,
+                    1,
+                ],
+            ),
+        ),
+        (
+            enabled: true,
+            local_transform: (
+                trans: [
+                    0,
+                    0,
+                    0,
+                ],
+                rot: [
+                    0,
+                    0,
+                    0,
+                    1,
+                ],
+                scale: [
+                    1,
+                    1,
+                    1,
+                ],
+            ),
+        ),
+        (
+            enabled: true,
+            local_transform: (
+                trans: [
+                    0,
+                    0,
+                    0,
+                ],
+                rot: [
+                    0,
+                    0,
+                    0.35704186634876606,
+                    0.9340883821535251,
+                ],
+                scale: [
+                    1,
+                    1,
+                    1,
+                ],
+            ),
+        ),
+        (
+            enabled: true,
+            local_transform: (
+                trans: [
+                    5,
+                    0,
+                    0,
+                ],
+                rot: [
+                    0,
+                    0,
+                    0,
+                    1,
+                ],
+                scale: [
+                    0.2,
+                    0.2,
+                    0.2,
+                ],
+            ),
+        ),
+        (
+            enabled: true,
+            local_transform: (
+                trans: [
+                    0,
+                    0,
+                    0,
+                ],
+                rot: [
+                    0,
+                    0,
+                    0,
+                    1,
+                ],
+                scale: [
+                    10,
+                    10,
+                    10,
+                ],
+            ),
+        ),
+    ],
+    light: {
+        (3): (
+            enabled: true,
+            light_type: Point,
+            color: [
+                0,
+                1,
+                1,
+            ],
+            intensity: 100000,
+            direction: Some([
+                0,
+                0,
+                -1,
+            ]),
+        ),
+    },
+    orbital: {},
+)

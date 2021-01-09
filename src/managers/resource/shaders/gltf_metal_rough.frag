@@ -8,11 +8,11 @@ precision highp float;
 #include <functions.glsl>
 
 uniform int u_light_types[MAX_LIGHTS];
-uniform vec3 u_light_pos_or_dir[MAX_LIGHTS];
+uniform vec3 u_light_pos_or_dir_c[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
 uniform float u_light_intensities[MAX_LIGHTS];
 
-uniform vec3 u_world_camera_pos;
+const vec3 u_camera_pos_c = vec3(0, 0, 0);
 
 uniform vec4 u_basecolor_factor;
 uniform float u_metallic_factor;
@@ -25,12 +25,12 @@ uniform sampler2D us_normal;
 uniform sampler2D us_emissive;
 uniform sampler2D us_occlusion;
 
-in vec3 v_world_normal;
-in vec3 v_world_tangent;
+in vec3 v_pos_c;
+in vec3 v_normal_c;
+in vec3 v_tangent_c;
 in vec4 v_color;
 in vec2 v_uv0;
 in vec2 v_uv1;
-in vec3 v_world_pos;
 
 out vec4 out_frag_color;
 
@@ -48,19 +48,19 @@ vec4 get_base_color()
 vec3 get_normal()
 {
     #ifdef NORMAL_TEXTURE
-        vec3 bitangent = cross(v_world_normal, v_world_tangent);
+        vec3 bitangent = cross(v_normal_c, v_tangent_c);
 
         vec3 normal_tex = normalize(texture(us_normal, v_uv0).rgb * 2.0 - vec3(1.0));
 
-        return mat3(v_world_tangent, bitangent, v_world_normal) * normal_tex;
+        return mat3(v_tangent_c, bitangent, v_normal_c) * normal_tex;
     #else 
-        return v_world_normal;
+        return v_normal_c;
     #endif
 }
 
 void main() 
 {
-    vec3 v = normalize(u_world_camera_pos - v_world_pos);
+    vec3 v = normalize(u_camera_pos_c - v_pos_c);
     vec3 n = get_normal();
 
     vec4 base_color = get_base_color();
@@ -90,11 +90,11 @@ void main()
     vec3 specular_color = vec3(0);
     for(int i = 0; i < MAX_LIGHTS; ++i)
     {
-        vec3 pos_to_light = -u_light_pos_or_dir[i];
+        vec3 pos_to_light = -u_light_pos_or_dir_c[i];
         float attenuation = 1.0;
 
         if (u_light_types[i] == POINT_LIGHT) {
-            pos_to_light = u_light_pos_or_dir[i] - v_world_pos;
+            pos_to_light = u_light_pos_or_dir_c[i] - v_pos_c;
             attenuation = 1.0 / dot(pos_to_light, pos_to_light);
         }
         

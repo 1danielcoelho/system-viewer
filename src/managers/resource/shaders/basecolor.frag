@@ -2,7 +2,7 @@ precision highp float;
 
 uniform sampler2D us_basecolor;
 
-in vec3 v_world_normal;
+in vec3 v_normal_c;
 in vec4 v_color;
 in vec2 v_uv0;
 in vec2 v_uv1;

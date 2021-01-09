@@ -4,7 +4,6 @@ in vec4 a_color;
 in vec2 a_uv0;
 in vec2 a_uv1;
 
-uniform mat4 u_world_trans;
 uniform mat4 u_wvp_trans;
 
 out vec4 v_color;

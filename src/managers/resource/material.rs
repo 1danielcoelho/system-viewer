@@ -6,32 +6,30 @@ use crate::{
     components::light::LightType, managers::details_ui::DetailsUI, managers::resource::shaders::*,
     utils::gl::GL,
 };
-use egui::{Align, Layout, Ui};
+use egui::Ui;
 use na::Matrix4;
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
 pub struct FrameUniformValues {
-    pub vp: [f32; 16],
-    pub p_v_mat: Matrix4<f64>,
+    pub v: Matrix4<f64>,  // World space to camera space
+    pub pv: Matrix4<f64>, // World space to NDC
     pub light_types: Vec<i32>,
-    pub light_pos_or_dir: Vec<f32>,
+    pub light_pos_or_dir_c: Vec<f32>, // For point lights, position; For directional lights, direction; Always in camera space
     pub light_colors: Vec<f32>,
     pub light_intensities: Vec<f32>,
-    pub camera_pos: [f32; 3],
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UniformName {
-    WorldTrans,
-    WorldTransInvTranspose,
+    WVTrans,
+    WVInvTranspTrans,
     WVPTrans,
     LightTypes,
     LightPosDir,
     LightColors,
     LightIntensities,
-    CameraPos,
     BaseColor,
     BaseColorFactor,
     MetallicRoughness,
@@ -45,29 +43,18 @@ pub enum UniformName {
 impl UniformName {
     pub fn default_value(&self) -> UniformValue {
         match *self {
-            UniformName::WorldTrans => UniformValue::Matrix([
-                1.0, 0.0, 0.0, 0.0, //
-                0.0, 1.0, 0.0, 0.0, //
-                0.0, 0.0, 1.0, 0.0, //
-                0.0, 0.0, 0.0, 0.0, //
-            ]),
-            UniformName::WorldTransInvTranspose => UniformValue::Matrix([
-                1.0, 0.0, 0.0, 0.0, //
-                0.0, 1.0, 0.0, 0.0, //
-                0.0, 0.0, 1.0, 0.0, //
-                0.0, 0.0, 0.0, 0.0, //
-            ]),
-            UniformName::WVPTrans => UniformValue::Matrix([
-                1.0, 0.0, 0.0, 0.0, //
-                0.0, 1.0, 0.0, 0.0, //
-                0.0, 0.0, 1.0, 0.0, //
-                0.0, 0.0, 0.0, 0.0, //
-            ]),
+            UniformName::WVTrans | UniformName::WVInvTranspTrans | UniformName::WVPTrans => {
+                UniformValue::Matrix([
+                    1.0, 0.0, 0.0, 0.0, //
+                    0.0, 1.0, 0.0, 0.0, //
+                    0.0, 0.0, 1.0, 0.0, //
+                    0.0, 0.0, 0.0, 0.0, //
+                ])
+            }
             UniformName::LightTypes => UniformValue::IntArr(vec![LightType::Directional as i32]),
             UniformName::LightPosDir => UniformValue::Vec3Arr(vec![0.0, 0.0, -1.0]),
             UniformName::LightColors => UniformValue::Vec3Arr(vec![1.0, 1.0, 1.0]),
             UniformName::LightIntensities => UniformValue::FloatArr(vec![1.0]),
-            UniformName::CameraPos => UniformValue::Vec3([0.0, 0.0, 0.0]),
             UniformName::BaseColor => UniformValue::Int(TextureUnit::BaseColor as i32),
             UniformName::BaseColorFactor => UniformValue::Vec4([1.0, 1.0, 1.0, 1.0]),
             UniformName::MetallicRoughness => {
@@ -84,14 +71,13 @@ impl UniformName {
 
     pub fn as_str(&self) -> &'static str {
         match *self {
-            UniformName::WorldTrans => "u_world_trans",
-            UniformName::WorldTransInvTranspose => "u_world_trans_inv_transp",
+            UniformName::WVTrans => "u_wv_trans",
+            UniformName::WVInvTranspTrans => "u_wv_inv_transp_trans",
             UniformName::WVPTrans => "u_wvp_trans",
             UniformName::LightTypes => "u_light_types",
-            UniformName::LightPosDir => "u_light_pos_or_dir",
+            UniformName::LightPosDir => "u_light_pos_or_dir_c",
             UniformName::LightColors => "u_light_colors",
             UniformName::LightIntensities => "u_light_intensities",
-            UniformName::CameraPos => "u_world_camera_pos",
             UniformName::BaseColor => "us_basecolor",
             UniformName::BaseColorFactor => "u_basecolor_factor",
             UniformName::MetallicRoughness => "us_metal_rough",
@@ -279,6 +265,15 @@ impl Material {
 
         for (uniform_name, uniform) in self.uniforms.iter_mut() {
             uniform.location = gl.get_uniform_location(&program, uniform_name.as_str());
+            if uniform.location.is_none() {
+                log::warn!(
+                    "Failed to find uniform '{}' on shaders used by material '{}': Vert: '{}', frag: '{}'",
+                    uniform_name.as_str(),
+                    &self.name,
+                    &self.vert,
+                    &self.frag
+                );
+            }
         }
 
         self.program = Some(program);

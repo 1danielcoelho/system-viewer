@@ -323,19 +323,25 @@ response |= ui.add(label);
 > - Change how camera reference works to maybe just append the translation of the reference or something, because it's very annoying to have the scale of the target body affect the camera transform/precision issues
 > - This would also fix the movement scaling issue when changing reference
 > - It could be useful to have camera near/far adjust like this though.... although we likely need a more robust system as I always want near/far/speed to scale down when we're near a body, whether we're using it as a reference or not
+> - Floating point precision issues
+> - Pluto wiggles severely. I think f64 is way more than fine for the orbital calculations, but it has to get cut down to f32 for WebGL
+> - https://prideout.net/emulating-double-precision
+> - https://blog.cyclemap.link/2011-06-09-glsl-part2-emu/ 
+> - https://programming.vip/docs/5ec76758067e9.html
+> - https://github.com/visgl/deck.gl/blob/master/docs/developer-guide/64-bits.md
+> - I can't even move if the move around pluto's orbit if the move speed is below some amount 
+> - GL_ARB_gpu_shader_fp64 extension?
+> - Fixed by just passing WVP instead of VP and W into the shaders and combining, because this way the object positions are (almost) always wrt to the camera
+>     - Orbits will remain a bit wiggly though, because e.g. pluto's orbit is still centered at the sun, but we still look at the line from pluto
+>         - We could fix this by just moving the length units a few exponents up: The orbits will always be the issue, because the planets/bodies don't look so bad as we only see them wrt. the camera
+>         - It doesn't look prohibitively bad right now, and I'm not even sure how I'll draw the orbits in the end, so I'll just ignore this for now
+    > - Lighting calculations will be wiggly (because I use light/frag coords in world space), unless we do all lighting in camera space (which we might)
 
-# Floating point precision issues
-- Pluto wiggles severely. I think f64 is way more than fine for the orbital calculations, but it has to get cut down to f32 for WebGL
-- https://prideout.net/emulating-double-precision
-- https://blog.cyclemap.link/2011-06-09-glsl-part2-emu/ 
-- https://programming.vip/docs/5ec76758067e9.html
-- https://github.com/visgl/deck.gl/blob/master/docs/developer-guide/64-bits.md
-- I can't even move if the move around pluto's orbit if the move speed is below some amount 
-- GL_ARB_gpu_shader_fp64 extension?
-- Fixed by just passing WVP instead of VP and W into the shaders and combining, because this way the object positions are (almost) always wrt to the camera
-    - Orbits will remain a bit wiggly though, because e.g. pluto's orbit is still centered at the sun, but we still look at the line from pluto
-        - We could fix this by just moving the length units a few exponents up: The orbits will always be the issue, because the planets/bodies don't look so bad as we only see them wrt. the camera
-    - Lighting calculations will be wiggly (because I use light/frag coords in world space), unless we do all lighting in camera space (which we might)
+# N-body simulation
+- Separate component than the orbital component. Maybe even something separate to the physics component entirely
+- Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
+- Introduce packed component storage with index switchboards to speed things up
+- Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
@@ -344,12 +350,6 @@ response |= ui.add(label);
   - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
 
 # How to do integration-based orbit prediction? Run the simulation N steps forward?
-
-# N-body simulation
-- Separate component than the orbital component. Maybe even something separate to the physics component entirely
-- Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
-- Introduce packed component storage with index switchboards to speed things up
-- Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
 
 # Logarithmic depth buffer
 - This would help when lowering the camera near distance and looking at far away orbits
@@ -367,6 +367,7 @@ response |= ui.add(label);
 # What about that transform feedback thing? Maybe I can use that for line drawing or?
 # Better line drawing
 - How did my JS app do it? The lines there seemed fine...
+- For main barycenter orbits the "object" still has center at the sun but the size is massive, so that using the camera as the origin doesn't help the precision issues
 - Line "tessellation" into triangles for thick lines
     - Geometry shaders? Not in WebGL2...
     - Will probably have to do a double-sided quad cross like old school foliage stuff

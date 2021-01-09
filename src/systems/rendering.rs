@@ -1,3 +1,4 @@
+use crate::components::light::LightType;
 use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},
@@ -69,25 +70,17 @@ impl RenderingSystem {
         }
 
         let mut result = FrameUniformValues {
-            vp: (na::convert::<Matrix4<f64>, Matrix4<f32>>(p * v))
-                .as_slice()
-                .try_into()
-                .unwrap(),
-            p_v_mat: p * v,
+            v,
+            pv: p * v,
             light_types: Vec::new(),
             light_colors: Vec::new(),
-            light_pos_or_dir: Vec::new(),
+            light_pos_or_dir_c: Vec::new(),
             light_intensities: Vec::new(),
-            camera_pos: [
-                state.camera.pos.x as f32,
-                state.camera.pos.y as f32,
-                state.camera.pos.z as f32,
-            ],
         };
 
         result.light_types.reserve(NUM_LIGHTS);
         result.light_colors.reserve(NUM_LIGHTS * 3);
-        result.light_pos_or_dir.reserve(NUM_LIGHTS * 3);
+        result.light_pos_or_dir_c.reserve(NUM_LIGHTS * 3);
         result.light_intensities.reserve(NUM_LIGHTS);
 
         // Pick lights that will affect the scene (randomly for now)
@@ -97,6 +90,11 @@ impl RenderingSystem {
             let pos = &scene.transform[ent_index as usize]
                 .get_world_transform()
                 .trans;
+
+            let pos = match light.light_type {
+                LightType::Point => v.transform_point(&Point3::from(*pos)).coords,
+                LightType::Directional => v.transform_vector(pos),
+            };
 
             result.light_types.push(light.light_type as i32);
 
@@ -108,9 +106,9 @@ impl RenderingSystem {
                 .light_intensities
                 .push(light.intensity.powf(state.light_intensity));
 
-            result.light_pos_or_dir.push(pos.x as f32);
-            result.light_pos_or_dir.push(pos.y as f32);
-            result.light_pos_or_dir.push(pos.z as f32);
+            result.light_pos_or_dir_c.push(pos.x as f32);
+            result.light_pos_or_dir_c.push(pos.y as f32);
+            result.light_pos_or_dir_c.push(pos.z as f32);
 
             // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
 
@@ -146,18 +144,27 @@ impl RenderingSystem {
         tc: &TransformComponent,
         mc: &MeshComponent,
     ) {
-        let trans = tc.get_world_transform();
-        let w: Matrix4<f32> = na::convert(trans.to_matrix4());
-        let world_trans_uniform_data: [f32; 16] = w.as_slice().try_into().unwrap();
+        // We never do calculations in world space to evade precision problems:
+        // If we're at 15557283 and our target is at 15557284 we'd get tons of triangle jittering,
+        // but if we do it in camera space then we're at 0 and our target is at 1, which is fine
+        let w = tc.get_world_transform().to_matrix4();
 
-        let w_inv_trans: Matrix4<f32> = w.try_inverse().unwrap_or(Matrix4::identity()).transpose();
-        let w_inv_trans_uniform_data: [f32; 16] = w_inv_trans.as_slice().try_into().unwrap();
+        let wv = uniform_data.v * w;
+        let wv_inv_trans = wv.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
+        let wvp = uniform_data.pv * w;
 
-        let wvp_trans: [f32; 16] =
-            na::convert::<Matrix4<f64>, Matrix4<f32>>(uniform_data.p_v_mat * trans.to_matrix4())
-                .as_slice()
-                .try_into()
-                .unwrap();
+        let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
+            .as_slice()
+            .try_into()
+            .unwrap();
+        let wv_inv_trans_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv_inv_trans)
+            .as_slice()
+            .try_into()
+            .unwrap();
+        let wvp_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wvp)
+            .as_slice()
+            .try_into()
+            .unwrap();
 
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.borrow().primitives.iter().enumerate() {
@@ -166,37 +173,31 @@ impl RenderingSystem {
                 if let Some(mat) = &resolved_mat {
                     let mut mat_mut = mat.borrow_mut();
 
-                    // TODO: I shouldn't need to clone these...
+                    mat_mut.set_uniform_value(UniformName::WVTrans, UniformValue::Matrix(wv_arr));
                     mat_mut.set_uniform_value(
-                        UniformName::WorldTrans,
-                        UniformValue::Matrix(world_trans_uniform_data),
+                        UniformName::WVInvTranspTrans,
+                        UniformValue::Matrix(wv_inv_trans_arr),
                     );
-                    mat_mut.set_uniform_value(
-                        UniformName::WorldTransInvTranspose,
-                        UniformValue::Matrix(w_inv_trans_uniform_data),
-                    );
-                    mat_mut
-                        .set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_trans));
+                    mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
 
                     mat_mut.set_uniform_value(
                         UniformName::LightTypes,
                         UniformValue::IntArr(uniform_data.light_types.clone()),
                     );
+
                     mat_mut.set_uniform_value(
                         UniformName::LightPosDir,
-                        UniformValue::Vec3Arr(uniform_data.light_pos_or_dir.clone()),
+                        UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
                     );
+
                     mat_mut.set_uniform_value(
                         UniformName::LightColors,
                         UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
                     );
+
                     mat_mut.set_uniform_value(
                         UniformName::LightIntensities,
                         UniformValue::FloatArr(uniform_data.light_intensities.clone()),
-                    );
-                    mat_mut.set_uniform_value(
-                        UniformName::CameraPos,
-                        UniformValue::Vec3(uniform_data.camera_pos),
                     );
 
                     // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);

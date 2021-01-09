@@ -107,6 +107,69 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
+    pub fn load_teal_sphere_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
+        let scene = self.new_scene(&identifier).unwrap();
+
+        // Floor
+        let planet = scene.new_entity(Some("floor"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, -2.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(50.0, 50.0, 1.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+
+        // Cube
+        let planet = scene.new_entity(Some("cube"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+
+        // Light material
+        let light_color: [f32; 3] = [0.0, 1.0, 1.0];
+        let light_mat = res_man.instantiate_material("gltf_metal_rough", "mega_sun_mat");
+        light_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .set_uniform_value(UniformName::EmissiveFactor, UniformValue::Vec3(light_color));
+
+        // Light center
+        let light_center = scene.new_entity(Some("light_center"));
+        scene
+            .add_component::<TransformComponent>(light_center)
+            .unwrap();
+        let physics = scene
+            .add_component::<PhysicsComponent>(light_center)
+            .unwrap();
+        physics.ang_mom = Vector3::new(0.0, 0.0, 300.0);
+
+        // Light
+        let light_ent = scene.new_entity(Some("Mega-sun"));
+        let trans_comp = scene
+            .add_component::<TransformComponent>(light_ent)
+            .unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(5.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
+        let mesh_comp = scene.add_component::<MeshComponent>(light_ent).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(light_mat.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(light_ent).unwrap();
+        light_comp.color = Vector3::new(light_color[0], light_color[1], light_color[2]);
+        light_comp.intensity = 100000.0;
+        light_comp.light_type = LightType::Point;
+        scene.set_entity_parent(light_center, light_ent);
+
+        // Axes
+        let axes = scene.new_entity(Some("axes"));
+        let trans_comp = scene.add_component::<TransformComponent>(axes).unwrap();
+        trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(axes).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
+    }
+
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         let scene = self.new_scene(&identifier).unwrap();
 
@@ -303,7 +366,11 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(counter_sun_mat.clone(), 0);
         let light_comp = scene.add_component::<LightComponent>(counter_sun).unwrap();
-        light_comp.color = Vector3::new(counter_sun_color[0], counter_sun_color[1], counter_sun_color[2]);
+        light_comp.color = Vector3::new(
+            counter_sun_color[0],
+            counter_sun_color[1],
+            counter_sun_color[2],
+        );
         light_comp.intensity = 10000000.0;
         light_comp.light_type = LightType::Point;
         scene.set_entity_parent(counter_sun_bary, counter_sun);
@@ -331,9 +398,7 @@ impl SceneManager {
 
         // Mega-sun
         let mega_sun = scene.new_entity(Some("Mega-sun"));
-        let trans_comp = scene
-            .add_component::<TransformComponent>(mega_sun)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(mega_sun).unwrap();
         trans_comp.get_local_transform_mut().trans = Vector3::new(35.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
         let mesh_comp = scene.add_component::<MeshComponent>(mega_sun).unwrap();
