@@ -153,14 +153,18 @@ impl RenderingSystem {
         let w_inv_trans: Matrix4<f32> = w.try_inverse().unwrap_or(Matrix4::identity()).transpose();
         let w_inv_trans_uniform_data: [f32; 16] = w_inv_trans.as_slice().try_into().unwrap();
 
+        let wvp_trans: [f32; 16] =
+            na::convert::<Matrix4<f64>, Matrix4<f32>>(uniform_data.p_v_mat * trans.to_matrix4())
+                .as_slice()
+                .try_into()
+                .unwrap();
+
         if let Some(mesh) = mc.get_mesh() {
             for (primitive_index, primitive) in mesh.borrow().primitives.iter().enumerate() {
                 let resolved_mat = mc.get_resolved_material(primitive_index);
 
                 if let Some(mat) = &resolved_mat {
                     let mut mat_mut = mat.borrow_mut();
-
-                    log::info!("world_trans: {}", w);
 
                     // TODO: I shouldn't need to clone these...
                     mat_mut.set_uniform_value(
@@ -171,10 +175,8 @@ impl RenderingSystem {
                         UniformName::WorldTransInvTranspose,
                         UniformValue::Matrix(w_inv_trans_uniform_data),
                     );
-                    mat_mut.set_uniform_value(
-                        UniformName::ViewProjTrans,
-                        UniformValue::Matrix(uniform_data.vp),
-                    );
+                    mat_mut
+                        .set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_trans));
 
                     mat_mut.set_uniform_value(
                         UniformName::LightTypes,

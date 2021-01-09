@@ -332,6 +332,10 @@ response |= ui.add(label);
 - https://github.com/visgl/deck.gl/blob/master/docs/developer-guide/64-bits.md
 - I can't even move if the move around pluto's orbit if the move speed is below some amount 
 - GL_ARB_gpu_shader_fp64 extension?
+- Fixed by just passing WVP instead of VP and W into the shaders and combining, because this way the object positions are (almost) always wrt to the camera
+    - Orbits will remain a bit wiggly though, because e.g. pluto's orbit is still centered at the sun, but we still look at the line from pluto
+        - We could fix this by just moving the length units a few exponents up: The orbits will always be the issue, because the planets/bodies don't look so bad as we only see them wrt. the camera
+    - Lighting calculations will be wiggly (because I use light/frag coords in world space), unless we do all lighting in camera space (which we might)
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
@@ -348,6 +352,7 @@ response |= ui.add(label);
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
 
 # Logarithmic depth buffer
+- This would help when lowering the camera near distance and looking at far away orbits
 
 # I think it should be possible to use chrome to debug 
 

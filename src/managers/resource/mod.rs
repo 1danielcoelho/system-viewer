@@ -382,13 +382,13 @@ impl ResourceManager {
                 identifier,
                 "relay_color.vert",
                 "white.frag",
-                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+                &[UniformName::WorldTrans, UniformName::WVPTrans],
             )),
             "vertex_color" => Some(Material::new(
                 identifier,
                 "relay_color.vert",
                 "color.frag",
-                &[UniformName::WorldTrans, UniformName::ViewProjTrans],
+                &[UniformName::WorldTrans, UniformName::WVPTrans],
             )),
             "world_normals" => Some(Material::new(
                 identifier,
@@ -397,7 +397,7 @@ impl ResourceManager {
                 &[
                     UniformName::WorldTrans,
                     UniformName::WorldTransInvTranspose,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                 ],
             )),
             "world_tangents" => Some(Material::new(
@@ -407,7 +407,7 @@ impl ResourceManager {
                 &[
                     UniformName::WorldTrans,
                     UniformName::WorldTransInvTranspose,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                 ],
             )),
             "uv0" => Some(Material::new(
@@ -417,7 +417,7 @@ impl ResourceManager {
                 &[
                     UniformName::WorldTrans,
                     UniformName::WorldTransInvTranspose,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                 ],
             )),
             "uv1" => Some(Material::new(
@@ -427,7 +427,7 @@ impl ResourceManager {
                 &[
                     UniformName::WorldTrans,
                     UniformName::WorldTransInvTranspose,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                 ],
             )),
             "basecolor" => Some(Material::new(
@@ -436,7 +436,7 @@ impl ResourceManager {
                 "basecolor.frag",
                 &[
                     UniformName::WorldTrans,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                     UniformName::BaseColor,
                 ],
             )),
@@ -447,7 +447,7 @@ impl ResourceManager {
                 &[
                     UniformName::WorldTrans,
                     UniformName::WorldTransInvTranspose,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                     UniformName::LightTypes,
                     UniformName::LightPosDir,
                     UniformName::LightColors,
@@ -461,7 +461,7 @@ impl ResourceManager {
                 &[
                     UniformName::WorldTrans,
                     UniformName::WorldTransInvTranspose,
-                    UniformName::ViewProjTrans,
+                    UniformName::WVPTrans,
                     UniformName::LightTypes,
                     UniformName::LightPosDir,
                     UniformName::LightColors,

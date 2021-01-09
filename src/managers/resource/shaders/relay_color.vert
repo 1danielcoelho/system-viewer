@@ -5,11 +5,11 @@ in vec2 a_uv0;
 in vec2 a_uv1;
 
 uniform mat4 u_world_trans;
-uniform mat4 u_view_proj_trans;
+uniform mat4 u_wvp_trans;
 
 out vec4 v_color;
 
 void main() {
   v_color = a_color;
-  gl_Position = u_view_proj_trans * u_world_trans * vec4(a_position, 1.0);
+  gl_Position = u_wvp_trans * vec4(a_position, 1.0);
 }

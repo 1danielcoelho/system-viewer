@@ -7,7 +7,7 @@ in vec2 a_uv1;
 
 uniform mat4 u_world_trans;
 uniform mat4 u_world_trans_inv_transp;
-uniform mat4 u_view_proj_trans;
+uniform mat4 u_wvp_trans;
 
 out vec3 v_world_normal;
 out vec3 v_world_tangent;
@@ -24,5 +24,5 @@ void main() {
     v_uv1 = a_uv1;
     v_world_pos = (u_world_trans * vec4(a_position, 1.0)).xyz;
 
-    gl_Position = u_view_proj_trans * vec4(v_world_pos, 1.0);
+    gl_Position = u_wvp_trans * vec4(a_position, 1.0);
 }

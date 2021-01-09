@@ -116,87 +116,268 @@ impl SceneManager {
             UniformValue::Vec3([1.0, 0.7, 0.0]),
         );
 
-        // // Sun
-        // let sun = scene.new_entity(Some("sun"));
-        // let trans_comp = scene.add_component::<TransformComponent>(sun).unwrap();
-        // trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        // trans_comp.get_local_transform_mut().scale = Vector3::new(695.0, 695.0, 695.0);
-        // let mesh_comp = scene.add_component::<MeshComponent>(sun).unwrap();
-        // mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        // mesh_comp.set_material_override(sun_mat.clone(), 0);
-        // let light_comp = scene.add_component::<LightComponent>(sun).unwrap();
-        // light_comp.color = Vector3::new(1.0, 1.0, 1.0);
-        // light_comp.intensity = 10000000.0;
-        // light_comp.light_type = LightType::Point;
+        // Sun
+        let sun = scene.new_entity(Some("sun"));
+        let trans_comp = scene.add_component::<TransformComponent>(sun).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(1.0, 1.0, 1.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(sun).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(sun_mat.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(sun).unwrap();
+        light_comp.color = Vector3::new(1.0, 1.0, 1.0);
+        light_comp.intensity = 10000000.0;
+        light_comp.light_type = LightType::Point;
 
-        // let planet_mat = res_man.instantiate_material("gltf_metal_rough", "planet_mat");
-        // planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
-        //     UniformName::BaseColorFactor,
-        //     UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
-        // );
+        let planet_mat = res_man.instantiate_material("gltf_metal_rough", "planet_mat");
+        planet_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.1, 0.8, 0.2, 1.0]),
+        );
 
-        // // System center so the sun doesn't have to rotate for the planet to orbit
-        // let sun_bary = scene.new_entity(Some("sun_barycenter"));
-        // scene.add_component::<TransformComponent>(sun_bary).unwrap();
-        // let physics = scene.add_component::<PhysicsComponent>(sun_bary).unwrap();
-        // physics.ang_mom = Vector3::new(0.0, 0.0, 0.25);
+        // System center so the sun doesn't have to rotate for the planet to orbit
+        let sun_bary = scene.new_entity(Some("sun_barycenter"));
+        scene.add_component::<TransformComponent>(sun_bary).unwrap();
+        let physics = scene.add_component::<PhysicsComponent>(sun_bary).unwrap();
+        physics.ang_mom = Vector3::new(0.0, 0.0, 470.0);
 
-        // // Planet
-        // let planet = scene.new_entity(Some("planet"));
-        // let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
-        // trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
-        // let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
-        // mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        // mesh_comp.set_material_override(planet_mat.clone(), 0);
-        // scene.set_entity_parent(sun_bary, planet);
+        // Planet
+        let planet = scene.new_entity(Some("planet"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(planet_mat.clone(), 0);
+        scene.set_entity_parent(sun_bary, planet);
 
-        // // Planet orbit
-        // let planet_orbit = scene.new_entity(Some("orbit"));
-        // let trans_comp = scene
-        //     .add_component::<TransformComponent>(planet_orbit)
-        //     .unwrap();
-        // trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        // trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
-        // let mesh_comp = scene.add_component::<MeshComponent>(planet_orbit).unwrap();
-        // mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
+        // Planet orbit
+        let planet_orbit = scene.new_entity(Some("orbit"));
+        let trans_comp = scene
+            .add_component::<TransformComponent>(planet_orbit)
+            .unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet_orbit).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
 
-        // // Moon orbit center
-        // let planet_bary = scene.new_entity(Some("center"));
-        // scene
-        //     .add_component::<TransformComponent>(planet_bary)
-        //     .unwrap();
-        // let physics = scene
-        //     .add_component::<PhysicsComponent>(planet_bary)
-        //     .unwrap();
-        // physics.ang_mom = Vector3::new(0.0, 0.0, 0.86);
-        // scene.set_entity_parent(planet, planet_bary);
+        // Moon orbit center
+        let planet_bary = scene.new_entity(Some("center"));
+        scene
+            .add_component::<TransformComponent>(planet_bary)
+            .unwrap();
+        let physics = scene
+            .add_component::<PhysicsComponent>(planet_bary)
+            .unwrap();
+        physics.ang_mom = Vector3::new(0.0, 0.0, 720.0);
+        scene.set_entity_parent(planet, planet_bary);
 
-        // let moon_mat = res_man.instantiate_material("gltf_metal_rough", "moon_mat");
-        // moon_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
-        //     UniformName::BaseColorFactor,
-        //     UniformValue::Vec4([0.8, 0.8, 0.7, 1.0]),
-        // );
+        let moon_mat = res_man.instantiate_material("gltf_metal_rough", "moon_mat");
+        moon_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.8, 0.8, 0.7, 1.0]),
+        );
 
-        // // Moon
-        // let moon = scene.new_entity(Some("moon"));
-        // let trans_comp = scene.add_component::<TransformComponent>(moon).unwrap();
-        // trans_comp.get_local_transform_mut().trans = Vector3::new(3.0, 0.0, 0.0);
-        // trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
-        // let mesh_comp = scene.add_component::<MeshComponent>(moon).unwrap();
-        // mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        // mesh_comp.set_material_override(moon_mat.clone(), 0);
-        // scene.set_entity_parent(planet_bary, moon);
+        // Moon
+        let moon = scene.new_entity(Some("moon"));
+        let trans_comp = scene.add_component::<TransformComponent>(moon).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(3.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
+        let mesh_comp = scene.add_component::<MeshComponent>(moon).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(moon_mat.clone(), 0);
+        scene.set_entity_parent(planet_bary, moon);
 
-        // // Moon orbit
-        // let moon_orbit = scene.new_entity(Some("orbit"));
-        // let trans_comp = scene
-        //     .add_component::<TransformComponent>(moon_orbit)
-        //     .unwrap();
-        // trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        // trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
-        // let mesh_comp = scene.add_component::<MeshComponent>(moon_orbit).unwrap();
-        // mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
-        // scene.set_entity_parent(planet_bary, moon_orbit);
+        // Moon orbit
+        let moon_orbit = scene.new_entity(Some("orbit"));
+        let trans_comp = scene
+            .add_component::<TransformComponent>(moon_orbit)
+            .unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(moon_orbit).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
+        scene.set_entity_parent(planet_bary, moon_orbit);
+
+        // Outer system center
+        let outer_bary = scene.new_entity(Some("outer_barycenter"));
+        scene
+            .add_component::<TransformComponent>(outer_bary)
+            .unwrap();
+        let physics = scene.add_component::<PhysicsComponent>(outer_bary).unwrap();
+        physics.ang_mom = Vector3::new(0.0, 0.0, -80.0);
+
+        // Outer planet 1
+        let mat = res_man.instantiate_material("gltf_metal_rough", "outer_mat_1");
+        mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.8, 0.9, 0.5, 1.0]),
+        );
+        let planet = scene.new_entity(Some("planet"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(30.0, 0.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(mat.clone(), 0);
+        scene.set_entity_parent(outer_bary, planet);
+
+        // Outer planet 2
+        let mat = res_man.instantiate_material("gltf_metal_rough", "outer_mat_2");
+        mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.9, 0.6, 0.8, 1.0]),
+        );
+        let planet = scene.new_entity(Some("planet"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 30.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(mat.clone(), 0);
+        scene.set_entity_parent(outer_bary, planet);
+
+        // Outer planet 3
+        let mat = res_man.instantiate_material("gltf_metal_rough", "outer_mat_3");
+        mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.9, 0.9, 0.9, 1.0]),
+        );
+        let planet = scene.new_entity(Some("planet"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, -30.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(mat.clone(), 0);
+        scene.set_entity_parent(outer_bary, planet);
+
+        // Outer planet 4
+        let mat = res_man.instantiate_material("gltf_metal_rough", "outer_mat_4");
+        mat.as_ref().unwrap().borrow_mut().set_uniform_value(
+            UniformName::BaseColorFactor,
+            UniformValue::Vec4([0.2, 0.3, 0.1, 1.0]),
+        );
+        let planet = scene.new_entity(Some("planet"));
+        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(-30.0, 0.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(mat.clone(), 0);
+        scene.set_entity_parent(outer_bary, planet);
+
+        // Outer orbit
+        let outer_orbit = scene.new_entity(Some("orbit"));
+        let trans_comp = scene
+            .add_component::<TransformComponent>(outer_orbit)
+            .unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(30.0, 30.0, 30.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(outer_orbit).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
+
+        let counter_sun_color: [f32; 3] = [0.0, 0.0, 1.0];
+        let counter_sun_mat = res_man.instantiate_material("gltf_metal_rough", "counter_sun_mat");
+        counter_sun_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .set_uniform_value(
+                UniformName::EmissiveFactor,
+                UniformValue::Vec3(counter_sun_color),
+            );
+
+        // Counter-sun barycenter
+        let counter_sun_bary = scene.new_entity(Some("counter_sun_barycenter"));
+        scene
+            .add_component::<TransformComponent>(counter_sun_bary)
+            .unwrap();
+        let physics = scene
+            .add_component::<PhysicsComponent>(counter_sun_bary)
+            .unwrap();
+        physics.ang_mom = Vector3::new(0.0, 0.0, -75.0);
+
+        // Counter-sun
+        let counter_sun = scene.new_entity(Some("Counter-sun"));
+        let trans_comp = scene
+            .add_component::<TransformComponent>(counter_sun)
+            .unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(15.0, 0.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(counter_sun).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(counter_sun_mat.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(counter_sun).unwrap();
+        light_comp.color = Vector3::new(counter_sun_color[0], counter_sun_color[1], counter_sun_color[2]);
+        light_comp.intensity = 10000000.0;
+        light_comp.light_type = LightType::Point;
+        scene.set_entity_parent(counter_sun_bary, counter_sun);
+
+        let mega_sun_color: [f32; 3] = [0.0, 1.0, 1.0];
+        let mega_sun_mat = res_man.instantiate_material("gltf_metal_rough", "mega_sun_mat");
+        mega_sun_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .set_uniform_value(
+                UniformName::EmissiveFactor,
+                UniformValue::Vec3(mega_sun_color),
+            );
+
+        // Mega-sun barycenter
+        let mega_sun_bary = scene.new_entity(Some("mega_sun_barycenter"));
+        scene
+            .add_component::<TransformComponent>(mega_sun_bary)
+            .unwrap();
+        let physics = scene
+            .add_component::<PhysicsComponent>(mega_sun_bary)
+            .unwrap();
+        physics.ang_mom = Vector3::new(0.0, 0.0, 133.0);
+
+        // Mega-sun
+        let mega_sun = scene.new_entity(Some("Mega-sun"));
+        let trans_comp = scene
+            .add_component::<TransformComponent>(mega_sun)
+            .unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(35.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(mega_sun).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(mega_sun_mat.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(mega_sun).unwrap();
+        light_comp.color = Vector3::new(mega_sun_color[0], mega_sun_color[1], mega_sun_color[2]);
+        light_comp.intensity = 100000000.0;
+        light_comp.light_type = LightType::Point;
+        scene.set_entity_parent(mega_sun_bary, mega_sun);
+
+        let vert_sun_color: [f32; 3] = [1.0, 0.0, 1.0];
+        let vert_sun_mat = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");
+        vert_sun_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .set_uniform_value(
+                UniformName::EmissiveFactor,
+                UniformValue::Vec3(vert_sun_color),
+            );
+
+        // Vertical-sun bary
+        let vert_sun_bary = scene.new_entity(Some("vertical_sun_barycenter"));
+        scene
+            .add_component::<TransformComponent>(vert_sun_bary)
+            .unwrap();
+        let physics = scene
+            .add_component::<PhysicsComponent>(vert_sun_bary)
+            .unwrap();
+        physics.ang_mom = Vector3::new(150.0, 0.0, 0.0);
+
+        // Vertical-sun
+        let vert_sun = scene.new_entity(Some("Vertical-sun"));
+        let trans_comp = scene.add_component::<TransformComponent>(vert_sun).unwrap();
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 5.0, 0.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(vert_sun).unwrap();
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(vert_sun_mat.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(vert_sun).unwrap();
+        light_comp.color = Vector3::new(vert_sun_color[0], vert_sun_color[1], vert_sun_color[2]);
+        light_comp.intensity = 10000000.0;
+        light_comp.light_type = LightType::Point;
+        scene.set_entity_parent(vert_sun_bary, vert_sun);
 
         // Grid
         let grid = scene.new_entity(Some("grid"));

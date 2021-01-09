@@ -26,7 +26,7 @@ pub struct FrameUniformValues {
 pub enum UniformName {
     WorldTrans,
     WorldTransInvTranspose,
-    ViewProjTrans,
+    WVPTrans,
     LightTypes,
     LightPosDir,
     LightColors,
@@ -57,7 +57,7 @@ impl UniformName {
                 0.0, 0.0, 1.0, 0.0, //
                 0.0, 0.0, 0.0, 0.0, //
             ]),
-            UniformName::ViewProjTrans => UniformValue::Matrix([
+            UniformName::WVPTrans => UniformValue::Matrix([
                 1.0, 0.0, 0.0, 0.0, //
                 0.0, 1.0, 0.0, 0.0, //
                 0.0, 0.0, 1.0, 0.0, //
@@ -86,7 +86,7 @@ impl UniformName {
         match *self {
             UniformName::WorldTrans => "u_world_trans",
             UniformName::WorldTransInvTranspose => "u_world_trans_inv_transp",
-            UniformName::ViewProjTrans => "u_view_proj_trans",
+            UniformName::WVPTrans => "u_wvp_trans",
             UniformName::LightTypes => "u_light_types",
             UniformName::LightPosDir => "u_light_pos_or_dir",
             UniformName::LightColors => "u_light_colors",
