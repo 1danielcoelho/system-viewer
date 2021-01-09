@@ -326,8 +326,12 @@ response |= ui.add(label);
 
 # Floating point precision issues
 - Pluto wiggles severely. I think f64 is way more than fine for the orbital calculations, but it has to get cut down to f32 for WebGL
-  - https://prideout.net/emulating-double-precision
+- https://prideout.net/emulating-double-precision
+- https://blog.cyclemap.link/2011-06-09-glsl-part2-emu/ 
+- https://programming.vip/docs/5ec76758067e9.html
+- https://github.com/visgl/deck.gl/blob/master/docs/developer-guide/64-bits.md
 - I can't even move if the move around pluto's orbit if the move speed is below some amount 
+- GL_ARB_gpu_shader_fp64 extension?
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations

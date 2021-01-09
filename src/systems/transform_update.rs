@@ -59,10 +59,6 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
     }
     let new_entity = new_entity.as_ref().unwrap();
 
-    let pos = na::convert::<Point3<f32>, Point3<f64>>(state.camera.pos);
-    let target = na::convert::<Point3<f32>, Point3<f64>>(state.camera.target);
-    let up = na::convert::<Vector3<f32>, Vector3<f64>>(*state.camera.up);
-
     let old_to_world = match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
         Some(old_comp) => Translation3::from(old_comp.get_world_transform().trans).to_homogeneous(),
         None => Matrix4::identity(),
@@ -83,9 +79,9 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
 
     let trans = world_to_new * old_to_world;
 
-    state.camera.pos = na::convert(trans.transform_point(&pos));
-    state.camera.target = na::convert(trans.transform_point(&target));
-    state.camera.up = Unit::new_normalize(na::convert(trans.transform_vector(&up)));
+    state.camera.pos = trans.transform_point(&state.camera.pos);
+    state.camera.target = trans.transform_point(&state.camera.target);
+    state.camera.up = Unit::new_normalize(trans.transform_vector(&state.camera.up));
 
     match new_entity {
         ReferenceChange::NewEntity(new_entity) => state.camera.reference_entity = Some(*new_entity),

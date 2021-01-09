@@ -25,7 +25,7 @@ impl Clone for Box<dyn Collider> {
 }
 
 pub trait Collider: ColliderClone + fmt::Debug {
-    fn intersects(&self, ray: &Ray) -> f32; // Distance along ray to the intersection point
+    fn intersects(&self, ray: &Ray<f32>) -> f32; // Distance along ray to the intersection point
     fn contains(&self, point: &Point3<f32>) -> bool;
 
     fn as_mesh(&self) -> Option<MeshCollider> {
@@ -49,7 +49,7 @@ pub struct CompoundCollider {
     pub colliders: Vec<Box<dyn Collider>>,
 }
 impl Collider for CompoundCollider {
-    fn intersects(&self, ray: &Ray) -> f32 {
+    fn intersects(&self, ray: &Ray<f32>) -> f32 {
         let mut min_t = std::f32::INFINITY;
         for collider in &self.colliders {
             min_t = min_t.min(collider.intersects(ray));
@@ -75,7 +75,7 @@ pub struct AxisAlignedBoxCollider {
     pub maxes: Point3<f32>,
 }
 impl Collider for AxisAlignedBoxCollider {
-    fn intersects(&self, ray: &Ray) -> f32 {
+    fn intersects(&self, ray: &Ray<f32>) -> f32 {
         return aabb_ray_intersection(&self.mins, &self.maxes, ray);
     }
 
@@ -95,7 +95,7 @@ pub struct SphereCollider {
     pub radius2: f32,
 }
 impl Collider for SphereCollider {
-    fn intersects(&self, ray: &Ray) -> f32 {
+    fn intersects(&self, ray: &Ray<f32>) -> f32 {
         return sphere_ray_intersection(&self.center, self.radius2, ray);
     }
 
@@ -115,7 +115,7 @@ pub struct MeshCollider {
     pub additional_outer_collider: Option<Box<dyn Collider>>,
 }
 impl Collider for MeshCollider {
-    fn intersects(&self, ray: &Ray) -> f32 {
+    fn intersects(&self, ray: &Ray<f32>) -> f32 {
         let mut min_t: f32 = std::f32::INFINITY;
 
         let mesh = self.mesh.upgrade();

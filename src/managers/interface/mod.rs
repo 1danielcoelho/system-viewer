@@ -380,7 +380,7 @@ impl InterfaceManager {
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Vertical FOV (deg):");
                         cols[1].add(
-                            egui::DragValue::f32(&mut state.camera.fov_v)
+                            egui::DragValue::f64(&mut state.camera.fov_v)
                                 .range(0.1..=120.0)
                                 .speed(0.5),
                         )
@@ -388,12 +388,12 @@ impl InterfaceManager {
 
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Near:");
-                        cols[1].add(egui::DragValue::f32(&mut state.camera.near))
+                        cols[1].add(egui::DragValue::f64(&mut state.camera.near))
                     });
 
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Far:");
-                        cols[1].add(egui::DragValue::f32(&mut state.camera.far))
+                        cols[1].add(egui::DragValue::f64(&mut state.camera.far))
                     });
 
                     response |= ui.columns(2, |cols| {
@@ -401,13 +401,13 @@ impl InterfaceManager {
                         cols[1]
                             .horizontal(|ui| {
                                 let mut r = ui.add(
-                                    egui::DragValue::f32(&mut state.camera.pos.x).prefix("x: "),
+                                    egui::DragValue::f64(&mut state.camera.pos.x).prefix("x: "),
                                 );
                                 r |= ui.add(
-                                    egui::DragValue::f32(&mut state.camera.pos.y).prefix("y: "),
+                                    egui::DragValue::f64(&mut state.camera.pos.y).prefix("y: "),
                                 );
                                 r |= ui.add(
-                                    egui::DragValue::f32(&mut state.camera.pos.z).prefix("z: "),
+                                    egui::DragValue::f64(&mut state.camera.pos.z).prefix("z: "),
                                 );
                                 r
                             })
@@ -450,7 +450,7 @@ impl InterfaceManager {
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Move speed:");
                         cols[1].add(
-                            egui::DragValue::f32(&mut state.move_speed)
+                            egui::DragValue::f64(&mut state.move_speed)
                                 .range(1.0..=1000.0)
                                 .speed(0.1),
                         )
@@ -459,7 +459,7 @@ impl InterfaceManager {
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Rotation speed:");
                         cols[1].add(
-                            egui::DragValue::f32(&mut state.rotate_speed)
+                            egui::DragValue::f64(&mut state.rotate_speed)
                                 .range(1.0..=10.0)
                                 .speed(0.1),
                         )
@@ -667,10 +667,10 @@ impl InterfaceManager {
 
 fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
     let p = Matrix4::new_perspective(
-        state.canvas_width as f32 / state.canvas_height as f32,
-        state.camera.fov_v.to_radians(),
-        state.camera.near,
-        state.camera.far,
+        state.canvas_width as f64 / state.canvas_height as f64,
+        state.camera.fov_v.to_radians() as f64,
+        state.camera.near as f64,
+        state.camera.far as f64,
     );
 
     let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
@@ -683,17 +683,17 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
                 .get_world_transform()
                 .trans;
 
-            Translation3::new(trans.x as f32, trans.y as f32, trans.z as f32).to_homogeneous()
+            Translation3::new(trans.x as f64, trans.y as f64, trans.z as f64).to_homogeneous()
         }
         None => Matrix4::identity(),
     };
 
-    let ndc_to_world: Matrix4<f32> =
+    let ndc_to_world: Matrix4<f64> =
         reference * v.try_inverse().unwrap() * p.try_inverse().unwrap();
 
     let ndc_near_pos = Point3::from(Vector3::new(
-        -1.0 + 2.0 * state.input.mouse_x as f32 / (state.canvas_width - 1) as f32,
-        1.0 - 2.0 * state.input.mouse_y as f32 / (state.canvas_height - 1) as f32,
+        -1.0 + 2.0 * state.input.mouse_x as f64 / (state.canvas_width - 1) as f64,
+        1.0 - 2.0 * state.input.mouse_y as f64 / (state.canvas_height - 1) as f64,
         -1.0,
     ));
 

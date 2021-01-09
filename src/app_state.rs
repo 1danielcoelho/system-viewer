@@ -14,12 +14,12 @@ pub enum ReferenceChange {
 
 #[derive(Serialize, Deserialize)]
 pub struct Camera {
-    pub pos: Point3<f32>,
-    pub up: Unit<Vector3<f32>>,
-    pub target: Point3<f32>,
-    pub fov_v: f32,
-    pub near: f32,
-    pub far: f32,
+    pub pos: Point3<f64>,
+    pub up: Unit<Vector3<f64>>,
+    pub target: Point3<f64>,
+    pub fov_v: f64,
+    pub near: f64,
+    pub far: f64,
 
     #[serde(skip)]
     pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. reference_translation
@@ -104,8 +104,8 @@ pub struct AppState {
 
     pub simulation_speed: f64,
     pub simulation_paused: bool,
-    pub move_speed: f32,
-    pub rotate_speed: f32,
+    pub move_speed: f64,
+    pub rotate_speed: f64,
     pub light_intensity: f32,
 
     #[serde(skip)]

@@ -7,12 +7,14 @@ use crate::{
     utils::gl::GL,
 };
 use egui::{Align, Layout, Ui};
+use na::Matrix4;
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
 pub struct FrameUniformValues {
     pub vp: [f32; 16],
+    pub p_v_mat: Matrix4<f64>,
     pub light_types: Vec<i32>,
     pub light_pos_or_dir: Vec<f32>,
     pub light_colors: Vec<f32>,

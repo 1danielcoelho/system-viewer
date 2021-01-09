@@ -48,11 +48,12 @@ impl RenderingSystem {
 
         // Initialize VP transform for frame
         let p = Matrix4::new_perspective(
-            state.canvas_width as f32 / state.canvas_height as f32,
+            state.canvas_width as f64 / state.canvas_height as f64,
             state.camera.fov_v.to_radians(),
             state.camera.near,
             state.camera.far,
         );
+
         let mut v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
 
         if let Some(reference) = state.camera.reference_entity {
@@ -62,28 +63,26 @@ impl RenderingSystem {
                 .get_world_transform()
                 .trans;
 
-            let mat: Matrix4<f32> =
-                Translation3::new(-trans.x as f32, -trans.y as f32, -trans.z as f32)
-                    .to_homogeneous();
+            let mat: Matrix4<f64> =
+                Translation3::new(-trans.x, -trans.y, -trans.z).to_homogeneous();
             v = v * mat;
-
-            // let world_to_reference: Matrix4<f32> = na::convert::<Matrix4<f64>, Matrix4<f32>>(
-
-            //         .to_matrix4()
-            //         .try_inverse()
-            //         .unwrap(),
-            // );
-
-            // v = v * world_to_reference;
         }
 
         let mut result = FrameUniformValues {
-            vp: (p * v).as_slice().try_into().unwrap(),
+            vp: (na::convert::<Matrix4<f64>, Matrix4<f32>>(p * v))
+                .as_slice()
+                .try_into()
+                .unwrap(),
+            p_v_mat: p * v,
             light_types: Vec::new(),
             light_colors: Vec::new(),
             light_pos_or_dir: Vec::new(),
             light_intensities: Vec::new(),
-            camera_pos: [state.camera.pos.x, state.camera.pos.y, state.camera.pos.z],
+            camera_pos: [
+                state.camera.pos.x as f32,
+                state.camera.pos.y as f32,
+                state.camera.pos.z as f32,
+            ],
         };
 
         result.light_types.reserve(NUM_LIGHTS);
@@ -161,6 +160,8 @@ impl RenderingSystem {
                 if let Some(mat) = &resolved_mat {
                     let mut mat_mut = mat.borrow_mut();
 
+                    log::info!("world_trans: {}", w);
+
                     // TODO: I shouldn't need to clone these...
                     mat_mut.set_uniform_value(
                         UniformName::WorldTrans,
@@ -174,6 +175,7 @@ impl RenderingSystem {
                         UniformName::ViewProjTrans,
                         UniformValue::Matrix(uniform_data.vp),
                     );
+
                     mat_mut.set_uniform_value(
                         UniformName::LightTypes,
                         UniformValue::IntArr(uniform_data.light_types.clone()),
