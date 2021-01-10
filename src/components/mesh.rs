@@ -1,12 +1,9 @@
-use super::{
-    component::{ComponentStorageType, ComponentType},
-    Component,
-};
-use crate::managers::{
-    details_ui::DetailsUI,
-    resource::{material::Material, mesh::Mesh},
-    scene::Scene,
-};
+use super::Component;
+use crate::managers::details_ui::DetailsUI;
+use crate::managers::resource::material::Material;
+use crate::managers::resource::mesh::Mesh;
+use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::scene::Scene;
 use egui::Ui;
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
@@ -20,6 +17,7 @@ pub struct MeshComponent {
     mesh: Option<Rc<RefCell<Mesh>>>,
     material_overrides: Vec<Option<Rc<RefCell<Material>>>>,
 }
+
 impl MeshComponent {
     fn new() -> Self {
         return Self::default();
@@ -63,6 +61,7 @@ impl MeshComponent {
         return None;
     }
 }
+
 impl Default for MeshComponent {
     fn default() -> Self {
         return Self {
@@ -74,21 +73,20 @@ impl Default for MeshComponent {
         };
     }
 }
+
 impl Component for MeshComponent {
     type ComponentType = MeshComponent;
-    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
-    const COMPONENT_TYPE: ComponentType = ComponentType::Mesh;
-
-    fn get_components_vector<'a>(w: &'a mut Scene) -> Option<&'a mut Vec<MeshComponent>> {
-        return Some(&mut w.mesh);
-    }
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
     }
 
-    fn get_enabled(&mut self) -> bool {
+    fn get_enabled(&self) -> bool {
         return self.enabled;
+    }
+
+    fn get_storage(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
+        return Box::new(&mut scene.mesh);
     }
 }
 

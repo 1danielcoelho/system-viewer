@@ -1,8 +1,8 @@
 use crate::components::{
     LightComponent, MeshComponent, OrbitalComponent, PhysicsComponent, TransformComponent,
 };
+use crate::managers::scene::component_storage::{HashStorage, PackedStorage, SparseStorage};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
 pub struct EntityIndex(pub u32);
@@ -25,9 +25,9 @@ pub struct SerScene<'a> {
     pub identifier: &'a str,
     pub entities: Vec<SerEntity<'a>>,
 
-    pub physics: Vec<PhysicsComponent>,
-    pub mesh: Vec<MeshComponent>,
-    pub transform: Vec<TransformComponent>,
-    pub light: HashMap<EntityIndex, LightComponent>,
-    pub orbital: HashMap<EntityIndex, OrbitalComponent>,
+    pub physics: PackedStorage<PhysicsComponent>,
+    pub mesh: SparseStorage<MeshComponent>,
+    pub transform: SparseStorage<TransformComponent>,
+    pub light: HashStorage<LightComponent>,
+    pub orbital: HashStorage<OrbitalComponent>,
 }

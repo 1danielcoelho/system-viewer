@@ -1,6 +1,6 @@
-use crate::components::component::{ComponentStorageType, ComponentType};
 use crate::components::Component;
 use crate::managers::details_ui::DetailsUI;
+use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::utils::transform::Transform;
 use egui::Ui;
@@ -37,21 +37,20 @@ impl TransformComponent {
         return &self.world_transform;
     }
 }
+
 impl Component for TransformComponent {
     type ComponentType = TransformComponent;
-    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::Vec;
-    const COMPONENT_TYPE: ComponentType = ComponentType::Transform;
-
-    fn get_components_vector<'a>(w: &'a mut Scene) -> Option<&'a mut Vec<TransformComponent>> {
-        return Some(&mut w.transform);
-    }
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
     }
 
-    fn get_enabled(&mut self) -> bool {
+    fn get_enabled(&self) -> bool {
         return self.enabled;
+    }
+
+    fn get_storage(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
+        return Box::new(&mut scene.transform);
     }
 }
 

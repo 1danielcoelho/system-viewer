@@ -1,14 +1,9 @@
-use super::{
-    component::{ComponentStorageType, ComponentType},
-    Component,
-};
-use crate::managers::{
-    details_ui::DetailsUI,
-    scene::{Entity, Scene},
-};
+use crate::components::Component;
+use crate::managers::details_ui::DetailsUI;
+use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::scene::Scene;
 use na::Vector3;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum LightType {
@@ -44,21 +39,17 @@ impl Default for LightComponent {
 }
 impl Component for LightComponent {
     type ComponentType = LightComponent;
-    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::HashMap;
-    const COMPONENT_TYPE: ComponentType = ComponentType::Light;
-
-    fn get_components_map<'a>(
-        w: &'a mut Scene,
-    ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
-        return Some(&mut w.light);
-    }
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
     }
 
-    fn get_enabled(&mut self) -> bool {
+    fn get_enabled(&self) -> bool {
         return self.enabled;
+    }
+
+    fn get_storage(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
+        return Box::new(&mut scene.light);
     }
 }
 impl DetailsUI for LightComponent {}

@@ -1,12 +1,15 @@
-use crate::{
-    components::{
-        component::ComponentStorageType, Component, LightComponent, MeshComponent,
-        OrbitalComponent, PhysicsComponent, TransformComponent,
-    },
-    managers::scene::serialization::{EntityIndex, SerEntity, SerScene},
+use crate::components::{
+    Component, LightComponent, MeshComponent, OrbitalComponent, PhysicsComponent,
+    TransformComponent,
 };
+use crate::managers::scene::component_storage::{
+    ComponentStorage, HashStorage, PackedStorage, SparseStorage,
+};
+use crate::managers::scene::serialization::{EntityIndex, SerEntity, SerScene};
 use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
 use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::rc::Rc;
 use std::{cmp::Reverse, hash::Hash};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
@@ -33,16 +36,16 @@ pub struct Scene {
 
     entity_storage: Vec<EntityEntry>,
     free_indices: BinaryHeap<Reverse<u32>>,
-    pub entity_to_index: HashMap<Entity, u32>,
+    entity_to_index: Rc<RefCell<HashMap<Entity, u32>>>,
     last_used_entity: Entity,
 
     // Until there is a proper way to split member borrows in Rust I think
     // hard-coding the component types in here is the simplest way of doing things, sadly
-    pub physics: Vec<PhysicsComponent>,
-    pub mesh: Vec<MeshComponent>,
-    pub transform: Vec<TransformComponent>,
-    pub light: HashMap<Entity, LightComponent>,
-    pub orbital: HashMap<Entity, OrbitalComponent>,
+    pub physics: PackedStorage<PhysicsComponent>,
+    pub mesh: SparseStorage<MeshComponent>,
+    pub transform: SparseStorage<TransformComponent>,
+    pub light: HashStorage<LightComponent>,
+    pub orbital: HashStorage<OrbitalComponent>,
 
     _private: (),
 }
@@ -50,18 +53,20 @@ pub struct Scene {
 // Main interface
 impl Scene {
     pub(super) fn new(identifier: &str) -> Self {
+        let entity_to_index = Rc::new(RefCell::new(HashMap::new()));
+
         Self {
             identifier: identifier.to_string(),
             entity_storage: Vec::new(),
             free_indices: BinaryHeap::new(),
-            entity_to_index: HashMap::new(),
+            entity_to_index: entity_to_index.clone(),
             last_used_entity: Entity(0),
 
-            physics: Vec::new(),
-            mesh: Vec::new(),
-            transform: Vec::new(),
-            light: HashMap::new(),
-            orbital: HashMap::new(),
+            physics: PackedStorage::new(),
+            mesh: SparseStorage::new(entity_to_index.clone()),
+            transform: SparseStorage::new(entity_to_index.clone()),
+            light: HashStorage::new(),
+            orbital: HashStorage::new(),
             _private: (),
         }
     }
@@ -93,11 +98,12 @@ impl Scene {
             for other_index in 0..num_other_ents {
                 let other_name = other_man.get_entity_from_index(other_index).unwrap();
                 let new_ent = self.new_entity(other_man.get_entity_name(other_name));
-                other_index_to_new_index[other_index as usize] = self.entity_to_index[&new_ent];
+                other_index_to_new_index[other_index as usize] =
+                    self.entity_to_index.borrow()[&new_ent];
                 other_index_to_new_ent[other_index as usize] = new_ent;
             }
 
-            for (other_ent, other_index) in other_man.entity_to_index.iter() {
+            for (other_ent, other_index) in other_man.entity_to_index.borrow().iter() {
                 other_ent_to_new_ent
                     .insert(*other_ent, other_index_to_new_ent[*other_index as usize]);
             }
@@ -118,7 +124,7 @@ impl Scene {
 
         // Move vec component data
         let highest_new_id = other_index_to_new_index.iter().max().unwrap();
-        self.resize_components((highest_new_id + 1) as usize);
+        self.resize_components(highest_new_id + 1);
         for this_index in other_index_to_new_index.iter().rev() {
             self.physics[*this_index as usize] = other_man.physics.pop().unwrap();
             self.mesh[*this_index as usize] = other_man.mesh.pop().unwrap();
@@ -140,14 +146,15 @@ impl Scene {
 impl Scene {
     pub fn reserve_space_for_entities(&mut self, num_new_spaces_to_reserve: u32) {
         let num_missing =
-            (num_new_spaces_to_reserve as i64 - self.free_indices.len() as i64).max(0);
+            (num_new_spaces_to_reserve as i64 - self.free_indices.len() as i64).max(0) as usize;
 
-        self.entity_storage.reserve(num_missing as usize);
-        self.physics.reserve(num_missing as usize);
-        self.transform.reserve(num_missing as usize);
-        self.mesh.reserve(num_missing as usize);
-        self.light.reserve(num_missing as usize);
-        self.orbital.reserve(num_missing as usize);
+        self.entity_storage.reserve(num_missing);
+
+        self.physics.reserve_for_n_more(num_missing);
+        self.transform.reserve_for_n_more(num_missing);
+        self.mesh.reserve_for_n_more(num_missing);
+        self.light.reserve_for_n_more(num_missing);
+        self.orbital.reserve_for_n_more(num_missing);
     }
 
     fn new_entity_at_index(&mut self, entity_storage_index: u32, name: Option<&str>) -> Entity {
@@ -177,6 +184,7 @@ impl Scene {
         new_entry.name = Some(String::from(name.unwrap_or_default()));
 
         self.entity_to_index
+            .borrow_mut()
             .insert(self.last_used_entity, entity_storage_index);
 
         log::info!(
@@ -267,7 +275,7 @@ impl Scene {
                 entry_ref.current.0 = 0;
 
                 self.free_indices.push(Reverse(index));
-                self.entity_to_index.remove(&e);
+                self.entity_to_index.borrow_mut().remove(&e);
 
                 return true;
             }
@@ -283,7 +291,7 @@ impl Scene {
     }
 
     pub fn get_entity_index(&self, e: Entity) -> Option<u32> {
-        match self.entity_to_index.get(&e) {
+        match self.entity_to_index.borrow().get(&e) {
             Some(index) => {
                 let ent = &self.entity_storage[(*index) as usize];
                 if ent.live {
@@ -478,11 +486,11 @@ impl Scene {
         }
 
         // Update index map
-        self.entity_to_index.insert(
+        self.entity_to_index.borrow_mut().insert(
             self.entity_storage[source_index as usize].current,
             target_index,
         );
-        self.entity_to_index.insert(
+        self.entity_to_index.borrow_mut().insert(
             self.entity_storage[target_index as usize].current,
             source_index,
         );
@@ -497,56 +505,22 @@ impl Scene {
 impl Scene {
     pub fn get_component<T>(&mut self, entity: Entity) -> Option<&mut T>
     where
-        T: Default + Component + Component<ComponentType = T>,
+        T: Component<ComponentType = T>,
     {
-        match T::STORAGE_TYPE {
-            ComponentStorageType::Vec => {
-                if let Some(entity_index) = self.get_entity_index(entity) {
-                    let comps = T::get_components_vector(self).unwrap();
-                    return comps.get_mut(entity_index as usize);
-                };
-
-                return None;
-            }
-            ComponentStorageType::HashMap => {
-                let comps = T::get_components_map(self).unwrap();
-                return comps.get_mut(&entity);
-            }
-        }
+        return T::get_storage(self).get_component_mut(entity);
     }
 
-    pub fn add_component<'a, T>(&'a mut self, entity: Entity) -> Option<&'a mut T>
+    pub fn add_component<'a, T>(&'a mut self, entity: Entity) -> &'a mut T
     where
         T: Default + Component + Component<ComponentType = T>,
     {
         log::info!(
             "Adding component '{:?}' to entity '{:?}'",
-            T::COMPONENT_TYPE,
+            std::any::type_name::<T>(),
             entity
         );
 
-        match T::STORAGE_TYPE {
-            ComponentStorageType::Vec => {
-                let index = self.entity_to_index[&entity];
-                self.resize_components((index + 1) as usize);
-
-                let comps = T::get_components_vector(self).unwrap();
-
-                comps[index as usize].set_enabled(true);
-                return comps.get_mut(index as usize);
-            }
-            ComponentStorageType::HashMap => {
-                let comps = T::get_components_map(self).unwrap();
-
-                if !comps.contains_key(&entity) {
-                    comps.insert(entity, T::default());
-                }
-
-                let existing = comps.get_mut(&entity).unwrap();
-                existing.set_enabled(true);
-                return Some(existing);
-            }
-        }
+        return T::get_storage(self).add_component(entity);
     }
 
     fn swap_components(&mut self, index_a: u32, index_b: u32) {
@@ -555,35 +529,27 @@ impl Scene {
         }
 
         // Pretty sure I'm converting to and from entities at least once too many...
-        // let ent_a = self.get_entity_from_index(index_a).unwrap();
-        // let ent_b = self.get_entity_from_index(index_b).unwrap();
+        let ent_a = self.get_entity_from_index(index_a).unwrap();
+        let ent_b = self.get_entity_from_index(index_b).unwrap();
 
         let max_index = index_a.max(index_b);
-        self.resize_components((max_index + 1) as usize);
+        self.resize_components(max_index + 1);
 
-        self.physics.swap(index_a as usize, index_b as usize);
-        self.mesh.swap(index_a as usize, index_b as usize);
-        self.transform.swap(index_a as usize, index_b as usize);
-
-        // Swap hashmap component storages
-        // let int_a = self.interface.remove(&ent_a);
-        // let int_b = self.interface.remove(&ent_b);
-        // if let Some(int_a) = int_a {
-        //     self.interface.insert(ent_b, int_a);
-        // }
-        // if let Some(int_b) = int_b {
-        //     self.interface.insert(ent_a, int_b);
-        // }
+        self.physics.swap_components(ent_a, ent_b);
+        self.mesh.swap_components(ent_a, ent_b);
+        self.transform.swap_components(ent_a, ent_b);
+        self.orbital.swap_components(ent_a, ent_b);
+        self.light.swap_components(ent_a, ent_b);
     }
 
-    fn resize_components(&mut self, min_length: usize) {
-        if min_length <= self.physics.len() {
+    /// Resizes sparse storage components to match a target min_length
+    fn resize_components(&mut self, min_length: u32) {
+        if min_length <= self.transform.get_num_components() {
             return;
         }
 
-        self.physics.resize_with(min_length, Default::default);
-        self.mesh.resize_with(min_length, Default::default);
-        self.transform.resize_with(min_length, Default::default);
+        self.transform.resize(min_length);
+        self.mesh.resize(min_length);
     }
 }
 

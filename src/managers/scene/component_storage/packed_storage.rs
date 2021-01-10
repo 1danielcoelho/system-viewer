@@ -4,12 +4,13 @@ use crate::managers::scene::Entity;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct PackedStorage<T: Component> {
+    storage: Vec<T>,
+    index_to_entity: Vec<Entity>,
+
     #[serde(skip)] // Can rebuild this one from the inverse map
     entity_to_index: HashMap<Entity, u32>,
-    index_to_entity: Vec<Entity>,
-    storage: Vec<T>,
 }
 impl<T: Component> PackedStorage<T> {
     pub fn new() -> Self {
@@ -20,17 +21,17 @@ impl<T: Component> PackedStorage<T> {
         return self.index_to_entity.get(index as usize).cloned();
     }
 
-    fn iter_components(&self) -> std::slice::Iter<T> {
+    pub fn iter(&self) -> std::slice::Iter<T> {
         return self.storage.iter();
     }
 
-    fn iter_components_mut(&mut self) -> std::slice::IterMut<T> {
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
         return self.storage.iter_mut();
     }
 }
 
 impl<T: Component> ComponentStorage<T> for PackedStorage<T> {
-    fn add_component(&mut self, entity: Entity) -> &T {
+    fn add_component(&mut self, entity: Entity) -> &mut T {
         assert!(!self.entity_to_index.contains_key(&entity));
 
         self.storage.push(T::default());
@@ -68,5 +69,22 @@ impl<T: Component> ComponentStorage<T> for PackedStorage<T> {
             self.index_to_entity.remove(*index as usize);
             self.entity_to_index.remove(&entity);
         }
+    }
+
+    fn reserve_for_n_more(&mut self, n: usize) {
+        self.storage.reserve(n);
+        self.index_to_entity.reserve(n);
+        self.entity_to_index.reserve(n);
+    }
+
+    fn swap_components(&mut self, entity_a: Entity, entity_b: Entity) {
+        let index_a = self.entity_to_index[&entity_a];
+        let index_b = self.entity_to_index[&entity_b];
+        
+        self.storage.swap(index_a as usize, index_b as usize);
+    }
+
+    fn get_num_components(&self) -> u32 {
+        return self.storage.len() as u32;
     }
 }

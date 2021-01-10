@@ -4,7 +4,7 @@ use crate::managers::scene::Entity;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct HashStorage<T: Component> {
     storage: HashMap<Entity, T>,
 }
@@ -13,22 +13,22 @@ impl<T: Component> HashStorage<T> {
         Self::default()
     }
 
-    fn iter_components(&self) -> std::collections::hash_map::Iter<'_, Entity, T> {
+    fn iter(&self) -> std::collections::hash_map::Iter<'_, Entity, T> {
         return self.storage.iter();
     }
 
-    fn iter_components_mut(&mut self) -> std::collections::hash_map::IterMut<'_, Entity, T> {
+    fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, Entity, T> {
         return self.storage.iter_mut();
     }
 }
 
 impl<T: Component> ComponentStorage<T> for HashStorage<T> {
-    fn add_component(&mut self, entity: Entity) -> &T {
+    fn add_component(&mut self, entity: Entity) -> &mut T {
         assert!(!self.storage.contains_key(&entity));
 
         self.storage.insert(entity, T::default());
 
-        return self.storage.get(&entity).unwrap();
+        return self.storage.get_mut(&entity).unwrap();
     }
 
     fn get_component(&self, entity: Entity) -> Option<&T> {
@@ -45,5 +45,26 @@ impl<T: Component> ComponentStorage<T> for HashStorage<T> {
 
     fn remove_component(&mut self, entity: Entity) {
         self.storage.remove(&entity);
+    }
+
+    fn reserve_for_n_more(&mut self, n: usize) {
+        self.storage.reserve(n);
+    }
+
+    fn swap_components(&mut self, entity_a: Entity, entity_b: Entity) {
+        let comp_a = self.storage.remove(&entity_a);
+        let comp_b = self.storage.remove(&entity_b);
+        
+        if let Some(comp_a) = comp_a {
+            self.storage.insert(entity_b, comp_a);
+        };
+
+        if let Some(comp_b) = comp_b {
+            self.storage.insert(entity_a, comp_b);
+        };        
+    }
+
+    fn get_num_components(&self) -> u32 {
+        return self.storage.len() as u32;
     }
 }

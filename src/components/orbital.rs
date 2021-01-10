@@ -1,17 +1,12 @@
-use super::{
-    component::{ComponentStorageType, ComponentType},
-    Component,
-};
-use crate::{
-    managers::{
-        details_ui::DetailsUI,
-        scene::{Entity, Scene},
-    },
-    utils::{orbits::BodyDescription, transform::Transform, units::Jdn},
-};
+use crate::components::Component;
+use crate::managers::details_ui::DetailsUI;
+use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::scene::Scene;
+use crate::utils::orbits::BodyDescription;
+use crate::utils::transform::Transform;
+use crate::utils::units::Jdn;
 use egui::Ui;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct OrbitalComponent {
@@ -29,21 +24,17 @@ impl OrbitalComponent {
 
 impl Component for OrbitalComponent {
     type ComponentType = OrbitalComponent;
-    const STORAGE_TYPE: ComponentStorageType = ComponentStorageType::HashMap;
-    const COMPONENT_TYPE: ComponentType = ComponentType::Orbital;
-
-    fn get_components_map<'a>(
-        w: &'a mut Scene,
-    ) -> Option<&'a mut HashMap<Entity, Self::ComponentType>> {
-        return Some(&mut w.orbital);
-    }
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
     }
 
-    fn get_enabled(&mut self) -> bool {
+    fn get_enabled(&self) -> bool {
         return self.enabled;
+    }
+
+    fn get_storage(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
+        return Box::new(&mut scene.orbital);
     }
 }
 
