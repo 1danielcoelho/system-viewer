@@ -1,7 +1,5 @@
-use crate::{
-    managers::scene::Entity,
-    utils::web::{local_storage_get, local_storage_remove, local_storage_set},
-};
+use crate::managers::scene::Entity;
+use crate::utils::web::{local_storage_get, local_storage_set};
 use na::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;

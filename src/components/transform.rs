@@ -1,12 +1,9 @@
-use super::{
-    component::{ComponentStorageType, ComponentType},
-    Component,
-};
-use crate::{
-    managers::{details_ui::DetailsUI, scene::Scene},
-    utils::transform::Transform,
-};
-use egui::{Align, Layout, Ui};
+use crate::components::component::{ComponentStorageType, ComponentType};
+use crate::components::Component;
+use crate::managers::details_ui::DetailsUI;
+use crate::managers::scene::Scene;
+use crate::utils::transform::Transform;
+use egui::Ui;
 use na::UnitQuaternion;
 use serde::{Deserialize, Serialize};
 

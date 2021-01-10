@@ -71,7 +71,7 @@ wasm-pack = "0.9.1"
 opt-level = "s"
 
 [profile.dev]
-opt-level = 2
+opt-level = 1 # Temp
 
 # The GLTF crate especially is dramatically slower with lower opt-levels
 [profile.dev.package."*"]

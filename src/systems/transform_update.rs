@@ -4,7 +4,7 @@ use crate::{
     managers::scene::Scene,
     utils::transform::Transform,
 };
-use na::{Matrix4, Point3, Translation3, Unit, Vector3};
+use na::{Matrix4, Point3, Translation3, Unit};
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
@@ -64,7 +64,6 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
         None => Matrix4::identity(),
     };
 
-    // From world to new
     let world_to_new = match new_entity {
         ReferenceChange::NewEntity(new_entity) => Translation3::from(
             -scene

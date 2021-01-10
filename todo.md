@@ -337,11 +337,33 @@ response |= ui.add(label);
 >         - It doesn't look prohibitively bad right now, and I'm not even sure how I'll draw the orbits in the end, so I'll just ignore this for now
     > - Lighting calculations will be wiggly (because I use light/frag coords in world space), unless we do all lighting in camera space (which we might)
 
+# Component storage refactor
+- Anymap
+    - Also difficult to split borrows (e.g. some system needs read access to physics components and write access to transform components)
+        - May be possible by putting RefCell<ComponentStorage<T>> inside the anymap
+        - Kind of sucks that it would pay the cost of runtime borrow check for every operation just for this usage
+    - Serialization
+        - No support from AnyMap, so I'd need some auxiliary data structure
+        - Maybe keep a tally of all entries that are registered/unregistered in the AnyMap, like a Vec for "ComponentIndices that were registered as vec". In some unlucky function somewhere I'd go through this tally and somehow try to query AnyMap for a type based on a value?
+- I could also maybe store a Vec<Box<dyn ComponentStorage>> or something like that?
+    - May be easier to serialize since I can easily iterate over them?
+        - Maybe I could make ComponentStorage : Serialize + Deserialize and have each struct implement it? Not sure if dynamic dispatch would work like that
+    - Could use a HashMap<ComponentIndex, usize> to know the index of each storage?
+    - Naturally prevents multiple storage types for the same component type
+    - Naturally restricts all storages through a common trait, which is neat
+    - May allow me to split references by using split at mut on the Vec of storages?
+        - I can't return the spit borrows though so I'd need some crazy refactoring of systems to work based on closures or something, and call the closures within a Scene function where I can split borrows
+    - Would be hard to type-erase the component types (have to use trait base classes and so on)
+    - Would likely be the most indirect method
+
 # N-body simulation
 - Separate component than the orbital component. Maybe even something separate to the physics component entirely
 - Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
+- For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
 - Introduce packed component storage with index switchboards to speed things up
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
+
+# How to do integration-based orbit prediction? Run the simulation N steps forward?
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
@@ -349,7 +371,13 @@ response |= ui.add(label);
 - Another component for osculating orbit prediction
   - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
 
-# How to do integration-based orbit prediction? Run the simulation N steps forward?
+# GUI to "add a body" with some orbital parameters
+
+# Debug gui to "select parent" and see children
+
+# Debug gui for physics component
+
+# Shadows
 
 # Logarithmic depth buffer
 - This would help when lowering the camera near distance and looking at far away orbits
@@ -372,9 +400,6 @@ response |= ui.add(label);
     - Geometry shaders? Not in WebGL2...
     - Will probably have to do a double-sided quad cross like old school foliage stuff
         - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
-# Free body movement
-- Gravity, force application
-- Orbital trajectory prediction -> line drawing
 # Put orbital mechanics stuff in another crate once it's big enough    
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
 - It seems fine on Chrome so I think I'll jus tignore this for now
@@ -386,6 +411,7 @@ response |= ui.add(label);
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 # Find a better way of handling component updates when sorting after reparenting
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
+- Seems to only happen on firefox
 # GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
 # I think it should be possible to store the shaders in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder

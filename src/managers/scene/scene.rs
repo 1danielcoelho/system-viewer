@@ -10,7 +10,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::{cmp::Reverse, hash::Hash};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
-pub struct Entity(u32);
+pub struct Entity(pub u32); // temp
 impl PartialEq for Entity {
     fn eq(&self, other: &Self) -> bool {
         return self.0 == other.0;
@@ -36,7 +36,8 @@ pub struct Scene {
     pub entity_to_index: HashMap<Entity, u32>,
     last_used_entity: Entity,
 
-    // TODO: Maybe put this in a wrapper struct or?
+    // Until there is a proper way to split member borrows in Rust I think
+    // hard-coding the component types in here is the simplest way of doing things, sadly
     pub physics: Vec<PhysicsComponent>,
     pub mesh: Vec<MeshComponent>,
     pub transform: Vec<TransformComponent>,

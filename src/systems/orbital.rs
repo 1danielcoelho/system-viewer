@@ -1,15 +1,14 @@
 use crate::{
     app_state::AppState,
     components::OrbitalComponent,
-    components::{Component, TransformComponent},
+    components::TransformComponent,
     managers::{scene::Scene, EventReceiver},
     utils::{
-        orbits::{elements_to_ellipse_rotation_transform, get_eccentric_anomaly},
-        transform::Transform,
+        orbits::get_eccentric_anomaly,
         units::{Jdn, J2000_JDN},
     },
 };
-use na::{Matrix3, Point3, Quaternion, UnitQuaternion, Vector3};
+use na::Point3;
 
 pub struct OrbitalSystem {}
 impl OrbitalSystem {

@@ -15,6 +15,7 @@ pub mod gltf;
 pub mod orbits;
 mod scene;
 mod serialization;
+pub mod component_storage;
 
 pub struct SceneManager {
     main: Option<String>,

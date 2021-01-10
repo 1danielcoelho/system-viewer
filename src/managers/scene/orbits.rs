@@ -1,20 +1,12 @@
-use crate::{
-    components::{
-        light::LightType, LightComponent, MeshComponent, OrbitalComponent, TransformComponent,
-    },
-    managers::{
-        scene::{Entity, SceneManager},
-        ResourceManager,
-    },
-    utils::{
-        orbits::{
-            bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription, BodyType,
-        },
-        units::{Jdn, Rad},
-    },
+use crate::components::light::LightType;
+use crate::components::{LightComponent, MeshComponent, OrbitalComponent, TransformComponent};
+use crate::managers::scene::{Entity, SceneManager};
+use crate::managers::ResourceManager;
+use crate::utils::orbits::{
+    bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription, BodyType,
 };
 use na::Vector3;
-use std::{collections::HashMap, f64::consts::PI};
+use std::collections::HashMap;
 
 impl SceneManager {
     pub fn load_bodies_into_scene(

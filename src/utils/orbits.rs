@@ -439,7 +439,9 @@ pub fn get_eccentric_anomaly(mut date: Jdn, orbital_period: f64, baked_times: &V
         Ok(exact_index) => {
             return Rad(angle_incr * exact_index as f64);
         }
+        #[allow(non_snake_case)]
         Err(prev_index) => {
+
             let next_index = (prev_index + 1) % baked_times.len();
 
             let prev_date = baked_times[prev_index];

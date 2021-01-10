@@ -1,27 +1,15 @@
-use std::collections::VecDeque;
-
-use crate::{
-    app_state::{AppState, ButtonState, ReferenceChange},
-    components::{MeshComponent, OrbitalComponent, TransformComponent},
-    managers::{
-        details_ui::DetailsUI,
-        scene::{Entity, SceneManager},
-        ResourceManager,
-    },
-    prompt_for_bytes_file, prompt_for_text_file,
-    utils::{
-        raycasting::{raycast, Ray},
-        units::{julian_date_number_to_date, Jdn, J2000_JDN},
-        web::write_string_to_file_prompt,
-    },
-};
-use crate::{managers::scene::Scene, UICTX};
-use egui::{
-    menu, Align, Button, CollapsingHeader, Frame, Id, LayerId, Layout, Pos2, Response, ScrollArea,
-    TextStyle, TopPanel, Ui,
-};
+use crate::app_state::{AppState, ButtonState, ReferenceChange};
+use crate::components::{MeshComponent, OrbitalComponent, TransformComponent};
+use crate::managers::details_ui::DetailsUI;
+use crate::managers::scene::{Scene, SceneManager};
+use crate::managers::ResourceManager;
+use crate::utils::raycasting::{raycast, Ray};
+use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
+use crate::utils::web::write_string_to_file_prompt;
+use crate::{prompt_for_bytes_file, prompt_for_text_file, UICTX};
 use gui_backend::WebInput;
 use na::{Matrix4, Point3, Translation3, Vector3};
+use std::collections::VecDeque;
 
 pub mod details_ui;
 
@@ -33,7 +21,7 @@ macro_rules! handle_output {
     }};
 }
 
-pub fn handle_output_func(state: &mut AppState, output: Response) {
+pub fn handle_output_func(state: &mut AppState, output: egui::Response) {
     if output.hovered {
         state.input.over_ui = true;
 
@@ -132,7 +120,7 @@ impl InterfaceManager {
 
         // TODO: Fill in more data in raw_input
         let mut raw_input = self.web_input.new_frame();
-        raw_input.mouse_pos = Some(Pos2 {
+        raw_input.mouse_pos = Some(egui::Pos2 {
             x: state.input.mouse_x as f32,
             y: state.input.mouse_y as f32,
         });
@@ -147,10 +135,10 @@ impl InterfaceManager {
 
         UICTX.with(|ui| {
             let mut ui = ui.borrow_mut();
-            ui.replace(Ui::new(
+            ui.replace(egui::Ui::new(
                 self.backend.ctx.clone(),
-                LayerId::background(),
-                Id::new("interface"),
+                egui::LayerId::background(),
+                egui::Id::new("interface"),
                 rect,
                 rect,
             ));
@@ -185,9 +173,9 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            TopPanel::top(Id::new("top panel")).show(&ui.ctx(), |ui| {
-                menu::bar(ui, |ui| {
-                    menu::menu(ui, "File", |ui| {
+            egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
+                egui::menu::bar(ui, |ui| {
+                    egui::menu::menu(ui, "File", |ui| {
                         if ui.button("New").clicked {
                             let new_scene_name =
                                 scene_man.new_scene("New scene").unwrap().identifier.clone();
@@ -219,7 +207,7 @@ impl InterfaceManager {
                         }
                     });
 
-                    menu::menu(ui, "Edit", |ui| {
+                    egui::menu::menu(ui, "Edit", |ui| {
                         if ui.button("Inject GLB...").clicked {
                             prompt_for_bytes_file("glb_inject", ".glb");
                         }
@@ -229,7 +217,7 @@ impl InterfaceManager {
                         }
                     });
 
-                    menu::menu(ui, "Window", |ui| {
+                    egui::menu::menu(ui, "Window", |ui| {
                         if ui.button("Debug").clicked {
                             self.open_windows.debug = !self.open_windows.debug;
                         }
@@ -255,7 +243,7 @@ impl InterfaceManager {
                         }
                     });
 
-                    menu::menu(ui, "Tools", |ui| {
+                    egui::menu::menu(ui, "Tools", |ui| {
                         if ui
                             .button("Clear Egui memory")
                             .on_hover_text("Forget scroll, collapsing headers etc")
@@ -282,9 +270,9 @@ impl InterfaceManager {
                         (time % 1.0 * 100.0).floor()
                     );
 
-                    ui.with_layout(Layout::right_to_left(), |ui| {
+                    ui.with_layout(egui::Layout::right_to_left(), |ui| {
                         if ui
-                            .add(Button::new(time).text_style(TextStyle::Monospace))
+                            .add(egui::Button::new(time).text_style(egui::TextStyle::Monospace))
                             .clicked
                         {
                             log::info!("Clicked on clock!");
@@ -546,10 +534,10 @@ impl InterfaceManager {
                             .and_then(|s| Some(s.clone()))
                             .unwrap_or_default();
 
-                        Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
+                        egui::Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
                             ui.set_min_height(ui.available_size().y);
 
-                            ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
+                            egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
                                 if self.selected_scene_name.is_empty() {
                                     self.selected_scene_name = main_name.clone();
                                 }
@@ -566,7 +554,7 @@ impl InterfaceManager {
                         });
 
                         if let Some(scene) = scene_man.get_scene(&self.selected_scene_name) {
-                            CollapsingHeader::new("Selected scene:")
+                            egui::CollapsingHeader::new("Selected scene:")
                                 .default_open(true)
                                 .show(&mut cols[1], |ui| {
                                     ui.columns(2, |cols| {
@@ -580,35 +568,42 @@ impl InterfaceManager {
                                     });
                                 });
 
-                            cols[1].with_layout(Layout::bottom_up(Align::right()), |ui| {
-                                ui.horizontal(|ui| {
-                                    if ui
-                                        .add(
-                                            Button::new("Delete")
-                                                .enabled(self.selected_scene_name != main_name),
-                                        )
-                                        .clicked
-                                    {
-                                        scene_man.delete_scene(&self.selected_scene_name);
-                                    }
+                            cols[1].with_layout(
+                                egui::Layout::bottom_up(egui::Align::right()),
+                                |ui| {
+                                    ui.horizontal(|ui| {
+                                        if ui
+                                            .add(
+                                                egui::Button::new("Delete")
+                                                    .enabled(self.selected_scene_name != main_name),
+                                            )
+                                            .clicked
+                                        {
+                                            scene_man.delete_scene(&self.selected_scene_name);
+                                        }
 
-                                    if ui.button("Load").clicked {
-                                        scene_man.set_scene(&self.selected_scene_name, res_man);
-                                    }
+                                        if ui.button("Load").clicked {
+                                            scene_man.set_scene(&self.selected_scene_name, res_man);
+                                        }
 
-                                    if ui
-                                        .add(
-                                            Button::new("Add")
-                                                .enabled(self.selected_scene_name != main_name),
-                                        )
-                                        .clicked
-                                    {
-                                        scene_man
-                                            .inject_scene(&self.selected_scene_name, None, res_man)
-                                            .unwrap();
-                                    }
-                                });
-                            });
+                                        if ui
+                                            .add(
+                                                egui::Button::new("Add")
+                                                    .enabled(self.selected_scene_name != main_name),
+                                            )
+                                            .clicked
+                                        {
+                                            scene_man
+                                                .inject_scene(
+                                                    &self.selected_scene_name,
+                                                    None,
+                                                    res_man,
+                                                )
+                                                .unwrap();
+                                        }
+                                    });
+                                },
+                            );
                         }
                     });
                 });
@@ -636,10 +631,10 @@ impl InterfaceManager {
                 .show(&ui.ctx(), |ui| {
                     ui.set_min_height(300.0);
 
-                    Frame::dark_canvas(ui.style()).show(ui, |ui| {
+                    egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
                         ui.set_min_height(ui.available_size().y);
 
-                        ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
+                        egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
                             for entity in scene.get_entity_entries() {
                                 if !entity.live {
                                     continue;
