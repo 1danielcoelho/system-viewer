@@ -13,11 +13,11 @@ impl<T: Component> HashStorage<T> {
         Self::default()
     }
 
-    fn iter(&self) -> std::collections::hash_map::Iter<'_, Entity, T> {
+    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, Entity, T> {
         return self.storage.iter();
     }
 
-    fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, Entity, T> {
+    pub fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, Entity, T> {
         return self.storage.iter_mut();
     }
 

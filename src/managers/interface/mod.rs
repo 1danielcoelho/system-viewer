@@ -701,7 +701,7 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
     };
 
     if state.input.m0 == ButtonState::Pressed {
-        if let Some(hit) = raycast(&ray, &scene.mesh, &scene.transform) {
+        if let Some(hit) = raycast(&ray, &scene) {
             if let Some(entity) = scene.get_entity_from_index(hit.entity_index) {
                 state.selection.clear();
                 state.selection.insert(entity);

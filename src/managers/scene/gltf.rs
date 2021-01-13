@@ -21,7 +21,7 @@ impl SceneManager {
         let ent: Entity = scene.new_entity(Some(&node.get_identifier(file_identifier)));
 
         // Transform
-        let trans_comp = scene.add_component::<TransformComponent>(ent).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(ent);
         let trans = trans_comp.get_local_transform_mut();
         let (pos, quat, scale) = node.transform().decomposed();
         trans.trans.x = pos[0] as f64;
@@ -38,7 +38,7 @@ impl SceneManager {
         // Mesh
         // let mut mesh_str = String::new();
         if let Some(mesh) = node.mesh() {
-            let mesh_comp = scene.add_component::<MeshComponent>(ent).unwrap();
+            let mesh_comp = scene.add_component::<MeshComponent>(ent);
 
             let mesh_identifier = mesh.get_identifier(&file_identifier);
             // mesh_str = mesh_identifier.to_owned();

@@ -1,9 +1,7 @@
+use crate::app_state::{AppState, ButtonState};
+use crate::managers::scene::Scene;
+use crate::utils::transform::Transform;
 use crate::{app_state::ReferenceChange, components::TransformComponent};
-use crate::{
-    app_state::{AppState, ButtonState},
-    managers::scene::Scene,
-    utils::transform::Transform,
-};
 use na::{Matrix4, Point3, Translation3, Unit};
 
 pub struct TransformUpdateSystem {}

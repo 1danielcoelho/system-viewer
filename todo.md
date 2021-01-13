@@ -357,6 +357,7 @@ response |= ui.add(label);
 
 # Component storage refactor
 > - Serialization of sparse storage is just duplicating the entity to index Rc for each component
+- There is no enforcing of a "root node", but inject_scene kind of expects it... I think I need some concept of a root node, or inject_scene needs to scan through all top-level entities and bake in the inject transform
 
 # N-body simulation
 - Separate component than the orbital component. Maybe even something separate to the physics component entirely

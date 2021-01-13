@@ -1,4 +1,4 @@
-use crate::components::{MeshComponent, TransformComponent};
+use crate::managers::scene::Scene;
 use na::{Matrix4, Point3, RealField, SimdRealField, Vector3};
 
 pub const INTERSECTION_EPSILON: f32 = 1e-6;
@@ -24,15 +24,13 @@ where
 /// Raycasts are done in f64 because they are input/output in world space. Internally they'll be converted to
 /// f32 after we transform them into the coordinate space of the collider, where the precision is enough.
 /// We'll then be able to use f32 meshes as colliders
-pub fn raycast(
-    ray: &Ray<f64>,
-    meshes: &Vec<MeshComponent>,
-    transforms: &Vec<TransformComponent>,
-) -> Option<RaycastHit<f64>> {
+pub fn raycast(ray: &Ray<f64>, scene: &Scene) -> Option<RaycastHit<f64>> {
     let mut min_t2: f64 = std::f64::INFINITY;
     let mut entity_index: Option<u32> = None;
 
-    for (index, (mesh_comp, trans_comp)) in meshes.iter().zip(transforms.iter()).enumerate() {
+    for (index, (mesh_comp, trans_comp)) in
+        scene.mesh.iter().zip(scene.transform.iter()).enumerate()
+    {
         if !mesh_comp.raycasting_visible {
             continue;
         }

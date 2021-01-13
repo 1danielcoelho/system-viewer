@@ -1,4 +1,5 @@
 use super::ResourceManager;
+use crate::managers::scene::component_storage::ComponentStorage;
 use crate::{
     components::{
         light::LightType, LightComponent, MeshComponent, PhysicsComponent, TransformComponent,
@@ -11,11 +12,11 @@ use std::collections::HashMap;
 
 pub use scene::*;
 
+pub mod component_storage;
 pub mod gltf;
 pub mod orbits;
 mod scene;
 mod serialization;
-pub mod component_storage;
 
 pub struct SceneManager {
     main: Option<String>,
@@ -113,18 +114,18 @@ impl SceneManager {
 
         // Floor
         let planet = scene.new_entity(Some("floor"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, -2.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(50.0, 50.0, 1.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("plane"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         // Cube
         let planet = scene.new_entity(Some("cube"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
@@ -139,25 +140,19 @@ impl SceneManager {
 
         // Light center
         let light_center = scene.new_entity(Some("light_center"));
-        scene
-            .add_component::<TransformComponent>(light_center)
-            .unwrap();
-        let physics = scene
-            .add_component::<PhysicsComponent>(light_center)
-            .unwrap();
+        scene.add_component::<TransformComponent>(light_center);
+        let physics = scene.add_component::<PhysicsComponent>(light_center);
         physics.ang_mom = Vector3::new(0.0, 0.0, 300.0);
 
         // Light
         let light_ent = scene.new_entity(Some("Mega-sun"));
-        let trans_comp = scene
-            .add_component::<TransformComponent>(light_ent)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(light_ent);
         trans_comp.get_local_transform_mut().trans = Vector3::new(5.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
-        let mesh_comp = scene.add_component::<MeshComponent>(light_ent).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(light_ent);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(light_mat.clone(), 0);
-        let light_comp = scene.add_component::<LightComponent>(light_ent).unwrap();
+        let light_comp = scene.add_component::<LightComponent>(light_ent);
         light_comp.color = Vector3::new(light_color[0], light_color[1], light_color[2]);
         light_comp.intensity = 100000.0;
         light_comp.light_type = LightType::Point;
@@ -165,9 +160,9 @@ impl SceneManager {
 
         // Axes
         let axes = scene.new_entity(Some("axes"));
-        let trans_comp = scene.add_component::<TransformComponent>(axes).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(axes);
         trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(axes).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
@@ -182,13 +177,13 @@ impl SceneManager {
 
         // Sun
         let sun = scene.new_entity(Some("sun"));
-        let trans_comp = scene.add_component::<TransformComponent>(sun).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(sun);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(1.0, 1.0, 1.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(sun).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(sun);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(sun_mat.clone(), 0);
-        let light_comp = scene.add_component::<LightComponent>(sun).unwrap();
+        let light_comp = scene.add_component::<LightComponent>(sun);
         light_comp.color = Vector3::new(1.0, 1.0, 1.0);
         light_comp.intensity = 10000000.0;
         light_comp.light_type = LightType::Point;
@@ -201,37 +196,31 @@ impl SceneManager {
 
         // System center so the sun doesn't have to rotate for the planet to orbit
         let sun_bary = scene.new_entity(Some("sun_barycenter"));
-        scene.add_component::<TransformComponent>(sun_bary).unwrap();
-        let physics = scene.add_component::<PhysicsComponent>(sun_bary).unwrap();
+        scene.add_component::<TransformComponent>(sun_bary);
+        let physics = scene.add_component::<PhysicsComponent>(sun_bary);
         physics.ang_mom = Vector3::new(0.0, 0.0, 470.0);
 
         // Planet
         let planet = scene.new_entity(Some("planet"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(10.0, 0.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(planet_mat.clone(), 0);
         scene.set_entity_parent(sun_bary, planet);
 
         // Planet orbit
         let planet_orbit = scene.new_entity(Some("orbit"));
-        let trans_comp = scene
-            .add_component::<TransformComponent>(planet_orbit)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet_orbit);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet_orbit).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet_orbit);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
 
         // Moon orbit center
         let planet_bary = scene.new_entity(Some("center"));
-        scene
-            .add_component::<TransformComponent>(planet_bary)
-            .unwrap();
-        let physics = scene
-            .add_component::<PhysicsComponent>(planet_bary)
-            .unwrap();
+        scene.add_component::<TransformComponent>(planet_bary);
+        let physics = scene.add_component::<PhysicsComponent>(planet_bary);
         physics.ang_mom = Vector3::new(0.0, 0.0, 720.0);
         scene.set_entity_parent(planet, planet_bary);
 
@@ -243,31 +232,27 @@ impl SceneManager {
 
         // Moon
         let moon = scene.new_entity(Some("moon"));
-        let trans_comp = scene.add_component::<TransformComponent>(moon).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(moon);
         trans_comp.get_local_transform_mut().trans = Vector3::new(3.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
-        let mesh_comp = scene.add_component::<MeshComponent>(moon).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(moon);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(moon_mat.clone(), 0);
         scene.set_entity_parent(planet_bary, moon);
 
         // Moon orbit
         let moon_orbit = scene.new_entity(Some("orbit"));
-        let trans_comp = scene
-            .add_component::<TransformComponent>(moon_orbit)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(moon_orbit);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(moon_orbit).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(moon_orbit);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
         scene.set_entity_parent(planet_bary, moon_orbit);
 
         // Outer system center
         let outer_bary = scene.new_entity(Some("outer_barycenter"));
-        scene
-            .add_component::<TransformComponent>(outer_bary)
-            .unwrap();
-        let physics = scene.add_component::<PhysicsComponent>(outer_bary).unwrap();
+        scene.add_component::<TransformComponent>(outer_bary);
+        let physics = scene.add_component::<PhysicsComponent>(outer_bary);
         physics.ang_mom = Vector3::new(0.0, 0.0, -80.0);
 
         // Outer planet 1
@@ -277,9 +262,9 @@ impl SceneManager {
             UniformValue::Vec4([0.8, 0.9, 0.5, 1.0]),
         );
         let planet = scene.new_entity(Some("planet"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(30.0, 0.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(mat.clone(), 0);
         scene.set_entity_parent(outer_bary, planet);
@@ -291,9 +276,9 @@ impl SceneManager {
             UniformValue::Vec4([0.9, 0.6, 0.8, 1.0]),
         );
         let planet = scene.new_entity(Some("planet"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 30.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(mat.clone(), 0);
         scene.set_entity_parent(outer_bary, planet);
@@ -305,9 +290,9 @@ impl SceneManager {
             UniformValue::Vec4([0.9, 0.9, 0.9, 1.0]),
         );
         let planet = scene.new_entity(Some("planet"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, -30.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(mat.clone(), 0);
         scene.set_entity_parent(outer_bary, planet);
@@ -319,21 +304,19 @@ impl SceneManager {
             UniformValue::Vec4([0.2, 0.3, 0.1, 1.0]),
         );
         let planet = scene.new_entity(Some("planet"));
-        let trans_comp = scene.add_component::<TransformComponent>(planet).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(planet);
         trans_comp.get_local_transform_mut().trans = Vector3::new(-30.0, 0.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(planet).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(planet);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(mat.clone(), 0);
         scene.set_entity_parent(outer_bary, planet);
 
         // Outer orbit
         let outer_orbit = scene.new_entity(Some("orbit"));
-        let trans_comp = scene
-            .add_component::<TransformComponent>(outer_orbit)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(outer_orbit);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(30.0, 30.0, 30.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(outer_orbit).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(outer_orbit);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
 
         let counter_sun_color: [f32; 3] = [0.0, 0.0, 1.0];
@@ -349,24 +332,18 @@ impl SceneManager {
 
         // Counter-sun barycenter
         let counter_sun_bary = scene.new_entity(Some("counter_sun_barycenter"));
-        scene
-            .add_component::<TransformComponent>(counter_sun_bary)
-            .unwrap();
-        let physics = scene
-            .add_component::<PhysicsComponent>(counter_sun_bary)
-            .unwrap();
+        scene.add_component::<TransformComponent>(counter_sun_bary);
+        let physics = scene.add_component::<PhysicsComponent>(counter_sun_bary);
         physics.ang_mom = Vector3::new(0.0, 0.0, -75.0);
 
         // Counter-sun
         let counter_sun = scene.new_entity(Some("Counter-sun"));
-        let trans_comp = scene
-            .add_component::<TransformComponent>(counter_sun)
-            .unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(counter_sun);
         trans_comp.get_local_transform_mut().trans = Vector3::new(15.0, 0.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(counter_sun).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(counter_sun);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(counter_sun_mat.clone(), 0);
-        let light_comp = scene.add_component::<LightComponent>(counter_sun).unwrap();
+        let light_comp = scene.add_component::<LightComponent>(counter_sun);
         light_comp.color = Vector3::new(
             counter_sun_color[0],
             counter_sun_color[1],
@@ -389,23 +366,19 @@ impl SceneManager {
 
         // Mega-sun barycenter
         let mega_sun_bary = scene.new_entity(Some("mega_sun_barycenter"));
-        scene
-            .add_component::<TransformComponent>(mega_sun_bary)
-            .unwrap();
-        let physics = scene
-            .add_component::<PhysicsComponent>(mega_sun_bary)
-            .unwrap();
+        scene.add_component::<TransformComponent>(mega_sun_bary);
+        let physics = scene.add_component::<PhysicsComponent>(mega_sun_bary);
         physics.ang_mom = Vector3::new(0.0, 0.0, 133.0);
 
         // Mega-sun
         let mega_sun = scene.new_entity(Some("Mega-sun"));
-        let trans_comp = scene.add_component::<TransformComponent>(mega_sun).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(mega_sun);
         trans_comp.get_local_transform_mut().trans = Vector3::new(35.0, 0.0, 0.0);
         trans_comp.get_local_transform_mut().scale = Vector3::new(3.0, 3.0, 3.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(mega_sun).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(mega_sun);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(mega_sun_mat.clone(), 0);
-        let light_comp = scene.add_component::<LightComponent>(mega_sun).unwrap();
+        let light_comp = scene.add_component::<LightComponent>(mega_sun);
         light_comp.color = Vector3::new(mega_sun_color[0], mega_sun_color[1], mega_sun_color[2]);
         light_comp.intensity = 100000000.0;
         light_comp.light_type = LightType::Point;
@@ -424,22 +397,18 @@ impl SceneManager {
 
         // Vertical-sun bary
         let vert_sun_bary = scene.new_entity(Some("vertical_sun_barycenter"));
-        scene
-            .add_component::<TransformComponent>(vert_sun_bary)
-            .unwrap();
-        let physics = scene
-            .add_component::<PhysicsComponent>(vert_sun_bary)
-            .unwrap();
+        scene.add_component::<TransformComponent>(vert_sun_bary);
+        let physics = scene.add_component::<PhysicsComponent>(vert_sun_bary);
         physics.ang_mom = Vector3::new(150.0, 0.0, 0.0);
 
         // Vertical-sun
         let vert_sun = scene.new_entity(Some("Vertical-sun"));
-        let trans_comp = scene.add_component::<TransformComponent>(vert_sun).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(vert_sun);
         trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 5.0, 0.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(vert_sun).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(vert_sun);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(vert_sun_mat.clone(), 0);
-        let light_comp = scene.add_component::<LightComponent>(vert_sun).unwrap();
+        let light_comp = scene.add_component::<LightComponent>(vert_sun);
         light_comp.color = Vector3::new(vert_sun_color[0], vert_sun_color[1], vert_sun_color[2]);
         light_comp.intensity = 10000000.0;
         light_comp.light_type = LightType::Point;
@@ -447,16 +416,16 @@ impl SceneManager {
 
         // Grid
         let grid = scene.new_entity(Some("grid"));
-        let trans_comp = scene.add_component::<TransformComponent>(grid).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(grid);
         trans_comp.get_local_transform_mut().scale = Vector3::new(1000000.0, 1000000.0, 1000000.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(grid).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(grid);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
 
         // Axes
         let axes = scene.new_entity(Some("axes"));
-        let trans_comp = scene.add_component::<TransformComponent>(axes).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(axes);
         trans_comp.get_local_transform_mut().scale = Vector3::new(10000.0, 10000.0, 10000.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(axes).unwrap();
+        let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
@@ -505,9 +474,16 @@ impl SceneManager {
             injected_scene_copy.get_num_entities()
         );
 
+        // TODO: This is really not enforced at all, but is usually the case
+        let root_entity = injected_scene_copy.get_entity_from_index(0).unwrap();
+
         // Update the position of the root scene node to the target transform
         if let Some(target_transform) = target_transform {
-            let scene_root_trans = injected_scene_copy.transform[0].get_local_transform_mut();
+            let scene_root_trans = injected_scene_copy
+                .transform
+                .get_component(root_entity)
+                .unwrap()
+                .get_local_transform_mut();
             *scene_root_trans = target_transform;
         }
 

@@ -58,7 +58,7 @@ impl SceneManager {
             scene.set_entity_parent(parent, body_ent);
         }
 
-        let trans_comp = scene.add_component::<TransformComponent>(body_ent).unwrap();
+        let trans_comp = scene.add_component::<TransformComponent>(body_ent);
 
         // Sphere mesh
         if body.mean_radius.0 > 0.0 {
@@ -66,13 +66,13 @@ impl SceneManager {
 
             trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
 
-            let mesh_comp = scene.add_component::<MeshComponent>(body_ent).unwrap();
+            let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
             mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
             mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
         }
 
         if body.body_type == BodyType::Star {
-            let light_comp = scene.add_component::<LightComponent>(body_ent).unwrap();
+            let light_comp = scene.add_component::<LightComponent>(body_ent);
             light_comp.color = Vector3::new(1.0, 1.0, 1.0);
             light_comp.intensity = 5E10;
             light_comp.light_type = LightType::Point;
@@ -82,7 +82,7 @@ impl SceneManager {
         if body.orbital_elements.semi_major_axis.0 > 0.0 {
             let trans = elements_to_circle_transform(&body.orbital_elements);
 
-            let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent).unwrap();
+            let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent);
             orbit_comp.desc = body.clone(); // TODO: I could probably move this in
             orbit_comp.circle_to_final_ellipse = trans.clone();
 
@@ -102,10 +102,10 @@ impl SceneManager {
                     scene.set_entity_parent(parent, orbit);
                 }
 
-                let trans_comp = scene.add_component::<TransformComponent>(orbit).unwrap();
+                let trans_comp = scene.add_component::<TransformComponent>(orbit);
                 *trans_comp.get_local_transform_mut() = trans;
 
-                let mesh_comp = scene.add_component::<MeshComponent>(orbit).unwrap();
+                let mesh_comp = scene.add_component::<MeshComponent>(orbit);
                 mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
             }
         }
