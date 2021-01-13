@@ -2,22 +2,15 @@ use crate::components::{
     LightComponent, MeshComponent, OrbitalComponent, PhysicsComponent, TransformComponent,
 };
 use crate::managers::scene::component_storage::{HashStorage, PackedStorage, SparseStorage};
+use crate::managers::scene::Entity;
 use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
-pub struct EntityIndex(pub u32);
-impl PartialEq for EntityIndex {
-    fn eq(&self, other: &Self) -> bool {
-        return self.0 == other.0;
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SerEntity<'a> {
     pub name: Option<&'a str>,
-    pub index: EntityIndex,
-    pub parent: Option<EntityIndex>,
-    pub children: Vec<EntityIndex>,
+    pub entity: Entity,
+    pub parent: Option<Entity>,
+    pub children: Vec<Entity>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

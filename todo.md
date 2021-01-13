@@ -336,25 +336,27 @@ response |= ui.add(label);
 >         - We could fix this by just moving the length units a few exponents up: The orbits will always be the issue, because the planets/bodies don't look so bad as we only see them wrt. the camera
 >         - It doesn't look prohibitively bad right now, and I'm not even sure how I'll draw the orbits in the end, so I'll just ignore this for now
     > - Lighting calculations will be wiggly (because I use light/frag coords in world space), unless we do all lighting in camera space (which we might)
+> - Component storage refactor
+> - Anymap
+>     - Also difficult to split borrows (e.g. some system needs read access to physics components and write access to transform components)
+>         - May be possible by putting RefCell<ComponentStorage<T>> inside the anymap
+>         - Kind of sucks that it would pay the cost of runtime borrow check for every operation just for this usage
+>     - Serialization
+>         - No support from AnyMap, so I'd need some auxiliary data structure
+>         - Maybe keep a tally of all entries that are registered/unregistered in the AnyMap, like a Vec for "ComponentIndices that were registered as vec". In some unlucky function somewhere I'd go through this tally and somehow try to query AnyMap for a type based on a value?
+> - I could also maybe store a Vec<Box<dyn ComponentStorage>> or something like that?
+>     - May be easier to serialize since I can easily iterate over them?
+>         - Maybe I could make ComponentStorage : Serialize + Deserialize and have each struct implement it? Not sure if dynamic dispatch would work like that
+>     - Could use a HashMap<ComponentIndex, usize> to know the index of each storage?
+>     - Naturally prevents multiple storage types for the same component type
+>     - Naturally restricts all storages through a common trait, which is neat
+>     - May allow me to split references by using split at mut on the Vec of storages?
+>         - I can't return the spit borrows though so I'd need some crazy refactoring of systems to work based on closures or something, and call the closures within a Scene function where I can split borrows
+>     - Would be hard to type-erase the component types (have to use trait base classes and so on)
+>     - Would likely be the most indirect method
 
 # Component storage refactor
-- Anymap
-    - Also difficult to split borrows (e.g. some system needs read access to physics components and write access to transform components)
-        - May be possible by putting RefCell<ComponentStorage<T>> inside the anymap
-        - Kind of sucks that it would pay the cost of runtime borrow check for every operation just for this usage
-    - Serialization
-        - No support from AnyMap, so I'd need some auxiliary data structure
-        - Maybe keep a tally of all entries that are registered/unregistered in the AnyMap, like a Vec for "ComponentIndices that were registered as vec". In some unlucky function somewhere I'd go through this tally and somehow try to query AnyMap for a type based on a value?
-- I could also maybe store a Vec<Box<dyn ComponentStorage>> or something like that?
-    - May be easier to serialize since I can easily iterate over them?
-        - Maybe I could make ComponentStorage : Serialize + Deserialize and have each struct implement it? Not sure if dynamic dispatch would work like that
-    - Could use a HashMap<ComponentIndex, usize> to know the index of each storage?
-    - Naturally prevents multiple storage types for the same component type
-    - Naturally restricts all storages through a common trait, which is neat
-    - May allow me to split references by using split at mut on the Vec of storages?
-        - I can't return the spit borrows though so I'd need some crazy refactoring of systems to work based on closures or something, and call the closures within a Scene function where I can split borrows
-    - Would be hard to type-erase the component types (have to use trait base classes and so on)
-    - Would likely be the most indirect method
+> - Serialization of sparse storage is just duplicating the entity to index Rc for each component
 
 # N-body simulation
 - Separate component than the orbital component. Maybe even something separate to the physics component entirely
@@ -362,8 +364,6 @@ response |= ui.add(label);
 - For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
 - Introduce packed component storage with index switchboards to speed things up
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
-
-# How to do integration-based orbit prediction? Run the simulation N steps forward?
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations
@@ -391,6 +391,10 @@ response |= ui.add(label);
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
 
+# How to do integration-based orbit prediction? Run the simulation N steps forward?
+- I really don't need "orbit prediction" unless I want to make maneuvre nodes like in KSP... what I really need is orbit trails, which is trivial to make: Store N last positions in a fixed time interval between them
+
+# https://software.intel.com/content/www/us/en/develop/blogs/otdoor-light-scattering-sample-update.html
 # I can tweak the egui visuals a bit. Check out the demo app menus on the left
 # What about that transform feedback thing? Maybe I can use that for line drawing or?
 # Better line drawing

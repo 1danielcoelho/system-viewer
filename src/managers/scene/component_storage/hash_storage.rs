@@ -20,6 +20,30 @@ impl<T: Component> HashStorage<T> {
     fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, Entity, T> {
         return self.storage.iter_mut();
     }
+
+    pub fn copy_from_other(&mut self, other: &HashStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+        let num_new_entries = other.storage.len();
+        
+        self.storage.reserve(num_new_entries);
+        
+        for (other_ent, comp) in other.storage.drain() {
+            let our_ent = other_entity_to_entity[&other_ent];
+
+            self.storage.insert(our_ent, comp.clone());
+        }
+    }
+
+    pub fn move_from_other(&mut self, other: HashStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+        let num_new_entries = other.storage.len();
+        
+        self.storage.reserve(num_new_entries);
+        
+        for (other_ent, comp) in other.storage.drain() {
+            let our_ent = other_entity_to_entity[&other_ent];
+
+            self.storage.insert(our_ent, comp);
+        }
+    }
 }
 
 impl<T: Component> ComponentStorage<T> for HashStorage<T> {

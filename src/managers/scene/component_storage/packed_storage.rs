@@ -28,6 +28,40 @@ impl<T: Component> PackedStorage<T> {
     pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
         return self.storage.iter_mut();
     }
+
+    pub fn copy_from_other(&mut self, other: &PackedStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+        let num_new_entries = other.storage.len();
+        
+        self.storage.reserve(num_new_entries);
+        self.index_to_entity.reserve(num_new_entries);
+        self.entity_to_index.reserve(num_new_entries);
+        
+        self.storage.append(&mut other.storage.clone());
+
+        for other_ent in other.index_to_entity {
+            let our_ent = other_entity_to_entity[&other_ent];
+
+            self.index_to_entity.push(our_ent);
+            self.entity_to_index.insert(our_ent, (self.entity_to_index.len() - 1) as u32);
+        }
+    }
+
+    pub fn move_from_other(&mut self, other: PackedStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+        let num_new_entries = other.storage.len();
+        
+        self.storage.reserve(num_new_entries);
+        self.index_to_entity.reserve(num_new_entries);
+        self.entity_to_index.reserve(num_new_entries);
+        
+        self.storage.append(&mut other.storage);
+
+        for other_ent in other.index_to_entity {
+            let our_ent = other_entity_to_entity[&other_ent];
+
+            self.index_to_entity.push(our_ent);
+            self.entity_to_index.insert(our_ent, (self.entity_to_index.len() - 1) as u32);
+        }
+    }
 }
 
 impl<T: Component> ComponentStorage<T> for PackedStorage<T> {
@@ -80,7 +114,7 @@ impl<T: Component> ComponentStorage<T> for PackedStorage<T> {
     fn swap_components(&mut self, entity_a: Entity, entity_b: Entity) {
         let index_a = self.entity_to_index[&entity_a];
         let index_b = self.entity_to_index[&entity_b];
-        
+
         self.storage.swap(index_a as usize, index_b as usize);
     }
 

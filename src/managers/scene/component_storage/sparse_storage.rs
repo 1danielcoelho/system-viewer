@@ -9,6 +9,8 @@ use std::rc::Rc;
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct SparseStorage<T: Component> {
     storage: Vec<T>,
+
+    #[serde(skip)]
     entity_to_index: Rc<RefCell<HashMap<Entity, u32>>>,
 }
 impl<T: Component> SparseStorage<T> {
@@ -28,6 +30,30 @@ impl<T: Component> SparseStorage<T> {
 
     pub fn resize(&mut self, target_size: u32) {
         self.storage.resize_with(target_size as usize, T::default);
+    }
+
+    pub fn set_entity_to_index(&mut self, entity_to_index: Rc<RefCell<HashMap<Entity, u32>>>) {
+        self.entity_to_index = entity_to_index;
+    }
+
+    /// This assumes that entity_to_index will be updated by the scene
+    pub fn copy_from_other(&mut self, other: &SparseStorage<T>, other_index_to_index: &Vec<u32>) {        
+        let highest_new_id = other_index_to_index.iter().max().unwrap();        
+        self.resize(highest_new_id + 1);
+
+        for (other_index, this_index) in other_index_to_index.iter().enumerate() {
+            self.storage[*this_index as usize] = other.storage[other_index].clone();
+        }
+    }
+
+    /// This assumes that entity_to_index will be updated by the scene
+    pub fn move_from_other(&mut self, other: SparseStorage<T>, other_index_to_index: &Vec<u32>) {        
+        let highest_new_id = other_index_to_index.iter().max().unwrap();        
+        self.resize(highest_new_id + 1);
+
+        for this_index in other_index_to_index.iter().rev() {
+            self.storage[*this_index as usize] = other.storage.pop().unwrap();
+        }
     }
 }
 
@@ -80,7 +106,7 @@ impl<T: Component> ComponentStorage<T> for SparseStorage<T> {
         let entity_to_index = self.entity_to_index.borrow();
         let index_a = entity_to_index[&entity_a];
         let index_b = entity_to_index[&entity_b];
-        
+
         self.storage.swap(index_a as usize, index_b as usize);
     }
 
