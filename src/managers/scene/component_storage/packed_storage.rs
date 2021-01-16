@@ -21,6 +21,14 @@ impl<T: Component> PackedStorage<T> {
         return self.index_to_entity.get(index as usize).cloned();
     }
 
+    pub fn get_storage(&self) -> &Vec<T> {
+        return &self.storage;
+    }
+
+    pub fn get_storage_mut(&mut self) -> &mut Vec<T> {
+        return &mut self.storage;
+    }
+
     pub fn iter(&self) -> std::slice::Iter<T> {
         return self.storage.iter();
     }

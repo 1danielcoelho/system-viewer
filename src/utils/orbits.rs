@@ -30,8 +30,8 @@ lazy_static! {
         Regex::new(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)").unwrap();
 }
 
-#[allow(dead_code)]
-pub const GRAVITATION_CONSTANT: f64 = 4.9823382528e-19; // Mm3 / (kg day2)
+/// Mm3 / (kg s2)
+pub const GRAVITATION_CONSTANT: f64 = 6.743E-29; 
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
 

@@ -359,10 +359,10 @@ response |= ui.add(label);
 > - Serialization of sparse storage is just duplicating the entity to index Rc for each component
 
 # N-body simulation
-- Separate component than the orbital component. Maybe even something separate to the physics component entirely
+> - Separate component than the orbital component. Maybe even something separate to the physics component entirely
 - Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
 - For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
-- Introduce packed component storage with index switchboards to speed things up
+> - Introduce packed component storage with index switchboards to speed things up
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
 
 # Improve design of orbit handling

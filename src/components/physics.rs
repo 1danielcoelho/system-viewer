@@ -11,16 +11,21 @@ pub struct PhysicsComponent {
     pub collision_enabled: bool,
 
     // Constants
-    pub inv_mass: f64,             // kg
-    pub inv_inertia: Matrix3<f64>, // Local space
+    /// Kg
+    pub mass: f64,
+    /// Local space
+    pub inv_inertia: Matrix3<f64>, 
 
     // Inputs/computed
-    pub force_sum: Vector3<f64>, // Sum of forces being applied to center of mass
-    pub torque_sum: Vector3<f64>, // Sum of torque being applied to center of mass
+    /// kg * Mm/s^2 
+    pub force_sum: Vector3<f64>, 
+    pub torque_sum: Vector3<f64>,
 
     // State
-    pub lin_mom: Vector3<f64>, // kg * m/s
-    pub ang_mom: Vector3<f64>, // length is kg * m2 * rad/s, right-hand rule
+    /// kg * Mm/s
+    pub lin_mom: Vector3<f64>, 
+    /// length is kg * Mm^2 * rad/s, right-hand rule
+    pub ang_mom: Vector3<f64>, 
     pub trans: Transform<f64>,
 }
 
@@ -36,7 +41,7 @@ impl Default for PhysicsComponent {
         return Self {
             enabled: false,
             collision_enabled: false,
-            inv_mass: 1.0,
+            mass: 1.0,
             inv_inertia: Matrix3::identity(),
             force_sum: Vector3::new(0.0, 0.0, 0.0),
             torque_sum: Vector3::new(0.0, 0.0, 0.0),

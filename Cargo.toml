@@ -8,6 +8,8 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+rand = { version = "0.8" }
+getrandom = { version = "0.2", features = ["js"] }
 console_error_panic_hook = "=0.1.5"
 console_log = "0.2"
 chrono = "0.4"
@@ -71,7 +73,7 @@ wasm-pack = "0.9.1"
 opt-level = "s"
 
 [profile.dev]
-opt-level = 1 # Temp
+opt-level = 3
 
 # The GLTF crate especially is dramatically slower with lower opt-levels
 [profile.dev.package."*"]

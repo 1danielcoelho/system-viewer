@@ -8,6 +8,7 @@ use crate::{
     utils::{string::get_unique_name, transform::Transform, vec::RemoveItem},
 };
 use na::Vector3;
+use rand::Rng;
 use std::collections::HashMap;
 
 pub use scene::*;
@@ -179,8 +180,8 @@ impl SceneManager {
 
         let ent = scene.new_entity(Some("sun"));
         let trans_comp = scene.add_component::<TransformComponent>(ent);
-        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 5.0);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.1, 0.1, 0.1);
         let mesh_comp = scene.add_component::<MeshComponent>(ent);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(sun_mat.clone(), 0);
@@ -189,17 +190,24 @@ impl SceneManager {
         light_comp.intensity = 25.0;
         light_comp.light_type = LightType::Point;
 
-        // Static box
-        let ent = scene.new_entity(Some("static_box"));
-        let trans_comp = scene.add_component::<TransformComponent>(ent);
-        trans_comp.get_local_transform_mut().trans = Vector3::new(0.5, 1.5, 0.5);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(0.5, 0.5, 0.5);
-        let mesh_comp = scene.add_component::<MeshComponent>(ent);
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-        let phys_comp = scene.add_component::<PhysicsComponent>(ent);
-        phys_comp.inv_mass = 1.0;
-        phys_comp.lin_mom = Vector3::new(1.0, 0.0, 0.0);
+        let mut rng = rand::thread_rng();
+        for _ in 0..500 {
+            let ent = scene.new_entity(Some("box"));
+
+            let pos = Vector3::new(rng.gen_range(-10.0..10.0), rng.gen_range(-10.0..10.0), 0.0);
+
+            let trans_comp = scene.add_component::<TransformComponent>(ent);
+            trans_comp.get_local_transform_mut().trans = pos;
+            trans_comp.get_local_transform_mut().scale = Vector3::new(0.1, 0.1, 0.1);
+            let mesh_comp = scene.add_component::<MeshComponent>(ent);
+            mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+            mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+            let phys_comp = scene.add_component::<PhysicsComponent>(ent);
+            phys_comp.mass = 1E20;
+            phys_comp.force_sum = pos
+                .cross(&Vector3::z())
+                .scale(1E13 * rng.gen_range(0.0..10.0));
+        }
 
         // Grid
         let grid = scene.new_entity(Some("grid"));
