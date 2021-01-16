@@ -4,6 +4,22 @@ use na::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
+pub enum SimulationScale {
+    Seconds,
+    Days,
+    Years,
+}
+impl SimulationScale {
+    pub fn to_str(&self) -> &str {
+        match *self {
+            SimulationScale::Seconds => "seconds / real second",
+            SimulationScale::Days => "days / real second",
+            SimulationScale::Years => "years / real second",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub enum ReferenceChange {
     NewEntity(Entity),
@@ -100,6 +116,7 @@ pub struct AppState {
     #[serde(skip)]
     pub time_of_last_save: f64,
 
+    pub simulation_scale: SimulationScale,
     pub simulation_speed: f64,
     pub simulation_paused: bool,
     pub move_speed: f64,
@@ -126,19 +143,20 @@ impl AppState {
             sim_delta_time_days: 0.,
             real_delta_time_s: 0.,
             time_of_last_save: 0.,
-            simulation_speed: 1.,
+            simulation_scale: SimulationScale::Seconds,
+            simulation_speed: 1. / 86400.0,
             simulation_paused: false,
-            move_speed: 10000.0,
+            move_speed: 5.0,
             rotate_speed: 2.0,
             light_intensity: 1.0,
             input: Input::default(),
             selection: HashSet::new(),
             camera: Camera {
-                pos: Point3::new(-34874.89, 144281.34, 614.11206),
+                pos: Point3::new(10.0, 10.0, 10.0),
                 up: Unit::new_unchecked(Vector3::z()),
                 target: Point3::new(0.0, 0.0, 0.0),
                 fov_v: 60.0,
-                near: 5.0,
+                near: 1.0,
                 far: 100000000.0,
                 reference_entity: None,
                 next_reference_entity: None,

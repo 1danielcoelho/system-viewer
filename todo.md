@@ -354,10 +354,9 @@ response |= ui.add(label);
 >         - I can't return the spit borrows though so I'd need some crazy refactoring of systems to work based on closures or something, and call the closures within a Scene function where I can split borrows
 >     - Would be hard to type-erase the component types (have to use trait base classes and so on)
 >     - Would likely be the most indirect method
-
-# Component storage refactor
+> I want to be able to more easily control the simulation scale (from day/s, seconds/s, years/s)
+> Component storage refactor
 > - Serialization of sparse storage is just duplicating the entity to index Rc for each component
-- There is no enforcing of a "root node", but inject_scene kind of expects it... I think I need some concept of a root node, or inject_scene needs to scan through all top-level entities and bake in the inject transform
 
 # N-body simulation
 - Separate component than the orbital component. Maybe even something separate to the physics component entirely
@@ -395,6 +394,7 @@ response |= ui.add(label);
 # How to do integration-based orbit prediction? Run the simulation N steps forward?
 - I really don't need "orbit prediction" unless I want to make maneuvre nodes like in KSP... what I really need is orbit trails, which is trivial to make: Store N last positions in a fixed time interval between them
 
+# There is no enforcing of a "root node", but inject_scene kind of expects it... I think I need some concept of a root node, or inject_scene needs to scan through all top-level entities and bake in the inject transform
 # https://software.intel.com/content/www/us/en/develop/blogs/otdoor-light-scattering-sample-update.html
 # I can tweak the egui visuals a bit. Check out the demo app menus on the left
 # What about that transform feedback thing? Maybe I can use that for line drawing or?

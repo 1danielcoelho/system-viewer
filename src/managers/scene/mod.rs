@@ -186,7 +186,7 @@ impl SceneManager {
         mesh_comp.set_material_override(sun_mat.clone(), 0);
         let light_comp = scene.add_component::<LightComponent>(ent);
         light_comp.color = Vector3::new(sun_color[0], sun_color[1], sun_color[2]);
-        light_comp.intensity = 10000.0;
+        light_comp.intensity = 25.0;
         light_comp.light_type = LightType::Point;
 
         // Static box

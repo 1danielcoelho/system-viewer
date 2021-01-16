@@ -6,6 +6,7 @@ extern crate ron;
 extern crate serde;
 extern crate wasm_bindgen;
 
+use crate::utils::web::local_storage_remove;
 use crate::{
     app_state::AppState,
     engine::Engine,
@@ -136,6 +137,7 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
 fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElement) {
     if state.pending_reset {
         *state = AppState::new();
+        local_storage_remove("app_state");
     }
 
     let canvas_width_on_screen = canvas.client_width() as u32;

@@ -1,4 +1,4 @@
-use crate::app_state::{AppState, ButtonState, ReferenceChange};
+use crate::app_state::{AppState, ButtonState, ReferenceChange, SimulationScale};
 use crate::components::{MeshComponent, OrbitalComponent, TransformComponent};
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::{Scene, SceneManager};
@@ -342,15 +342,52 @@ impl InterfaceManager {
                         cols[1].label(format!("{:.2}", frame_rate))
                     });
 
+                    let mut sim_scale = state.simulation_scale;
+                    let mut sim_speed_in_units = match state.simulation_scale {
+                        SimulationScale::Seconds => state.simulation_speed * 86400.0,
+                        SimulationScale::Days => state.simulation_speed,
+                        SimulationScale::Years => state.simulation_speed / 365.0,
+                    };
+
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Simulation multiplier:");
-                        cols[1].add(
-                            egui::DragValue::f64(&mut state.simulation_speed)
-                                .range(-100.0..=100.0)
-                                .speed(0.01)
-                                .suffix(" days/s"),
-                        )
+                        cols[0].label("Simulation scale:");
+
+                        cols[1]
+                            .horizontal(|ui| {
+                                ui.add(egui::DragValue::f64(&mut sim_speed_in_units).speed(0.01));
+
+                                egui::combo_box(
+                                    ui,
+                                    egui::Id::new("Simulation scale"),
+                                    state.simulation_scale.to_str(),
+                                    |ui| {
+                                        ui.selectable_value(
+                                            &mut sim_scale,
+                                            SimulationScale::Years,
+                                            SimulationScale::Years.to_str(),
+                                        );
+                                        ui.selectable_value(
+                                            &mut sim_scale,
+                                            SimulationScale::Days,
+                                            SimulationScale::Days.to_str(),
+                                        );
+                                        ui.selectable_value(
+                                            &mut sim_scale,
+                                            SimulationScale::Seconds,
+                                            SimulationScale::Seconds.to_str(),
+                                        );
+                                    },
+                                );
+                            })
+                            .1
                     });
+
+                    state.simulation_scale = sim_scale;
+                    state.simulation_speed = match sim_scale {
+                        SimulationScale::Seconds => sim_speed_in_units / 86400.0,
+                        SimulationScale::Days => sim_speed_in_units,
+                        SimulationScale::Years => sim_speed_in_units * 365.0,
+                    };
 
                     ui.separator();
 
@@ -376,7 +413,7 @@ impl InterfaceManager {
 
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Near:");
-                        cols[1].add(egui::DragValue::f64(&mut state.camera.near))
+                        cols[1].add(egui::DragValue::f64(&mut state.camera.near).speed(0.01))
                     });
 
                     response |= ui.columns(2, |cols| {
