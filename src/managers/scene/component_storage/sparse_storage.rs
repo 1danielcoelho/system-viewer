@@ -68,6 +68,7 @@ impl<T: Component> SparseStorage<T> {
 impl<T: Component> ComponentStorage<T> for SparseStorage<T> {
     fn add_component(&mut self, entity: Entity) -> &mut T {
         let index = self.entity_to_index.borrow()[&entity];
+        self.resize(index + 1);
 
         let comp = &mut self.storage[index as usize];
         *comp = T::default();

@@ -51,8 +51,11 @@ impl<T: Component> ComponentStorage<T> for HashStorage<T> {
         assert!(!self.storage.contains_key(&entity));
 
         self.storage.insert(entity, T::default());
+        
+        let comp = self.storage.get_mut(&entity).unwrap();
+        comp.set_enabled(true);
 
-        return self.storage.get_mut(&entity).unwrap();
+        return comp;
     }
 
     fn get_component(&self, entity: Entity) -> Option<&T> {

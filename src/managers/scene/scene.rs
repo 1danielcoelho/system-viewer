@@ -511,7 +511,7 @@ impl Scene {
         T: Default + Component + Component<ComponentType = T>,
     {
         log::info!(
-            "Adding component '{:?}' to entity '{:?}'",
+            "Adding component {:?} to entity '{:?}'",
             std::any::type_name::<T>(),
             entity
         );

@@ -92,7 +92,10 @@ impl<T: Component> ComponentStorage<T> for PackedStorage<T> {
         let new_index = (self.storage.len() - 1) as u32;
         self.entity_to_index.insert(entity, new_index);
 
-        return &mut self.storage[new_index as usize];
+        let comp = &mut self.storage[new_index as usize];
+        comp.set_enabled(true);
+
+        return comp;
     }
 
     fn get_component(&self, entity: Entity) -> Option<&T> {

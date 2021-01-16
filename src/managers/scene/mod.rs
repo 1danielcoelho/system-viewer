@@ -169,6 +169,56 @@ impl SceneManager {
     pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         let scene = self.new_scene(&identifier).unwrap();
 
+        let sun_color: [f32; 3] = [1.0, 1.0, 0.8];
+        let sun_mat = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");
+        sun_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .set_uniform_value(UniformName::EmissiveFactor, UniformValue::Vec3(sun_color));
+
+        let ent = scene.new_entity(Some("sun"));
+        let trans_comp = scene.add_component::<TransformComponent>(ent);
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 5.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.2, 0.2, 0.2);
+        let mesh_comp = scene.add_component::<MeshComponent>(ent);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(sun_mat.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(ent);
+        light_comp.color = Vector3::new(sun_color[0], sun_color[1], sun_color[2]);
+        light_comp.intensity = 10000.0;
+        light_comp.light_type = LightType::Point;
+
+        // Static box
+        let ent = scene.new_entity(Some("static_box"));
+        let trans_comp = scene.add_component::<TransformComponent>(ent);
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.5, 1.5, 0.5);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.5, 0.5, 0.5);
+        let mesh_comp = scene.add_component::<MeshComponent>(ent);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        let phys_comp = scene.add_component::<PhysicsComponent>(ent);
+        phys_comp.inv_mass = 1.0;
+        phys_comp.lin_mom = Vector3::new(1.0, 0.0, 0.0);
+
+        // Grid
+        let grid = scene.new_entity(Some("grid"));
+        let trans_comp = scene.add_component::<TransformComponent>(grid);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(grid);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
+
+        // Axes
+        let axes = scene.new_entity(Some("axes"));
+        let trans_comp = scene.add_component::<TransformComponent>(axes);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(1.0, 1.0, 1.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(axes);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
+    }
+
+    pub fn load_planetarium_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
+        let scene = self.new_scene(&identifier).unwrap();
+
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "sun_mat");
         sun_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
             UniformName::EmissiveFactor,
