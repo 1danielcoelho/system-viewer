@@ -1,39 +1,37 @@
 use crate::app_state::{AppState, ButtonState};
 use crate::managers::scene::Scene;
-use crate::utils::transform::Transform;
 use crate::{app_state::ReferenceChange, components::TransformComponent};
 use na::{Matrix4, Point3, Translation3, Unit};
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
     pub fn run(&self, state: &mut AppState, scene: &mut Scene) {
-        let identity = Transform::identity();
-
-        for entity_index in 0..scene.get_num_entities() {
-            // TODO: This has an indirection
-            let parent_index = scene.get_parent_index_from_index(entity_index);
-
-            // Note that we go only one parent level: We guarantee that we'll
-            // update our transforms in order, so that parents always come before children
-            match parent_index {
-                Some(parent_index) => {
-                    // TODO: Indirection, clones TWICE (once inside update_world_transform)
-                    let parent_transform = scene.transform[parent_index as usize]
-                        .get_world_transform()
-                        .clone();
-                    scene.transform[entity_index as usize]
-                        .update_world_transform(&parent_transform);
-                }
-                None => {
-                    // What
-                    scene.transform[entity_index as usize].update_world_transform(&identity);
-                }
-            }
-        }
+        concatenate_parent_transforms(scene);
 
         rebase_camera_transform(state, scene);
 
         focus_camera_on_selection(state, scene);
+    }
+}
+
+fn concatenate_parent_transforms(scene: &mut Scene) {
+    for entity_index in 0..scene.get_num_entities() {
+        let parent_trans = scene
+            .get_parent_index_from_index(entity_index)
+            .and_then(|parent_index| scene.transform.get_component_from_index(parent_index))
+            .and_then(|parent_trans| Some(parent_trans.get_world_transform().clone()));
+
+        if let Some(ent_trans) = scene.transform.get_component_from_index_mut(entity_index) {
+            match parent_trans {
+                Some(mut trans) => {
+                    trans.concat(ent_trans.get_local_transform());
+                    *ent_trans.get_world_transform_mut() = trans;
+                }
+                None => {
+                    *ent_trans.get_world_transform_mut() = ent_trans.get_local_transform().clone()
+                }
+            };
+        }
     }
 }
 

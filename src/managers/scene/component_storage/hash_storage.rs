@@ -26,14 +26,14 @@ impl<T: Component> HashStorage<T> {
         
         self.storage.reserve(num_new_entries);
         
-        for (other_ent, comp) in other.storage.drain() {
+        for (other_ent, comp) in other.storage.iter() {
             let our_ent = other_entity_to_entity[&other_ent];
 
             self.storage.insert(our_ent, comp.clone());
         }
     }
 
-    pub fn move_from_other(&mut self, other: HashStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+    pub fn move_from_other(&mut self, mut other: HashStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
         let num_new_entries = other.storage.len();
         
         self.storage.reserve(num_new_entries);

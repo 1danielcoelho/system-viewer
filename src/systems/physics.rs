@@ -1,38 +1,36 @@
-use crate::{
-    app_state::AppState,
-    components::PhysicsComponent,
-    components::{Component, TransformComponent},
-    managers::{scene::Scene, EventReceiver},
-};
+use crate::app_state::AppState;
+use crate::components::Component;
+use crate::components::PhysicsComponent;
+use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::scene::Scene;
+use crate::managers::EventReceiver;
 use na::{Matrix3, Quaternion, UnitQuaternion};
 
 pub struct PhysicsSystem {}
 impl PhysicsSystem {
     pub fn run(&self, state: &AppState, scene: &mut Scene) {
-        for entity_index in 0..scene.transform.len() {
-            // TODO: Indirection on the hot path...
-            // TODO: Disable physics calculations for child entities for free bodies (rails should be OK though)
-            // if scene
-            //     .get_parent_index_from_index(entity_index as u32)
-            //     .is_some()
-            // {
-            //     continue;
-            // }
+        // Load in current transforms
+        for (ent, phys) in scene.physics.ent_iter_mut() {
+            let trans = scene.transform.get_component(*ent).unwrap();
 
-            PhysicsSystem::update(
-                state,
-                &mut scene.transform[entity_index],
-                &mut scene.physics[entity_index],
-            );
+            phys.trans = trans.get_local_transform().clone(); 
+        }
+
+        // Run physics system
+        for phys in scene.physics.iter_mut() {
+            PhysicsSystem::update(state, phys);
+        }
+
+        // Unload new transforms
+        for (ent, phys) in scene.physics.ent_iter() {
+            let trans = scene.transform.get_component_mut(*ent).unwrap();
+
+            *trans.get_local_transform_mut() = phys.trans.clone();
         }
     }
 
-    // Applies semi-implicit Euler integration to update `transform` and `physics` to time t
-    pub fn update(
-        state: &AppState,
-        trans_comp: &mut TransformComponent,
-        phys_comp: &mut PhysicsComponent,
-    ) {
+    // Applies semi-implicit Euler integration to update `physics` to time t
+    pub fn update(state: &AppState, phys_comp: &mut PhysicsComponent) {
         if !phys_comp.get_enabled() {
             return;
         }
@@ -50,8 +48,7 @@ impl PhysicsSystem {
         phys_comp.ang_mom += phys_comp.torque_sum * dt;
 
         // Compute world-space inverse inertia tensor
-        let trans = trans_comp.get_local_transform_mut();
-        let rot_mat = Matrix3::from(trans.rot); // Assumes rot is normalized
+        let rot_mat = Matrix3::from(phys_comp.trans.rot); // Assumes rot is normalized
         let inv_inertia_world = rot_mat * phys_comp.inv_inertia * rot_mat.transpose();
 
         // Update velocities
@@ -60,9 +57,10 @@ impl PhysicsSystem {
         let ang_vel_q = Quaternion::new(0.0, ang_vel.x, ang_vel.y, ang_vel.z);
 
         // Update position and rotation
-        trans.trans += lin_vel * dt;
-        let new_rot = trans.rot.quaternion() + 0.5 * ang_vel_q * trans.rot.quaternion() * dt; // todo
-        trans.rot = UnitQuaternion::new_normalize(new_rot);
+        phys_comp.trans.trans += lin_vel * dt;
+        let new_rot = phys_comp.trans.rot.quaternion()
+            + 0.5 * ang_vel_q * phys_comp.trans.rot.quaternion() * dt; // todo
+        phys_comp.trans.rot = UnitQuaternion::new_normalize(new_rot);
 
         // Clear accumulators?
 

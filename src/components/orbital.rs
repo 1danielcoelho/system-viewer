@@ -17,6 +17,7 @@ pub struct OrbitalComponent {
     pub circle_to_final_ellipse: Transform<f64>,
 }
 impl OrbitalComponent {
+    #[allow(dead_code)]
     fn new() -> Self {
         return Self::default();
     }

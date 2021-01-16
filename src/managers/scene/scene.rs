@@ -76,7 +76,7 @@ impl Scene {
     }
 
     /** Used when injecting scenes into eachother */
-    pub fn move_from_other(&mut self, mut other_man: Self) {
+    pub fn move_from_other(&mut self, other_man: Self) {
         // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
         // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
         // packing
@@ -553,7 +553,7 @@ impl Scene {
 impl Scene {
     /** Internal use. Use SceneManager::deserialize_scene */
     pub(super) fn deserialize(ron_str: &str) -> Result<Self, String> {
-        let mut ser_scene: SerScene = ron::de::from_str(ron_str)
+        let ser_scene: SerScene = ron::de::from_str(ron_str)
             .map_err(|e| format!("RON Deserialization error:\n{}", e).to_owned())?;
 
         let mut new_scene = Self::new(ser_scene.identifier);
@@ -582,9 +582,13 @@ impl Scene {
         // scene, regardless of what that is
         new_scene.physics = ser_scene.physics;
         new_scene.mesh = ser_scene.mesh;
-        new_scene.mesh.set_entity_to_index(new_scene.entity_to_index.clone());
+        new_scene
+            .mesh
+            .set_entity_to_index(new_scene.entity_to_index.clone());
         new_scene.transform = ser_scene.transform;
-        new_scene.transform.set_entity_to_index(new_scene.entity_to_index.clone());
+        new_scene
+            .transform
+            .set_entity_to_index(new_scene.entity_to_index.clone());
         new_scene.light = ser_scene.light;
         new_scene.orbital = ser_scene.orbital;
 

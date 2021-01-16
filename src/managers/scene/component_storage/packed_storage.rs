@@ -17,7 +17,7 @@ impl<T: Component> PackedStorage<T> {
         Self::default()
     }
 
-    fn get_component_owner(&self, index: u32) -> Option<Entity> {
+    pub fn get_component_owner(&self, index: u32) -> Option<Entity> {
         return self.index_to_entity.get(index as usize).cloned();
     }
 
@@ -29,37 +29,55 @@ impl<T: Component> PackedStorage<T> {
         return self.storage.iter_mut();
     }
 
-    pub fn copy_from_other(&mut self, other: &PackedStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+    pub fn ent_iter(&mut self) -> std::iter::Zip<std::slice::Iter<Entity>, std::slice::Iter<T>> {
+        return self.index_to_entity.iter().zip(self.storage.iter());
+    }
+
+    pub fn ent_iter_mut(&mut self) -> std::iter::Zip<std::slice::Iter<Entity>, std::slice::IterMut<T>> {
+        return self.index_to_entity.iter().zip(self.storage.iter_mut());
+    }
+
+    pub fn copy_from_other(
+        &mut self,
+        other: &PackedStorage<T>,
+        other_entity_to_entity: &HashMap<Entity, Entity>,
+    ) {
         let num_new_entries = other.storage.len();
-        
+
         self.storage.reserve(num_new_entries);
         self.index_to_entity.reserve(num_new_entries);
         self.entity_to_index.reserve(num_new_entries);
-        
+
         self.storage.append(&mut other.storage.clone());
 
-        for other_ent in other.index_to_entity {
+        for other_ent in &other.index_to_entity {
             let our_ent = other_entity_to_entity[&other_ent];
 
             self.index_to_entity.push(our_ent);
-            self.entity_to_index.insert(our_ent, (self.entity_to_index.len() - 1) as u32);
+            self.entity_to_index
+                .insert(our_ent, (self.entity_to_index.len() - 1) as u32);
         }
     }
 
-    pub fn move_from_other(&mut self, other: PackedStorage<T>, other_entity_to_entity: &HashMap<Entity, Entity>) {
+    pub fn move_from_other(
+        &mut self,
+        mut other: PackedStorage<T>,
+        other_entity_to_entity: &HashMap<Entity, Entity>,
+    ) {
         let num_new_entries = other.storage.len();
-        
+
         self.storage.reserve(num_new_entries);
         self.index_to_entity.reserve(num_new_entries);
         self.entity_to_index.reserve(num_new_entries);
-        
+
         self.storage.append(&mut other.storage);
 
         for other_ent in other.index_to_entity {
             let our_ent = other_entity_to_entity[&other_ent];
 
             self.index_to_entity.push(our_ent);
-            self.entity_to_index.insert(our_ent, (self.entity_to_index.len() - 1) as u32);
+            self.entity_to_index
+                .insert(our_ent, (self.entity_to_index.len() - 1) as u32);
         }
     }
 }

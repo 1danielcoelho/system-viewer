@@ -1,21 +1,17 @@
-use crate::{
-    app_state::AppState,
-    components::OrbitalComponent,
-    components::TransformComponent,
-    managers::{scene::Scene, EventReceiver},
-    utils::{
-        orbits::get_eccentric_anomaly,
-        units::{Jdn, J2000_JDN},
-    },
-};
+use crate::app_state::AppState;
+use crate::components::OrbitalComponent;
+use crate::components::TransformComponent;
+use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::{scene::Scene, EventReceiver};
+use crate::utils::orbits::get_eccentric_anomaly;
+use crate::utils::units::{Jdn, J2000_JDN};
 use na::Point3;
 
 pub struct OrbitalSystem {}
 impl OrbitalSystem {
     pub fn run(&self, state: &AppState, scene: &mut Scene) {
         for (ent, orb) in scene.orbital.iter() {
-            let index = scene.get_entity_index(*ent).unwrap();
-            let trans = &mut scene.transform[index as usize];
+            let trans = scene.transform.get_component_mut(*ent).unwrap();
 
             OrbitalSystem::update(state, trans, orb);
         }

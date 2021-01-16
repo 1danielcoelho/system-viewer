@@ -21,6 +21,7 @@ pub struct LightComponent {
     pub direction: Option<Vector3<f32>>,
 }
 impl LightComponent {
+    #[allow(dead_code)]
     fn new() -> Self {
         return Self::default();
     }

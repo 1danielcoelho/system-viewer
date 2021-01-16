@@ -427,6 +427,7 @@ pub fn local_storage_set(key: &str, value: &str) {
     local_storage().map(|storage| storage.set_item(key, value));
 }
 
+#[allow(dead_code)]
 pub fn local_storage_remove(key: &str) {
     local_storage().map(|storage| storage.remove_item(key));
 }

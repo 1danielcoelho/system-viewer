@@ -1,4 +1,6 @@
-use crate::{engine::Engine};
+#![allow(dead_code)]
+
+use crate::engine::Engine;
 use std::collections::VecDeque;
 
 pub enum EventTransmitter {

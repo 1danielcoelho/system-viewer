@@ -1,6 +1,7 @@
 use crate::components::Component;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::{details_ui::DetailsUI, scene::Scene};
+use crate::utils::transform::Transform;
 use na::{Matrix3, Vector3};
 use serde::{Deserialize, Serialize};
 
@@ -20,9 +21,11 @@ pub struct PhysicsComponent {
     // State
     pub lin_mom: Vector3<f64>, // kg * m/s
     pub ang_mom: Vector3<f64>, // length is kg * m2 * rad/s, right-hand rule
+    pub trans: Transform<f64>,
 }
 
 impl PhysicsComponent {
+    #[allow(dead_code)]
     fn new() -> Self {
         return Self::default();
     }
@@ -39,6 +42,7 @@ impl Default for PhysicsComponent {
             torque_sum: Vector3::new(0.0, 0.0, 0.0),
             lin_mom: Vector3::new(0.0, 0.0, 0.0),
             ang_mom: Vector3::new(0.0, 0.0, 0.0),
+            trans: Transform::identity(),
         };
     }
 }

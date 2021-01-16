@@ -1,4 +1,5 @@
 use crate::components::light::LightType;
+use crate::managers::scene::component_storage::ComponentStorage;
 use crate::{
     app_state::AppState,
     components::{MeshComponent, TransformComponent},
@@ -86,8 +87,10 @@ impl RenderingSystem {
         // Pick lights that will affect the scene (randomly for now)
         let mut index = 0;
         for (ent, light) in scene.light.iter() {
-            let ent_index = scene.get_entity_index(*ent).unwrap();
-            let pos = &scene.transform[ent_index as usize]
+            let pos = &scene
+                .transform
+                .get_component(*ent)
+                .unwrap()
                 .get_world_transform()
                 .trans;
 

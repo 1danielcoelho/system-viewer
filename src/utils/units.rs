@@ -51,6 +51,7 @@ impl Eq for Jdn {}
 
 /// Returns the corresponding Julian Day Number (JDN) for an instant in time.
 /// See https://en.wikipedia.org/wiki/Julian_day
+#[allow(dead_code)]
 pub fn date_to_julian_date_number(date: &chrono::DateTime<Utc>) -> Jdn {
     return Jdn((date.timestamp() as f64) / 86400.0 + 2440587.5);
 }

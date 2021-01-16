@@ -19,6 +19,7 @@ pub struct MeshComponent {
 }
 
 impl MeshComponent {
+    #[allow(dead_code)]
     fn new() -> Self {
         return Self::default();
     }

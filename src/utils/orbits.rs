@@ -30,6 +30,7 @@ lazy_static! {
         Regex::new(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)").unwrap();
 }
 
+#[allow(dead_code)]
 pub const GRAVITATION_CONSTANT: f64 = 4.9823382528e-19; // Mm3 / (kg day2)
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
@@ -163,6 +164,7 @@ pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
     });
 }
 
+#[allow(dead_code)]
 pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
     let semi_major_axis = Au(
         float_from_match(file_str, &SEMI_MAJOR_AXIS_RE).ok_or(format!(
@@ -457,6 +459,7 @@ pub fn get_eccentric_anomaly(mut date: Jdn, orbital_period: f64, baked_times: &V
 }
 
 /// Returns the JDN time of the next periapsis crossing
+#[allow(dead_code)]
 pub fn time_of_next_periapsis(mean_anomaly_at_epoch: Rad, mean_motion: f64) -> Jdn {
     return Jdn((2.0 * PI - mean_anomaly_at_epoch.0) / mean_motion + J2000_JDN.0);
 }

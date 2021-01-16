@@ -481,7 +481,7 @@ impl SceneManager {
         if let Some(target_transform) = target_transform {
             let scene_root_trans = injected_scene_copy
                 .transform
-                .get_component(root_entity)
+                .get_component_mut(root_entity)
                 .unwrap()
                 .get_local_transform_mut();
             *scene_root_trans = target_transform;

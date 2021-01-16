@@ -29,12 +29,12 @@ impl TransformComponent {
         return &mut self.local_transform;
     }
 
-    pub fn update_world_transform(&mut self, parent_local_transform: &Transform<f64>) {
-        self.world_transform = parent_local_transform.concat_clone(&self.local_transform);
-    }
-
     pub fn get_world_transform(&self) -> &Transform<f64> {
         return &self.world_transform;
+    }
+
+    pub fn get_world_transform_mut(&mut self) -> &mut Transform<f64> {
+        return &mut self.world_transform;
     }
 }
 

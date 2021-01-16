@@ -36,6 +36,14 @@ impl<T: Component> SparseStorage<T> {
         self.entity_to_index = entity_to_index;
     }
 
+    pub fn get_component_from_index(&self, index: u32) -> Option<&T> {
+        return Some(&self.storage[index as usize]);
+    }
+
+    pub fn get_component_from_index_mut(&mut self, index: u32) -> Option<&mut T> {
+        return Some(&mut self.storage[index as usize]);
+    }
+
     /// This assumes that entity_to_index will be updated by the scene
     pub fn copy_from_other(&mut self, other: &SparseStorage<T>, other_index_to_index: &Vec<u32>) {        
         let highest_new_id = other_index_to_index.iter().max().unwrap();        
@@ -47,7 +55,7 @@ impl<T: Component> SparseStorage<T> {
     }
 
     /// This assumes that entity_to_index will be updated by the scene
-    pub fn move_from_other(&mut self, other: SparseStorage<T>, other_index_to_index: &Vec<u32>) {        
+    pub fn move_from_other(&mut self, mut other: SparseStorage<T>, other_index_to_index: &Vec<u32>) {        
         let highest_new_id = other_index_to_index.iter().max().unwrap();        
         self.resize(highest_new_id + 1);
 
