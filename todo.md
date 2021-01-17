@@ -358,12 +358,69 @@ response |= ui.add(label);
 > Component storage refactor
 > - Serialization of sparse storage is just duplicating the entity to index Rc for each component
 
+# Plan out a reachable goal before this creeps out of control again
+- Maybe just a full solar system N-body simulation on J2000 first
+
 # N-body simulation
 > - Separate component than the orbital component. Maybe even something separate to the physics component entirely
-- Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
+> - Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
 - For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
 > - Introduce packed component storage with index switchboards to speed things up
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
+- Parse mass more carefully, since the exponent seems to always change
+    - Lots of bodies don't have mass listed. I think we'll have to estimate it based on orbital period and reference body
+> - Asteroid data
+- Parse data from horizons and compile it in a big json file
+    - Use this to complement it, if they don't match: https://ssd.jpl.nasa.gov/?sat_phys_par    
+    - One JSON file for all data we have on each class: One big file for all planets, one for all jupiter satellites, one for all asteroids, etc
+    - Store original epoch of osculating elements, and have an easy way to roll it forward and back before computing state vectors
+        - I don't think this is a great idea.. it would require some annoying computation like doing the same for each parent and then concatenating the transforms, and the result would be grossly inaccurate as those were just osculating elements anyway. I'm better off just having state vectors at J2000 for everything
+            - For asteroids/small bodies I'll probably have to estimate it anyway, but at least they're always just wrt. sun
+- Rotation axes: 
+    - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
+    - Check the PDF I downloadd
+- Adapt python script to convert ephemerides orbital elements files into json data
+- Adapt python script to read downloaded state vectors and add them to the read json data
+- Manually copy rotation axis data from the downloaded PDF into some text file 
+- Python script to convert rotation axis data and load it into json files
+
+- I stopped trying to make a regex that matches one entry, whether that is for orbital elements or state vectors
+
+``` JSON
+{
+  "0": {
+    "name": "Sun",
+    "type": "star", // star, planet, satellite, asteroid, comet, artificial, barycenter
+    "meta": {}, // data sources, future proofing, etc.
+    "mass": 2, // kg
+    "radius": 2, // Mm
+    "albedo": 2, // abs
+    "magnitude": 2, // abs
+    "rotation_period": 2, // days (86400s)
+    "rotation_axis": [0.1, 0.8, 0.2], // J2000 ecliptic rectangular right-handed normalized
+    "osc_elements": [
+      {
+        "refid": "0", // reference body id
+        "epoch": 2455400.0, // JDN
+        "a": 2, // Semi-major axis, Mm
+        "e": 2, // Eccentricity, abs
+        "i": 2, // Inclination, rad
+        "O": 2, // Longitude of ascending node, rad
+        "w": 2, // Argument of periapsis, rad
+        "M": 2, // Mean anomaly, rad
+        "p": 2, // Sidereal orbital period, days (86400s)
+      },
+    ],
+    "eccentric_anomaly_times": [
+      [0.123, 2455400.0] // rad, JDN
+    ]
+    "state_vectors_ssb": [
+      [2455400.0, 20, 20, 20, 10, 10, 10], // JDN, Mm, Mm, Mm, Mm/s, Mm/s, Mm/s
+      [2455401.0, 30, 30, 30, 10, 10, 10],
+    ],    
+  }
+}
+```
 
 # Improve design of orbit handling
 - One component for bulk N-body calculations

@@ -1,25 +1,13 @@
-import json
 import os
 import re
 import glob
 import numpy as np
 
-horizons_pattern = "D:/Dropbox/Astronomy/horizons_ephemeris_heliocentric/*.txt"
+folder_path = r"horizons_ephemeris_heliocentric/planets_and_moons/*.txt"
+out_path = r"../public/body_data/heliocentric/planets_moons.gen.csv"
 
-database_folder = "D:/Dropbox/Astronomy/database"
-files = [
-    "asteroids", 
-    "comets", 
-    "inner_satellites", 
-    "jovian_satellites", 
-    "saturnian_satellites", 
-    "outer_satellites", 
-    "major_bodies", 
-    "artificial"
-]
-
-target_body_name_re = re.compile(r"Target body name: ([^;]+?) \((\d+)\)")
-center_body_name_re = re.compile(r"Center body name: ([^;]+?) \((\d+)\)")
+target_body_name_re = re.compile(r"Target body name: ([^;]+?) \(")
+center_body_name_re = re.compile(r"Center body name: ([^;]+?) \(")
 eccentricity_re = re.compile(r" EC=[\s]*([\d\-+eE.]+)")
 periapsis_distance_re = re.compile(r" QR=[\s]*([\d\-+eE.]+)")
 inclination_re = re.compile(r" IN=[\s]*([\d\-+eE.]+)")
@@ -33,75 +21,10 @@ semi_major_axis_re = re.compile(r" A =[\s]*([\d\-+eE.]+)")
 apoapsis_distance_re = re.compile(r" AD=[\s]*([\d\-+eE.]+)")
 sideral_orbit_period_re = re.compile(r" PR=[\s]*([\d\-+eE.]+)")
 mean_radius_re = re.compile(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)")
-elements_entry_re = re.compile(r"(([\d.]+)[\s\S]*?PR.*)")
 
-# Read existing files and load into maps
-database = {}
-for file in files:
-    database[file] = {}
-    path = os.path.join(database_folder, file + ".json")
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            database[file] = json.load(f)
-
-# Parse horizons data and load it
-# horizon_file_names = glob.glob(horizons_pattern)
-horizon_file_names = ["C:/Users/1dani/Desktop/test.txt"]
-for filename in horizon_file_names:
-    with open(filename) as f:
-        data = f.read()
-
-        name, body_id = re.findall(target_body_name_re, data)[0]
-        ref_name, ref_id = re.findall(center_body_name_re, data)[0]
-
-        # Radius
-        radius = 0.0
-        radius_str = re.findall(mean_radius_re, data)
-        if radius_str and radius_str[0] is not ' ':
-            radius_str = radius_str[0]
-            radii = [float(val.strip()) for val in radius_str.split('x')]
-            radius = np.mean(radii)
-        radius /= 1000.0  # Km to Mm
-
-        # Clip everything before and after $$SOE and $$EOE, since it sometimes contains
-        # things that trip our re
-        data = re.split(r'\$\$SOE|\$\$EOE', data)[1]
-
-        # Find all sets of orbital elements, in case we got multiple on this file
-        entries = re.findall(elements_entry_re, data)
-        for entry in entries:
-            full_entry = entry[0]
-            
-            epoch = float(entry[1])
-
-            eccentricity = float(re.findall(eccentricity_re, data)[0])
-            periapsis_distance = float(re.findall(periapsis_distance_re, data)[0])
-            inclination = float(re.findall(inclination_re, data)[0])
-            long_asc_node = float(re.findall(long_asc_node_re, data)[0])
-            arg_periapsis = float(re.findall(arg_periapsis_re, data)[0])
-            time_of_periapsis = float(re.findall(time_of_periapsis_re, data)[0])
-            mean_motion = float(re.findall(mean_motion_re, data)[0])
-            mean_anomaly = float(re.findall(mean_anomaly_re, data)[0])
-            true_anomaly = float(re.findall(true_anomaly_re, data)[0])
-            semi_major_axis = float(re.findall(semi_major_axis_re, data)[0])
-            apoapsis_distance = float(re.findall(apoapsis_distance_re, data)[0])
-            sidereal_orbit_period = float(re.findall(sideral_orbit_period_re, data)[0])
-            
-            print(epoch)
-            print()
-
-        # Orbital elements
-
-
-
-exit()
-# Write database to files
-for filename in database:
-    path = os.path.join(database_folder, filename + ".json")
-    with open(path, "w") as f:
-        json.dump(database[filename], f)
-
-
+curr_dir = os.path.dirname(os.path.realpath(__file__))
+folder_path = os.path.join(curr_dir, folder_path)
+out_path = os.path.join(curr_dir, out_path)
 
 
 class Body:
