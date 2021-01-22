@@ -360,19 +360,20 @@ response |= ui.add(label);
 
 # Plan out a reachable goal before this creeps out of control again
 - Maybe just a full solar system N-body simulation on J2000 first
+- Cleanup github repo and properly handle licensing
+- Then handle putting this on a webpage and make a tiny portfolio page with it
 
 # N-body simulation
 > - Separate component than the orbital component. Maybe even something separate to the physics component entirely
 > - Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
-- For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
+> - For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
 > - Introduce packed component storage with index switchboards to speed things up
-- Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff?
 - Parse mass more carefully, since the exponent seems to always change
     - Lots of bodies don't have mass listed. I think we'll have to estimate it based on orbital period and reference body
 > - Asteroid data
-- Parse data from horizons and compile it in a big json file
+- Parse data from horizons and compile it in big, *standardized* json files
     - Use this to complement it, if they don't match: https://ssd.jpl.nasa.gov/?sat_phys_par    
-    - One JSON file for all data we have on each class: One big file for all planets, one for all jupiter satellites, one for all asteroids, etc
+    > - One JSON file for all data we have on each class: One big file for all planets, one for all jupiter satellites, one for all asteroids, etc
     - Store original epoch of osculating elements, and have an easy way to roll it forward and back before computing state vectors
         - I don't think this is a great idea.. it would require some annoying computation like doing the same for each parent and then concatenating the transforms, and the result would be grossly inaccurate as those were just osculating elements anyway. I'm better off just having state vectors at J2000 for everything
             - For asteroids/small bodies I'll probably have to estimate it anyway, but at least they're always just wrt. sun
@@ -383,8 +384,7 @@ response |= ui.add(label);
 - Adapt python script to read downloaded state vectors and add them to the read json data
 - Manually copy rotation axis data from the downloaded PDF into some text file 
 - Python script to convert rotation axis data and load it into json files
-
-- I stopped trying to make a regex that matches one entry, whether that is for orbital elements or state vectors
+- I stopped at trying to make a regex that matches one entry, whether that is for orbital elements or state vectors
 
 ``` JSON
 {
@@ -411,9 +411,6 @@ response |= ui.add(label);
         "p": 2, // Sidereal orbital period, days (86400s)
       },
     ],
-    "eccentric_anomaly_times": [
-      [0.123, 2455400.0] // rad, JDN
-    ]
     "state_vectors_ssb": [
       [2455400.0, 20, 20, 20, 10, 10, 10], // JDN, Mm, Mm, Mm, Mm/s, Mm/s, Mm/s
       [2455401.0, 30, 30, 30, 10, 10, 10],
@@ -422,17 +419,7 @@ response |= ui.add(label);
 }
 ```
 
-# Improve design of orbit handling
-- One component for bulk N-body calculations
-- One component for on-rails orbit movement
-- Another component for osculating orbit prediction
-  - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
-
 # GUI to "add a body" with some orbital parameters
-
-# Debug gui to "select parent" and see children
-
-# Debug gui for physics component
 
 # Shadows
 
@@ -481,6 +468,7 @@ response |= ui.add(label);
 # Maybe use https://crates.io/crates/calloop for the event system instead
 # Maybe find a nicer way of having a generic component storage system
 - Expose a separate get_component and get_component_mut
+# Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff
 
 # Docs link:
 - file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
@@ -522,6 +510,7 @@ response |= ui.add(label);
     - https://space.stackexchange.com/questions/1904/how-to-programmatically-calculate-orbital-elements-using-position-velocity-vecto
     - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
         - On this one they recommend using heliocentric if I intend to use osculating orbital elements, as they tend to be more consistent
+    - https://space.stackexchange.com/questions/24276/why-does-the-eccentricity-of-venuss-and-other-orbits-as-reported-by-horizons
     - https://space.stackexchange.com/questions/25218/why-is-the-sidereal-period-of-the-earth-362-392667-days
     - https://space.stackexchange.com/questions/23408/how-to-calculate-the-planets-and-moons-beyond-newtonss-gravitational-force/23409#23409
     - https://space.stackexchange.com/questions/15364/pythagorean-three-body-problem-need-some-points-from-an-accurate-solution-fo

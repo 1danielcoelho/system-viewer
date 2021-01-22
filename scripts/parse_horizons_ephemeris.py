@@ -5,16 +5,16 @@ import glob
 import numpy as np
 
 horizons_pattern = "D:/Dropbox/Astronomy/horizons_ephemeris_heliocentric/*.txt"
+# horizons_pattern = "D:/Dropbox/Astronomy/horizons_statevectors_ssb_j2000/*.txt"
 
 database_folder = "D:/Dropbox/Astronomy/database"
 files = [
-    "asteroids", 
-    "comets", 
-    "inner_satellites", 
-    "jovian_satellites", 
-    "saturnian_satellites", 
-    "outer_satellites", 
-    "major_bodies", 
+    "asteroids",
+    "comets",
+    "jovian_satellites",
+    "saturnian_satellites",
+    "other_satellites",
+    "major_bodies",
     "artificial"
 ]
 
@@ -33,7 +33,57 @@ semi_major_axis_re = re.compile(r" A =[\s]*([\d\-+eE.]+)")
 apoapsis_distance_re = re.compile(r" AD=[\s]*([\d\-+eE.]+)")
 sideral_orbit_period_re = re.compile(r" PR=[\s]*([\d\-+eE.]+)")
 mean_radius_re = re.compile(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)")
-elements_entry_re = re.compile(r"(([\d.]+)[\s\S]*?PR.*)")
+output_type_re = re.compile(r"Output type\s+:(.*)")
+elements_entry_re = re.compile(r"(([\d.]+)[ =,]+A\.D\.[\s\S]+?)(?:(?=[\d.]+[ =,]+A\.D\.)|\Z)")
+
+au_to_Mm = 149597.8707
+deg_to_rad = 3.14159265358979323846264 / 180.0
+
+def get_body_database(body_id):
+    try:
+        body_id = int(body_id)
+        if body_id <= 10 or (body_id > 100 and (body_id + 1) % 100 == 0):
+            return "major_bodies"
+        elif (body_id > 500 and body_id < 599) or (body_id > 55500 and body_id < 55510) or body_id in [55060, 55061, 55062, 55064, 55065, 55066, 55068, 55070, 55071, 55074]:
+            return 'jovian_satellites'
+        elif (body_id > 600 and body_id < 700) or body_id in [65035, 65040, 65041, 65045, 65048, 65050, 65055, 65056, 65065, 65066, 65067, 65068, 65069, 65070, 65071, 65071, 65073, 65074, 65075, 65076, 65077, 65078]:
+            return 'saturnian_satellites'
+        elif (body_id > 700 and body_id < 999) or body_id in [301, 401, 402]:
+            return 'other_satellites'
+    except ValueError:
+        pass
+
+    print(body_id)
+
+    if body_id[0] == 'a':
+        return 'asteroids'
+    elif body_id[0] == 'c':
+        return 'comets'
+    
+    raise ValueError('Unexpected body_id ' + str(body_id))
+
+
+def get_body_type(body_id):
+    try:
+        body_id = int(body_id)
+        if body_id < 10:
+            return 'barycenter'
+        if body_id == 10:
+            return 'star'
+        elif body_id > 100 and (body_id + 1) % 100 == 0:
+            return 'planet'
+        elif body_id > 100:
+            return 'satellite'
+    except ValueError:
+        pass
+
+    if body_id[0] == 'a':
+        return 'asteroid'
+    elif body_id[0] == 'c':
+        return 'comet'
+    
+    raise ValueError('Unexpected body_id ' + str(body_id))
+
 
 # Read existing files and load into maps
 database = {}
@@ -45,14 +95,27 @@ for file in files:
             database[file] = json.load(f)
 
 # Parse horizons data and load it
-# horizon_file_names = glob.glob(horizons_pattern)
-horizon_file_names = ["C:/Users/1dani/Desktop/test.txt"]
+horizon_file_names = glob.glob(horizons_pattern)
+# horizon_file_names = ["C:/Users/1dani/Desktop/test.txt"]
 for filename in horizon_file_names:
     with open(filename) as f:
         data = f.read()
 
         name, body_id = re.findall(target_body_name_re, data)[0]
         ref_name, ref_id = re.findall(center_body_name_re, data)[0]
+
+        print(name, body_id, ref_name, ref_id)
+
+        database_name = get_body_database(body_id)
+        db = database[database_name]
+        
+        if body_id not in db:
+            db[body_id] = {}
+        body_entry = db[body_id]
+        
+        body_entry['name'] = name
+        body_entry['type'] = get_body_type(body_id)
+        body_entry['meta'] = {}
 
         # Radius
         radius = 0.0
@@ -62,237 +125,105 @@ for filename in horizon_file_names:
             radii = [float(val.strip()) for val in radius_str.split('x')]
             radius = np.mean(radii)
         radius /= 1000.0  # Km to Mm
+        body_entry['radius'] = radius
+
+        # Something like ' GEOMETRIC cartesian states' or ' GEOMETRIC osculating elements'
+        horizons_output_type = re.findall(output_type_re, data)[0]
 
         # Clip everything before and after $$SOE and $$EOE, since it sometimes contains
         # things that trip our re
         data = re.split(r'\$\$SOE|\$\$EOE', data)[1]
 
-        # Find all sets of orbital elements, in case we got multiple on this file
-        entries = re.findall(elements_entry_re, data)
-        for entry in entries:
-            full_entry = entry[0]
-            
-            epoch = float(entry[1])
-
-            eccentricity = float(re.findall(eccentricity_re, data)[0])
-            periapsis_distance = float(re.findall(periapsis_distance_re, data)[0])
-            inclination = float(re.findall(inclination_re, data)[0])
-            long_asc_node = float(re.findall(long_asc_node_re, data)[0])
-            arg_periapsis = float(re.findall(arg_periapsis_re, data)[0])
-            time_of_periapsis = float(re.findall(time_of_periapsis_re, data)[0])
-            mean_motion = float(re.findall(mean_motion_re, data)[0])
-            mean_anomaly = float(re.findall(mean_anomaly_re, data)[0])
-            true_anomaly = float(re.findall(true_anomaly_re, data)[0])
-            semi_major_axis = float(re.findall(semi_major_axis_re, data)[0])
-            apoapsis_distance = float(re.findall(apoapsis_distance_re, data)[0])
-            sidereal_orbit_period = float(re.findall(sideral_orbit_period_re, data)[0])
-            
-            print(epoch)
-            print()
-
         # Orbital elements
+        if 'osculating elements' in horizons_output_type:            
+            if 'osc_elements' not in body_entry:
+                body_entry['osc_elements'] = []
+            osc_elements = body_entry['osc_elements']
+            osc_elements.sort(key=lambda els: els['epoch'])
+
+            all_parsed_elements = []
+            entries = re.findall(elements_entry_re, data)
+            for entry in entries:
+                full_entry = entry[0]
+
+                parsed_elements = {}
+                parsed_elements['epoch'] = float(entry[1])
+                parsed_elements['ref_id'] = ref_id
+                parsed_elements['eccentricity'] = float(re.findall(eccentricity_re, full_entry)[0]) 
+                parsed_elements['periapsis_distance'] = float(re.findall(periapsis_distance_re, full_entry)[0]) * au_to_Mm
+                parsed_elements['inclination'] = float(re.findall(inclination_re, full_entry)[0]) * deg_to_rad
+                parsed_elements['long_asc_node'] = float(re.findall(long_asc_node_re, full_entry)[0]) * deg_to_rad
+                parsed_elements['arg_periapsis'] = float(re.findall(arg_periapsis_re, full_entry)[0]) * deg_to_rad
+                parsed_elements['time_of_periapsis'] = float(re.findall(time_of_periapsis_re, full_entry)[0])
+                parsed_elements['mean_motion'] = float(re.findall(mean_motion_re, full_entry)[0]) * deg_to_rad
+                parsed_elements['mean_anomaly'] = float(re.findall(mean_anomaly_re, full_entry)[0]) * deg_to_rad
+                parsed_elements['true_anomaly'] = float(re.findall(true_anomaly_re, full_entry)[0]) * deg_to_rad
+                parsed_elements['semi_major_axis'] = float(re.findall(semi_major_axis_re, full_entry)[0]) * au_to_Mm
+                parsed_elements['apoapsis_distance'] = float(re.findall(apoapsis_distance_re, full_entry)[0]) * au_to_Mm
+                parsed_elements['sidereal_orbit_period'] = float(re.findall(sideral_orbit_period_re, full_entry)[0])
+                all_parsed_elements.append(parsed_elements)
+            
+            all_parsed_elements.sort(key=lambda els: els['epoch'])
+
+            for parsed_element in all_parsed_elements:
+                parsed_epoch = parsed_element['epoch']
+
+                found = False
+                for index, element in enumerate(osc_elements):
+                    epoch = element['epoch']
+                    
+                    if epoch > parsed_epoch:
+                        break
+
+                    if epoch == parsed_epoch and element['ref_id'] == parsed_element['ref_id']:
+                        osc_elements[index] = parsed_element
+                        found = True
+                        break
+                    
+                if not found:
+                    osc_elements.append(parsed_element)
+        
+        elif 'cartesian states' in horizons_output_type:
+            if 'state_vectors' not in body_entry:
+                body_entry['state_vectors'] = []
+            state_vectors = body_entry['state_vectors']
+            state_vectors.sort(key=lambda vec: vec[0])
+
+            all_parsed_vectors = []
+            entries = re.findall(elements_entry_re, data)
+            for entry in entries:
+                full_entry = entry[0]
+
+                values = full_entry.strip().split(",")
+                epoch = float(values[0])
+                xyz_vxvyvz = [float(val) / 1000.0 for val in values[3:] if val]
+
+                parsed_vector = [epoch] + xyz_vxvyvz
+                all_parsed_vectors.append(parsed_vector)
+            
+            all_parsed_vectors.sort(key=lambda vec: vec[0])
+
+            for parsed_vector in all_parsed_vectors:
+                parsed_epoch = parsed_vector[0]
+
+                found = False
+                for index, vec in enumerate(state_vectors):
+                    epoch = vec[0]
+                    
+                    if epoch > parsed_epoch:
+                        break
+
+                    if epoch == parsed_epoch:
+                        state_vectors[index] = parsed_vector
+                        found = True
+                        break
+                    
+                if not found:
+                    state_vectors.append(parsed_vector)
 
 
-
-exit()
 # Write database to files
 for filename in database:
     path = os.path.join(database_folder, filename + ".json")
     with open(path, "w") as f:
         json.dump(database[filename], f)
-
-
-
-
-class Body:
-    def __init__(self):
-        self.id = 0
-        self.ref = 0
-        self.name = ''
-        self.mean_radius = 2.0
-        self.eccentricity = 0.0
-        self.periapsis_distance = 0.0
-        self.inclination = 0.0
-        self.long_asc_node = 0.0
-        self.arg_periapsis = 0.0
-        self.time_of_periapsis = 0.0
-        self.mean_motion = 0.0
-        self.mean_anomaly = 0.0
-        self.true_anomaly = 0.0
-        self.semi_major_axis = 0.0
-        self.apoapsis_distance = 0.0
-        self.sidereal_orbit_period = 0.0
-        self.type = ""
-
-    def __str__(self):
-        return ",".join([str(x) for x in [
-            self.id,
-            self.name,
-            self.ref,
-            self.type,
-            self.semi_major_axis,
-            self.eccentricity,
-            self.inclination,
-            self.long_asc_node,
-            self.arg_periapsis,
-            self.mean_anomaly,
-            self.mean_radius,
-            self.sidereal_orbit_period,
-        ]])
-
-    def __repr__(self):
-        return self.__str__()
-
-
-orig_names = glob.glob(folder_path)
-
-# Fake a couple entries for the sun and the heliocenter
-# It's important to have separate entries here because we usually parent things (in a scene graph way) to barycenters,
-# and apply scaling to objects. We want to apply the sun radius scaling to the sun object, but we don't want to apply that scaling
-# to orbits that are reference to the heliocenter
-sun_center = Body()
-sun_center.id = 0
-sun_center.ref = 0
-sun_center.name = 'Sun body center'
-sun_center.mean_radius = 0.0
-
-sun = Body()
-sun.id = 10
-sun.ref = 0
-sun.name = 'Sun'
-sun.mean_radius = 695500.0
-
-bodies = {
-    sun_center.id: sun_center,
-    sun.id: sun
-}
-
-for filename in orig_names:
-    name_no_ext = re.findall(r"([^\\]+)\.txt", filename)[0]
-
-    body_id = name_no_ext[:name_no_ext.find('@')]
-    reference = name_no_ext[name_no_ext.find('@')+1:]
-
-    if reference == 'sun':
-        reference = 0
-
-    with open(filename) as f:
-        data = f.read()
-
-        new_body = Body()
-        new_body.id = int(body_id)
-        new_body.ref = int(reference)
-        new_body.name = re.findall(target_body_name_re, data)[0]
-
-        # Try and get a decent mean radius. If not, it will be left at 2 km
-        radius = re.findall(mean_radius_re, data)
-        if radius and radius[0] is not ' ':
-            radius = radius[0]
-            radii = [float(val.strip()) for val in radius.split('x')]
-            radius = np.mean(radii)
-            new_body.mean_radius = radius
-
-        # Clip everything before and after $$SOE and $$EOE, since it sometimes contains
-        # things that trip our re
-        data = re.split(r'\$\$SOE|\$\$EOE', data)[1]
-
-        try:
-            new_body.eccentricity = float(re.findall(eccentricity_re, data)[0])
-            new_body.periapsis_distance = float(re.findall(periapsis_distance_re, data)[0])
-            new_body.inclination = float(re.findall(inclination_re, data)[0])
-            new_body.long_asc_node = float(re.findall(long_asc_node_re, data)[0])
-            new_body.arg_periapsis = float(re.findall(arg_periapsis_re, data)[0])
-            new_body.time_of_periapsis = float(re.findall(time_of_periapsis_re, data)[0])
-            new_body.mean_motion = float(re.findall(mean_motion_re, data)[0])
-            new_body.mean_anomaly = float(re.findall(mean_anomaly_re, data)[0])
-            new_body.true_anomaly = float(re.findall(true_anomaly_re, data)[0])
-            new_body.semi_major_axis = float(re.findall(semi_major_axis_re, data)[0])
-            new_body.apoapsis_distance = float(re.findall(apoapsis_distance_re, data)[0])
-            new_body.sidereal_orbit_period = float(re.findall(sideral_orbit_period_re, data)[0])
-        except BaseException as e:
-            print(data)
-            raise
-
-        bodies[new_body.id] = new_body
-
-# Add radius of pluto manually since that seems to be different than all the others
-bodies[999].mean_radius = 1195
-
-# Fake add mercury and venus, since they have no satellites and the "barycenter files" for them is themselves
-mercury_bary = bodies[1]
-venus_bary = bodies[2]
-mercury_body = Body()
-mercury_body.ref = 1
-mercury_body.id = 199
-mercury_body.name = 'Mercury'
-mercury_body.mean_radius = mercury_bary.mean_radius
-bodies[199] = mercury_body
-venus_body = Body()
-venus_body.ref = 2
-venus_body.id = 299
-venus_body.name = 'Venus'
-venus_body.mean_radius = venus_bary.mean_radius
-bodies[299] = venus_body
-
-# Add body types
-for body in bodies.values():
-    if body.id == 0:
-        body.type = "star"
-    elif body.id > 100 and (body.id + 1) % 100 == 0:
-        body.type = "planet"
-    elif body.ref == 0 and body.id < 10:
-        body.type = "system barycenter"
-    else:
-        body.type = "satellite"
-
-# Convert all distances to Mm
-for body in bodies.values():
-    # If its a planet-system barycenter, set a zero radius
-    if 0 < body.id < 10:
-        body.mean_radius = 0
-
-    body.mean_radius /= 1000.0
-    body.periapsis_distance *= 149597.8707
-    body.semi_major_axis *= 149597.8707
-    body.apoapsis_distance *= 149597.8707
-
-# Create a list in the best order for display
-# Sun, planet-bary, planet, moons, planet-bary, planet, moons, etc
-sorted_keys = sorted(bodies.keys())
-sorted_bodies = []
-sorted_bodies.append((sun_center.id, sun_center))
-sorted_bodies.append((sun.id, sun))
-del bodies[sun_center.id]
-del bodies[sun.id]
-for i in range(1, 10):
-    # Bary
-    sorted_bodies.append((i, bodies[i]))
-    del bodies[i]
-
-    # Planet
-    planet_index = i*100 + 99
-    sorted_bodies.append((planet_index, bodies[planet_index]))
-    del bodies[planet_index]
-
-    # Moons
-    for id in sorted_keys:
-        system = int(str(id)[0])
-        if i != system:
-            continue
-
-        if id in bodies:
-            sorted_bodies.append((id, bodies[id]))
-            del bodies[id]
-
-
-# for (body_id, body) in sorted_bodies:
-#     try:
-#         calc_tp = 2451545.0 - (body.mean_anomaly - 360) / body.mean_motion
-#         print(body_id, calc_tp, body.time_of_periapsis, round((calc_tp - body.time_of_periapsis) / body.sidereal_orbit_period, 3), body.mean_anomaly > 180.0)
-#     except ZeroDivisionError:
-#         pass
-
-with open(out_path, 'w') as f:
-    print("Writing", str(len(sorted_bodies)), "bodies to", out_path)
-    f.write("\n".join([str(entry[1]) for entry in sorted_bodies]))
-    print("Done")
