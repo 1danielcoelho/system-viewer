@@ -3,9 +3,10 @@ import os
 import re
 import glob
 import numpy as np
+import copy
 
-horizons_pattern = "D:/Dropbox/Astronomy/horizons_ephemeris_heliocentric/*.txt"
-# horizons_pattern = "D:/Dropbox/Astronomy/horizons_statevectors_ssb_j2000/*.txt"
+horizons_elements_pattern = "D:/Dropbox/Astronomy/horizons_ephemeris_heliocentric/*.txt"
+horizons_vectors_pattern = "D:/Dropbox/Astronomy/horizons_statevectors_ssb_j2000/*.txt"
 
 database_folder = "D:/Dropbox/Astronomy/database"
 files = [
@@ -39,6 +40,7 @@ elements_entry_re = re.compile(r"(([\d.]+)[ =,]+A\.D\.[\s\S]+?)(?:(?=[\d.]+[ =,]
 au_to_Mm = 149597.8707
 deg_to_rad = 3.14159265358979323846264 / 180.0
 
+
 def get_body_database(body_id):
     try:
         body_id = int(body_id)
@@ -59,7 +61,7 @@ def get_body_database(body_id):
         return 'asteroids'
     elif body_id[0] == 'c':
         return 'comets'
-    
+
     raise ValueError('Unexpected body_id ' + str(body_id))
 
 
@@ -81,7 +83,7 @@ def get_body_type(body_id):
         return 'asteroid'
     elif body_id[0] == 'c':
         return 'comet'
-    
+
     raise ValueError('Unexpected body_id ' + str(body_id))
 
 
@@ -95,8 +97,7 @@ for file in files:
             database[file] = json.load(f)
 
 # Parse horizons data and load it
-horizon_file_names = glob.glob(horizons_pattern)
-# horizon_file_names = ["C:/Users/1dani/Desktop/test.txt"]
+horizon_file_names = glob.glob(horizons_elements_pattern) + glob.glob(horizons_vectors_pattern)
 for filename in horizon_file_names:
     with open(filename) as f:
         data = f.read()
@@ -108,11 +109,11 @@ for filename in horizon_file_names:
 
         database_name = get_body_database(body_id)
         db = database[database_name]
-        
+
         if body_id not in db:
             db[body_id] = {}
         body_entry = db[body_id]
-        
+
         body_entry['name'] = name
         body_entry['type'] = get_body_type(body_id)
         body_entry['meta'] = {}
@@ -135,7 +136,7 @@ for filename in horizon_file_names:
         data = re.split(r'\$\$SOE|\$\$EOE', data)[1]
 
         # Orbital elements
-        if 'osculating elements' in horizons_output_type:            
+        if 'osculating elements' in horizons_output_type:
             if 'osc_elements' not in body_entry:
                 body_entry['osc_elements'] = []
             osc_elements = body_entry['osc_elements']
@@ -149,7 +150,7 @@ for filename in horizon_file_names:
                 parsed_elements = {}
                 parsed_elements['epoch'] = float(entry[1])
                 parsed_elements['ref_id'] = ref_id
-                parsed_elements['eccentricity'] = float(re.findall(eccentricity_re, full_entry)[0]) 
+                parsed_elements['eccentricity'] = float(re.findall(eccentricity_re, full_entry)[0])
                 parsed_elements['periapsis_distance'] = float(re.findall(periapsis_distance_re, full_entry)[0]) * au_to_Mm
                 parsed_elements['inclination'] = float(re.findall(inclination_re, full_entry)[0]) * deg_to_rad
                 parsed_elements['long_asc_node'] = float(re.findall(long_asc_node_re, full_entry)[0]) * deg_to_rad
@@ -162,7 +163,7 @@ for filename in horizon_file_names:
                 parsed_elements['apoapsis_distance'] = float(re.findall(apoapsis_distance_re, full_entry)[0]) * au_to_Mm
                 parsed_elements['sidereal_orbit_period'] = float(re.findall(sideral_orbit_period_re, full_entry)[0])
                 all_parsed_elements.append(parsed_elements)
-            
+
             all_parsed_elements.sort(key=lambda els: els['epoch'])
 
             for parsed_element in all_parsed_elements:
@@ -171,7 +172,7 @@ for filename in horizon_file_names:
                 found = False
                 for index, element in enumerate(osc_elements):
                     epoch = element['epoch']
-                    
+
                     if epoch > parsed_epoch:
                         break
 
@@ -179,10 +180,10 @@ for filename in horizon_file_names:
                         osc_elements[index] = parsed_element
                         found = True
                         break
-                    
+
                 if not found:
                     osc_elements.append(parsed_element)
-        
+
         elif 'cartesian states' in horizons_output_type:
             if 'state_vectors' not in body_entry:
                 body_entry['state_vectors'] = []
@@ -200,7 +201,7 @@ for filename in horizon_file_names:
 
                 parsed_vector = [epoch] + xyz_vxvyvz
                 all_parsed_vectors.append(parsed_vector)
-            
+
             all_parsed_vectors.sort(key=lambda vec: vec[0])
 
             for parsed_vector in all_parsed_vectors:
@@ -209,7 +210,7 @@ for filename in horizon_file_names:
                 found = False
                 for index, vec in enumerate(state_vectors):
                     epoch = vec[0]
-                    
+
                     if epoch > parsed_epoch:
                         break
 
@@ -217,10 +218,70 @@ for filename in horizon_file_names:
                         state_vectors[index] = parsed_vector
                         found = True
                         break
-                    
+
                 if not found:
                     state_vectors.append(parsed_vector)
 
+# Handle annoying exceptions
+fake_osc_elements = {
+    "epoch": 2451545.0,
+    "ref_id": "10",
+    "eccentricity": 1,
+    "periapsis_distance": 0,
+    "inclination": 0,
+    "long_asc_node": 0,
+    "arg_periapsis": 0,
+    "time_of_periapsis": 2451545.0,
+    "mean_motion": 0,
+    "mean_anomaly": 0,
+    "true_anomaly": 0,
+    "semi_major_axis": 0,
+    "apoapsis_distance": 0,
+    "sidereal_orbit_period": 1,
+}
+try:    
+    # Sun shouldn't have gotten any osc_elements yet since all our elements are heliocentric
+    database['major_bodies']['10']['osc_elements'] = [fake_osc_elements]
+except KeyError:
+    pass
+
+try:    
+    # Mercury Barycenter is the same as Mercury, but we kind of want separate entries for consistency
+    database['major_bodies']['1'] = copy.deepcopy(database['major_bodies']['199'])
+    database['major_bodies']['1']['type'] = 'barycenter'
+    database['major_bodies']['1']['mass'] = 0
+    database['major_bodies']['1']['radius'] = 0
+    database['major_bodies']['1']['albedo'] = 0
+    database['major_bodies']['1']['magnitude'] = 0
+    database['major_bodies']['1']['rotation_period'] = 0
+    database['major_bodies']['1']['rotation_axis'] = [0, 0, 0]
+    del database['major_bodies']['1']['state_vectors']
+    database['major_bodies']['199']['name'] = 'Mercury'
+    database['major_bodies']['199']['osc_elements'] = [copy.deepcopy(fake_osc_elements)]
+    database['major_bodies']['199']['osc_elements'][0]['ref_id'] = '1'
+except KeyError:
+    pass
+
+try:    
+    # Venus Barycenter is the same as Venus, but we kind of want separate entries for consistency
+    database['major_bodies']['2'] = copy.deepcopy(database['major_bodies']['299'])
+    database['major_bodies']['2']['type'] = 'barycenter'
+    database['major_bodies']['2']['mass'] = 0
+    database['major_bodies']['2']['radius'] = 0
+    database['major_bodies']['2']['albedo'] = 0
+    database['major_bodies']['2']['magnitude'] = 0
+    database['major_bodies']['2']['rotation_period'] = 0
+    database['major_bodies']['2']['rotation_axis'] = [0, 0, 0]
+    del database['major_bodies']['2']['state_vectors']
+    database['major_bodies']['299']['name'] = 'Venus'
+    database['major_bodies']['299']['osc_elements'] = [copy.deepcopy(fake_osc_elements)]
+    database['major_bodies']['299']['osc_elements'][0]['ref_id'] = '2'
+except KeyError:
+    pass
+
+# Sort all databases
+for db_name in database.keys():
+    database[db_name] = {k: v for k, v in sorted(database[db_name].items(), key=lambda item: float(item[0]))}
 
 # Write database to files
 for filename in database:

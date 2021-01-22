@@ -384,7 +384,7 @@ response |= ui.add(label);
 - Adapt python script to read downloaded state vectors and add them to the read json data
 - Manually copy rotation axis data from the downloaded PDF into some text file 
 - Python script to convert rotation axis data and load it into json files
-- I stopped at trying to make a regex that matches one entry, whether that is for orbital elements or state vectors
+> - I stopped at trying to make a regex that matches one entry, whether that is for orbital elements or state vectors
 
 ``` JSON
 {
