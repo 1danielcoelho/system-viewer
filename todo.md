@@ -357,13 +357,7 @@ response |= ui.add(label);
 > I want to be able to more easily control the simulation scale (from day/s, seconds/s, years/s)
 > Component storage refactor
 > - Serialization of sparse storage is just duplicating the entity to index Rc for each component
-
-# Plan out a reachable goal before this creeps out of control again
-- Maybe just a full solar system N-body simulation on J2000 first
-- Cleanup github repo and properly handle licensing
-- Then handle putting this on a webpage and make a tiny portfolio page with it
-
-# N-body simulation
+> - N-body simulation
 > - Separate component than the orbital component. Maybe even something separate to the physics component entirely
 > - Looking at the space stackexchange it seems imperative to compute all forces before all positions/velocities update
 > - For solar system n-body it seems critical to also use the solar system barycenter as the origin and let the sun move, in contrast with using the sun as the origin for rails simulation (due to how the planet orbits are closer to constant ellipses wrt. the sun)
@@ -429,6 +423,18 @@ response |= ui.add(label);
     > - Comets don't just have one magnitude, they have many
         > - Comet mass estimation
         >     - I think this is impossible given that JPL has *no* mass values for any comet
+
+# N-body simulation
+- Load data from new json databases
+- J2000 simulation with tons of objects
+- Integration sample scenes with known 3-body patterns to test stability
+- Solar system N-body simulation with n largest masses and compare results with those stack exchange answers
+- Cut down on calculations by ignoring some low mass - low mass interactions via some threshold
+
+# Plan out a reachable goal before this creeps out of control again
+- Maybe just a full solar system N-body simulation on J2000 first
+- Cleanup github repo and properly handle licensing
+- Then handle putting this on a webpage and make a tiny portfolio page with it
 
 # Rotation axes: 
 - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
