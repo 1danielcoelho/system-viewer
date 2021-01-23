@@ -394,6 +394,8 @@ response |= ui.add(label);
 >     "magnitude": 2, // abs
 >     "rotation_period": 2, // days (86400s)
 >     "rotation_axis": [0.1, 0.8, 0.2], // J2000 ecliptic rectangular right-handed normalized
+>     "spec_smassii": "Sk", // Spectral class
+>     "spec_tholen": "B", // Spectral class
 >     "osc_elements": [
 >       {
 >         "ref_id": "0", // reference body id
@@ -417,11 +419,11 @@ response |= ui.add(label);
 - Get asteroid and comet entries into the database
     - Elements can come from the downloaded existing files, but we need state vectors
         - They're all heliocentric, so just roll their osc_elements to J2000 and convert (ugh)
-    - Radius estimation from albedo/magnitude
+    > - Radius estimation from albedo/magnitude
     - Radius/mass estimation
     - https://space.stackexchange.com/questions/36/how-can-i-derive-an-asteroid-mass-size-estimate-from-jpl-parameters
     - https://space.stackexchange.com/questions/2882/method-to-estimate-asteroid-density-based-on-spectral-type
-
+    - Comets don't just have one magnitude, they have many
 
 # Rotation axes: 
 - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic

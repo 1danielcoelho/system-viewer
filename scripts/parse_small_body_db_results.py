@@ -5,10 +5,13 @@ import glob
 import numpy as np
 import copy
 from database_utils import save_database, load_database
+from math import sqrt
 
 main_file = "D:/Dropbox/Astronomy/asteroid_comet_elements.csv"
-num_asteroids = 1000
-num_comets = 1000
+spectral_file = "D:/Dropbox/Astronomy/asteroid_comet_spectral.csv"
+num_asteroids = 10000000
+num_comets = 0
+only_with_mass = False  # Only fetch objects whose mass can be estimated
 
 au_to_Mm = 149597.8707
 deg_to_rad = 3.14159265358979323846264 / 180.0
@@ -33,19 +36,6 @@ def add_small_body_data(database):
 
             is_asteroid = line[0] == 'a'
             is_comet = line[0] == 'c'
-            
-            if is_asteroid:
-                asteroid_count += 1
-            elif is_comet:
-                comet_count += 1
-            
-            skip_asteroid = is_asteroid and asteroid_count > num_asteroids
-            skip_comet = is_comet and comet_count > num_comets
-
-            if skip_asteroid and skip_comet:
-                break            
-            elif skip_asteroid or skip_comet:
-                continue
 
             vals = line.split(',')
             body_id = vals[0]
@@ -61,21 +51,24 @@ def add_small_body_data(database):
             body = {}
             body['name'] = body_name
             body['type'] = 'asteroid' if is_asteroid else 'comet'
-            
-            if body_diameter:
-                body['radius'] = float(body_diameter) / 2000.0
 
             if body_H:
                 body['magnitude'] = float(body_H)
 
             if body_albedo:
                 body['albedo'] = float(body_albedo)
-            
+
+            if body_diameter:
+                body['radius'] = float(body_diameter) / 2000.0
+
             if body_rot_per:
                 body['rotation_period'] = float(body_rot_per) / 24.0
 
             if body_gm:
                 body['mass'] = float(body_gm) / G
+            else:
+                if only_with_mass:
+                    continue
 
             elements = {}
             elements['ref_id'] = '10'  # All heliocentric
@@ -88,11 +81,57 @@ def add_small_body_data(database):
             elements['M'] = float(vals[17]) * deg_to_rad
             elements['p'] = float(vals[19])
 
+            if is_asteroid:
+                asteroid_count += 1
+            elif is_comet:
+                comet_count += 1
+
+            skip_asteroid = is_asteroid and asteroid_count > num_asteroids
+            skip_comet = is_comet and comet_count > num_comets
+
+            if skip_asteroid and skip_comet:
+                break
+            elif skip_asteroid or skip_comet:
+                continue
+
             body['osc_elements'] = [elements]
             if is_asteroid:
                 db_asteroids[body_id] = body
             else:
                 db_comets[body_id] = body
+
+    with open(spectral_file, "r") as f:
+        # Skip header
+        f.readline()
+
+        while True:
+            line = f.readline()
+            if not line:
+                break
+
+            is_asteroid = line[0] == 'a'
+
+            vals = line.split(',')
+            body_id = vals[0]
+            body_name = vals[1]
+            body_smassii = vals[2].strip()
+            body_tholen = vals[3].strip()
+
+            assert(body_id)
+
+            db = db_asteroids if is_asteroid else db_comets
+            try:
+                body = db[body_id]
+
+                if body_smassii:
+                    body['spec_smassii'] = body_smassii
+
+                if body_tholen:
+                    body['spec_tholen'] = body_tholen
+
+            except KeyError:
+                # print(f"Failed to find body with id {body_id}, name '{body_name}' to unload spectral info into")
+                pass
 
 
 if __name__ == "__main__":
