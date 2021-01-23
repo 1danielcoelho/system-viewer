@@ -160,18 +160,18 @@ def add_horizons_data(database):
                     parsed_elements = {}
                     parsed_elements['epoch'] = float(entry[1])
                     parsed_elements['ref_id'] = ref_id
-                    parsed_elements['eccentricity'] = float(re.findall(eccentricity_re, full_entry)[0])
-                    parsed_elements['periapsis_distance'] = float(re.findall(periapsis_distance_re, full_entry)[0]) * au_to_Mm
-                    parsed_elements['inclination'] = float(re.findall(inclination_re, full_entry)[0]) * deg_to_rad
-                    parsed_elements['long_asc_node'] = float(re.findall(long_asc_node_re, full_entry)[0]) * deg_to_rad
-                    parsed_elements['arg_periapsis'] = float(re.findall(arg_periapsis_re, full_entry)[0]) * deg_to_rad
-                    parsed_elements['time_of_periapsis'] = float(re.findall(time_of_periapsis_re, full_entry)[0])
-                    parsed_elements['mean_motion'] = float(re.findall(mean_motion_re, full_entry)[0]) * deg_to_rad
-                    parsed_elements['mean_anomaly'] = float(re.findall(mean_anomaly_re, full_entry)[0]) * deg_to_rad
-                    parsed_elements['true_anomaly'] = float(re.findall(true_anomaly_re, full_entry)[0]) * deg_to_rad
-                    parsed_elements['semi_major_axis'] = float(re.findall(semi_major_axis_re, full_entry)[0]) * au_to_Mm
-                    parsed_elements['apoapsis_distance'] = float(re.findall(apoapsis_distance_re, full_entry)[0]) * au_to_Mm
-                    parsed_elements['sidereal_orbit_period'] = float(re.findall(sideral_orbit_period_re, full_entry)[0])
+                    parsed_elements['e'] = float(re.findall(eccentricity_re, full_entry)[0])
+                    # parsed_elements['periapsis_distance'] = float(re.findall(periapsis_distance_re, full_entry)[0]) * au_to_Mm
+                    parsed_elements['i'] = float(re.findall(inclination_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['O'] = float(re.findall(long_asc_node_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['w'] = float(re.findall(arg_periapsis_re, full_entry)[0]) * deg_to_rad
+                    # parsed_elements['time_of_periapsis'] = float(re.findall(time_of_periapsis_re, full_entry)[0])
+                    # parsed_elements['mean_motion'] = float(re.findall(mean_motion_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['M'] = float(re.findall(mean_anomaly_re, full_entry)[0]) * deg_to_rad
+                    # parsed_elements['true_anomaly'] = float(re.findall(true_anomaly_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['a'] = float(re.findall(semi_major_axis_re, full_entry)[0]) * au_to_Mm
+                    # parsed_elements['apoapsis_distance'] = float(re.findall(apoapsis_distance_re, full_entry)[0]) * au_to_Mm
+                    parsed_elements['p'] = float(re.findall(sideral_orbit_period_re, full_entry)[0])
                     all_parsed_elements.append(parsed_elements)
 
                 all_parsed_elements.sort(key=lambda els: els['epoch'])

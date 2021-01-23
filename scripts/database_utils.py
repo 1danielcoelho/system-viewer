@@ -107,9 +107,15 @@ def save_database(database):
 
     handle_database_exceptions(database)
 
+    def order(item):
+        try:
+            return float(item[0])
+        except ValueError:
+            return item[0]
+
     # Sort all databases
     for db_name in database.keys():
-        database[db_name] = {k: v for k, v in sorted(database[db_name].items(), key=lambda item: float(item[0]))}
+        database[db_name] = {k: v for k, v in sorted(database[db_name].items(), key=lambda item: order(item))}
 
     # Write database to files
     for filename in database:
