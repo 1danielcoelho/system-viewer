@@ -4,8 +4,7 @@
 
 from math import nan
 from database_utils import load_database, save_database, get_body_by_name
-
-G = 6.67259E-20 # km3/(s2 kg1)
+from constants import *
 
 values = [
     # Name              # GM (km3/s2)   Radius (km) Density(g/cm3) Magnitude    Albedo

@@ -5,17 +5,14 @@ import glob
 import numpy as np
 import copy
 from database_utils import save_database, load_database
+from constants import *
 from math import sqrt
 
 main_file = "D:/Dropbox/Astronomy/asteroid_comet_elements.csv"
 spectral_file = "D:/Dropbox/Astronomy/asteroid_comet_spectral.csv"
-num_asteroids = 10000000
-num_comets = 0
+num_asteroids = 10000
+num_comets = 10000
 only_with_mass = False  # Only fetch objects whose mass can be estimated
-
-au_to_Mm = 149597.8707
-deg_to_rad = 3.14159265358979323846264 / 180.0
-G = 6.67259E-20  # km3/(s2 kg1)
 
 
 def add_small_body_data(database):

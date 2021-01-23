@@ -416,14 +416,19 @@ response |= ui.add(label);
 >   }
 > }
 > ```
-- Get asteroid and comet entries into the database
-    - Elements can come from the downloaded existing files, but we need state vectors
-        - They're all heliocentric, so just roll their osc_elements to J2000 and convert (ugh)
+> - Get asteroid and comet entries into the database
+>     - Elements can come from the downloaded existing files, but we need state vectors
+>         - They're all heliocentric, so just roll their osc_elements to J2000 and convert (ugh)
+>         - Work on testing elements->cartesian conversions in python
+>         - It may still be slightly off because Horizons uses some other osculating element solutions
     > - Radius estimation from albedo/magnitude
-    - Radius/mass estimation
-    - https://space.stackexchange.com/questions/36/how-can-i-derive-an-asteroid-mass-size-estimate-from-jpl-parameters
-    - https://space.stackexchange.com/questions/2882/method-to-estimate-asteroid-density-based-on-spectral-type
-    - Comets don't just have one magnitude, they have many
+    > - Radius/mass estimation
+    > - https://space.stackexchange.com/questions/36/how-can-i-derive-an-asteroid-mass-size-estimate-from-jpl-parameters
+    > - https://space.stackexchange.com/questions/2882/method-to-estimate-asteroid-density-based-on-spectral-type
+    > - Atm we got mass for 23% of all bodies, which should be more than enough
+    > - Comets don't just have one magnitude, they have many
+        > - Comet mass estimation
+        >     - I think this is impossible given that JPL has *no* mass values for any comet
 
 # Rotation axes: 
 - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
