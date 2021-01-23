@@ -4,20 +4,10 @@ import re
 import glob
 import numpy as np
 import copy
+from database_utils import save_database, load_database
 
 horizons_elements_pattern = "D:/Dropbox/Astronomy/horizons_ephemeris_heliocentric/*.txt"
 horizons_vectors_pattern = "D:/Dropbox/Astronomy/horizons_statevectors_ssb_j2000/*.txt"
-
-database_folder = "D:/Dropbox/Astronomy/database"
-files = [
-    "asteroids",
-    "comets",
-    "jovian_satellites",
-    "saturnian_satellites",
-    "other_satellites",
-    "major_bodies",
-    "artificial"
-]
 
 target_body_name_re = re.compile(r"Target body name: ([^;]+?) \((\d+)\)")
 center_body_name_re = re.compile(r"Center body name: ([^;]+?) \((\d+)\)")
@@ -36,6 +26,8 @@ sideral_orbit_period_re = re.compile(r" PR=[\s]*([\d\-+eE.]+)")
 mean_radius_re = re.compile(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)")
 output_type_re = re.compile(r"Output type\s+:(.*)")
 elements_entry_re = re.compile(r"(([\d.]+)[ =,]+A\.D\.[\s\S]+?)(?:(?=[\d.]+[ =,]+A\.D\.)|\Z)")
+geometric_albedo_re = re.compile(r"Geometric Albedo\s+=\s*([\d.]+)\s")
+mass_re = re.compile(r"Mass.*10\^([\d-]+)\s*([\w]+)[\s\)=]+([\d.]+)[\s\(]+10\^([\d-]+)?")
 
 au_to_Mm = 149597.8707
 deg_to_rad = 3.14159265358979323846264 / 180.0
@@ -87,204 +79,163 @@ def get_body_type(body_id):
     raise ValueError('Unexpected body_id ' + str(body_id))
 
 
-# Read existing files and load into maps
-database = {}
-for file in files:
-    database[file] = {}
-    path = os.path.join(database_folder, file + ".json")
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            database[file] = json.load(f)
+def add_horizons_data(database):
+    """ Parse horizons data from files and load it into the database """
 
-# Parse horizons data and load it
-horizon_file_names = glob.glob(horizons_elements_pattern) + glob.glob(horizons_vectors_pattern)
-for filename in horizon_file_names:
-    with open(filename) as f:
-        data = f.read()
+    horizon_file_names = glob.glob(horizons_elements_pattern) + glob.glob(horizons_vectors_pattern)
+    for filename in horizon_file_names:
+        with open(filename) as f:
+            data = f.read()
 
-        name, body_id = re.findall(target_body_name_re, data)[0]
-        ref_name, ref_id = re.findall(center_body_name_re, data)[0]
+            name, body_id = re.findall(target_body_name_re, data)[0]
+            ref_name, ref_id = re.findall(center_body_name_re, data)[0]
 
-        print(name, body_id, ref_name, ref_id)
+            database_name = get_body_database(body_id)
+            db = database[database_name]
 
-        database_name = get_body_database(body_id)
-        db = database[database_name]
+            if body_id not in db:
+                db[body_id] = {}
+            body_entry = db[body_id]
 
-        if body_id not in db:
-            db[body_id] = {}
-        body_entry = db[body_id]
+            body_entry['name'] = name
+            body_entry['type'] = get_body_type(body_id)
+            body_entry['meta'] = {}
 
-        body_entry['name'] = name
-        body_entry['type'] = get_body_type(body_id)
-        body_entry['meta'] = {}
+            # Mass
+            mass_matches = re.findall(mass_re, data)
+            if len(mass_matches) > 0:
+                mass_match = mass_matches[0]
+                exponent = float(mass_match[0])
+                units = mass_match[1]
+                value = float(mass_match[2])
 
-        # Radius
-        radius = 0.0
-        radius_str = re.findall(mean_radius_re, data)
-        if radius_str and radius_str[0] is not ' ':
-            radius_str = radius_str[0]
-            radii = [float(val.strip()) for val in radius_str.split('x')]
-            radius = np.mean(radii)
-        radius /= 1000.0  # Km to Mm
-        body_entry['radius'] = radius
+                assert(units == "kg" or units == "g")
+                if units == "g":
+                    value /= 1000.0
 
-        # Something like ' GEOMETRIC cartesian states' or ' GEOMETRIC osculating elements'
-        horizons_output_type = re.findall(output_type_re, data)[0]
+                # Sometimes they have *another* trailing exponent for some reason
+                # Like for Phobos: 
+                #    Mass (10^20 kg )        =  1.08 (10^-4)
+                if len(mass_match) > 3:
+                    extra_exponent = float(mass_match[3])
+                    value *= 10 ** extra_exponent
 
-        # Clip everything before and after $$SOE and $$EOE, since it sometimes contains
-        # things that trip our re
-        data = re.split(r'\$\$SOE|\$\$EOE', data)[1]
+                mass = value * 10 ** exponent
+                body_entry['mass'] = mass            
 
-        # Orbital elements
-        if 'osculating elements' in horizons_output_type:
-            if 'osc_elements' not in body_entry:
-                body_entry['osc_elements'] = []
-            osc_elements = body_entry['osc_elements']
-            osc_elements.sort(key=lambda els: els['epoch'])
+            # Radius
+            radius = 0.0
+            radius_str = re.findall(mean_radius_re, data)
+            if radius_str and radius_str[0] is not ' ':
+                radius_str = radius_str[0]
+                radii = [float(val.strip()) for val in radius_str.split('x')]
+                radius = np.mean(radii)
+            radius /= 1000.0  # Km to Mm
+            body_entry['radius'] = radius
 
-            all_parsed_elements = []
-            entries = re.findall(elements_entry_re, data)
-            for entry in entries:
-                full_entry = entry[0]
+            # Geometric albedo
+            albedo_str = re.findall(geometric_albedo_re, data)
+            if albedo_str and albedo_str[0] is not ' ':
+                body_entry['albedo'] = float(albedo_str[0])
 
-                parsed_elements = {}
-                parsed_elements['epoch'] = float(entry[1])
-                parsed_elements['ref_id'] = ref_id
-                parsed_elements['eccentricity'] = float(re.findall(eccentricity_re, full_entry)[0])
-                parsed_elements['periapsis_distance'] = float(re.findall(periapsis_distance_re, full_entry)[0]) * au_to_Mm
-                parsed_elements['inclination'] = float(re.findall(inclination_re, full_entry)[0]) * deg_to_rad
-                parsed_elements['long_asc_node'] = float(re.findall(long_asc_node_re, full_entry)[0]) * deg_to_rad
-                parsed_elements['arg_periapsis'] = float(re.findall(arg_periapsis_re, full_entry)[0]) * deg_to_rad
-                parsed_elements['time_of_periapsis'] = float(re.findall(time_of_periapsis_re, full_entry)[0])
-                parsed_elements['mean_motion'] = float(re.findall(mean_motion_re, full_entry)[0]) * deg_to_rad
-                parsed_elements['mean_anomaly'] = float(re.findall(mean_anomaly_re, full_entry)[0]) * deg_to_rad
-                parsed_elements['true_anomaly'] = float(re.findall(true_anomaly_re, full_entry)[0]) * deg_to_rad
-                parsed_elements['semi_major_axis'] = float(re.findall(semi_major_axis_re, full_entry)[0]) * au_to_Mm
-                parsed_elements['apoapsis_distance'] = float(re.findall(apoapsis_distance_re, full_entry)[0]) * au_to_Mm
-                parsed_elements['sidereal_orbit_period'] = float(re.findall(sideral_orbit_period_re, full_entry)[0])
-                all_parsed_elements.append(parsed_elements)
+            # Something like ' GEOMETRIC cartesian states' or ' GEOMETRIC osculating elements'
+            horizons_output_type = re.findall(output_type_re, data)[0]
 
-            all_parsed_elements.sort(key=lambda els: els['epoch'])
+            # Clip everything before and after $$SOE and $$EOE, since it sometimes contains
+            # things that trip our re
+            data = re.split(r'\$\$SOE|\$\$EOE', data)[1]
 
-            for parsed_element in all_parsed_elements:
-                parsed_epoch = parsed_element['epoch']
+            # Orbital elements
+            if 'osculating elements' in horizons_output_type:
+                if 'osc_elements' not in body_entry:
+                    body_entry['osc_elements'] = []
+                osc_elements = body_entry['osc_elements']
+                osc_elements.sort(key=lambda els: els['epoch'])
 
-                found = False
-                for index, element in enumerate(osc_elements):
-                    epoch = element['epoch']
+                all_parsed_elements = []
+                entries = re.findall(elements_entry_re, data)
+                for entry in entries:
+                    full_entry = entry[0]
 
-                    if epoch > parsed_epoch:
-                        break
+                    parsed_elements = {}
+                    parsed_elements['epoch'] = float(entry[1])
+                    parsed_elements['ref_id'] = ref_id
+                    parsed_elements['eccentricity'] = float(re.findall(eccentricity_re, full_entry)[0])
+                    parsed_elements['periapsis_distance'] = float(re.findall(periapsis_distance_re, full_entry)[0]) * au_to_Mm
+                    parsed_elements['inclination'] = float(re.findall(inclination_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['long_asc_node'] = float(re.findall(long_asc_node_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['arg_periapsis'] = float(re.findall(arg_periapsis_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['time_of_periapsis'] = float(re.findall(time_of_periapsis_re, full_entry)[0])
+                    parsed_elements['mean_motion'] = float(re.findall(mean_motion_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['mean_anomaly'] = float(re.findall(mean_anomaly_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['true_anomaly'] = float(re.findall(true_anomaly_re, full_entry)[0]) * deg_to_rad
+                    parsed_elements['semi_major_axis'] = float(re.findall(semi_major_axis_re, full_entry)[0]) * au_to_Mm
+                    parsed_elements['apoapsis_distance'] = float(re.findall(apoapsis_distance_re, full_entry)[0]) * au_to_Mm
+                    parsed_elements['sidereal_orbit_period'] = float(re.findall(sideral_orbit_period_re, full_entry)[0])
+                    all_parsed_elements.append(parsed_elements)
 
-                    if epoch == parsed_epoch and element['ref_id'] == parsed_element['ref_id']:
-                        osc_elements[index] = parsed_element
-                        found = True
-                        break
+                all_parsed_elements.sort(key=lambda els: els['epoch'])
 
-                if not found:
-                    osc_elements.append(parsed_element)
+                for parsed_element in all_parsed_elements:
+                    parsed_epoch = parsed_element['epoch']
 
-        elif 'cartesian states' in horizons_output_type:
-            if 'state_vectors' not in body_entry:
-                body_entry['state_vectors'] = []
-            state_vectors = body_entry['state_vectors']
-            state_vectors.sort(key=lambda vec: vec[0])
+                    found = False
+                    for index, element in enumerate(osc_elements):
+                        epoch = element['epoch']
 
-            all_parsed_vectors = []
-            entries = re.findall(elements_entry_re, data)
-            for entry in entries:
-                full_entry = entry[0]
+                        if epoch > parsed_epoch:
+                            break
 
-                values = full_entry.strip().split(",")
-                epoch = float(values[0])
-                xyz_vxvyvz = [float(val) / 1000.0 for val in values[3:] if val]
+                        if epoch == parsed_epoch and element['ref_id'] == parsed_element['ref_id']:
+                            osc_elements[index] = parsed_element
+                            found = True
+                            break
 
-                parsed_vector = [epoch] + xyz_vxvyvz
-                all_parsed_vectors.append(parsed_vector)
+                    if not found:
+                        osc_elements.append(parsed_element)
 
-            all_parsed_vectors.sort(key=lambda vec: vec[0])
+            elif 'cartesian states' in horizons_output_type:
+                if 'state_vectors' not in body_entry:
+                    body_entry['state_vectors'] = []
+                state_vectors = body_entry['state_vectors']
+                state_vectors.sort(key=lambda vec: vec[0])
 
-            for parsed_vector in all_parsed_vectors:
-                parsed_epoch = parsed_vector[0]
+                all_parsed_vectors = []
+                entries = re.findall(elements_entry_re, data)
+                for entry in entries:
+                    full_entry = entry[0]
 
-                found = False
-                for index, vec in enumerate(state_vectors):
-                    epoch = vec[0]
+                    values = full_entry.strip().split(",")
+                    epoch = float(values[0])
+                    xyz_vxvyvz = [float(val) / 1000.0 for val in values[3:] if val]
 
-                    if epoch > parsed_epoch:
-                        break
+                    parsed_vector = [epoch] + xyz_vxvyvz
+                    all_parsed_vectors.append(parsed_vector)
 
-                    if epoch == parsed_epoch:
-                        state_vectors[index] = parsed_vector
-                        found = True
-                        break
+                all_parsed_vectors.sort(key=lambda vec: vec[0])
 
-                if not found:
-                    state_vectors.append(parsed_vector)
+                for parsed_vector in all_parsed_vectors:
+                    parsed_epoch = parsed_vector[0]
 
-# Handle annoying exceptions
-fake_osc_elements = {
-    "epoch": 2451545.0,
-    "ref_id": "10",
-    "eccentricity": 1,
-    "periapsis_distance": 0,
-    "inclination": 0,
-    "long_asc_node": 0,
-    "arg_periapsis": 0,
-    "time_of_periapsis": 2451545.0,
-    "mean_motion": 0,
-    "mean_anomaly": 0,
-    "true_anomaly": 0,
-    "semi_major_axis": 0,
-    "apoapsis_distance": 0,
-    "sidereal_orbit_period": 1,
-}
-try:    
-    # Sun shouldn't have gotten any osc_elements yet since all our elements are heliocentric
-    database['major_bodies']['10']['osc_elements'] = [fake_osc_elements]
-except KeyError:
-    pass
+                    found = False
+                    for index, vec in enumerate(state_vectors):
+                        epoch = vec[0]
 
-try:    
-    # Mercury Barycenter is the same as Mercury, but we kind of want separate entries for consistency
-    database['major_bodies']['1'] = copy.deepcopy(database['major_bodies']['199'])
-    database['major_bodies']['1']['type'] = 'barycenter'
-    database['major_bodies']['1']['mass'] = 0
-    database['major_bodies']['1']['radius'] = 0
-    database['major_bodies']['1']['albedo'] = 0
-    database['major_bodies']['1']['magnitude'] = 0
-    database['major_bodies']['1']['rotation_period'] = 0
-    database['major_bodies']['1']['rotation_axis'] = [0, 0, 0]
-    del database['major_bodies']['1']['state_vectors']
-    database['major_bodies']['199']['name'] = 'Mercury'
-    database['major_bodies']['199']['osc_elements'] = [copy.deepcopy(fake_osc_elements)]
-    database['major_bodies']['199']['osc_elements'][0]['ref_id'] = '1'
-except KeyError:
-    pass
+                        if epoch > parsed_epoch:
+                            break
 
-try:    
-    # Venus Barycenter is the same as Venus, but we kind of want separate entries for consistency
-    database['major_bodies']['2'] = copy.deepcopy(database['major_bodies']['299'])
-    database['major_bodies']['2']['type'] = 'barycenter'
-    database['major_bodies']['2']['mass'] = 0
-    database['major_bodies']['2']['radius'] = 0
-    database['major_bodies']['2']['albedo'] = 0
-    database['major_bodies']['2']['magnitude'] = 0
-    database['major_bodies']['2']['rotation_period'] = 0
-    database['major_bodies']['2']['rotation_axis'] = [0, 0, 0]
-    del database['major_bodies']['2']['state_vectors']
-    database['major_bodies']['299']['name'] = 'Venus'
-    database['major_bodies']['299']['osc_elements'] = [copy.deepcopy(fake_osc_elements)]
-    database['major_bodies']['299']['osc_elements'][0]['ref_id'] = '2'
-except KeyError:
-    pass
+                        if epoch == parsed_epoch:
+                            state_vectors[index] = parsed_vector
+                            found = True
+                            break
 
-# Sort all databases
-for db_name in database.keys():
-    database[db_name] = {k: v for k, v in sorted(database[db_name].items(), key=lambda item: float(item[0]))}
+                    if not found:
+                        state_vectors.append(parsed_vector)
 
-# Write database to files
-for filename in database:
-    path = os.path.join(database_folder, filename + ".json")
-    with open(path, "w") as f:
-        json.dump(database[filename], f)
+
+if __name__ == "__main__":
+    database = load_database()
+
+    add_horizons_data(database)
+
+    save_database(database)

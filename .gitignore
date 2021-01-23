@@ -4,3 +4,6 @@ node_modules
 package-lock.json
 pkg
 target
+
+/.vscode/.ropeproject/*
+/scripts/__pycache__/*
