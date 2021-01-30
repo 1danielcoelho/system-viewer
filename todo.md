@@ -425,8 +425,8 @@ response |= ui.add(label);
         >     - I think this is impossible given that JPL has *no* mass values for any comet
 
 # Cleanup for MVP
-- Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
-    - Controls to set simulation speed right there
+> - Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
+    > - Controls to set simulation speed right there
     - Option to reset to start
     - Option to go back to splash screen
     - Object list (can click to go to and track)
@@ -434,7 +434,7 @@ response |= ui.add(label);
 - Initial splash screen with picker for different scenes
     - Scenes can be baked in, and load a subset of objects from json each
     - Load data from new json databases, J2000 N-body simulation
-- Show object name on hover
+- Show object name on hover, open details on click
 - Track object on click
 - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
 - Okay-ish results on the simulation for now, we can improve later

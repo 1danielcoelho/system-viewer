@@ -17,6 +17,8 @@ use std::collections::VecDeque;
 
 pub mod details_ui;
 
+const DEBUG: bool = false;
+
 #[macro_export]
 macro_rules! handle_output {
     ($s:ident, $e:expr) => {{
@@ -65,6 +67,7 @@ struct OpenWindows {
     debug: bool,
     scene_man: bool,
     scene_hierarchy: bool,
+    about: bool,
 }
 
 pub struct InterfaceManager {
@@ -87,6 +90,7 @@ impl InterfaceManager {
                 debug: true,
                 scene_man: false,
                 scene_hierarchy: false,
+                about: false,
             },
             selected_scene_name: String::new(),
             frame_times: vec![16.66; 15].into_iter().collect(),
@@ -200,121 +204,6 @@ impl InterfaceManager {
             ui.ctx().set_style(style);
 
             egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
-                // egui::menu::bar(ui, |ui| {
-                //     egui::menu::menu(ui, "File", |ui| {
-                //         if ui.button("New").clicked {
-                //             let new_scene_name =
-                //                 scene_man.new_scene("New scene").unwrap().identifier.clone();
-                //             scene_man.set_scene(&new_scene_name, res_man);
-                //         }
-
-                //         if ui.button("Open").clicked {
-                //             prompt_for_text_file("scene", ".ron");
-                //         }
-
-                //         if ui.button("Save").clicked {
-                //             if let Some(scene) = scene_man.get_main_scene() {
-                //                 let ser_str = scene.serialize();
-                //                 write_string_to_file_prompt(
-                //                     &format!("{}.ron", &scene.identifier),
-                //                     &ser_str,
-                //                 );
-                //             } else {
-                //                 log::warn!("Clicked Save but no scene is currently loaded!");
-                //             }
-                //         }
-
-                //         ui.separator();
-
-                //         if ui.button("Close").clicked {
-                //             let new_scene_name =
-                //                 scene_man.new_scene("New scene").unwrap().identifier.clone();
-                //             scene_man.set_scene(&new_scene_name, res_man);
-                //         }
-                //     });
-
-                //     egui::menu::menu(ui, "Edit", |ui| {
-                //         if ui.button("Inject GLB...").clicked {
-                //             prompt_for_bytes_file("glb_inject", ".glb");
-                //         }
-
-                //         if ui.button("Inject orbital elements CSV...").clicked {
-                //             prompt_for_text_file("csv_inject", ".csv");
-                //         }
-                //     });
-
-                //     egui::menu::menu(ui, "Window", |ui| {
-                //         if ui.button("Debug").clicked {
-                //             self.open_windows.debug = !self.open_windows.debug;
-                //         }
-
-                //         if ui.button("Scene manager").clicked {
-                //             self.open_windows.scene_man = !self.open_windows.scene_man;
-                //         }
-
-                //         if ui.button("Scene hierarchy").clicked {
-                //             self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
-                //         }
-
-                //         ui.separator();
-
-                //         if ui.button("Organize windows").clicked {
-                //             ui.ctx().memory().reset_areas();
-                //         }
-
-                //         if ui.button("Close all").clicked {
-                //             self.open_windows.debug = false;
-                //             self.open_windows.scene_man = false;
-                //             self.open_windows.scene_hierarchy = false;
-                //         }
-                //     });
-
-                //     egui::menu::menu(ui, "Tools", |ui| {
-                //         if ui
-                //             .button("Clear Egui memory")
-                //             .on_hover_text("Forget scroll, collapsing headers etc")
-                //             .clicked
-                //         {
-                //             *ui.ctx().memory() = Default::default();
-                //         }
-
-                //         if ui
-                //             .button("Reset app state")
-                //             .on_hover_text("Clears app state from local storage")
-                //             .clicked
-                //         {
-                //             state.pending_reset = true;
-                //         }
-                //     });
-
-                //     let time = state.real_time_s;
-                //     let time = format!(
-                //         "{:02}:{:02}:{:02}.{:02}",
-                //         (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
-                //         (time % (60.0 * 60.0) / 60.0).floor(),
-                //         (time % 60.0).floor(),
-                //         (time % 1.0 * 100.0).floor()
-                //     );
-
-                //     ui.with_layout(egui::Layout::right_to_left(), |ui| {
-                //         if ui
-                //             .add(egui::Button::new(time).text_style(egui::TextStyle::Monospace))
-                //             .clicked
-                //         {
-                //             log::info!("Clicked on clock!");
-                //         }
-                //     });
-                // });
-
-                let time = state.real_time_s;
-                let time = format!(
-                    "{:02}:{:02}:{:02}.{:02}",
-                    (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
-                    (time % (60.0 * 60.0) / 60.0).floor(),
-                    (time % 60.0).floor(),
-                    (time % 1.0 * 100.0).floor()
-                );
-
                 let num_bodies = scene_man
                     .get_main_scene()
                     .unwrap()
@@ -326,19 +215,139 @@ impl InterfaceManager {
                     julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
                 );
 
-                ui.with_layout(egui::Layout::right_to_left(), |ui| {
-                    if ui
-                        .add(egui::Button::new("⚙").text_style(egui::TextStyle::Monospace))
-                        .clicked
-                    {
-                        log::info!("Clicked on clock!");
-                    }
+                ui.with_layout(egui::Layout::left_to_right(), |ui| {
+                    egui::menu::menu(ui, "⚙", |ui| {
+                        if ui.button("Reset scene").clicked {}
+
+                        if ui.button("Open scene").clicked {}
+
+                        ui.separator();
+
+                        if ui.button("About").clicked {
+                            self.open_windows.about = !self.open_windows.about;
+                        }
+
+                        if DEBUG {
+                            ui.separator();
+                            ui.separator();
+
+                            if ui.button("New").clicked {
+                                let new_scene_name =
+                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
+                                scene_man.set_scene(&new_scene_name, res_man);
+                            }
+
+                            if ui.button("Open").clicked {
+                                prompt_for_text_file("scene", ".ron");
+                            }
+
+                            if ui.button("Save").clicked {
+                                if let Some(scene) = scene_man.get_main_scene() {
+                                    let ser_str = scene.serialize();
+                                    write_string_to_file_prompt(
+                                        &format!("{}.ron", &scene.identifier),
+                                        &ser_str,
+                                    );
+                                } else {
+                                    log::warn!("Clicked Save but no scene is currently loaded!");
+                                }
+                            }
+
+                            ui.separator();
+
+                            if ui.button("Close").clicked {
+                                let new_scene_name =
+                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
+                                scene_man.set_scene(&new_scene_name, res_man);
+                            }
+
+                            if ui.button("Inject GLB...").clicked {
+                                prompt_for_bytes_file("glb_inject", ".glb");
+                            }
+
+                            if ui.button("Inject orbital elements CSV...").clicked {
+                                prompt_for_text_file("csv_inject", ".csv");
+                            }
+
+                            ui.separator();
+
+                            if ui.button("Debug").clicked {
+                                self.open_windows.debug = !self.open_windows.debug;
+                            }
+
+                            if ui.button("Scene manager").clicked {
+                                self.open_windows.scene_man = !self.open_windows.scene_man;
+                            }
+
+                            if ui.button("Scene hierarchy").clicked {
+                                self.open_windows.scene_hierarchy =
+                                    !self.open_windows.scene_hierarchy;
+                            }
+
+                            ui.separator();
+
+                            if ui.button("Organize windows").clicked {
+                                ui.ctx().memory().reset_areas();
+                            }
+
+                            if ui.button("Close all").clicked {
+                                self.open_windows.debug = false;
+                                self.open_windows.scene_man = false;
+                                self.open_windows.scene_hierarchy = false;
+                            }
+
+                            ui.separator();
+
+                            if ui
+                                .button("Clear Egui memory")
+                                .on_hover_text("Forget scroll, collapsing headers etc")
+                                .clicked
+                            {
+                                *ui.ctx().memory() = Default::default();
+                            }
+
+                            if ui
+                                .button("Reset app state")
+                                .on_hover_text("Clears app state from local storage")
+                                .clicked
+                            {
+                                state.pending_reset = true;
+                            }
+                        }
+                    });
 
                     if ui
                         .add(
                             egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
                                 .text_style(egui::TextStyle::Monospace),
                         )
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+
+                    let mut sim_speed_in_units = match state.simulation_scale {
+                        SimulationScale::Seconds => state.simulation_speed * 86400.0,
+                        SimulationScale::Days => state.simulation_speed,
+                        SimulationScale::Years => state.simulation_speed / 365.0,
+                    };
+
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::DragValue::f64(&mut sim_speed_in_units)
+                                .speed(0.001)
+                                .suffix("x speed"),
+                        );
+                    });
+
+                    state.simulation_speed = match state.simulation_scale {
+                        SimulationScale::Seconds => sim_speed_in_units / 86400.0,
+                        SimulationScale::Days => sim_speed_in_units,
+                        SimulationScale::Years => sim_speed_in_units * 365.0,
+                    };
+
+                    if ui
+                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
                         .clicked
                     {
                         log::info!("Clicked on clock!");
@@ -351,22 +360,32 @@ impl InterfaceManager {
                         )
                         .clicked
                     {
-                        log::info!("Clicked on clock!");
+                        self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
                     }
 
-                    if ui
-                        .add(egui::Button::new(time).text_style(egui::TextStyle::Monospace))
-                        .clicked
-                    {
-                        log::info!("Clicked on clock!");
-                    }
+                    ui.horizontal(|ui| {
+                        let ref_name = match scene_man.get_main_scene() {
+                            Some(scene) => match state.camera.reference_entity {
+                                Some(reference) => {
+                                    scene.get_entity_name(reference).unwrap_or_default()
+                                }
+                                None => "Not tracking",
+                            },
+                            None => "No scene!",
+                        };
 
-                    if ui
-                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
-                        .clicked
-                    {
-                        log::info!("Clicked on clock!");
-                    }
+                        let clear_resp = ui
+                            .add(
+                                egui::Button::new("🗑")
+                                    .enabled(state.camera.reference_entity.is_some()),
+                            )
+                            .on_hover_text("Stop tracking this body");
+                        if clear_resp.clicked {
+                            state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+                        }
+
+                        ui.label(ref_name);
+                    });
                 });
             });
 
@@ -389,6 +408,8 @@ impl InterfaceManager {
         if let Some(main_scene) = scene_man.get_main_scene() {
             self.draw_scene_hierarchy_window(state, main_scene);
         }
+
+        self.draw_about_window(state);
     }
 
     fn draw_debug_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -728,6 +749,37 @@ impl InterfaceManager {
                 });
 
             self.open_windows.scene_man = open_window;
+
+            if let Some(response) = response {
+                handle_output!(state, response);
+            }
+        });
+    }
+
+    fn draw_about_window(&mut self, state: &mut AppState) {
+        UICTX.with(|ui| {
+            let ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_ref().unwrap();
+
+            let mut open_window = self.open_windows.about;
+
+            let response = egui::Window::new("About")
+                .open(&mut open_window)
+                .scroll(false)
+                .resizable(false)
+                .fixed_size(egui::vec2(400.0, 400.0))
+                .show(&ui.ctx(), |ui| {
+                    ui.label("This is a simple, custom N-body simulation 3D engine written for the web.");
+                    ui.label("\nIt uses simple semi-implicit Euler integration to calculate the effect of gravity at each timestep.\nInitial J2000 state vectors were collected from NASA's HORIZONS system, and when required evolved to J2000 using the mean orbital elements (e.g. for asteroids).");
+                    ui.label("\nIt is fully written in Rust (save for some glue code), and compiled to WebAssembly via wasm_bindgen, which includes WebGL2 bindings.");
+                    ui.label("The 3D engine uses a data-oriented entity component system in order to maximize performance, and the Egui immediate mode GUI library, also written in pure Rust.");
+                    ui.horizontal_wrapped_for_text(egui::TextStyle::Body, |ui| {
+                        ui.label("\nProject home page:");
+                        ui.hyperlink("https://github.com/1danielcoelho/system-viewer");
+                    });
+                });
+
+            self.open_windows.about = open_window;
 
             if let Some(response) = response {
                 handle_output!(state, response);
