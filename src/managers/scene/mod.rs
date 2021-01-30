@@ -1,12 +1,9 @@
 use super::ResourceManager;
+use crate::components::light::LightType;
+use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
+use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
-use crate::{
-    components::{
-        light::LightType, LightComponent, MeshComponent, PhysicsComponent, TransformComponent,
-    },
-    managers::resource::material::{UniformName, UniformValue},
-    utils::{string::get_unique_name, transform::Transform, vec::RemoveItem},
-};
+use crate::utils::{string::get_unique_name, transform::Transform, vec::RemoveItem};
 use na::Vector3;
 use rand::Rng;
 use std::collections::HashMap;
@@ -17,7 +14,6 @@ pub mod component_storage;
 pub mod gltf;
 pub mod orbits;
 mod scene;
-mod serialization;
 
 pub struct SceneManager {
     main: Option<String>,
@@ -33,37 +29,6 @@ impl SceneManager {
             loaded_scenes: HashMap::new(),
             sorted_loaded_scene_names: Vec::new(),
         };
-    }
-
-    pub fn deserialize_scene(&mut self, ron_str: &str) -> Option<&mut Scene> {
-        let scene = Scene::deserialize(ron_str);
-        if scene.is_err() {
-            log::error!(
-                "Failed to deserialize scene. Error:\n{}",
-                scene.err().unwrap()
-            );
-            return None;
-        }
-        let mut scene = scene.unwrap();
-
-        let unique_scene_name = get_unique_name(&scene.identifier, &self.loaded_scenes);
-
-        log::info!(
-            "Deserialized scene with name '{}'. New name: '{}'",
-            &scene.identifier,
-            unique_scene_name
-        );
-        scene.identifier = unique_scene_name.clone();
-
-        assert!(!self.loaded_scenes.contains_key(&unique_scene_name));
-
-        self.loaded_scenes.insert(unique_scene_name.clone(), scene);
-        let scene_in_storage = self.loaded_scenes.get_mut(&unique_scene_name);
-
-        self.sorted_loaded_scene_names.push(unique_scene_name);
-        self.sorted_loaded_scene_names.sort();
-
-        return scene_in_storage;
     }
 
     pub fn new_scene(&mut self, scene_name: &str) -> Option<&mut Scene> {

@@ -35,6 +35,7 @@ pub fn force_full_canvas(canvas: &HtmlCanvasElement) {
         .expect("Failed to set height!");
 }
 
+#[allow(dead_code)]
 pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
     let window = web_sys::window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");

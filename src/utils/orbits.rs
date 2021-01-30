@@ -31,7 +31,7 @@ lazy_static! {
 }
 
 /// Mm3 / (kg s2)
-pub const GRAVITATION_CONSTANT: f64 = 6.743E-29; 
+pub const GRAVITATION_CONSTANT: f64 = 6.743E-29;
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
 
@@ -96,72 +96,6 @@ fn string_from_match(s: &str, regex: &Regex) -> Option<String> {
         .captures(s)
         .and_then(|c| c.get(1))
         .and_then(|m| Some(m.as_str().to_owned()));
-}
-
-pub fn parse_csv_lines(file_str: &str) -> Result<Vec<BodyDescription>, String> {
-    let mut results = Vec::new();
-    for line in file_str.lines() {
-        results.push(parse_csv_line(line)?);
-    }
-
-    return Ok(results);
-}
-
-pub fn parse_csv_line(line_str: &str) -> Result<BodyDescription, String> {
-    let elements: Vec<&str> = line_str.split(",").collect();
-
-    const EXPECTED: usize = 12;
-    if elements.len() != EXPECTED {
-        return Err(format!(
-            "Incorrect number of elements in csv line! Expected: {}. Found: {}",
-            EXPECTED,
-            elements.len()
-        ));
-    }
-
-    // Body data
-    let id: u32 = elements[0].parse::<u32>().map_err(|err| err.to_string())?;
-    let name: String = elements[1].to_owned();
-    let reference_id: u32 = elements[2].parse::<u32>().map_err(|err| err.to_string())?;
-    let body_type: BodyType = match elements[3] {
-        "star" => BodyType::Star,
-        "planet" => BodyType::Planet,
-        "system barycenter" => BodyType::Barycenter,
-        "satellite" => BodyType::Moon,
-        _ => BodyType::Other,
-    };
-    let mean_radius: Mm = Mm(elements[10].parse::<f64>().map_err(|err| err.to_string())?);
-    let sidereal_orbit_period_days: f64 =
-        elements[11].parse::<f64>().map_err(|err| err.to_string())?;
-
-    // Orbit data
-    let semi_major_axis: Mm = Mm(elements[4].parse::<f64>().map_err(|err| err.to_string())?);
-    let eccentricity: f64 = elements[5].parse::<f64>().map_err(|err| err.to_string())?;
-    let inclination: Rad = Deg(elements[6].parse::<f64>().map_err(|err| err.to_string())?).to_rad();
-    let long_asc_node: Rad =
-        Deg(elements[7].parse::<f64>().map_err(|err| err.to_string())?).to_rad();
-    let arg_periapsis: Rad =
-        Deg(elements[8].parse::<f64>().map_err(|err| err.to_string())?).to_rad();
-    let mean_anomaly_0: Rad =
-        Deg(elements[9].parse::<f64>().map_err(|err| err.to_string())?).to_rad();
-
-    return Ok(BodyDescription {
-        id,
-        name,
-        reference_id,
-        body_type,
-        mass: 0.0, // TODO
-        mean_radius,
-        orbital_elements: OrbitalElements {
-            semi_major_axis,
-            eccentricity,
-            inclination,
-            long_asc_node,
-            arg_periapsis,
-            mean_anomaly_0,
-            sidereal_orbit_period_days,
-        },
-    });
 }
 
 #[allow(dead_code)]
@@ -443,7 +377,6 @@ pub fn get_eccentric_anomaly(mut date: Jdn, orbital_period: f64, baked_times: &V
         }
         #[allow(non_snake_case)]
         Err(prev_index) => {
-
             let next_index = (prev_index + 1) % baked_times.len();
 
             let prev_date = baked_times[prev_index];

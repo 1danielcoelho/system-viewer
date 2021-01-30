@@ -6,13 +6,10 @@ use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
-use crate::utils::web::write_string_to_file_prompt;
-use crate::{prompt_for_bytes_file, prompt_for_text_file, UICTX};
-use egui::Srgba;
+use crate::{prompt_for_bytes_file, UICTX};
 use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::{Matrix4, Point3, Translation3, Vector3};
-use std::borrow::BorrowMut;
 use std::collections::VecDeque;
 
 pub mod details_ui;
@@ -241,21 +238,9 @@ impl InterfaceManager {
                                 scene_man.set_scene(&new_scene_name, res_man);
                             }
 
-                            if ui.button("Open").clicked {
-                                prompt_for_text_file("scene", ".ron");
-                            }
+                            if ui.button("Open").clicked {}
 
-                            if ui.button("Save").clicked {
-                                if let Some(scene) = scene_man.get_main_scene() {
-                                    let ser_str = scene.serialize();
-                                    write_string_to_file_prompt(
-                                        &format!("{}.ron", &scene.identifier),
-                                        &ser_str,
-                                    );
-                                } else {
-                                    log::warn!("Clicked Save but no scene is currently loaded!");
-                                }
-                            }
+                            if ui.button("Save").clicked {}
 
                             ui.separator();
 
@@ -267,10 +252,6 @@ impl InterfaceManager {
 
                             if ui.button("Inject GLB...").clicked {
                                 prompt_for_bytes_file("glb_inject", ".glb");
-                            }
-
-                            if ui.button("Inject orbital elements CSV...").clicked {
-                                prompt_for_text_file("csv_inject", ".csv");
                             }
 
                             ui.separator();

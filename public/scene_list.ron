@@ -1,0 +1,32 @@
+SceneList(
+    scenes: [
+        SceneDescription(
+            name: "Planets and inner moons",
+            description: "Solar system barycenter, Sun, barycenters of all planets, all major planets, the Moon, Phobos and Deimos",
+            time: "J2000",
+            simulation_scale: "500.0",
+            reference: "",
+            camera_pos: [0.0, 100.0, 200.0],
+            camera_target: [0.0, 0.0, 0.0],
+            camera_up: [0.0, 0.0, 1.0],
+            bodies: {
+                "major_bodies": ["0", "1", "199", "2", "299", "3", "399", "4", "499", "5", "599", "6", "699", "7", "799","8", "899", "9", "999", "10"],
+                "other_satellites": ["301", "401", "402"],
+            }     
+        ),
+        SceneDescription(
+            name: "Jupiter system",
+            description: "Solar system barycenter, Sun, Jupiter and it's system barycenter, as well as 10 of its moons",
+            time: "J2000",
+            simulation_scale: "500.0",
+            reference: "599",
+            camera_pos: [0.0, 100.0, 200.0],
+            camera_target: [0.0, 0.0, 0.0],
+            camera_up: [0.0, 0.0, 1.0],
+            bodies: {
+                "major_bodies": ["0", "5", "599", "10"],
+                "jovian_satellites": ["501", "502", "503", "504", "505", "506", "507", "508", "509", "510"]
+            }     
+        ),
+    ]    
+)

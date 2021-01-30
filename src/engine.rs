@@ -1,10 +1,7 @@
-use crate::{
-    app_state::AppState,
-    managers::{
-        scene::SceneManager, EventManager, InputManager, InterfaceManager, ResourceManager,
-        SystemManager,
-    },
-    utils::orbits::parse_csv_lines,
+use crate::app_state::AppState;
+use crate::managers::scene::SceneManager;
+use crate::managers::{
+    EventManager, InputManager, InterfaceManager, ResourceManager, SystemManager,
 };
 
 pub struct Engine {
@@ -55,12 +52,8 @@ impl Engine {
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
         match content_type {
-            "csv_inject" => self.receive_csv_inject(url, text),
-            "scene" => {
-                let scene = self.scene_man.deserialize_scene(text);
-                let name = scene.unwrap().identifier.to_owned();
-
-                self.scene_man.set_scene(&name, &mut self.res_man);
+            "scene_list" => {
+                log::info!("Received data {}", text);
             }
             _ => log::error!(
                 "Unexpected content_type for receive_text: '{}'. url: '{}'",
@@ -80,27 +73,6 @@ impl Engine {
                 content_type,
                 url
             ),
-        }
-    }
-
-    fn receive_csv_inject(&mut self, url: &str, text: &str) {
-        match parse_csv_lines(text) {
-            Ok(mut results) => {
-                log::info!(
-                    "Loaded {} orbiting bodies from csv file '{}'",
-                    results.len(),
-                    url
-                );
-
-                // Make sure that parent bodies always come before their children
-                results.sort_by(|a, b| a.id.cmp(&b.id));
-
-                self.scene_man
-                    .load_bodies_into_scene(&results, &mut self.res_man);
-            }
-            Err(msg) => {
-                log::error!("Error parsing csv file:\n{}", msg);
-            }
         }
     }
 

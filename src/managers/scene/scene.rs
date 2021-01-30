@@ -5,7 +5,6 @@ use crate::components::{
 use crate::managers::scene::component_storage::{
     ComponentStorage, HashStorage, PackedStorage, SparseStorage,
 };
-use crate::managers::scene::serialization::{SerEntity, SerScene};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{BinaryHeap, HashMap, HashSet};
@@ -13,7 +12,7 @@ use std::rc::Rc;
 use std::{cmp::Reverse, hash::Hash};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
-pub struct Entity(pub u32); // temp
+pub struct Entity(u32);
 impl PartialEq for Entity {
     fn eq(&self, other: &Self) -> bool {
         return self.0 == other.0;
@@ -546,129 +545,5 @@ impl Scene {
 
         self.transform.resize(min_length);
         self.mesh.resize(min_length);
-    }
-}
-
-// Serialization interface
-impl Scene {
-    /** Internal use. Use SceneManager::deserialize_scene */
-    pub(super) fn deserialize(ron_str: &str) -> Result<Self, String> {
-        let ser_scene: SerScene = ron::de::from_str(ron_str)
-            .map_err(|e| format!("RON Deserialization error:\n{}", e).to_owned())?;
-
-        let mut new_scene = Self::new(ser_scene.identifier);
-        new_scene.reserve_space_for_entities(ser_scene.entities.len() as u32);
-
-        // First add entries for all entities
-        for ser_ent in ser_scene.entities.iter() {
-            new_scene.new_entity(ser_ent.name);
-        }
-
-        // Parent/child relationships
-        for (index, ser_ent) in ser_scene.entities.iter().enumerate() {
-            if ser_ent.parent.is_none() {
-                continue;
-            }
-
-            new_scene.set_entity_parent(
-                new_scene
-                    .get_entity_from_index(ser_ent.parent.unwrap().0)
-                    .unwrap(),
-                new_scene.get_entity_from_index(index as u32).unwrap(),
-            );
-        }
-
-        // Since our scene is empty, we can just use the Entities as they were in the serialized
-        // scene, regardless of what that is
-        new_scene.physics = ser_scene.physics;
-        new_scene.mesh = ser_scene.mesh;
-        new_scene
-            .mesh
-            .set_entity_to_index(new_scene.entity_to_index.clone());
-        new_scene.transform = ser_scene.transform;
-        new_scene
-            .transform
-            .set_entity_to_index(new_scene.entity_to_index.clone());
-        new_scene.light = ser_scene.light;
-        new_scene.orbital = ser_scene.orbital;
-
-        return Ok(new_scene);
-    }
-
-    pub fn serialize(&self) -> String {
-        // For the serialized scene we temporarily use Entities as if they're just indices
-        let _unused = Rc::new(RefCell::new(HashMap::new()));
-        let mut ser_scene = SerScene {
-            identifier: &self.identifier,
-            entities: Vec::new(),
-            physics: PackedStorage::new(),
-            mesh: SparseStorage::new(_unused.clone()),
-            transform: SparseStorage::new(_unused.clone()),
-            light: HashStorage::new(),
-            orbital: HashStorage::new(),
-        };
-
-        let mut index_to_packed_index: Vec<u32> = Vec::new();
-        let mut ent_to_packed_ent: HashMap<Entity, Entity> = HashMap::new();
-
-        index_to_packed_index.resize(self.entity_storage.len(), 0);
-        ser_scene.entities.reserve(self.entity_storage.len());
-
-        // Add packed entities, still referencing indices of parent/childs from the non-serialized scene
-        for (index, entry) in self.entity_storage.iter().enumerate() {
-            if !entry.live {
-                continue;
-            }
-
-            let packed_ent = Entity(index as u32);
-            let parent_index = entry.parent.and_then(|p| self.get_entity_index(p));
-            let child_indices: Vec<Entity> = entry
-                .children
-                .iter()
-                .map(|c| Entity(self.get_entity_index(*c).unwrap()))
-                .collect();
-
-            index_to_packed_index[index] = ser_scene.entities.len() as u32;
-
-            ser_scene.entities.push(SerEntity {
-                name: entry.name.as_ref().and_then(|n| Some(n.as_ref())),
-                entity: packed_ent,
-                parent: parent_index.and_then(|p| Some(Entity(p))),
-                children: child_indices,
-            });
-
-            ent_to_packed_ent.insert(entry.current, packed_ent);
-        }
-
-        // Now that all our entities are packed, update the parent/child references to the packed entities vec
-        for ent in ser_scene.entities.iter_mut() {
-            ent.parent = ent
-                .parent
-                .and_then(|p| Some(Entity(index_to_packed_index[p.0 as usize])));
-
-            ent.children = ent
-                .children
-                .iter()
-                .map(|c| Entity(index_to_packed_index[c.0 as usize]))
-                .collect();
-        }
-
-        ser_scene
-            .physics
-            .copy_from_other(&self.physics, &ent_to_packed_ent);
-        ser_scene
-            .mesh
-            .copy_from_other(&self.mesh, &index_to_packed_index);
-        ser_scene
-            .transform
-            .copy_from_other(&self.transform, &index_to_packed_index);
-        ser_scene
-            .light
-            .copy_from_other(&self.light, &ent_to_packed_ent);
-        ser_scene
-            .orbital
-            .copy_from_other(&self.orbital, &ent_to_packed_ent);
-
-        return ron::ser::to_string_pretty(&ser_scene, ron::ser::PrettyConfig::new()).unwrap();
     }
 }
