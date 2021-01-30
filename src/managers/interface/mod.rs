@@ -62,7 +62,6 @@ pub fn handle_output_func(state: &mut AppState, output: egui::Response) {
 
 struct OpenWindows {
     debug: bool,
-    scene_man: bool,
     scene_hierarchy: bool,
     scene_browser: bool,
     about: bool,
@@ -72,7 +71,7 @@ pub struct InterfaceManager {
     backend: gui_backend::WebBackend,
     web_input: WebInput,
     open_windows: OpenWindows,
-    selected_scene_name: String,
+    selected_scene_desc_index: Option<u32>,
 
     frame_times: VecDeque<f64>,
     time_of_last_update: f64,
@@ -86,12 +85,11 @@ impl InterfaceManager {
             web_input: Default::default(),
             open_windows: OpenWindows {
                 debug: false,
-                scene_man: false,
                 scene_hierarchy: false,
                 scene_browser: true,
                 about: false,
             },
-            selected_scene_name: String::new(),
+            selected_scene_desc_index: None,
             frame_times: vec![16.66; 15].into_iter().collect(),
             time_of_last_update: -2.0,
             last_frame_rate: 60.0, // Optimism
@@ -260,10 +258,6 @@ impl InterfaceManager {
                                 self.open_windows.debug = !self.open_windows.debug;
                             }
 
-                            if ui.button("Scene manager").clicked {
-                                self.open_windows.scene_man = !self.open_windows.scene_man;
-                            }
-
                             if ui.button("Scene hierarchy").clicked {
                                 self.open_windows.scene_hierarchy =
                                     !self.open_windows.scene_hierarchy;
@@ -277,8 +271,9 @@ impl InterfaceManager {
 
                             if ui.button("Close all").clicked {
                                 self.open_windows.debug = false;
-                                self.open_windows.scene_man = false;
                                 self.open_windows.scene_hierarchy = false;
+                                self.open_windows.about = false;
+                                self.open_windows.scene_browser = false;
                             }
 
                             ui.separator();
@@ -388,7 +383,6 @@ impl InterfaceManager {
         res_man: &mut ResourceManager,
     ) {
         self.draw_debug_window(state, scene_man);
-        self.draw_scene_manager_window(state, scene_man, res_man);
 
         if let Some(main_scene) = scene_man.get_main_scene() {
             self.draw_scene_hierarchy_window(state, main_scene);
@@ -632,116 +626,6 @@ impl InterfaceManager {
         });
     }
 
-    fn draw_scene_manager_window(
-        &mut self,
-        state: &mut AppState,
-        scene_man: &mut SceneManager,
-        res_man: &mut ResourceManager,
-    ) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
-            let mut open_window = self.open_windows.scene_man;
-
-            let response = egui::Window::new("Scene manager")
-                .open(&mut open_window)
-                .scroll(false)
-                .resizable(false)
-                .fixed_size(egui::vec2(600.0, 300.0))
-                .show(&ui.ctx(), |ui| {
-                    ui.columns(2, |cols| {
-                        cols[0].set_min_height(300.0);
-                        cols[1].set_min_height(300.0);
-
-                        let main_name = scene_man
-                            .get_main_scene_name()
-                            .as_ref()
-                            .and_then(|s| Some(s.clone()))
-                            .unwrap_or_default();
-
-                        egui::Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
-                            ui.set_min_height(ui.available_size().y);
-
-                            egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                                if self.selected_scene_name.is_empty() {
-                                    self.selected_scene_name = main_name.clone();
-                                }
-                                for scene in scene_man.sorted_loaded_scene_names.iter() {
-                                    ui.radio_value(&mut self.selected_scene_name, scene.clone(), {
-                                        if scene == &main_name {
-                                            scene.to_owned() + " (active)"
-                                        } else {
-                                            scene.clone()
-                                        }
-                                    });
-                                }
-                            });
-                        });
-
-                        if let Some(scene) = scene_man.get_scene(&self.selected_scene_name) {
-                            egui::CollapsingHeader::new("Selected scene:")
-                                .default_open(true)
-                                .show(&mut cols[1], |ui| {
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Name:");
-                                        cols[1].label(&scene.identifier);
-                                    });
-
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Entities:");
-                                        cols[1].label(format!("{}", scene.get_num_entities()));
-                                    });
-                                });
-
-                            cols[1].with_layout(
-                                egui::Layout::bottom_up(egui::Align::right()),
-                                |ui| {
-                                    ui.horizontal(|ui| {
-                                        if ui
-                                            .add(
-                                                egui::Button::new("Delete")
-                                                    .enabled(self.selected_scene_name != main_name),
-                                            )
-                                            .clicked
-                                        {
-                                            scene_man.delete_scene(&self.selected_scene_name);
-                                        }
-
-                                        if ui.button("Load").clicked {
-                                            scene_man.set_scene(&self.selected_scene_name, res_man);
-                                        }
-
-                                        if ui
-                                            .add(
-                                                egui::Button::new("Add")
-                                                    .enabled(self.selected_scene_name != main_name),
-                                            )
-                                            .clicked
-                                        {
-                                            scene_man
-                                                .inject_scene(
-                                                    &self.selected_scene_name,
-                                                    None,
-                                                    res_man,
-                                                )
-                                                .unwrap();
-                                        }
-                                    });
-                                },
-                            );
-                        }
-                    });
-                });
-
-            self.open_windows.scene_man = open_window;
-
-            if let Some(response) = response {
-                handle_output!(state, response);
-            }
-        });
-    }
-
     fn draw_about_window(&mut self, state: &mut AppState) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
@@ -805,50 +689,70 @@ impl InterfaceManager {
                             ui.set_min_height(ui.available_size().y);
 
                             egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                                if self.selected_scene_name.is_empty() {
-                                    self.selected_scene_name = main_name.clone();
-                                }
-                                for scene in scene_man.sorted_loaded_scene_names.iter() {
-                                    ui.radio_value(&mut self.selected_scene_name, scene.clone(), {
-                                        if scene == &main_name {
-                                            scene.to_owned() + " (active)"
-                                        } else {
-                                            scene.clone()
-                                        }
-                                    });
+                                for (index, scene) in scene_man.descriptions.0.iter().enumerate() {
+                                    ui.radio_value(
+                                        &mut self.selected_scene_desc_index,
+                                        Some(index as u32),
+                                        {
+                                            if &scene.name == &main_name {
+                                                scene.name.to_owned() + " (active)"
+                                            } else {
+                                                scene.name.to_owned()
+                                            }
+                                        },
+                                    );
                                 }
                             });
                         });
 
-                        if let Some(scene) = scene_man.get_scene(&self.selected_scene_name) {
-                            egui::CollapsingHeader::new("Selected scene:")
-                                .default_open(true)
-                                .show(&mut cols[1], |ui| {
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Name:");
-                                        cols[1].label(&scene.identifier);
-                                    });
+                        egui::CollapsingHeader::new("Selected scene:")
+                            .default_open(true)
+                            .show(&mut cols[1], |ui| {
+                                if let Some(index) = self.selected_scene_desc_index {
+                                    let desc = &scene_man.descriptions.0[index as usize];
 
                                     ui.columns(2, |cols| {
-                                        cols[0].label("Bodies:");
-                                        cols[1].label(format!("{}", scene.get_num_entities()));
+                                        cols[0].label("Name:");
+                                        cols[1].label(&desc.name);
                                     });
 
                                     ui.columns(2, |cols| {
                                         cols[0].label("Description:");
-                                        cols[1].label("This is where the description would be. It would say something like \" Hey this is a solar system simulation at J2000 where you can see where Oumuamua was coming from and so on\"");
+                                        cols[1].label(&desc.description);
                                     });
-                                });
 
-                            cols[1].with_layout(
-                                egui::Layout::bottom_up(egui::Align::Center),
-                                |ui| {
-                                    if ui.button("   Open   ").clicked {
-                                        scene_man.set_scene(&self.selected_scene_name, res_man);
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Time:");
+                                        cols[1].label(&desc.time);
+                                    });
+
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Simulation scale:");
+                                        cols[1].label(format!("{}", &desc.simulation_scale));
+                                    });
+
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Reference");
+                                        cols[1].label(&desc.reference);
+                                    });
+
+                                    let mut num_bodies = 0;
+                                    for (_, bodies) in desc.bodies.iter() {
+                                        num_bodies += bodies.len();
                                     }
-                                },
-                            );
-                        }
+
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Bodies:");
+                                        cols[1].label(format!("{}", num_bodies));
+                                    });
+                                }
+                            });
+
+                        cols[1].with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                            if ui.button("   Open   ").clicked {
+                                //scene_man.set_scene(&self.selected_scene_name, res_man);
+                            }
+                        });
                     });
                 });
 

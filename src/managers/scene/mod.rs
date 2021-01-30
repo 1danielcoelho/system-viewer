@@ -3,6 +3,7 @@ use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::scene::description::SceneDescriptionVec;
 use crate::utils::{string::get_unique_name, transform::Transform, vec::RemoveItem};
 use na::Vector3;
 use rand::Rng;
@@ -11,6 +12,7 @@ use std::collections::HashMap;
 pub use scene::*;
 
 pub mod component_storage;
+pub mod description;
 pub mod gltf;
 pub mod orbits;
 mod scene;
@@ -18,6 +20,7 @@ mod scene;
 pub struct SceneManager {
     main: Option<String>,
     loaded_scenes: HashMap<String, Scene>,
+    pub descriptions: SceneDescriptionVec,
 
     // Used for UI, kept in sync with loaded_scenes
     pub sorted_loaded_scene_names: Vec<String>,
@@ -27,6 +30,7 @@ impl SceneManager {
         return Self {
             main: None,
             loaded_scenes: HashMap::new(),
+            descriptions: SceneDescriptionVec(Vec::new()),
             sorted_loaded_scene_names: Vec::new(),
         };
     }
@@ -73,6 +77,16 @@ impl SceneManager {
 
     pub fn get_scene_mut(&mut self, identifier: &str) -> Option<&mut Scene> {
         return self.loaded_scenes.get_mut(identifier);
+    }
+
+    pub fn load_scene_description_vec(&mut self, serialized: &str) -> Result<(), String> {
+        let new_vec: SceneDescriptionVec = ron::de::from_str(serialized)
+            .map_err(|e| format!("RON deserialization error:\n{}", e).to_owned())?;
+
+        log::info!("Loaded {} new scene descriptions", new_vec.0.len());
+
+        self.descriptions = new_vec;
+        return Ok(());
     }
 
     pub fn load_teal_sphere_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
@@ -155,24 +169,24 @@ impl SceneManager {
         light_comp.intensity = 25.0;
         light_comp.light_type = LightType::Point;
 
-        let mut rng = rand::thread_rng();
-        for _ in 0..500 {
-            let ent = scene.new_entity(Some("box"));
+        // let mut rng = rand::thread_rng();
+        // for _ in 0..500 {
+        //     let ent = scene.new_entity(Some("box"));
 
-            let pos = Vector3::new(rng.gen_range(-10.0..10.0), rng.gen_range(-10.0..10.0), 0.0);
+        //     let pos = Vector3::new(rng.gen_range(-10.0..10.0), rng.gen_range(-10.0..10.0), 0.0);
 
-            let trans_comp = scene.add_component::<TransformComponent>(ent);
-            trans_comp.get_local_transform_mut().trans = pos;
-            trans_comp.get_local_transform_mut().scale = Vector3::new(0.1, 0.1, 0.1);
-            let mesh_comp = scene.add_component::<MeshComponent>(ent);
-            mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-            mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-            let phys_comp = scene.add_component::<PhysicsComponent>(ent);
-            phys_comp.mass = 1E20;
-            phys_comp.force_sum = pos
-                .cross(&Vector3::z())
-                .scale(1E13 * rng.gen_range(0.0..10.0));
-        }
+        //     let trans_comp = scene.add_component::<TransformComponent>(ent);
+        //     trans_comp.get_local_transform_mut().trans = pos;
+        //     trans_comp.get_local_transform_mut().scale = Vector3::new(0.1, 0.1, 0.1);
+        //     let mesh_comp = scene.add_component::<MeshComponent>(ent);
+        //     mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+        //     mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        //     let phys_comp = scene.add_component::<PhysicsComponent>(ent);
+        //     phys_comp.mass = 1E20;
+        //     phys_comp.force_sum = pos
+        //         .cross(&Vector3::z())
+        //         .scale(1E13 * rng.gen_range(0.0..10.0));
+        // }
 
         // Grid
         let grid = scene.new_entity(Some("grid"));

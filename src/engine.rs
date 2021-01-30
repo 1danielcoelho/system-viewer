@@ -52,15 +52,23 @@ impl Engine {
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
         match content_type {
-            "scene_list" => {
-                log::info!("Received data {}", text);
-            }
+            "scene_list" => self.receive_scene_list_text(url, text),
             _ => log::error!(
                 "Unexpected content_type for receive_text: '{}'. url: '{}'",
                 content_type,
                 url
             ),
         }
+    }
+
+    pub fn receive_scene_list_text(&mut self, url: &str, text: &str) {
+        log::info!(
+            "Loading scene descriptions from '{}' (length {})",
+            url,
+            text.len()
+        );
+
+        self.scene_man.load_scene_description_vec(text).unwrap();
     }
 
     pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {

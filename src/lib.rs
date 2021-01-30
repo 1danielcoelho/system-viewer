@@ -83,6 +83,8 @@ pub fn initialize() {
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
+    fetch_text("public/scene_list.ron", "scene_list");
+
     let event_loop = EventLoop::new();
 
     let window = WindowBuilder::new()
