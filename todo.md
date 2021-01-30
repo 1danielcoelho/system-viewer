@@ -424,34 +424,46 @@ response |= ui.add(label);
         > - Comet mass estimation
         >     - I think this is impossible given that JPL has *no* mass values for any comet
 
+# Cleanup for MVP
+- Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
+    - Controls to set simulation speed right there
+    - Option to reset to start
+    - Option to go back to splash screen
+    - Object list (can click to go to and track)
+    - About
+- Initial splash screen with picker for different scenes
+    - Scenes can be baked in, and load a subset of objects from json each
+    - Load data from new json databases, J2000 N-body simulation
+- Show object name on hover
+- Track object on click
+- Switch camera to orbit mode when tracking an object, mouse wheel to zoom
+- Okay-ish results on the simulation for now, we can improve later
+- Fix firefox dragging bug
+- Update egui
+- Cleanup github repo and properly handle licensing
+
 # N-body simulation
-- Load data from new json databases
-- J2000 simulation with tons of objects
 - Integration sample scenes with known 3-body patterns to test stability
 - Solar system N-body simulation with n largest masses and compare results with those stack exchange answers
 - Cut down on calculations by ignoring some low mass - low mass interactions via some threshold
-
-# Plan out a reachable goal before this creeps out of control again
-- Maybe just a full solar system N-body simulation on J2000 first
-- Cleanup github repo and properly handle licensing
-- Then handle putting this on a webpage and make a tiny portfolio page with it
 
 # Rotation axes: 
 - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
 - Check the PDF I downloaded (Astronomy folder)
 
-# GUI to "add a body" with some orbital parameters
+# Starfield skybox
 
 # Shadows
 
+# GUI to "add a body" with some state vectors/orbital parameters
+
 # Logarithmic depth buffer
 - This would help when lowering the camera near distance and looking at far away orbits
+- Only required when drawing the ellipses
 
-# I think it should be possible to use chrome to debug 
+# I think it should be possible to use chrome to debug WASM
 
 # Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
-
-# Add tests for raycast intersections
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
@@ -477,7 +489,6 @@ response |= ui.add(label);
 - Demo app has an x seconds per frame thing on the left which is just what I need
 # I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
 <!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
-# Cubemap texture for the skybox
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
 # Find a better way of handling component updates when sorting after reparenting
 # Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
