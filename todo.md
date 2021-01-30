@@ -425,22 +425,29 @@ response |= ui.add(label);
         >     - I think this is impossible given that JPL has *no* mass values for any comet
 
 # Cleanup for MVP
-> - Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
-    > - Controls to set simulation speed right there
-    - Option to reset to start
-    - Option to go back to splash screen
-    - Object list (can click to go to and track)
-    - About
 - Initial splash screen with picker for different scenes
     - Scenes can be baked in, and load a subset of objects from json each
     - Load data from new json databases, J2000 N-body simulation
+        - Single ron file with list of scenes. Each item would have a scene name, description, number of bodies and a list of body_ids and dbs to check. When clicking it, it would parse all required dbs and fetch the bodies required
+> - Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
+    > - Controls to set simulation speed right there
+    > - Object list (can click to go to and track)
+    > - About
+    - Option to reset to start
+        - Just open the current scene again
+    - Option to go back to splash screen
 - Show object name on hover, open details on click
 - Track object on click
 - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
 - Okay-ish results on the simulation for now, we can improve later
+- Basic solar system simulation at J2000 with bodies in the right size, good colors/textures, sun with OK brightness
 - Fix firefox dragging bug
 - Update egui
 - Cleanup github repo and properly handle licensing
+
+# Window showing controls
+
+# Window showing settings (show starmap or not, etc.)
 
 # N-body simulation
 - Integration sample scenes with known 3-body patterns to test stability

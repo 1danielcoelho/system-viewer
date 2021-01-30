@@ -17,7 +17,7 @@ use std::collections::VecDeque;
 
 pub mod details_ui;
 
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
 #[macro_export]
 macro_rules! handle_output {
@@ -67,6 +67,7 @@ struct OpenWindows {
     debug: bool,
     scene_man: bool,
     scene_hierarchy: bool,
+    scene_browser: bool,
     about: bool,
 }
 
@@ -87,9 +88,10 @@ impl InterfaceManager {
                 .expect("Failed to make a web backend for egui"),
             web_input: Default::default(),
             open_windows: OpenWindows {
-                debug: true,
+                debug: false,
                 scene_man: false,
                 scene_hierarchy: false,
+                scene_browser: true,
                 about: false,
             },
             selected_scene_name: String::new(),
@@ -219,7 +221,9 @@ impl InterfaceManager {
                     egui::menu::menu(ui, "⚙", |ui| {
                         if ui.button("Reset scene").clicked {}
 
-                        if ui.button("Open scene").clicked {}
+                        if ui.button("Scene browser").clicked {
+                            self.open_windows.scene_browser = !self.open_windows.scene_browser;
+                        }
 
                         ui.separator();
 
@@ -410,6 +414,7 @@ impl InterfaceManager {
         }
 
         self.draw_about_window(state);
+        self.draw_scene_browser(state, scene_man, res_man);
     }
 
     fn draw_debug_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -770,9 +775,9 @@ impl InterfaceManager {
                 .fixed_size(egui::vec2(400.0, 400.0))
                 .show(&ui.ctx(), |ui| {
                     ui.label("This is a simple, custom N-body simulation 3D engine written for the web.");
-                    ui.label("\nIt uses simple semi-implicit Euler integration to calculate the effect of gravity at each timestep.\nInitial J2000 state vectors were collected from NASA's HORIZONS system, and when required evolved to J2000 using the mean orbital elements (e.g. for asteroids).");
-                    ui.label("\nIt is fully written in Rust (save for some glue code), and compiled to WebAssembly via wasm_bindgen, which includes WebGL2 bindings.");
-                    ui.label("The 3D engine uses a data-oriented entity component system in order to maximize performance, and the Egui immediate mode GUI library, also written in pure Rust.");
+                    ui.label("\nIt uses simple semi-implicit Euler integration to calculate the effect of gravity at each timestep.\nInitial J2000 state vectors were collected from NASA's HORIZONS system and JPL's Small-Body Database Search Engine, and when required evolved to J2000 using the mean orbital elements (e.g. for asteroids).");
+                    ui.label("\nIt is fully written in Rust (save for some glue Javascript code), and compiled to WebAssembly via wasm_bindgen, which includes WebGL2 bindings.");
+                    ui.label("The 3D engine uses a data-oriented entity component system in order to maximize performance of batch physics calculations, and the Egui immediate mode GUI library, also written in pure Rust.");
                     ui.horizontal_wrapped_for_text(egui::TextStyle::Body, |ui| {
                         ui.label("\nProject home page:");
                         ui.hyperlink("https://github.com/1danielcoelho/system-viewer");
@@ -780,6 +785,93 @@ impl InterfaceManager {
                 });
 
             self.open_windows.about = open_window;
+
+            if let Some(response) = response {
+                handle_output!(state, response);
+            }
+        });
+    }
+
+    fn draw_scene_browser(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
+        UICTX.with(|ui| {
+            let ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_ref().unwrap();
+
+            let mut open_window = self.open_windows.scene_browser;
+
+            let response = egui::Window::new("Scene browser")
+                .open(&mut open_window)
+                .scroll(false)
+                .resizable(false)
+                .fixed_size(egui::vec2(600.0, 300.0))
+                .show(&ui.ctx(), |ui| {
+                    ui.columns(2, |cols| {
+                        cols[0].set_min_height(300.0);
+                        cols[1].set_min_height(300.0);
+
+                        let main_name = scene_man
+                            .get_main_scene_name()
+                            .as_ref()
+                            .and_then(|s| Some(s.clone()))
+                            .unwrap_or_default();
+
+                        egui::Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
+                            ui.set_min_height(ui.available_size().y);
+
+                            egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
+                                if self.selected_scene_name.is_empty() {
+                                    self.selected_scene_name = main_name.clone();
+                                }
+                                for scene in scene_man.sorted_loaded_scene_names.iter() {
+                                    ui.radio_value(&mut self.selected_scene_name, scene.clone(), {
+                                        if scene == &main_name {
+                                            scene.to_owned() + " (active)"
+                                        } else {
+                                            scene.clone()
+                                        }
+                                    });
+                                }
+                            });
+                        });
+
+                        if let Some(scene) = scene_man.get_scene(&self.selected_scene_name) {
+                            egui::CollapsingHeader::new("Selected scene:")
+                                .default_open(true)
+                                .show(&mut cols[1], |ui| {
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Name:");
+                                        cols[1].label(&scene.identifier);
+                                    });
+
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Bodies:");
+                                        cols[1].label(format!("{}", scene.get_num_entities()));
+                                    });
+
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Description:");
+                                        cols[1].label("This is where the description would be. It would say something like \" Hey this is a solar system simulation at J2000 where you can see where Oumuamua was coming from and so on\"");
+                                    });
+                                });
+
+                            cols[1].with_layout(
+                                egui::Layout::bottom_up(egui::Align::Center),
+                                |ui| {
+                                    if ui.button("   Open   ").clicked {
+                                        scene_man.set_scene(&self.selected_scene_name, res_man);
+                                    }
+                                },
+                            );
+                        }
+                    });
+                });
+
+            self.open_windows.scene_browser = open_window;
 
             if let Some(response) = response {
                 handle_output!(state, response);
