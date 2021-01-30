@@ -1,14 +1,18 @@
 use crate::app_state::{AppState, ButtonState, ReferenceChange, SimulationScale};
 use crate::components::{MeshComponent, OrbitalComponent, TransformComponent};
 use crate::managers::details_ui::DetailsUI;
+use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::write_string_to_file_prompt;
 use crate::{prompt_for_bytes_file, prompt_for_text_file, UICTX};
+use egui::Srgba;
 use gui_backend::WebInput;
+use lazy_static::__Deref;
 use na::{Matrix4, Point3, Translation3, Vector3};
+use std::borrow::BorrowMut;
 use std::collections::VecDeque;
 
 pub mod details_ui;
@@ -133,6 +137,19 @@ impl InterfaceManager {
         self.backend.begin_frame(raw_input);
         let rect = self.backend.ctx.available_rect();
 
+        // Always record our new frame times
+        self.frame_times.pop_back();
+        self.frame_times.push_front(state.real_delta_time_s);
+
+        // Update framerate display only once a second or else it's too hard to read
+        if state.real_time_s - self.time_of_last_update > 1.0 {
+            self.time_of_last_update = state.real_time_s;
+
+            let new_frame_rate: f64 =
+                1.0 / (self.frame_times.iter().sum::<f64>() / (self.frame_times.len() as f64));
+            self.last_frame_rate = new_frame_rate;
+        }
+
         UICTX.with(|ui| {
             let mut ui = ui.borrow_mut();
             ui.replace(egui::Ui::new(
@@ -170,116 +187,193 @@ impl InterfaceManager {
         res_man: &mut ResourceManager,
     ) {
         UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
+            let mut ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_mut().unwrap();
+
+            let mut style = ui.ctx().style().deref().clone();
+            let old_fill = style.visuals.widgets.noninteractive.bg_fill;
+            let old_stroke = style.visuals.widgets.noninteractive.bg_stroke.width;
+
+            style.visuals.widgets.noninteractive.bg_fill =
+                egui::Srgba::from_rgba_unmultiplied(255, 0, 0, 0);
+            style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
+            ui.ctx().set_style(style);
 
             egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
-                egui::menu::bar(ui, |ui| {
-                    egui::menu::menu(ui, "File", |ui| {
-                        if ui.button("New").clicked {
-                            let new_scene_name =
-                                scene_man.new_scene("New scene").unwrap().identifier.clone();
-                            scene_man.set_scene(&new_scene_name, res_man);
-                        }
+                // egui::menu::bar(ui, |ui| {
+                //     egui::menu::menu(ui, "File", |ui| {
+                //         if ui.button("New").clicked {
+                //             let new_scene_name =
+                //                 scene_man.new_scene("New scene").unwrap().identifier.clone();
+                //             scene_man.set_scene(&new_scene_name, res_man);
+                //         }
 
-                        if ui.button("Open").clicked {
-                            prompt_for_text_file("scene", ".ron");
-                        }
+                //         if ui.button("Open").clicked {
+                //             prompt_for_text_file("scene", ".ron");
+                //         }
 
-                        if ui.button("Save").clicked {
-                            if let Some(scene) = scene_man.get_main_scene() {
-                                let ser_str = scene.serialize();
-                                write_string_to_file_prompt(
-                                    &format!("{}.ron", &scene.identifier),
-                                    &ser_str,
-                                );
-                            } else {
-                                log::warn!("Clicked Save but no scene is currently loaded!");
-                            }
-                        }
+                //         if ui.button("Save").clicked {
+                //             if let Some(scene) = scene_man.get_main_scene() {
+                //                 let ser_str = scene.serialize();
+                //                 write_string_to_file_prompt(
+                //                     &format!("{}.ron", &scene.identifier),
+                //                     &ser_str,
+                //                 );
+                //             } else {
+                //                 log::warn!("Clicked Save but no scene is currently loaded!");
+                //             }
+                //         }
 
-                        ui.separator();
+                //         ui.separator();
 
-                        if ui.button("Close").clicked {
-                            let new_scene_name =
-                                scene_man.new_scene("New scene").unwrap().identifier.clone();
-                            scene_man.set_scene(&new_scene_name, res_man);
-                        }
-                    });
+                //         if ui.button("Close").clicked {
+                //             let new_scene_name =
+                //                 scene_man.new_scene("New scene").unwrap().identifier.clone();
+                //             scene_man.set_scene(&new_scene_name, res_man);
+                //         }
+                //     });
 
-                    egui::menu::menu(ui, "Edit", |ui| {
-                        if ui.button("Inject GLB...").clicked {
-                            prompt_for_bytes_file("glb_inject", ".glb");
-                        }
+                //     egui::menu::menu(ui, "Edit", |ui| {
+                //         if ui.button("Inject GLB...").clicked {
+                //             prompt_for_bytes_file("glb_inject", ".glb");
+                //         }
 
-                        if ui.button("Inject orbital elements CSV...").clicked {
-                            prompt_for_text_file("csv_inject", ".csv");
-                        }
-                    });
+                //         if ui.button("Inject orbital elements CSV...").clicked {
+                //             prompt_for_text_file("csv_inject", ".csv");
+                //         }
+                //     });
 
-                    egui::menu::menu(ui, "Window", |ui| {
-                        if ui.button("Debug").clicked {
-                            self.open_windows.debug = !self.open_windows.debug;
-                        }
+                //     egui::menu::menu(ui, "Window", |ui| {
+                //         if ui.button("Debug").clicked {
+                //             self.open_windows.debug = !self.open_windows.debug;
+                //         }
 
-                        if ui.button("Scene manager").clicked {
-                            self.open_windows.scene_man = !self.open_windows.scene_man;
-                        }
+                //         if ui.button("Scene manager").clicked {
+                //             self.open_windows.scene_man = !self.open_windows.scene_man;
+                //         }
 
-                        if ui.button("Scene hierarchy").clicked {
-                            self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
-                        }
+                //         if ui.button("Scene hierarchy").clicked {
+                //             self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
+                //         }
 
-                        ui.separator();
+                //         ui.separator();
 
-                        if ui.button("Organize windows").clicked {
-                            ui.ctx().memory().reset_areas();
-                        }
+                //         if ui.button("Organize windows").clicked {
+                //             ui.ctx().memory().reset_areas();
+                //         }
 
-                        if ui.button("Close all").clicked {
-                            self.open_windows.debug = false;
-                            self.open_windows.scene_man = false;
-                            self.open_windows.scene_hierarchy = false;
-                        }
-                    });
+                //         if ui.button("Close all").clicked {
+                //             self.open_windows.debug = false;
+                //             self.open_windows.scene_man = false;
+                //             self.open_windows.scene_hierarchy = false;
+                //         }
+                //     });
 
-                    egui::menu::menu(ui, "Tools", |ui| {
-                        if ui
-                            .button("Clear Egui memory")
-                            .on_hover_text("Forget scroll, collapsing headers etc")
-                            .clicked
-                        {
-                            *ui.ctx().memory() = Default::default();
-                        }
+                //     egui::menu::menu(ui, "Tools", |ui| {
+                //         if ui
+                //             .button("Clear Egui memory")
+                //             .on_hover_text("Forget scroll, collapsing headers etc")
+                //             .clicked
+                //         {
+                //             *ui.ctx().memory() = Default::default();
+                //         }
 
-                        if ui
-                            .button("Reset app state")
-                            .on_hover_text("Clears app state from local storage")
-                            .clicked
-                        {
-                            state.pending_reset = true;
-                        }
-                    });
+                //         if ui
+                //             .button("Reset app state")
+                //             .on_hover_text("Clears app state from local storage")
+                //             .clicked
+                //         {
+                //             state.pending_reset = true;
+                //         }
+                //     });
 
-                    let time = state.real_time_s;
-                    let time = format!(
-                        "{:02}:{:02}:{:02}.{:02}",
-                        (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
-                        (time % (60.0 * 60.0) / 60.0).floor(),
-                        (time % 60.0).floor(),
-                        (time % 1.0 * 100.0).floor()
-                    );
+                //     let time = state.real_time_s;
+                //     let time = format!(
+                //         "{:02}:{:02}:{:02}.{:02}",
+                //         (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
+                //         (time % (60.0 * 60.0) / 60.0).floor(),
+                //         (time % 60.0).floor(),
+                //         (time % 1.0 * 100.0).floor()
+                //     );
 
-                    ui.with_layout(egui::Layout::right_to_left(), |ui| {
-                        if ui
-                            .add(egui::Button::new(time).text_style(egui::TextStyle::Monospace))
-                            .clicked
-                        {
-                            log::info!("Clicked on clock!");
-                        }
-                    });
+                //     ui.with_layout(egui::Layout::right_to_left(), |ui| {
+                //         if ui
+                //             .add(egui::Button::new(time).text_style(egui::TextStyle::Monospace))
+                //             .clicked
+                //         {
+                //             log::info!("Clicked on clock!");
+                //         }
+                //     });
+                // });
+
+                let time = state.real_time_s;
+                let time = format!(
+                    "{:02}:{:02}:{:02}.{:02}",
+                    (time % (24.0 * 60.0 * 60.0) / 3600.0).floor(),
+                    (time % (60.0 * 60.0) / 60.0).floor(),
+                    (time % 60.0).floor(),
+                    (time % 1.0 * 100.0).floor()
+                );
+
+                let num_bodies = scene_man
+                    .get_main_scene()
+                    .unwrap()
+                    .physics
+                    .get_num_components();
+
+                let sim_date_str = format!(
+                    "{}",
+                    julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
+                );
+
+                ui.with_layout(egui::Layout::right_to_left(), |ui| {
+                    if ui
+                        .add(egui::Button::new("⚙").text_style(egui::TextStyle::Monospace))
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+
+                    if ui
+                        .add(
+                            egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
+                                .text_style(egui::TextStyle::Monospace),
+                        )
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+
+                    if ui
+                        .add(
+                            egui::Button::new(format!("{} bodies", num_bodies))
+                                .text_style(egui::TextStyle::Monospace),
+                        )
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+
+                    if ui
+                        .add(egui::Button::new(time).text_style(egui::TextStyle::Monospace))
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+
+                    if ui
+                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
+                        .clicked
+                    {
+                        log::info!("Clicked on clock!");
+                    }
                 });
             });
+
+            let mut style = ui.ctx().style().deref().clone();
+            style.visuals.widgets.noninteractive.bg_fill = old_fill;
+            style.visuals.widgets.noninteractive.bg_stroke.width = old_stroke;
+            ui.ctx().set_style(style);
         });
     }
 
@@ -302,18 +396,6 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            // Always record our new frame times
-            self.frame_times.pop_back();
-            self.frame_times.push_front(state.real_delta_time_s);
-
-            // Update framerate display only once a second or else it's too hard to read
-            if state.real_time_s - self.time_of_last_update > 1.0 {
-                self.time_of_last_update = state.real_time_s;
-
-                let new_frame_rate: f64 =
-                    1.0 / (self.frame_times.iter().sum::<f64>() / (self.frame_times.len() as f64));
-                self.last_frame_rate = new_frame_rate;
-            }
             let frame_rate = self.last_frame_rate;
 
             let response = egui::Window::new("Debug")
