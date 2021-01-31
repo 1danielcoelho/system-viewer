@@ -750,7 +750,12 @@ impl InterfaceManager {
 
                         cols[1].with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                             if ui.button("   Open   ").clicked {
-                                //scene_man.set_scene(&self.selected_scene_name, res_man);
+                                let desc = &scene_man.descriptions.0
+                                    [self.selected_scene_desc_index.unwrap() as usize];
+                                let name = desc.name.to_owned();
+
+                                scene_man.load_scene(&name, res_man);
+                                scene_man.set_scene(&name, res_man);
                             }
                         });
                     });

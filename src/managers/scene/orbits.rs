@@ -1,12 +1,11 @@
+use nalgebra::Vector3;
+
 use crate::components::light::LightType;
-use crate::components::{LightComponent, MeshComponent, OrbitalComponent, TransformComponent};
-use crate::managers::scene::{Entity, SceneManager};
+use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
+use crate::managers::resource::body_description::{BodyDescription, BodyType};
+use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::ResourceManager;
-use crate::utils::orbits::{
-    bake_eccentric_anomaly_times, elements_to_circle_transform, BodyDescription, BodyType,
-};
-use na::Vector3;
-use std::collections::HashMap;
+use crate::utils::units::Jdn;
 
 impl SceneManager {
     pub fn load_bodies_into_scene(
@@ -19,25 +18,25 @@ impl SceneManager {
         // The idea here is that bodies are only ever parented to barycenters
         // Barycenters will themselves translate, but never rotate or scale, so nested orbits look ok-for-now-I-guess
 
-        let mut id_to_entity: HashMap<u32, Entity> = HashMap::new();
-        for body in bodies {
-            let parent = {
-                if body.reference_id == body.id {
-                    None
-                } else {
-                    // We expect these bodies to be in order, so we should already have
-                    // parsed our parent
-                    Some(id_to_entity[&body.reference_id])
-                }
-            };
+        // let mut id_to_entity: HashMap<u32, Entity> = HashMap::new();
+        // for body in bodies {
+        //     let parent = {
+        //         if body.reference_id == body.id {
+        //             None
+        //         } else {
+        //             // We expect these bodies to be in order, so we should already have
+        //             // parsed our parent
+        //             Some(id_to_entity[&body.reference_id])
+        //         }
+        //     };
 
-            let body_ent = self.add_body_entities(body, parent, res_man);
-            if let Some(_) = id_to_entity.insert(body.id, body_ent) {
-                log::warn!("Body collision when parsing csv for body: '{:#?}'", body);
-            }
-        }
+        //     let body_ent = self.add_body_entities(body, parent, res_man);
+        //     if let Some(_) = id_to_entity.insert(body.id, body_ent) {
+        //         log::warn!("Body collision when parsing csv for body: '{:#?}'", body);
+        //     }
+        // }
 
-        log::info!("Loaded {} bodies into the scene", id_to_entity.len());
+        // log::info!("Loaded {} bodies into the scene", id_to_entity.len());
     }
 
     /// Adds these entities to the scene
@@ -60,56 +59,113 @@ impl SceneManager {
 
         let trans_comp = scene.add_component::<TransformComponent>(body_ent);
 
-        // Sphere mesh
-        if body.mean_radius.0 > 0.0 {
-            let radius = body.mean_radius.0;
+        // // Sphere mesh
+        // if body.mean_radius.0 > 0.0 {
+        //     let radius = body.mean_radius.0;
 
-            trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
+        //     trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
 
-            let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
-            mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-            mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-        }
+        //     let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
+        //     mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+        //     mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        // }
 
-        if body.body_type == BodyType::Star {
-            let light_comp = scene.add_component::<LightComponent>(body_ent);
-            light_comp.color = Vector3::new(1.0, 1.0, 1.0);
-            light_comp.intensity = 5E10;
-            light_comp.light_type = LightType::Point;
-        }
+        // if body.body_type == BodyType::Star {
+        //     let light_comp = scene.add_component::<LightComponent>(body_ent);
+        //     light_comp.color = Vector3::new(1.0, 1.0, 1.0);
+        //     light_comp.intensity = 5E10;
+        //     light_comp.light_type = LightType::Point;
+        // }
 
-        // Orbit
-        if body.orbital_elements.semi_major_axis.0 > 0.0 {
-            let trans = elements_to_circle_transform(&body.orbital_elements);
+        // // Orbit
+        // if body.orbital_elements.semi_major_axis.0 > 0.0 {
+        //     let trans = elements_to_circle_transform(&body.orbital_elements);
 
-            let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent);
-            orbit_comp.desc = body.clone(); // TODO: I could probably move this in
-            orbit_comp.circle_to_final_ellipse = trans.clone();
+        //     let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent);
+        //     orbit_comp.desc = body.clone(); // TODO: I could probably move this in
+        //     orbit_comp.circle_to_final_ellipse = trans.clone();
 
-            // Bake eccentric anomalies into the body
-            if body.orbital_elements.sidereal_orbit_period_days > 0.0 {
-                const NUM_ANGLES: u32 = 360;
+        //     // Bake eccentric anomalies into the body
+        //     if body.orbital_elements.sidereal_orbit_period_days > 0.0 {
+        //         const NUM_ANGLES: u32 = 360;
 
-                // Add eccentric anomaly interpolation values
-                orbit_comp.baked_eccentric_anomaly_times =
-                    bake_eccentric_anomaly_times(&body.orbital_elements, NUM_ANGLES);
-            }
+        //         // Add eccentric anomaly interpolation values
+        //         orbit_comp.baked_eccentric_anomaly_times =
+        //             bake_eccentric_anomaly_times(&body.orbital_elements, NUM_ANGLES);
+        //     }
 
-            // Orbit mesh entity
-            {
-                let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
-                if let Some(parent) = parent_bary {
-                    scene.set_entity_parent(parent, orbit);
-                }
+        //     // Orbit mesh entity
+        //     {
+        //         let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
+        //         if let Some(parent) = parent_bary {
+        //             scene.set_entity_parent(parent, orbit);
+        //         }
 
-                let trans_comp = scene.add_component::<TransformComponent>(orbit);
-                *trans_comp.get_local_transform_mut() = trans;
+        //         let trans_comp = scene.add_component::<TransformComponent>(orbit);
+        //         *trans_comp.get_local_transform_mut() = trans;
 
-                let mesh_comp = scene.add_component::<MeshComponent>(orbit);
-                mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
-            }
-        }
+        //         let mesh_comp = scene.add_component::<MeshComponent>(orbit);
+        //         mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
+        //     }
+        // }
 
         return body_ent;
+    }
+}
+
+pub fn add_free_body(
+    scene: &mut Scene,
+    epoch: Jdn,
+    body: &BodyDescription,
+    res_man: &ResourceManager,
+) {
+    if body.body_type == BodyType::Barycenter {
+        return;
+    }
+
+    log::info!(
+        "Adding body '{}' to scene '{}'",
+        body.name,
+        scene.identifier
+    );
+
+    // Check if we have a state vector close to the target epoch
+    let state_vector = body
+        .state_vectors
+        .iter()
+        .find(|vec| (vec.jdn_date.0 - epoch.0).abs() < 0.01);
+    if state_vector.is_none() {
+        log::warn!(
+            "Body '{}' doesn't have a state vector usable for epoch '{}'",
+            body.name,
+            epoch.0
+        );
+        return;
+    }
+    let state_vector = state_vector.cloned().unwrap();
+
+    let body_ent = scene.new_entity(Some(&body.name));
+    let trans_comp = scene.add_component::<TransformComponent>(body_ent);
+    trans_comp.get_local_transform_mut().trans = state_vector.pos.coords;
+
+    // Sphere mesh
+    if let Some(radius) = body.radius {
+        trans_comp.get_local_transform_mut().scale =
+            Vector3::new(radius.into(), radius.into(), radius.into());
+
+        let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
+        mesh_comp.set_mesh(res_man.get_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(res_man.get_material("gltf_metal_rough"), 0);
+    }
+
+    let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
+    phys_comp.lin_mom = state_vector.vel.scale(body.mass.unwrap() as f64);
+
+    // Emit light if it's a star
+    if body.body_type == BodyType::Star {
+        let light_comp = scene.add_component::<LightComponent>(body_ent);
+        light_comp.color = Vector3::new(1.0, 1.0, 1.0);
+        light_comp.intensity = 5E10;
+        light_comp.light_type = LightType::Point;
     }
 }

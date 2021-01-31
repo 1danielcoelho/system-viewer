@@ -1,17 +1,16 @@
 use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
-use crate::{
-    fetch_bytes,
-    managers::resource::{material::UniformName, texture::TextureUnit},
-    utils::{
-        gl::GL,
-        string::{get_unique_name, remove_numbered_suffix},
-    },
-};
+use crate::fetch_bytes;
+use crate::managers::resource::body_description::BodyDescription;
+use crate::managers::resource::material::UniformName;
+use crate::managers::resource::texture::TextureUnit;
+use crate::utils::gl::GL;
+use crate::utils::string::{get_unique_name, remove_numbered_suffix};
 use crate::{managers::scene::Scene, GLCTX};
 use image::{io::Reader, DynamicImage, ImageFormat};
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
+pub mod body_description;
 pub mod collider;
 pub mod gltf;
 pub mod intermediate_mesh;
@@ -151,6 +150,7 @@ pub struct ResourceManager {
     meshes: HashMap<String, Rc<RefCell<Mesh>>>,
     textures: HashMap<String, Rc<RefCell<Texture>>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
+    bodies: HashMap<String, HashMap<String, BodyDescription>>,
 }
 impl ResourceManager {
     pub fn new() -> Self {
@@ -158,6 +158,7 @@ impl ResourceManager {
             meshes: HashMap::new(),
             textures: HashMap::new(),
             materials: HashMap::new(),
+            bodies: HashMap::new(),
         };
 
         return new_res_man;
@@ -544,5 +545,55 @@ impl ResourceManager {
         }
 
         return None;
+    }
+
+    pub fn load_database_file(&mut self, url: &str, text: &str) -> Result<(), String> {
+        let mut parsed_data: HashMap<String, BodyDescription> = serde_json::de::from_str(text)
+            .map_err(|e| format!("Database deserialization error:\n{}", e).to_owned())?;
+
+        // TODO: Do I need the ids in the bodies as well?
+        for (key, val) in parsed_data.iter_mut() {
+            val.id = Some(key.clone());
+        }
+
+        let database_name: String = std::path::Path::new(url)
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned();
+
+        let num_bodies = parsed_data.len();
+        self.bodies.insert(database_name, parsed_data);
+
+        log::info!("Parsed {} bodies from database '{}'", num_bodies, url);
+
+        return Ok(());
+    }
+
+    pub fn get_body_database(
+        &self,
+        db_name: &str,
+    ) -> Result<&HashMap<String, BodyDescription>, String> {
+        let db = self.bodies.get(db_name).ok_or(String::from(format!(
+            "Resource manager has no database with name '{}'",
+            db_name
+        )))?;
+
+        return Ok(db);
+    }
+
+    pub fn get_body(&self, db_name: &str, body_id: &str) -> Result<&BodyDescription, String> {
+        let db = self.bodies.get(db_name).ok_or(String::from(format!(
+            "Resource manager has no database with name '{}'",
+            db_name
+        )))?;
+
+        let body = db.get(body_id).ok_or(String::from(format!(
+            "Resource manager's database '{}' has no body with id '{}'",
+            db_name, body_id
+        )))?;
+
+        return Ok(body);
     }
 }

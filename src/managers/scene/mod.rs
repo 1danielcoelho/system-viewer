@@ -4,9 +4,10 @@ use crate::components::{LightComponent, MeshComponent, PhysicsComponent, Transfo
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::description::SceneDescriptionVec;
-use crate::utils::{string::get_unique_name, transform::Transform, vec::RemoveItem};
+use crate::managers::scene::orbits::add_free_body;
+use crate::utils::units::J2000_JDN;
+use crate::utils::{string::get_unique_name, transform::Transform};
 use na::Vector3;
-use rand::Rng;
 use std::collections::HashMap;
 
 pub use scene::*;
@@ -21,9 +22,6 @@ pub struct SceneManager {
     main: Option<String>,
     loaded_scenes: HashMap<String, Scene>,
     pub descriptions: SceneDescriptionVec,
-
-    // Used for UI, kept in sync with loaded_scenes
-    pub sorted_loaded_scene_names: Vec<String>,
 }
 impl SceneManager {
     pub fn new() -> Self {
@@ -31,7 +29,6 @@ impl SceneManager {
             main: None,
             loaded_scenes: HashMap::new(),
             descriptions: SceneDescriptionVec(Vec::new()),
-            sorted_loaded_scene_names: Vec::new(),
         };
     }
 
@@ -46,9 +43,6 @@ impl SceneManager {
         self.loaded_scenes
             .insert(unique_scene_name.to_string(), scene);
         let scene_in_storage = self.loaded_scenes.get_mut(&unique_scene_name);
-
-        self.sorted_loaded_scene_names.push(unique_scene_name);
-        self.sorted_loaded_scene_names.sort();
 
         return scene_in_storage;
     }
@@ -466,6 +460,55 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
+    pub fn load_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
+        if self.loaded_scenes.contains_key(identifier) {
+            return;
+        }
+
+        let res = self
+            .descriptions
+            .0
+            .iter()
+            .find(|desc| desc.name == identifier);
+        if res.is_none() {
+            return;
+        }
+        let res = res.unwrap();
+
+        // Make Rust happy
+        let name = res.name.clone();
+        let bodies = res.bodies.clone();
+        let time = J2000_JDN;
+
+        let scene = self.new_scene(&name).unwrap();
+
+        for (db_name, body_ids) in bodies.iter() {
+            let db = res_man.get_body_database(db_name);
+            if db.is_err() {
+                log::warn!(
+                    "Error retrieving body database '{}':\n{}",
+                    db_name,
+                    db.unwrap_err()
+                );
+                continue;
+            }
+            let db = db.unwrap();
+
+            for body_id in body_ids.iter() {
+                let body = db.get(body_id.as_str());
+                if body.is_none() {
+                    log::warn!(
+                        "Failed to find body '{}' in database '{}'",
+                        body_id,
+                        db_name,
+                    );
+                }
+
+                add_free_body(scene, time, body.unwrap(), res_man);
+            }
+        }
+    }
+
     pub fn set_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         if let Some(main) = &self.main {
             if &main[..] == identifier {
@@ -532,7 +575,5 @@ impl SceneManager {
 
     pub fn delete_scene(&mut self, identifier: &str) {
         self.loaded_scenes.remove(identifier);
-        self.sorted_loaded_scene_names
-            .remove_one_item(&identifier.to_owned());
     }
 }

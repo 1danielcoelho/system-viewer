@@ -84,6 +84,14 @@ pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
     fetch_text("public/scene_list.ron", "scene_list");
+    
+    fetch_text("public/database/artificial.json", "database");
+    fetch_text("public/database/asteroids.json", "database");
+    fetch_text("public/database/comets.json", "database");
+    fetch_text("public/database/jovian_satellites.json", "database");
+    fetch_text("public/database/major_bodies.json", "database");
+    fetch_text("public/database/other_satellites.json", "database");
+    fetch_text("public/database/saturnian_satellites.json", "database");
 
     let event_loop = EventLoop::new();
 

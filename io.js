@@ -3,7 +3,7 @@ export function fetch_text(url, content_type) {
   console.log(
     "JS fetching text from url '",
     url,
-    "' with content_type '" + content_type + '"'
+    "' with content_type '" + content_type + "'"
   );
   return fetch(url).then((response) =>
     response.text().then((text) => {
@@ -23,7 +23,7 @@ export function fetch_bytes(url, content_type) {
   console.log(
     "JS fetching bytes from url '",
     url,
-    "' with content_type '" + content_type + '"'
+    "' with content_type '" + content_type + "'"
   );
   return fetch(url).then((response) =>
     response.arrayBuffer().then((buffer) => {

@@ -428,11 +428,13 @@ response |= ui.add(label);
 - Initial splash screen with picker for different scenes
     - Scenes can be baked in, and load a subset of objects from json each
     - Load data from new json databases, J2000 N-body simulation
+        - For some reason planets don't have masses?
+        - I think I should put the scene description inside the created Scene?
         > - Create rust analogue of SceneDescription
         > - Parse scene_list.ron 
         > - Show SceneDescriptions on ui
-        - Parse json body databases on demand
-        - Single ron file with list of scenes. Each item would have a scene name, description, number of bodies and a list of body_ids and dbs to check. When clicking it, it would parse all required dbs and fetch the bodies required
+        > - Parse json body databases on demand
+        > - Single ron file with list of scenes. Each item would have a scene name, description, number of bodies and a list of body_ids and dbs to check. When clicking it, it would parse all required dbs and fetch the bodies required
 > - Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
     > - Controls to set simulation speed right there
     > - Object list (can click to go to and track)

@@ -1,8 +1,8 @@
 use crate::components::Component;
 use crate::managers::details_ui::DetailsUI;
+use crate::managers::resource::body_description::BodyDescription;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
-use crate::utils::orbits::BodyDescription;
 use crate::utils::transform::Transform;
 use crate::utils::units::Jdn;
 use egui::Ui;
@@ -44,21 +44,6 @@ impl DetailsUI for OrbitalComponent {
         ui.columns(2, |cols| {
             cols[0].label("Name:");
             cols[1].label(&self.desc.name);
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Id:");
-            cols[1].label(self.desc.id.to_string());
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Reference id:");
-            cols[1].label(self.desc.reference_id.to_string());
-        });
-
-        ui.columns(2, |cols| {
-            cols[0].label("Mass:");
-            cols[1].label(self.desc.mass.to_string());
         });
     }
 }

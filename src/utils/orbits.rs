@@ -1,10 +1,8 @@
-use crate::utils::{
-    transform::Transform,
-    units::{Au, Deg, Jdn, Mm, Rad, J2000_JDN},
-};
+use crate::managers::resource::body_description::{BodyDescription, BodyType, OrbitalElements};
+use crate::utils::transform::Transform;
+use crate::utils::units::{Au, Deg, Jdn, Mm, Rad, J2000_JDN};
 use na::{Point3, UnitQuaternion, Vector3};
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
 lazy_static! {
@@ -35,46 +33,6 @@ pub const GRAVITATION_CONSTANT: f64 = 6.743E-29;
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum BodyType {
-    Barycenter,
-    Star,
-    Planet,
-    Moon,
-    Asteroid,
-    Comet,
-    Artificial,
-    Other,
-}
-impl Default for BodyType {
-    fn default() -> Self {
-        BodyType::Other
-    }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct BodyDescription {
-    pub id: u32,
-    pub name: String,
-    pub reference_id: u32,
-    pub body_type: BodyType,
-    pub mean_radius: Mm,
-    pub mass: f64,
-    // Rotation, rotation axis?
-    pub orbital_elements: OrbitalElements,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct OrbitalElements {
-    pub semi_major_axis: Mm,
-    pub eccentricity: f64,
-    pub inclination: Rad, // Rad to prevent a rogue .sin() from spewing nonsense
-    pub long_asc_node: Rad,
-    pub arg_periapsis: Rad,
-    pub mean_anomaly_0: Rad,
-    pub sidereal_orbit_period_days: f64,
-}
-
 fn float_from_match(s: &str, regex: &Regex) -> Option<f64> {
     return regex
         .captures(s)
@@ -96,96 +54,6 @@ fn string_from_match(s: &str, regex: &Regex) -> Option<String> {
         .captures(s)
         .and_then(|c| c.get(1))
         .and_then(|m| Some(m.as_str().to_owned()));
-}
-
-#[allow(dead_code)]
-pub fn parse_ephemerides(file_str: &str) -> Result<BodyDescription, String> {
-    let semi_major_axis = Au(
-        float_from_match(file_str, &SEMI_MAJOR_AXIS_RE).ok_or(format!(
-            "Failed to extract semi major axis from this file!\n{}",
-            file_str
-        ))?,
-    )
-    .to_Mm();
-
-    let eccentricity = float_from_match(file_str, &ECCENTRICITY_RE).ok_or(format!(
-        "Failed to extract eccentricity from this file!\n{}",
-        file_str
-    ))?;
-
-    let inclination = Deg(float_from_match(file_str, &INCLINATION_RE).ok_or(format!(
-        "Failed to extract inclination from this file!\n{}",
-        file_str
-    ))?)
-    .to_rad();
-
-    let long_asc_node = Deg(float_from_match(file_str, &LONG_ASC_NODE_RE).ok_or(format!(
-        "Failed to extract longitude of ascending node from this file!\n{}",
-        file_str
-    ))?)
-    .to_rad();
-
-    let arg_periapsis = Deg(float_from_match(file_str, &ARG_PERIAPSIS_RE).ok_or(format!(
-        "Failed to extract argument of periapsis from this file!\n{}",
-        file_str
-    ))?)
-    .to_rad();
-
-    let mean_anomaly_0 = Deg(float_from_match(file_str, &TRUE_ANOMALY_RE).ok_or(format!(
-        "Failed to extract true anomaly from this file!\n{}",
-        file_str
-    ))?)
-    .to_rad();
-
-    let name = string_from_match(file_str, &TARGET_BODY_NAME_RE).ok_or(format!(
-        "Failed to extract body name from this file!\n{}",
-        file_str
-    ))?;
-
-    let id = int_from_match(file_str, &TARGET_BODY_ID_RE).ok_or(format!(
-        "Failed to extract body id from this file!\n{}",
-        file_str
-    ))?;
-
-    let reference_id = int_from_match(file_str, &CENTER_BODY_ID_RE).ok_or(format!(
-        "Failed to extract reference body id from this file!\n{}",
-        file_str
-    ))?;
-
-    let mean_radius = Mm(float_from_match(file_str, &MEAN_RADIUS_RE).unwrap_or(0.0) / 1000.0);
-
-    let sidereal_orbit_period_days =
-        float_from_match(file_str, &SIDERAL_ORBIT_PERIOD_RE).unwrap_or(0.0);
-
-    let body_type = {
-        if id == 0 {
-            BodyType::Star
-        } else if id > 100 && (id + 1) % 100 == 0 {
-            BodyType::Planet
-        } else if reference_id == 0 && id < 10 {
-            BodyType::Barycenter
-        } else {
-            BodyType::Other
-        }
-    };
-
-    return Ok(BodyDescription {
-        id,
-        mean_radius,
-        name,
-        reference_id,
-        mass: 0.0, // TODO
-        body_type,
-        orbital_elements: OrbitalElements {
-            semi_major_axis,
-            eccentricity,
-            inclination,
-            long_asc_node,
-            arg_periapsis,
-            mean_anomaly_0,
-            sidereal_orbit_period_days,
-        },
-    });
 }
 
 pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform<f64> {
@@ -417,6 +285,8 @@ pub mod tests {
     pub fn elements_to_cartesian_numerical() {
         // Venus heliocentric
         let elements = OrbitalElements {
+            ref_id: String::from("10"),
+            epoch: J2000_JDN,
             semi_major_axis: Au(7.233269274790103E-01).to_Mm(),
             eccentricity: 6.755786250503024E-03,
             inclination: Deg(3.394589648659516E+00).to_rad(),
@@ -446,6 +316,8 @@ pub mod tests {
 
         // Callisto vs Jupiter system barycenter
         let elements = OrbitalElements {
+            ref_id: String::from("10"),
+            epoch: J2000_JDN,
             semi_major_axis: Au(1.258537659089199E-02).to_Mm(),
             eccentricity: 7.423685220918853E-03,
             inclination: Deg(2.016919351362485E+00).to_rad(),
@@ -478,6 +350,8 @@ pub mod tests {
     pub fn test_bake_eccentric_anomaly_times() {
         // Mercury
         let elements = OrbitalElements {
+            ref_id: String::from("10"),
+            epoch: J2000_JDN,
             semi_major_axis: Au(0.3870982121840369).to_Mm(),
             eccentricity: 0.2056302929816634,
             inclination: Deg(7.00501414069919).to_rad(),
@@ -870,6 +744,8 @@ pub mod tests {
 
         // Charon
         let elements = OrbitalElements {
+            ref_id: String::from("10"),
+            epoch: J2000_JDN,
             semi_major_axis: Au(0.0001165004117181425).to_Mm(),
             eccentricity: 0.002072743604774027,
             inclination: Deg(112.8984926230046).to_rad(),
