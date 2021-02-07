@@ -8,6 +8,7 @@ use crate::managers::scene::orbits::add_free_body;
 use crate::utils::units::J2000_JDN;
 use crate::utils::{string::get_unique_name, transform::Transform};
 use na::Vector3;
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 pub use scene::*;
@@ -25,14 +26,21 @@ pub struct SceneManager {
 }
 impl SceneManager {
     pub fn new() -> Self {
-        return Self {
+        let mut new_man = Self {
             main: None,
             loaded_scenes: HashMap::new(),
             descriptions: SceneDescriptionVec(Vec::new()),
         };
+
+        new_man.new_scene("empty");
+        new_man.main = Some(String::from("empty"));
+
+        return new_man;
     }
 
-    pub fn new_scene(&mut self, scene_name: &str) -> Option<&mut Scene> {
+    /// For SceneManager usage. Consumers should just `set_scene` instead, and the scenes
+    /// will be created automatically when needed
+    pub(super) fn new_scene(&mut self, scene_name: &str) -> Option<&mut Scene> {
         let unique_scene_name = get_unique_name(scene_name, &self.loaded_scenes);
 
         let scene = Scene::new(&unique_scene_name);
@@ -47,13 +55,102 @@ impl SceneManager {
         return scene_in_storage;
     }
 
-    pub fn get_main_scene_name(&self) -> &Option<String> {
-        return &self.main;
+    /// Sets the current scene to one with `identifier`. Will load/create the scene
+    /// if we can/know how to. This includes constructing new `Scene` from `SceneDescription`s
+    pub fn set_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
+        if let Some(main) = &self.main {
+            if main.as_str() == identifier {
+                return;
+            }
+        };
+
+        if !self.loaded_scenes.contains_key(identifier) {
+            self.load_scene(identifier, res_man);
+        }
+
+        if let Some(found_scene) = self.get_scene_mut(identifier) {
+            res_man.provision_scene_assets(found_scene);
+            self.main = Some(identifier.to_string());
+        } else {
+            log::warn!("Scene with identifier '{}' not found!", identifier);
+        }
+    }
+
+    fn load_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
+        match identifier {
+            "test" => self.load_test_scene(res_man),
+            "teal" => self.load_teal_sphere_scene(res_man),
+            "planetarium" => self.load_planetarium_scene(res_man),
+            _ => self.load_scene_from_desc(identifier, res_man),
+        };
+    }
+
+    /// Injects the scene with `identifier` into the current scene, setting its 0th node to transform `target_transform`
+    pub fn inject_scene(
+        &mut self,
+        identifier: &str,
+        target_transform: Option<Transform<f64>>,
+        res_man: &mut ResourceManager,
+    ) -> Result<(), String> {
+        // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
+        let mut injected_scene_copy = self
+            .get_scene(identifier)
+            .ok_or(format!(
+                "Failed to find scene to inject '{}'. Available scenes:\n{:#?}",
+                identifier,
+                self.loaded_scenes.keys()
+            ))?
+            .clone();
+
+        res_man.provision_scene_assets(&mut injected_scene_copy);
+
+        let current_scene = self
+            .get_main_scene_mut()
+            .ok_or("Can't inject if we don't have a main scene!")?;
+
+        log::info!(
+            "Injecting scene '{}' into current '{}' ({} entities)",
+            injected_scene_copy.identifier,
+            current_scene.identifier,
+            injected_scene_copy.get_num_entities()
+        );
+
+        // TODO: This is really not enforced at all, but is usually the case
+        let root_entity = injected_scene_copy.get_entity_from_index(0).unwrap();
+
+        // Update the position of the root scene node to the target transform
+        if let Some(target_transform) = target_transform {
+            let scene_root_trans = injected_scene_copy
+                .transform
+                .get_component_mut(root_entity)
+                .unwrap()
+                .get_local_transform_mut();
+            *scene_root_trans = target_transform;
+        }
+
+        // Inject entities into current_scene, and keep track of where they ended up
+        current_scene.move_from_other(injected_scene_copy);
+
+        return Ok(());
+    }
+
+    /// Completely unloads the scene with `identifier`. The next time `set_scene` is called with
+    /// `identifier`, it may need to be re-constructed
+    pub fn delete_scene(&mut self, identifier: &str) {
+        if let Some(main_name) = self.main.as_ref() {
+            if main_name == identifier {
+                self.main = Some(String::from("empty"));
+            }
+        }
+
+        log::info!("Unloading scene '{}'", identifier);
+
+        self.loaded_scenes.remove(identifier);
     }
 
     pub fn get_main_scene(&self) -> Option<&Scene> {
-        match self.get_main_scene_name() {
-            Some(ident_ref) => self.get_scene(ident_ref),
+        match self.main.as_ref() {
+            Some(ident_ref) => self.get_scene(&ident_ref),
             None => None,
         }
     }
@@ -73,7 +170,7 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    pub fn load_scene_description_vec(&mut self, serialized: &str) -> Result<(), String> {
+    pub fn receive_scene_description_vec(&mut self, serialized: &str) -> Result<(), String> {
         let new_vec: SceneDescriptionVec = ron::de::from_str(serialized)
             .map_err(|e| format!("RON deserialization error:\n{}", e).to_owned())?;
 
@@ -83,16 +180,8 @@ impl SceneManager {
         return Ok(());
     }
 
-    pub fn load_empty_scene(&mut self) {
-        if self.loaded_scenes.contains_key("empty") {
-            return;
-        }
-
-        self.new_scene("empty").unwrap();
-    }
-
-    pub fn load_teal_sphere_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
-        let scene = self.new_scene(&identifier).unwrap();
+    fn load_teal_sphere_scene(&mut self, res_man: &mut ResourceManager) {
+        let scene = self.new_scene("teal_sphere").unwrap();
 
         // Floor
         let planet = scene.new_entity(Some("floor"));
@@ -148,8 +237,8 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
-    pub fn load_test_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
-        let scene = self.new_scene(&identifier).unwrap();
+    fn load_test_scene(&mut self, res_man: &mut ResourceManager) {
+        let scene = self.new_scene("test").unwrap();
 
         let sun_color: [f32; 3] = [1.0, 1.0, 0.8];
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");
@@ -205,8 +294,8 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
-    pub fn load_planetarium_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
-        let scene = self.new_scene(&identifier).unwrap();
+    fn load_planetarium_scene(&mut self, res_man: &mut ResourceManager) {
+        let scene = self.new_scene("planetarium").unwrap();
 
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "sun_mat");
         sun_mat.as_ref().unwrap().borrow_mut().set_uniform_value(
@@ -468,30 +557,26 @@ impl SceneManager {
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
-    pub fn load_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
-        if self.loaded_scenes.contains_key(identifier) {
-            return;
-        }
-
-        let res = self
+    fn load_scene_from_desc(&mut self, identifier: &str, res_man: &mut ResourceManager) {
+        let desc = self
             .descriptions
             .0
             .iter()
             .find(|desc| desc.name == identifier);
-        if res.is_none() {
+        if desc.is_none() {
             return;
         }
-        let res = res.unwrap();
+        let desc = desc.unwrap();
 
         // Make Rust happy
-        let name = res.name.clone();
-        let bodies = res.bodies.clone();
+        let name = desc.name.clone();
+        let bodies = desc.bodies.clone();
         let time = J2000_JDN;
 
         let scene = self.new_scene(&name).unwrap();
 
         for (db_name, body_ids) in bodies.iter() {
-            let db = res_man.get_body_database(db_name);
+            let db = res_man.take_body_database(db_name);
             if db.is_err() {
                 log::warn!(
                     "Error retrieving body database '{}':\n{}",
@@ -514,6 +599,8 @@ impl SceneManager {
 
                 add_free_body(scene, time, body.unwrap(), res_man);
             }
+
+            res_man.set_body_database(db_name, db);
         }
 
         // Grid
@@ -529,73 +616,5 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = Vector3::new(10000.0, 10000.0, 10000.0);
         let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
-    }
-
-    pub fn set_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
-        if let Some(main) = &self.main {
-            if &main[..] == identifier {
-                return;
-            }
-        };
-
-        if let Some(found_scene) = self.get_scene_mut(identifier) {
-            res_man.provision_scene_assets(found_scene);
-            self.main = Some(identifier.to_string());
-        } else {
-            log::warn!("Scene with identifier '{}' not found!", identifier);
-        }
-    }
-
-    /** Injects the scene with identifier `str` into the current scene, setting its 0th node to transform `target_transform` */
-    pub fn inject_scene(
-        &mut self,
-        identifier: &str,
-        target_transform: Option<Transform<f64>>,
-        res_man: &mut ResourceManager,
-    ) -> Result<(), String> {
-        // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
-        let mut injected_scene_copy = self
-            .get_scene(identifier)
-            .ok_or(format!(
-                "Failed to find scene to inject '{}'. Available scenes:\n{:#?}",
-                identifier,
-                self.loaded_scenes.keys()
-            ))?
-            .clone();
-
-        res_man.provision_scene_assets(&mut injected_scene_copy);
-
-        let current_scene = self
-            .get_main_scene_mut()
-            .ok_or("Can't inject if we don't have a main scene!")?;
-
-        log::info!(
-            "Injecting scene '{}' into current '{}' ({} entities)",
-            injected_scene_copy.identifier,
-            current_scene.identifier,
-            injected_scene_copy.get_num_entities()
-        );
-
-        // TODO: This is really not enforced at all, but is usually the case
-        let root_entity = injected_scene_copy.get_entity_from_index(0).unwrap();
-
-        // Update the position of the root scene node to the target transform
-        if let Some(target_transform) = target_transform {
-            let scene_root_trans = injected_scene_copy
-                .transform
-                .get_component_mut(root_entity)
-                .unwrap()
-                .get_local_transform_mut();
-            *scene_root_trans = target_transform;
-        }
-
-        // Inject entities into current_scene, and keep track of where they ended up
-        current_scene.move_from_other(injected_scene_copy);
-
-        return Ok(());
-    }
-
-    pub fn delete_scene(&mut self, identifier: &str) {
-        self.loaded_scenes.remove(identifier);
     }
 }

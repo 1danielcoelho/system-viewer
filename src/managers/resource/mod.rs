@@ -571,16 +571,20 @@ impl ResourceManager {
         return Ok(());
     }
 
-    pub fn get_body_database(
-        &self,
+    pub fn take_body_database(
+        &mut self,
         db_name: &str,
-    ) -> Result<&HashMap<String, BodyDescription>, String> {
-        let db = self.bodies.get(db_name).ok_or(String::from(format!(
+    ) -> Result<HashMap<String, BodyDescription>, String> {
+        let db = self.bodies.remove(db_name).ok_or(String::from(format!(
             "Resource manager has no database with name '{}'",
             db_name
         )))?;
 
         return Ok(db);
+    }
+
+    pub fn set_body_database(&mut self, db_name: &str, db: HashMap<String, BodyDescription>) {
+        self.bodies.insert(db_name.to_owned(), db);
     }
 
     pub fn get_body(&self, db_name: &str, body_id: &str) -> Result<&BodyDescription, String> {

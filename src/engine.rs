@@ -23,7 +23,6 @@ impl Engine {
             int_man: InterfaceManager::new(),
         };
 
-        new_engine.scene_man.load_empty_scene();
         new_engine
             .scene_man
             .set_scene("empty", &mut new_engine.res_man);
@@ -67,7 +66,7 @@ impl Engine {
             text.len()
         );
 
-        self.scene_man.load_scene_description_vec(text).unwrap();
+        self.scene_man.receive_scene_description_vec(text).unwrap();
     }
 
     pub fn receive_database_text(&mut self, url: &str, text: &str) {

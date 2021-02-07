@@ -1,11 +1,7 @@
-use crate::{
-    components::{MeshComponent, TransformComponent},
-    managers::{
-        resource::gltf::GltfResource,
-        scene::{Entity, Scene, SceneManager},
-        ResourceManager,
-    },
-};
+use crate::components::{MeshComponent, TransformComponent};
+use crate::managers::resource::gltf::GltfResource;
+use crate::managers::scene::{Entity, Scene, SceneManager};
+use crate::managers::ResourceManager;
 use na::{Quaternion, UnitQuaternion, Vector3};
 
 impl SceneManager {

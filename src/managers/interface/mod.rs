@@ -685,11 +685,7 @@ impl InterfaceManager {
                         cols[0].set_min_height(300.0);
                         cols[1].set_min_height(300.0);
 
-                        let main_name = scene_man
-                            .get_main_scene_name()
-                            .as_ref()
-                            .and_then(|s| Some(s.clone()))
-                            .unwrap_or_default();
+                        let main_name = scene_man.get_main_scene().unwrap().identifier.clone();
 
                         egui::Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
                             ui.set_min_height(ui.available_size().y);
@@ -776,12 +772,11 @@ impl InterfaceManager {
                         cols[1].columns(2, |cols| {
                             cols[0].with_layout(egui::Layout::right_to_left(), |ui| {
                                 if ui.button("   Open   ").clicked {
-                                    let desc = &scene_man.descriptions.0
-                                        [self.selected_scene_desc_index as usize];
-                                    let name = desc.name.to_owned();
-
-                                    scene_man.load_scene(&name, res_man);
-                                    scene_man.set_scene(&name, res_man);
+                                    let name = &scene_man.descriptions.0
+                                        [self.selected_scene_desc_index as usize]
+                                        .name
+                                        .clone();
+                                    scene_man.set_scene(name, res_man);
                                 }
                             });
 
@@ -793,7 +788,11 @@ impl InterfaceManager {
                                     )
                                     .on_hover_text("Close this scene");
                                 if close_resp.clicked {
-                                    scene_man.set_scene("empty", res_man);
+                                    let name = &scene_man.descriptions.0
+                                        [self.selected_scene_desc_index as usize]
+                                        .name
+                                        .clone();
+                                    scene_man.delete_scene(name);
                                 }
                             });
                         });
