@@ -426,33 +426,42 @@ response |= ui.add(label);
 
 # Cleanup for MVP
 - Initial splash screen with picker for different scenes
-    - Scenes can be baked in, and load a subset of objects from json each
-    - Load data from new json databases, J2000 N-body simulation
+    > - Scenes can be baked in, and load a subset of objects from json each
+    > - Load data from new json databases, J2000 N-body simulation
         > - For some reason planets don't have masses?
         > - I think they're spawning with wrong positions/velocities, I may need to make a debug GUI thing for the physics component
         > - Fix planets instantly just falling into the sun
             > - Initial speeds and velocities seem reasonable, gravity is just too strong somehow?
-        - I think I should put the scene description inside the created Scene?
         > - Create rust analogue of SceneDescription
         > - Parse scene_list.ron 
         > - Show SceneDescriptions on ui
         > - Parse json body databases on demand
         > - Single ron file with list of scenes. Each item would have a scene name, description, number of bodies and a list of body_ids and dbs to check. When clicking it, it would parse all required dbs and fetch the bodies required
+        - I think I should put the scene description inside the created Scene?
+            - Because I need to be able to reset the scene to start e.g. reset time and camera
 > - Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
     > - Controls to set simulation speed right there
     > - Object list (can click to go to and track)
     > - About
+    > - Option to go back to splash screen
+    - Fix scenes not loading meshes
+        - This is because we were relying on the test scene to load the meshes and stuff
     - Option to reset to start
         - Just open the current scene again
-    - Option to go back to splash screen
-- Show object name on hover, open details on click
-    - Track object on click
-- Switch camera to orbit mode when tracking an object, mouse wheel to zoom
+    - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
+- Controls and manipulation tweaks    
+    - Show object name on hover, open details on click    
+        - Track object on click
+    - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
+        - Have the "go to thing" system be more aware of the thing's size. It's impossible to find phobos and deimos for example, because they're too small    
 - Okay-ish results on the simulation for now, we can improve later
 - Basic solar system simulation at J2000 with bodies in the right size, good colors/textures, sun with OK brightness
 - Fix firefox dragging bug
 - Update egui
+- I think I have to not use the localstorage or show a popup about storing data in the browser
 - Cleanup github repo and properly handle licensing
+
+# Planet trails (or something). It's impossible to see anything from far away
 
 # I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
 

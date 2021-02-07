@@ -23,12 +23,10 @@ impl Engine {
             int_man: InterfaceManager::new(),
         };
 
+        new_engine.scene_man.load_empty_scene();
         new_engine
             .scene_man
-            .load_test_scene("test", &mut new_engine.res_man);
-        new_engine
-            .scene_man
-            .set_scene("test", &mut new_engine.res_man);
+            .set_scene("empty", &mut new_engine.res_man);
 
         return new_engine;
     }

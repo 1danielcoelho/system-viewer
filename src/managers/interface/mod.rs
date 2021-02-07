@@ -7,6 +7,7 @@ use crate::managers::ResourceManager;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::{prompt_for_bytes_file, UICTX};
+use egui::Layout;
 use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::{Matrix4, Point3, Translation3, Vector3};
@@ -71,7 +72,7 @@ pub struct InterfaceManager {
     backend: gui_backend::WebBackend,
     web_input: WebInput,
     open_windows: OpenWindows,
-    selected_scene_desc_index: Option<u32>,
+    selected_scene_desc_index: u32,
 
     frame_times: VecDeque<f64>,
     time_of_last_update: f64,
@@ -89,7 +90,7 @@ impl InterfaceManager {
                 scene_browser: true,
                 about: false,
             },
-            selected_scene_desc_index: None,
+            selected_scene_desc_index: 0,
             frame_times: vec![16.66; 15].into_iter().collect(),
             time_of_last_update: -2.0,
             last_frame_rate: 60.0, // Optimism
@@ -697,7 +698,7 @@ impl InterfaceManager {
                                 for (index, scene) in scene_man.descriptions.0.iter().enumerate() {
                                     ui.radio_value(
                                         &mut self.selected_scene_desc_index,
-                                        Some(index as u32),
+                                        index as u32,
                                         {
                                             if &scene.name == &main_name {
                                                 scene.name.to_owned() + " (active)"
@@ -710,58 +711,91 @@ impl InterfaceManager {
                             });
                         });
 
-                        egui::CollapsingHeader::new("Selected scene:")
-                            .default_open(true)
-                            .show(&mut cols[1], |ui| {
-                                if let Some(index) = self.selected_scene_desc_index {
-                                    let desc = &scene_man.descriptions.0[index as usize];
+                        let selected_is_active = match scene_man
+                            .descriptions
+                            .0
+                            .get(self.selected_scene_desc_index as usize)
+                        {
+                            Some(desc) => &desc.name == &main_name,
+                            None => false,
+                        };
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Name:");
-                                        cols[1].label(&desc.name);
-                                    });
+                        // HACK: 32.0 is the height of the button. I have no idea how to do this programmatically
+                        // Maybe with a bottom up layout, but there is some type of egui crash when I put a ScrollArea
+                        // inside another layout, and the ScrollArea spawns a scrollbar
+                        let height = cols[1].available_size().y - 32.0;
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Description:");
-                                        cols[1].label(&desc.description);
-                                    });
+                        egui::ScrollArea::from_max_height(height).show(&mut cols[1], |ui| {
+                            ui.set_min_height(height);
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Time:");
-                                        cols[1].label(&desc.time);
-                                    });
+                            if let Some(desc) = scene_man
+                                .descriptions
+                                .0
+                                .get(self.selected_scene_desc_index as usize)
+                            {
+                                ui.columns(2, |cols| {
+                                    cols[0].label("Name:");
+                                    cols[1].label(&desc.name);
+                                });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Simulation scale:");
-                                        cols[1].label(format!("{}", &desc.simulation_scale));
-                                    });
+                                ui.columns(2, |cols| {
+                                    cols[0].label("Description:");
+                                    cols[1].label(&desc.description);
+                                });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Reference");
-                                        cols[1].label(&desc.reference);
-                                    });
+                                ui.columns(2, |cols| {
+                                    cols[0].label("Time:");
+                                    cols[1].label(&desc.time);
+                                });
 
-                                    let mut num_bodies = 0;
-                                    for (_, bodies) in desc.bodies.iter() {
-                                        num_bodies += bodies.len();
-                                    }
+                                ui.columns(2, |cols| {
+                                    cols[0].label("Simulation scale:");
+                                    cols[1].label(format!("{}", &desc.simulation_scale));
+                                });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Bodies:");
-                                        cols[1].label(format!("{}", num_bodies));
-                                    });
+                                ui.columns(2, |cols| {
+                                    cols[0].label("Reference");
+                                    cols[1].label(&desc.reference);
+                                });
+
+                                let mut num_bodies = 0;
+                                for (_, bodies) in desc.bodies.iter() {
+                                    num_bodies += bodies.len();
+                                }
+
+                                ui.columns(2, |cols| {
+                                    cols[0].label("Bodies:");
+                                    cols[1].label(format!("{}", num_bodies));
+                                });
+                            }
+                        });
+
+                        cols[1].separator();
+
+                        // TODO: There has to be a simpler way of just centering two buttons on that space
+                        cols[1].columns(2, |cols| {
+                            cols[0].with_layout(egui::Layout::right_to_left(), |ui| {
+                                if ui.button("   Open   ").clicked {
+                                    let desc = &scene_man.descriptions.0
+                                        [self.selected_scene_desc_index as usize];
+                                    let name = desc.name.to_owned();
+
+                                    scene_man.load_scene(&name, res_man);
+                                    scene_man.set_scene(&name, res_man);
                                 }
                             });
 
-                        cols[1].with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                            if ui.button("   Open   ").clicked {
-                                let desc = &scene_man.descriptions.0
-                                    [self.selected_scene_desc_index.unwrap() as usize];
-                                let name = desc.name.to_owned();
-
-                                scene_man.load_scene(&name, res_man);
-                                scene_man.set_scene(&name, res_man);
-                            }
+                            cols[1].with_layout(egui::Layout::left_to_right(), |ui| {
+                                let close_resp = ui
+                                    .add(
+                                        egui::Button::new("   Close   ")
+                                            .enabled(selected_is_active),
+                                    )
+                                    .on_hover_text("Close this scene");
+                                if close_resp.clicked {
+                                    scene_man.set_scene("empty", res_man);
+                                }
+                            });
                         });
                     });
                 });

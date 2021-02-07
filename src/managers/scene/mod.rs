@@ -83,6 +83,14 @@ impl SceneManager {
         return Ok(());
     }
 
+    pub fn load_empty_scene(&mut self) {
+        if self.loaded_scenes.contains_key("empty") {
+            return;
+        }
+
+        self.new_scene("empty").unwrap();
+    }
+
     pub fn load_teal_sphere_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
         let scene = self.new_scene(&identifier).unwrap();
 
@@ -534,7 +542,7 @@ impl SceneManager {
             res_man.provision_scene_assets(found_scene);
             self.main = Some(identifier.to_string());
         } else {
-            log::warn!("Scene with identifier {} not found!", identifier);
+            log::warn!("Scene with identifier '{}' not found!", identifier);
         }
     }
 
