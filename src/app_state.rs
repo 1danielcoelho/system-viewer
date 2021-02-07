@@ -145,7 +145,7 @@ impl AppState {
             time_of_last_save: 0.,
             simulation_scale: SimulationScale::Seconds,
             simulation_speed: 1. / 86400.0,
-            simulation_paused: false,
+            simulation_paused: true,
             move_speed: 5.0,
             rotate_speed: 2.0,
             light_intensity: 1.0,

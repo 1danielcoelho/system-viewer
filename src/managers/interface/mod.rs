@@ -1,5 +1,5 @@
 use crate::app_state::{AppState, ButtonState, ReferenceChange, SimulationScale};
-use crate::components::{MeshComponent, OrbitalComponent, TransformComponent};
+use crate::components::{MeshComponent, OrbitalComponent, PhysicsComponent, TransformComponent};
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Scene, SceneManager};
@@ -486,7 +486,7 @@ impl InterfaceManager {
                     ui.separator();
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Vertical FOV (deg):");
+                        cols[0].label("Vertical FOV [deg]:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.camera.fov_v)
                                 .range(0.1..=120.0)
@@ -495,17 +495,17 @@ impl InterfaceManager {
                     });
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Near:");
+                        cols[0].label("Near [Mm]:");
                         cols[1].add(egui::DragValue::f64(&mut state.camera.near).speed(0.01))
                     });
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Far:");
+                        cols[0].label("Far [Mm]:");
                         cols[1].add(egui::DragValue::f64(&mut state.camera.far))
                     });
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Camera pos:");
+                        cols[0].label("Camera pos [Mm]:");
                         cols[1]
                             .horizontal(|ui| {
                                 let mut r = ui.add(
@@ -556,7 +556,7 @@ impl InterfaceManager {
                     ui.separator();
 
                     response |= ui.columns(2, |cols| {
-                        cols[0].label("Move speed:");
+                        cols[0].label("Move speed [???]:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.move_speed)
                                 .range(1.0..=1000.0)
@@ -602,6 +602,7 @@ impl InterfaceManager {
                                 ))
                             });
 
+                            // TODO: Make this more generic
                             if let Some(comp) = scene.get_component::<TransformComponent>(selection)
                             {
                                 ui.collapsing("Transform component", |ui| comp.draw_details_ui(ui));
@@ -613,6 +614,10 @@ impl InterfaceManager {
 
                             if let Some(comp) = scene.get_component::<OrbitalComponent>(selection) {
                                 ui.collapsing("Orbital component", |ui| comp.draw_details_ui(ui));
+                            }
+
+                            if let Some(comp) = scene.get_component::<PhysicsComponent>(selection) {
+                                ui.collapsing("Physics component", |ui| comp.draw_details_ui(ui));
                             }
                         }
                     }
@@ -797,6 +802,9 @@ impl InterfaceManager {
                                     if ui.button(name).clicked {
                                         state.selection.clear();
                                         state.selection.insert(entity.current);
+
+                                        state.camera.next_reference_entity =
+                                            Some(ReferenceChange::NewEntity(entity.current));
                                     }
                                 }
                             }

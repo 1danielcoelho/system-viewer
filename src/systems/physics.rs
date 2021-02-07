@@ -5,7 +5,7 @@ use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::managers::EventReceiver;
 use crate::utils::orbits::GRAVITATION_CONSTANT;
-use na::{Matrix3, Quaternion, UnitQuaternion, Vector3};
+use na::*;
 
 pub struct PhysicsSystem {}
 impl PhysicsSystem {
@@ -55,8 +55,8 @@ fn collect_gravity(scene: &mut Scene) {
             let other_comp = &phys_comps[j];
 
             let delta = other_comp.trans.trans - pos;
-            let dist = delta.magnitude();
-            let force = delta * GRAVITATION_CONSTANT * mass * other_comp.mass / dist;
+            let dist = delta.magnitude();            
+            let force: Vector3<f64> = delta.normalize() * GRAVITATION_CONSTANT * mass * other_comp.mass / (dist * dist);
 
             phys_comps[i].force_sum += force;
             phys_comps[j].force_sum += -force;

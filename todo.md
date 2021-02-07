@@ -428,7 +428,10 @@ response |= ui.add(label);
 - Initial splash screen with picker for different scenes
     - Scenes can be baked in, and load a subset of objects from json each
     - Load data from new json databases, J2000 N-body simulation
-        - For some reason planets don't have masses?
+        > - For some reason planets don't have masses?
+        > - I think they're spawning with wrong positions/velocities, I may need to make a debug GUI thing for the physics component
+        > - Fix planets instantly just falling into the sun
+            > - Initial speeds and velocities seem reasonable, gravity is just too strong somehow?
         - I think I should put the scene description inside the created Scene?
         > - Create rust analogue of SceneDescription
         > - Parse scene_list.ron 
@@ -443,13 +446,15 @@ response |= ui.add(label);
         - Just open the current scene again
     - Option to go back to splash screen
 - Show object name on hover, open details on click
-- Track object on click
+    - Track object on click
 - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
 - Okay-ish results on the simulation for now, we can improve later
 - Basic solar system simulation at J2000 with bodies in the right size, good colors/textures, sun with OK brightness
 - Fix firefox dragging bug
 - Update egui
 - Cleanup github repo and properly handle licensing
+
+# I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
 
 # Good UV-mapped GLTF materials for the planets and asteroids (use blender?)
 
@@ -461,6 +466,7 @@ response |= ui.add(label);
 - Integration sample scenes with known 3-body patterns to test stability
 - Solar system N-body simulation with n largest masses and compare results with those stack exchange answers
 - Cut down on calculations by ignoring some low mass - low mass interactions via some threshold
+    - Mass doesn't change, I could do this easy by just sorting the entities by mass and stopping the inner loop after it hits N large masses, or something like that
 
 # Rotation axes: 
 - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic

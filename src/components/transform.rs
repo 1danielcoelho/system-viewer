@@ -57,7 +57,7 @@ impl Component for TransformComponent {
 impl DetailsUI for TransformComponent {
     fn draw_details_ui(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
-            cols[0].label("Pos:");
+            cols[0].label("Pos [Mm]:");
             cols[1].horizontal(|ui| {
                 ui.add(egui::DragValue::f64(&mut self.local_transform.trans.x).prefix("x: "));
                 ui.add(egui::DragValue::f64(&mut self.local_transform.trans.y).prefix("y: "));
@@ -66,7 +66,7 @@ impl DetailsUI for TransformComponent {
         });
 
         ui.columns(2, |cols| {
-            cols[0].label("Rot:");
+            cols[0].label("Rot [deg]:");
             cols[1].horizontal(|ui| {
                 let (mut euler_x, mut euler_y, mut euler_z) =
                     self.local_transform.rot.euler_angles();
@@ -74,21 +74,9 @@ impl DetailsUI for TransformComponent {
                 euler_y = euler_y.to_degrees();
                 euler_z = euler_z.to_degrees();
 
-                ui.add(
-                    egui::DragValue::f64(&mut euler_x)
-                        .prefix("x: ")
-                        .suffix("deg"),
-                );
-                ui.add(
-                    egui::DragValue::f64(&mut euler_y)
-                        .prefix("y: ")
-                        .suffix("deg"),
-                );
-                ui.add(
-                    egui::DragValue::f64(&mut euler_z)
-                        .prefix("z: ")
-                        .suffix("deg"),
-                );
+                ui.add(egui::DragValue::f64(&mut euler_x).prefix("x: "));
+                ui.add(egui::DragValue::f64(&mut euler_y).prefix("y: "));
+                ui.add(egui::DragValue::f64(&mut euler_z).prefix("z: "));
 
                 self.local_transform.rot = UnitQuaternion::from_euler_angles(
                     euler_x.to_radians(),

@@ -165,10 +165,10 @@ pub fn add_free_body(
 
         let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
         mesh_comp.set_mesh(res_man.get_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(res_man.get_material("gltf_metal_rough"), 0);
     }
 
     let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
+    phys_comp.mass = body.mass.unwrap() as f64;
     phys_comp.lin_mom = state_vector.vel.scale(body.mass.unwrap() as f64);
 
     // Emit light if it's a star

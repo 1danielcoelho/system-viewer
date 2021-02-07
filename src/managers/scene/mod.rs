@@ -507,6 +507,20 @@ impl SceneManager {
                 add_free_body(scene, time, body.unwrap(), res_man);
             }
         }
+
+        // Grid
+        let grid = scene.new_entity(Some("grid"));
+        let trans_comp = scene.add_component::<TransformComponent>(grid);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(1000000.0, 1000000.0, 1000000.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(grid);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
+
+        // Axes
+        let axes = scene.new_entity(Some("axes"));
+        let trans_comp = scene.add_component::<TransformComponent>(axes);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(10000.0, 10000.0, 10000.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(axes);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
     }
 
     pub fn set_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) {
