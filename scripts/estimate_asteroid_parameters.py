@@ -91,9 +91,13 @@ def estimate_body_data(database):
     load_mass('c00067_0', 1E13)  # 67P/Churyumov-Gerasimenko
 
 
+def run(database):
+    estimate_body_data(database)
+
+
 if __name__ == "__main__":
     database = load_database()
 
-    estimate_body_data(database)
+    run(database)
 
     save_database(database)

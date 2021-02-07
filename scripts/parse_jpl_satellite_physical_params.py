@@ -187,6 +187,7 @@ values = [
     ["Styx",	        0.0000,		    10.0,	    nan,	    "27.0V",		0.35],
 ]
 
+
 def add_jpl_data(database):
     for name, mass, radius, density, magnitude, albedo in values:
         if mass == 0:
@@ -209,10 +210,13 @@ def add_jpl_data(database):
             body['mass'] = mass_kg
 
 
+def run(database):
+    add_jpl_data(database)
+
 
 if __name__ == "__main__":
     database = load_database()
 
-    add_jpl_data(database)
+    run(database)
 
     save_database(database)

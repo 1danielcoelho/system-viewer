@@ -4,7 +4,8 @@ import json
 import copy
 import re
 
-database_folder = "D:/Dropbox/Astronomy/database"
+# database_folder = "D:/Dropbox/Astronomy/database"
+database_folder = "E:/Rust/system_viewer/public/database"
 files = [
     "asteroids",
     "comets",

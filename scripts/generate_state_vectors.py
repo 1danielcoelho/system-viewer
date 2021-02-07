@@ -197,9 +197,13 @@ def ensure_j2000_state_vector(database):
             body['state_vectors'].append(new_vec)
 
 
+def run(database):
+    ensure_j2000_state_vector(database)
+
+
 if __name__ == "__main__":
     database = load_database()
 
-    ensure_j2000_state_vector(database)
+    run(database)
 
     save_database(database)

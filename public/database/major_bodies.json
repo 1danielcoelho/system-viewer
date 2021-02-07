@@ -3,6 +3,7 @@
         "name": "Mercury Barycenter",
         "type": "barycenter",
         "meta": {},
+        "mass": 0,
         "radius": 0,
         "osc_elements": [
             {
@@ -18,7 +19,6 @@
             }
         ],
         "albedo": 0,
-        "mass": 0,
         "magnitude": 0,
         "rotation_period": 0,
         "rotation_axis": [
@@ -42,6 +42,7 @@
         "name": "Venus Barycenter",
         "type": "barycenter",
         "meta": {},
+        "mass": 0,
         "radius": 0,
         "osc_elements": [
             {
@@ -57,7 +58,6 @@
             }
         ],
         "albedo": 0,
-        "mass": 0,
         "magnitude": 0,
         "rotation_period": 0,
         "rotation_axis": [
@@ -591,6 +591,7 @@
         "name": "Mercury",
         "type": "planet",
         "meta": {},
+        "mass": 3.3020000000000006e+23,
         "radius": 2.44,
         "osc_elements": [
             {
@@ -892,6 +893,7 @@
         "name": "Venus",
         "type": "planet",
         "meta": {},
+        "mass": 4.868500000000001e+24,
         "radius": 6.05184,
         "osc_elements": [
             {
@@ -1193,6 +1195,7 @@
         "name": "Earth",
         "type": "planet",
         "meta": {},
+        "mass": 5.97219e+24,
         "radius": 6.37101,
         "osc_elements": [
             {
@@ -1493,6 +1496,7 @@
         "name": "Mars",
         "type": "planet",
         "meta": {},
+        "mass": 6.4171e+23,
         "radius": 3.38992,
         "osc_elements": [
             {
@@ -1794,6 +1798,7 @@
         "name": "Jupiter",
         "type": "planet",
         "meta": {},
+        "mass": 1.89813e+27,
         "radius": 66.854,
         "osc_elements": [
             {
@@ -2095,6 +2100,7 @@
         "name": "Saturn",
         "type": "planet",
         "meta": {},
+        "mass": 5.6834e+26,
         "radius": 54.364,
         "osc_elements": [
             {
@@ -2396,6 +2402,7 @@
         "name": "Uranus",
         "type": "planet",
         "meta": {},
+        "mass": 8.6813e+25,
         "radius": 24.973,
         "osc_elements": [
             {
@@ -2697,6 +2704,7 @@
         "name": "Neptune",
         "type": "planet",
         "meta": {},
+        "mass": 1.0241e+26,
         "radius": 24.624,
         "osc_elements": [
             {
@@ -2998,6 +3006,7 @@
         "name": "Pluto",
         "type": "planet",
         "meta": {},
+        "mass": 1.3069999999999998e+22,
         "radius": 1.1883,
         "osc_elements": [
             {

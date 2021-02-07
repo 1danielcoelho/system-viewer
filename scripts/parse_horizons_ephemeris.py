@@ -28,7 +28,7 @@ mean_radius_re = re.compile(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)")
 output_type_re = re.compile(r"Output type\s+:(.*)")
 elements_entry_re = re.compile(r"(([\d.]+)[ =,]+A\.D\.[\s\S]+?)(?:(?=[\d.]+[ =,]+A\.D\.)|\Z)")
 geometric_albedo_re = re.compile(r"Geometric Albedo\s+=\s*([\d.]+)\s")
-mass_re = re.compile(r"Mass.*10\^([\d-]+)\s*([\w]+)[\s\)=]+([\d.]+)[\s\(]+10\^([\d-]+)?")
+mass_re = re.compile(r"Mass.*10\^([\d-]+)[\s\(\)]*([\w]+)[\s\)=]+([\d.]+)[\+\-\.\d]*(?:[\s\(]+10\^([\d-]+))?")
 
 
 def get_body_database(body_id):
@@ -114,7 +114,7 @@ def add_horizons_data(database):
                 # Sometimes they have *another* trailing exponent for some reason
                 # Like for Phobos:
                 #    Mass (10^20 kg )        =  1.08 (10^-4)
-                if len(mass_match) > 3:
+                if len(mass_match) > 3 and len(mass_match[3]) > 0:
                     extra_exponent = float(mass_match[3])
                     value *= 10 ** extra_exponent
 
@@ -293,11 +293,15 @@ def handle_database_exceptions(database):
         pass
 
 
-if __name__ == "__main__":
-    database = load_database()
-
+def run(database):
     add_horizons_data(database)
 
     handle_database_exceptions(database)
+
+
+if __name__ == "__main__":
+    database = load_database()
+
+    run(database)
 
     save_database(database)

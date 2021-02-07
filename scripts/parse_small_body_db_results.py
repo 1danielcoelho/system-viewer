@@ -131,9 +131,13 @@ def add_small_body_data(database):
                 pass
 
 
+def run(database):
+    add_small_body_data(database)
+
+
 if __name__ == "__main__":
     database = load_database()
 
-    add_small_body_data(database)
+    run(database)
 
     save_database(database)
