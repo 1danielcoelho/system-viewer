@@ -28,7 +28,7 @@ mean_radius_re = re.compile(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)")
 output_type_re = re.compile(r"Output type\s+:(.*)")
 elements_entry_re = re.compile(r"(([\d.]+)[ =,]+A\.D\.[\s\S]+?)(?:(?=[\d.]+[ =,]+A\.D\.)|\Z)")
 geometric_albedo_re = re.compile(r"Geometric Albedo\s+=\s*([\d.]+)\s")
-mass_re = re.compile(r"Mass.*10\^([\d-]+)[\s\(\)]*([\w]+)[\s\)=]+([\d.]+)[\+\-\.\d]*(?:[\s\(]+10\^([\d-]+))?")
+mass_re = re.compile(r"Mass.*10\^([\d-]+)[\s\(\)]*([\w]+)[\s\)=~]+([\d.]+)[\+\-\.\d]*(?:[\s\(]+10\^([\d-]+))?")
 
 
 def get_body_database(body_id):

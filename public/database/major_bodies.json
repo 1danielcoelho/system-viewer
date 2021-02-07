@@ -291,6 +291,7 @@
         "name": "Sun",
         "type": "star",
         "meta": {},
+        "mass": 1.9885e+30,
         "radius": 695.7,
         "state_vectors": [
             [

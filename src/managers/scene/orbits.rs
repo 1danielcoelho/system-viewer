@@ -1,4 +1,5 @@
 use nalgebra::Vector3;
+use web_sys::console::warn;
 
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
@@ -120,6 +121,15 @@ pub fn add_free_body(
     res_man: &ResourceManager,
 ) {
     if body.body_type == BodyType::Barycenter {
+        return;
+    }
+
+    if body.mass.is_none() {
+        log::warn!(
+            "Skipping body {} ('{}') for having no mass",
+            body.id.as_ref().unwrap(),
+            body.name
+        );
         return;
     }
 

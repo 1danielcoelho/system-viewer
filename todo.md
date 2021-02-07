@@ -470,6 +470,9 @@ response |= ui.add(label);
 
 # Shadows
 
+# Salvage capability to display on-rails bodies and static orbits
+- Big scene with as many asteroids as I can handle
+
 # GUI to "add a body" with some state vectors/orbital parameters
 
 # Logarithmic depth buffer
