@@ -10,12 +10,12 @@
             1.0,
             2.0,
         ],
-        up: [
+        camera_up: [
             0.0,
             0.0,
             1.0,
         ],
-        target: [
+        camera_target: [
             0.0,
             0.0,
             0.0,
@@ -36,12 +36,12 @@
             1,
             2,
         ],
-        up: [
+        camera_up: [
             0,
             0,
             1,
         ],
-        target: [
+        camera_target: [
             0,
             0,
             0,

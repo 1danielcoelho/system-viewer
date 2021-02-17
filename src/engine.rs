@@ -25,7 +25,7 @@ impl Engine {
 
         new_engine
             .scene_man
-            .set_scene("empty", &mut new_engine.res_man);
+            .set_scene("empty", &mut new_engine.res_man, None);
 
         return new_engine;
     }

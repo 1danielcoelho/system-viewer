@@ -180,6 +180,8 @@ impl InterfaceManager {
         self.draw_main_toolbar(state, scene_man, res_man);
 
         self.draw_open_windows(state, scene_man, res_man);
+
+        self.draw_pop_ups(state, scene_man, res_man);
     }
 
     fn draw_main_toolbar(
@@ -234,7 +236,7 @@ impl InterfaceManager {
                             if ui.button("New").clicked {
                                 let new_scene_name =
                                     scene_man.new_scene("New scene").unwrap().identifier.clone();
-                                scene_man.set_scene(&new_scene_name, res_man);
+                                scene_man.set_scene(&new_scene_name, res_man, Some(state));
                             }
 
                             if ui.button("Open").clicked {}
@@ -246,7 +248,7 @@ impl InterfaceManager {
                             if ui.button("Close").clicked {
                                 let new_scene_name =
                                     scene_man.new_scene("New scene").unwrap().identifier.clone();
-                                scene_man.set_scene(&new_scene_name, res_man);
+                                scene_man.set_scene(&new_scene_name, res_man, Some(state));
                             }
 
                             if ui.button("Inject GLB...").clicked {
@@ -391,6 +393,64 @@ impl InterfaceManager {
 
         self.draw_about_window(state);
         self.draw_scene_browser(state, scene_man, res_man);
+    }
+
+    fn draw_pop_ups(
+        &mut self,
+        state: &mut AppState,
+        scene_man: &mut SceneManager,
+        res_man: &mut ResourceManager,
+    ) {
+        let scene = scene_man.get_main_scene();
+        if scene.is_none() {
+            return;
+        }
+        let scene = scene.unwrap();
+
+        UICTX.with(|ui| {
+            let ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_ref().unwrap();
+
+            for selected_entity in &state.selection {
+                let name = scene.get_entity_name(*selected_entity);
+                if name.is_none() {
+                    continue;
+                }
+                let name = name.unwrap();
+
+                let response = egui::Window::new(name)
+                    .fixed_pos(egui::Pos2 {
+                        x: state.input.mouse_x as f32,
+                        y: state.input.mouse_y as f32,
+                    })
+                    .resizable(false)
+                    .scroll(false)
+                    .collapsible(false)
+                    .show(&ui.ctx(), |ui| {});
+            }
+
+            for hovered_entity in &state.hovered {
+                if state.selection.contains(hovered_entity) {
+                    continue;
+                }
+
+                let name = scene.get_entity_name(*hovered_entity);
+                if name.is_none() {
+                    continue;
+                }
+                let name = name.unwrap();
+
+                let response = egui::Window::new(name)
+                    .fixed_pos(egui::Pos2 {
+                        x: state.input.mouse_x as f32,
+                        y: state.input.mouse_y as f32,
+                    })
+                    .resizable(false)
+                    .scroll(false)
+                    .collapsible(false)
+                    .show(&ui.ctx(), |ui| {});
+            }
+        });
     }
 
     fn draw_debug_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -776,7 +836,7 @@ impl InterfaceManager {
                                         [self.selected_scene_desc_index as usize]
                                         .name
                                         .clone();
-                                    scene_man.set_scene(name, res_man);
+                                    scene_man.set_scene(name, res_man, Some(state));
                                 }
                             });
 
@@ -855,30 +915,7 @@ impl InterfaceManager {
 }
 
 fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
-    let p = Matrix4::new_perspective(
-        state.canvas_width as f64 / state.canvas_height as f64,
-        state.camera.fov_v.to_radians() as f64,
-        state.camera.near as f64,
-        state.camera.far as f64,
-    );
-
-    let v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
-
-    let reference = match state.camera.reference_entity {
-        Some(reference) => {
-            let trans = scene
-                .get_component::<TransformComponent>(reference)
-                .unwrap()
-                .get_world_transform()
-                .trans;
-
-            Translation3::new(trans.x as f64, trans.y as f64, trans.z as f64).to_homogeneous()
-        }
-        None => Matrix4::identity(),
-    };
-
-    let ndc_to_world: Matrix4<f64> =
-        reference * v.try_inverse().unwrap() * p.try_inverse().unwrap();
+    let ndc_to_world: Matrix4<f64> = state.camera.v_inv * state.camera.p_inv;
 
     let ndc_near_pos = Point3::from(Vector3::new(
         -1.0 + 2.0 * state.input.mouse_x as f64 / (state.canvas_width - 1) as f64,
@@ -887,33 +924,34 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
     ));
 
     let end_world = ndc_to_world.transform_point(&ndc_near_pos);
-    let start_world = reference.transform_point(&state.camera.pos);
+    let mut start_world = state.camera.pos.clone();
+
+    if let Some(reference) = state.camera.reference_translation {
+        start_world += reference;
+    }
 
     let ray = Ray {
         start: start_world,
         direction: (end_world - start_world).normalize(),
     };
 
+    let entity = if let Some(hit) = raycast(&ray, &scene) {
+        scene.get_entity_from_index(hit.entity_index)
+    } else {
+        None
+    };
+
+    state.hovered.clear();
+
     if state.input.m0 == ButtonState::Pressed {
-        if let Some(hit) = raycast(&ray, &scene) {
-            if let Some(entity) = scene.get_entity_from_index(hit.entity_index) {
-                state.selection.clear();
-                state.selection.insert(entity);
-            }
-        } else {
-            state.selection.clear();
+        state.selection.clear();
+
+        if entity.is_some() {
+            state.selection.insert(entity.unwrap());
         }
-
-        // log::info!("Raycast hit: {:?}", rayhit);
-
-        // let ui = state.ui.take();
-        // let response = egui::Window::new("Test")
-        //     .fixed_pos(Pos2 {
-        //         x: state.input.mouse_x as f32,
-        //         y: state.input.mouse_y as f32,
-        //     })
-        //     .show(&ui.as_ref().unwrap().ctx(), |ui| {});
-
-        // state.ui = ui;
+    } else {
+        if entity.is_some() {
+            state.hovered.insert(entity.unwrap());
+        }
     }
 }

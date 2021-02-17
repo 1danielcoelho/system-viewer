@@ -8,6 +8,8 @@ impl TransformUpdateSystem {
     pub fn run(&self, state: &mut AppState, scene: &mut Scene) {
         concatenate_parent_transforms(scene);
 
+        update_reference_translation(state, scene);
+
         rebase_camera_transform(state, scene);
 
         focus_camera_on_selection(state, scene);
@@ -33,6 +35,23 @@ fn concatenate_parent_transforms(scene: &mut Scene) {
             };
         }
     }
+}
+
+/// Fetch the intended reference entity and store on the state its translation directly.
+/// This so that the camera and other consumers don't have to all poke around the scene to find it
+/// Plus this way it is always up to date and a single consistent value throughout all uses
+fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
+    state.camera.reference_translation = if let Some(ref_ent) = state.camera.reference_entity {
+        Some(
+            scene
+                .get_component::<TransformComponent>(ref_ent)
+                .unwrap()
+                .get_world_transform()
+                .trans,
+        )
+    } else {
+        None
+    };
 }
 
 /// If we have a `state.camera.next_reference_entity`, this will update the camera `pos`/`target`/`up` to be with respect to

@@ -444,8 +444,8 @@ response |= ui.add(label);
     > - Object list (can click to go to and track)
     > - About
     > - Option to go back to splash screen
-    - Fix scenes not loading meshes
-        - This is because we were relying on the test scene to load the meshes and stuff
+    > - Fix scenes not loading meshes
+    >     - This is because we were relying on the test scene to load the meshes and stuff
     - Option to reset to start
         - Just open the current scene again
     - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)

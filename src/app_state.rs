@@ -37,12 +37,24 @@ pub struct Camera {
 
     #[serde(skip)]
     pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. reference_translation
+    #[serde(skip)]
+    pub reference_translation: Option<Vector3<f64>>,
 
     // When we want to change reference, we set the new one here.
     // The transform update system will fixup our pos/up/target to be wrt. to it and move it to reference_entity (setting this
     // to None when done). We need this because our transforms are only finalized (due to physics and stuff) after it runs
     #[serde(skip)]
     pub next_reference_entity: Option<ReferenceChange>,
+
+    // Calculated once per frame after inputs are accounted for
+    #[serde(skip)]
+    pub v: Matrix4<f64>,
+    #[serde(skip)]
+    pub p: Matrix4<f64>,
+    #[serde(skip)]
+    pub v_inv: Matrix4<f64>,
+    #[serde(skip)]
+    pub p_inv: Matrix4<f64>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -127,6 +139,7 @@ pub struct AppState {
     pub input: Input,
 
     #[serde(skip)]
+    pub hovered: HashSet<Entity>,
     pub selection: HashSet<Entity>,
     pub camera: Camera,
 }
@@ -150,6 +163,7 @@ impl AppState {
             rotate_speed: 2.0,
             light_intensity: 1.0,
             input: Input::default(),
+            hovered: HashSet::new(),
             selection: HashSet::new(),
             camera: Camera {
                 pos: Point3::new(10.0, 10.0, 10.0),
@@ -159,7 +173,12 @@ impl AppState {
                 near: 1.0,
                 far: 100000000.0,
                 reference_entity: None,
+                reference_translation: None,
                 next_reference_entity: None,
+                v: Matrix4::identity(),
+                p: Matrix4::identity(),
+                v_inv: Matrix4::identity(),
+                p_inv: Matrix4::identity(),
             },
         }
     }

@@ -48,31 +48,9 @@ impl RenderingSystem {
         glc!(gl, gl.clear_color(0.1, 0.1, 0.2, 1.0));
         glc!(gl, gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
-        // Initialize VP transform for frame
-        let p = Matrix4::new_perspective(
-            state.canvas_width as f64 / state.canvas_height as f64,
-            state.camera.fov_v.to_radians(),
-            state.camera.near,
-            state.camera.far,
-        );
-
-        let mut v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
-
-        if let Some(reference) = state.camera.reference_entity {
-            let trans = &scene
-                .get_component::<TransformComponent>(reference)
-                .unwrap()
-                .get_world_transform()
-                .trans;
-
-            let mat: Matrix4<f64> =
-                Translation3::new(-trans.x, -trans.y, -trans.z).to_homogeneous();
-            v = v * mat;
-        }
-
         let mut result = FrameUniformValues {
-            v,
-            pv: p * v,
+            v: state.camera.v,
+            pv: state.camera.p * state.camera.v,
             light_types: Vec::new(),
             light_colors: Vec::new(),
             light_pos_or_dir_c: Vec::new(),
@@ -95,8 +73,8 @@ impl RenderingSystem {
                 .trans;
 
             let pos = match light.light_type {
-                LightType::Point => v.transform_point(&Point3::from(*pos)).coords,
-                LightType::Directional => v.transform_vector(pos),
+                LightType::Point => result.v.transform_point(&Point3::from(*pos)).coords,
+                LightType::Directional => result.v.transform_vector(pos),
             };
 
             result.light_types.push(light.light_type as i32);
