@@ -8,5 +8,6 @@ pub trait Component: Default + Clone + DetailsUI {
     fn set_enabled(&mut self, enabled: bool);
     fn get_enabled(&self) -> bool;
 
-    fn get_storage(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>>;
+    fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>>;
+    fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>>;
 }

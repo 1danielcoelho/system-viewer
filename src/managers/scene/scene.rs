@@ -498,11 +498,18 @@ impl Scene {
 
 // Component interface
 impl Scene {
-    pub fn get_component<T>(&mut self, entity: Entity) -> Option<&mut T>
+    pub fn get_component<T>(&self, entity: Entity) -> Option<&T>
     where
         T: Component<ComponentType = T>,
     {
-        return T::get_storage(self).get_component_mut(entity);
+        return T::get_storage(self).get_component(entity);
+    }
+
+    pub fn get_component_mut<T>(&mut self, entity: Entity) -> Option<&mut T>
+    where
+        T: Component<ComponentType = T>,
+    {
+        return T::get_storage_mut(self).get_component_mut(entity);
     }
 
     pub fn add_component<'a, T>(&'a mut self, entity: Entity) -> &'a mut T
@@ -515,7 +522,7 @@ impl Scene {
             entity
         );
 
-        return T::get_storage(self).add_component(entity);
+        return T::get_storage_mut(self).add_component(entity);
     }
 
     fn swap_components(&mut self, index_a: u32, index_b: u32) {

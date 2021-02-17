@@ -664,20 +664,26 @@ impl InterfaceManager {
                             });
 
                             // TODO: Make this more generic
-                            if let Some(comp) = scene.get_component::<TransformComponent>(selection)
+                            if let Some(comp) =
+                                scene.get_component_mut::<TransformComponent>(selection)
                             {
                                 ui.collapsing("Transform component", |ui| comp.draw_details_ui(ui));
                             }
 
-                            if let Some(comp) = scene.get_component::<MeshComponent>(selection) {
+                            if let Some(comp) = scene.get_component_mut::<MeshComponent>(selection)
+                            {
                                 ui.collapsing("Mesh component", |ui| comp.draw_details_ui(ui));
                             }
 
-                            if let Some(comp) = scene.get_component::<OrbitalComponent>(selection) {
+                            if let Some(comp) =
+                                scene.get_component_mut::<OrbitalComponent>(selection)
+                            {
                                 ui.collapsing("Orbital component", |ui| comp.draw_details_ui(ui));
                             }
 
-                            if let Some(comp) = scene.get_component::<PhysicsComponent>(selection) {
+                            if let Some(comp) =
+                                scene.get_component_mut::<PhysicsComponent>(selection)
+                            {
                                 ui.collapsing("Physics component", |ui| comp.draw_details_ui(ui));
                             }
                         }

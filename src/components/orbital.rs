@@ -34,7 +34,11 @@ impl Component for OrbitalComponent {
         return self.enabled;
     }
 
-    fn get_storage(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
+    fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>> {
+        return Box::new(&scene.orbital);
+    }
+
+    fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
         return Box::new(&mut scene.orbital);
     }
 }
