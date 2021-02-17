@@ -56,6 +56,42 @@ pub struct Camera {
     #[serde(skip)]
     pub p_inv: Matrix4<f64>,
 }
+impl Camera {
+    /// Converts from pixels (with 0,0 on top left of canvas) into world space coordinates
+    pub fn canvas_to_world(
+        &self,
+        x: i32,
+        y: i32,
+        canvas_width: u32,
+        canvas_height: u32,
+    ) -> Point3<f64> {
+        let ndc_to_world: Matrix4<f64> = self.v_inv * self.p_inv;
+
+        let ndc_near_pos = Point3::from(Vector3::new(
+            -1.0 + 2.0 * x as f64 / (canvas_width - 1) as f64,
+            1.0 - 2.0 * y as f64 / (canvas_height - 1) as f64,
+            -1.0,
+        ));
+
+        return ndc_to_world.transform_point(&ndc_near_pos);
+    }
+
+    pub fn world_to_canvas(
+        &self,
+        pt: &Point3<f64>,
+        canvas_width: u32,
+        canvas_height: u32,
+    ) -> (i32, i32) {
+        let world_to_ndc = self.p * self.v;
+
+        let ndc = world_to_ndc.transform_point(pt);
+
+        return (
+            (canvas_width as f64 * (ndc.x + 1.0) / 2.0) as i32 + 1,
+            (canvas_height as f64 * (1.0 - ndc.y) / 2.0) as i32 + 1,
+        );
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ButtonState {

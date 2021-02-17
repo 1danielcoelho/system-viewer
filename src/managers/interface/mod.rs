@@ -177,11 +177,11 @@ impl InterfaceManager {
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
     ) {
+        self.draw_pop_ups(state, scene_man, res_man);
+
         self.draw_main_toolbar(state, scene_man, res_man);
 
         self.draw_open_windows(state, scene_man, res_man);
-
-        self.draw_pop_ups(state, scene_man, res_man);
     }
 
     fn draw_main_toolbar(
@@ -418,10 +418,24 @@ impl InterfaceManager {
                 }
                 let name = name.unwrap();
 
+                let trans = scene
+                    .get_component::<TransformComponent>(*selected_entity)
+                    .and_then(|c| Some(c.get_world_transform().trans));
+                if trans.is_none() {
+                    continue;
+                }
+                let trans = trans.unwrap();
+
+                let (x, y) = state.camera.world_to_canvas(
+                    &Point3::from(trans),
+                    state.canvas_width,
+                    state.canvas_height,
+                );
+
                 let response = egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {
-                        x: state.input.mouse_x as f32,
-                        y: state.input.mouse_y as f32,
+                        x: x as f32,
+                        y: y as f32,
                     })
                     .resizable(false)
                     .scroll(false)
@@ -921,17 +935,14 @@ impl InterfaceManager {
 }
 
 fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
-    let ndc_to_world: Matrix4<f64> = state.camera.v_inv * state.camera.p_inv;
+    let end_world = state.camera.canvas_to_world(
+        state.input.mouse_x,
+        state.input.mouse_y,
+        state.canvas_width,
+        state.canvas_height,
+    );
 
-    let ndc_near_pos = Point3::from(Vector3::new(
-        -1.0 + 2.0 * state.input.mouse_x as f64 / (state.canvas_width - 1) as f64,
-        1.0 - 2.0 * state.input.mouse_y as f64 / (state.canvas_height - 1) as f64,
-        -1.0,
-    ));
-
-    let end_world = ndc_to_world.transform_point(&ndc_near_pos);
     let mut start_world = state.camera.pos.clone();
-
     if let Some(reference) = state.camera.reference_translation {
         start_world += reference;
     }
