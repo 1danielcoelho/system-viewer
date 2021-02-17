@@ -10,7 +10,7 @@ use crate::{prompt_for_bytes_file, UICTX};
 use egui::Layout;
 use gui_backend::WebInput;
 use lazy_static::__Deref;
-use na::{Matrix4, Point3, Translation3, Vector3};
+use na::*;
 use std::collections::VecDeque;
 
 pub mod details_ui;
@@ -411,6 +411,12 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
+            let world_to_ndc = state.camera.p * state.camera.v;
+            let mut cam_pos = state.camera.pos;
+            if let Some(reference) = state.camera.reference_translation {
+                cam_pos += reference;
+            }
+
             for selected_entity in &state.selection {
                 let name = scene.get_entity_name(*selected_entity);
                 if name.is_none() {
@@ -420,22 +426,42 @@ impl InterfaceManager {
 
                 let trans = scene
                     .get_component::<TransformComponent>(*selected_entity)
-                    .and_then(|c| Some(c.get_world_transform().trans));
+                    .and_then(|c| Some(c.get_world_transform()));
                 if trans.is_none() {
                     continue;
                 }
                 let trans = trans.unwrap();
 
-                let (x, y) = state.camera.world_to_canvas(
-                    &Point3::from(trans),
-                    state.canvas_width,
-                    state.canvas_height,
-                );
+                // TODO: Cleanup late night wacky trig. Something is slightly off...
+                let distance = (cam_pos - Point3::from(trans.trans)).magnitude();
+
+                let scale = (trans.scale.x + trans.scale.y + trans.scale.z) / 3.0;
+
+                let alpha = (scale / distance).asin();
+
+                let ndc = world_to_ndc.transform_point(&Point3::from(trans.trans));
+
+                let theta = (ndc.x).atan2(state.camera.near);
+
+                let ndc_x = state.camera.near * (theta + alpha).tan();
+
+                let label_x = (state.canvas_width as f64 * (ndc_x + 1.0) / 2.0) as i32 + 1;
+
+                let label_y = (state.canvas_height as f64 * (1.0 - ndc.y) / 2.0) as i32 + 1;
+
+                let front = ndc.z > 0.0 && ndc.z < 1.0;
+
+                // Entity is behind us, don't show anything
+                if !front {
+                    continue;
+                };
+
+                // Use the fact that our models are in [0, 1] range by default and we use scale to place them in the world
 
                 let response = egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {
-                        x: x as f32,
-                        y: y as f32,
+                        x: label_x as f32,
+                        y: label_y as f32 - 20.0, // TODO: Find actual size
                     })
                     .resizable(false)
                     .scroll(false)

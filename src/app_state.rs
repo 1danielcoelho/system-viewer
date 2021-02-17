@@ -76,12 +76,13 @@ impl Camera {
         return ndc_to_world.transform_point(&ndc_near_pos);
     }
 
+    /// Converts from Mm xyz to pixel xy (with 0,0 on top left of canvas). Also returns whether the point is in front of camera or not
     pub fn world_to_canvas(
         &self,
         pt: &Point3<f64>,
         canvas_width: u32,
         canvas_height: u32,
-    ) -> (i32, i32) {
+    ) -> (i32, i32, bool) {
         let world_to_ndc = self.p * self.v;
 
         let ndc = world_to_ndc.transform_point(pt);
@@ -89,6 +90,7 @@ impl Camera {
         return (
             (canvas_width as f64 * (ndc.x + 1.0) / 2.0) as i32 + 1,
             (canvas_height as f64 * (1.0 - ndc.y) / 2.0) as i32 + 1,
+            ndc.z > 0.0  && ndc.z < 1.0
         );
     }
 }
