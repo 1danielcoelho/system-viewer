@@ -450,8 +450,8 @@ response |= ui.add(label);
         - Just open the current scene again
     - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
 - Controls and manipulation tweaks    
-    - Show object name on hover, open details on click    
-        - Track object on click
+    >- Show object name on hover, open details on click    
+    >    - Track object on click
     - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
         - Have the "go to thing" system be more aware of the thing's size. It's impossible to find phobos and deimos for example, because they're too small    
 - Okay-ish results on the simulation for now, we can improve later
@@ -460,6 +460,10 @@ response |= ui.add(label);
 - Update egui
 - I think I have to not use the localstorage or show a popup about storing data in the browser
 - Cleanup github repo and properly handle licensing
+
+# Bugs
+- Labels seem like 1 frame behind somehow?
+- Big old glitch when clicking a body in the scene hierarchy
 
 # Planet trails (or something). It's impossible to see anything from far away
 

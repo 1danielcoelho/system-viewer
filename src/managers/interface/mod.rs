@@ -411,7 +411,6 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            let world_to_ndc = state.camera.p * state.camera.v;
             let mut cam_pos = state.camera.pos;
             if let Some(reference) = state.camera.reference_translation {
                 cam_pos += reference;
@@ -432,6 +431,8 @@ impl InterfaceManager {
                 }
                 let trans = trans.unwrap();
 
+                // I think there should be a much simpler way of finding the label position using trig,
+                // but I couldn't do it without trashing precision
                 let scale = (trans.scale.x + trans.scale.y + trans.scale.z) / 3.0;
                 let mut obj_to_cam = cam_pos - Point3::from(trans.trans);
                 let distance = obj_to_cam.magnitude();
@@ -444,7 +445,7 @@ impl InterfaceManager {
 
                 let rotation = na::Rotation3::new(actual_up * ang_dir_to_tangent);
 
-                let obj_to_tang = rotation.transform_vector(&obj_to_cam) * scale;
+                let obj_to_tang = rotation.transform_vector(&obj_to_cam) * (scale + 0.2);
                 let tang_point = Point3::from(trans.trans) + obj_to_tang;
 
                 let (canvas_x, canvas_y, in_front) = state.camera.world_to_canvas(
