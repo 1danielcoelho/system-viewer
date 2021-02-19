@@ -418,6 +418,8 @@ impl InterfaceManager {
                 cam_pos += reference;
             }
 
+            let world_to_ndc = state.camera.p * state.camera.v;
+
             // If we have up locked to +Z, we need to calculate the real up vector
             let forward = (state.camera.target - cam_pos).normalize();
             let right = forward.cross(&state.camera.up).normalize();
@@ -456,15 +458,30 @@ impl InterfaceManager {
                 let obj_to_tang = rotation.transform_vector(&obj_to_cam) * scale * 1.1;
                 let tang_point = Point3::from(trans.trans) + obj_to_tang;
 
-                let (canvas_x, canvas_y, in_front) = state.camera.world_to_canvas(
-                    &tang_point,
-                    state.canvas_width,
-                    state.canvas_height,
-                );
+                let obj_v = state.camera.v.transform_point(&Point3::from(trans.trans));
 
-                if !in_front {
-                    continue;
+                let mut ndc = world_to_ndc.transform_point(&tang_point);
+
+                // If it's behind us we have to flip this to keep it showing on the same side
+                if obj_v.z > 0.0 {
+                    ndc.x *= -1.0;
+                    ndc.y *= -1.0;
                 }
+
+                let mut canvas_x = (state.canvas_width as f64 * (ndc.x + 1.0) / 2.0) as i32 + 1;
+                let mut canvas_y = (state.canvas_height as f64 * (1.0 - ndc.y) / 2.0) as i32 + 1;
+
+                // TODO: Figure out how (if possible) to do this with egui...
+                let expected_width = 60;
+                let expected_height = 42;
+                let margin = 20;
+
+                canvas_x = canvas_x
+                    .max(margin)
+                    .min((state.canvas_width - expected_width) as i32);
+                canvas_y = canvas_y
+                    .max(margin + expected_height / 2)
+                    .min((state.canvas_height - expected_height as u32) as i32);
 
                 let response = egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {

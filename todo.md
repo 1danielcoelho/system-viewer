@@ -463,7 +463,7 @@ response |= ui.add(label);
 
 # Bugs
 > - If you are above an object and look down, the label goes on the wrong location
-- Labels disappear when too close to near plane
+> - Labels disappear when too close to near plane
 - I kind of want these labels to always be on the screen, even if the object is out (like an arrow indicator in games)
 > - Offset of label to body is incorrect
 > - Labels seem like 1 frame behind somehow?
