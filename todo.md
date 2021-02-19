@@ -464,10 +464,15 @@ response |= ui.add(label);
 # Bugs
 > - If you are above an object and look down, the label goes on the wrong location
 > - Labels disappear when too close to near plane
-- I kind of want these labels to always be on the screen, even if the object is out (like an arrow indicator in games)
+> - I kind of want these labels to always be on the screen, even if the object is out (like an arrow indicator in games)
 > - Offset of label to body is incorrect
 > - Labels seem like 1 frame behind somehow?
-- Big old glitch when clicking a body in the scene hierarchy
+- Labels projection math doesn't work if body is reference (maybe using/not using the camera reference would fix it?)
+- Labels freak out if they're behind and we have a body as reference, or even when having no reference at all
+- Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
+- Clear out confusion of what should happen when we click/reference a body
+    - There's also two functions on the transform update system that seem to do the same thing
+> - Big old glitch when clicking a body in the scene hierarchy
 
 # Planet trails (or something). It's impossible to see anything from far away
 

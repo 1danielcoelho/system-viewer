@@ -8,11 +8,11 @@ impl TransformUpdateSystem {
     pub fn run(&self, state: &mut AppState, scene: &mut Scene) {
         concatenate_parent_transforms(scene);
 
-        update_reference_translation(state, scene);
-
         rebase_camera_transform(state, scene);
-
+        
         focus_camera_on_selection(state, scene);
+        
+        update_reference_translation(state, scene);
     }
 }
 
