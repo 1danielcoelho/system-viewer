@@ -432,36 +432,35 @@ impl InterfaceManager {
                 }
                 let trans = trans.unwrap();
 
-                // TODO: Cleanup late night wacky trig. Something is slightly off...
-                let distance = (cam_pos - Point3::from(trans.trans)).magnitude();
-
                 let scale = (trans.scale.x + trans.scale.y + trans.scale.z) / 3.0;
+                let mut obj_to_cam = cam_pos - Point3::from(trans.trans);
+                let distance = obj_to_cam.magnitude();
+                obj_to_cam = obj_to_cam.normalize();
 
-                let alpha = (scale / distance).asin();
+                let ang_dir_to_tangent = (scale / distance).acos();
 
-                let ndc = world_to_ndc.transform_point(&Point3::from(trans.trans));
+                let cam_right = state.camera.up.cross(&obj_to_cam).normalize();
+                let actual_up = obj_to_cam.cross(&cam_right).normalize();
 
-                let theta = (ndc.x).atan2(state.camera.near);
+                let rotation = na::Rotation3::new(actual_up * ang_dir_to_tangent);
 
-                let ndc_x = state.camera.near * (theta + alpha).tan();
+                let obj_to_tang = rotation.transform_vector(&obj_to_cam) * scale;
+                let tang_point = Point3::from(trans.trans) + obj_to_tang;
 
-                let label_x = (state.canvas_width as f64 * (ndc_x + 1.0) / 2.0) as i32 + 1;
+                let (canvas_x, canvas_y, in_front) = state.camera.world_to_canvas(
+                    &tang_point,
+                    state.canvas_width,
+                    state.canvas_height,
+                );
 
-                let label_y = (state.canvas_height as f64 * (1.0 - ndc.y) / 2.0) as i32 + 1;
-
-                let front = ndc.z > 0.0 && ndc.z < 1.0;
-
-                // Entity is behind us, don't show anything
-                if !front {
+                if !in_front {
                     continue;
-                };
-
-                // Use the fact that our models are in [0, 1] range by default and we use scale to place them in the world
+                }
 
                 let response = egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {
-                        x: label_x as f32,
-                        y: label_y as f32 - 20.0, // TODO: Find actual size
+                        x: canvas_x as f32,
+                        y: canvas_y as f32 - 20.0, // TODO: Find actual size
                     })
                     .resizable(false)
                     .scroll(false)

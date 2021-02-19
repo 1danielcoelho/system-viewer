@@ -16,6 +16,7 @@ use crate::{
     },
 };
 use egui::Ui;
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
@@ -84,7 +85,7 @@ pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
     fetch_text("public/scene_list.ron", "scene_list");
-    
+
     fetch_text("public/database/artificial.json", "database");
     fetch_text("public/database/asteroids.json", "database");
     fetch_text("public/database/comets.json", "database");
@@ -92,6 +93,20 @@ pub async fn start_loop() {
     fetch_text("public/database/major_bodies.json", "database");
     fetch_text("public/database/other_satellites.json", "database");
     fetch_text("public/database/saturnian_satellites.json", "database");
+
+    STATE.with(|s| {
+        if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
+            let s = ref_mut_s.as_mut().unwrap();
+
+            ENGINE.with(|e| {
+                if let Ok(mut ref_mut_e) = e.try_borrow_mut() {
+                    let e = ref_mut_e.as_mut().unwrap();
+
+                    e.scene_man.set_scene("test", &mut e.res_man, Some(s));
+                }
+            });
+        }
+    });
 
     let event_loop = EventLoop::new();
 
