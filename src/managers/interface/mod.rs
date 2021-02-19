@@ -418,6 +418,10 @@ impl InterfaceManager {
                 cam_pos += reference;
             }
 
+            // If we have up locked to +Z, we need to calculate the real up vector
+            let forward = (state.camera.target - cam_pos).normalize();
+            let right = forward.cross(&state.camera.up).normalize();
+
             for selected_entity in &state.selection {
                 let name = scene.get_entity_name(*selected_entity);
                 if name.is_none() {
@@ -440,12 +444,14 @@ impl InterfaceManager {
                 let distance = obj_to_cam.magnitude();
                 obj_to_cam = obj_to_cam.normalize();
 
+                // Have to enforce all models are within a radius 1 sphere to use this...
                 let ang_dir_to_tangent = (scale / distance).acos();
 
-                let cam_right = state.camera.up.cross(&obj_to_cam).normalize();
-                let actual_up = obj_to_cam.cross(&cam_right).normalize();
+                // Note that this axis is only equal camera up if the object is directly ahead. In most
+                // cases this is slightly different than cam up
+                let axis = obj_to_cam.cross(&right).normalize();
 
-                let rotation = na::Rotation3::new(actual_up * ang_dir_to_tangent);
+                let rotation = na::Rotation3::new(axis * ang_dir_to_tangent);
 
                 let obj_to_tang = rotation.transform_vector(&obj_to_cam) * scale * 1.1;
                 let tang_point = Point3::from(trans.trans) + obj_to_tang;
