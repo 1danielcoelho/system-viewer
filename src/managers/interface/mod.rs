@@ -101,23 +101,25 @@ impl InterfaceManager {
      * This runs before all systems, and starts collecting all the UI elements we'll draw, as
      * well as draws the main UI
      */
-    pub fn begin_frame(
+    pub fn begin_frame(&mut self, state: &mut AppState) {
+        self.pre_draw(state);
+    }
+
+    /** This runs after all systems, and draws the collected UI elements to the framebuffer */
+    pub fn end_frame(
         &mut self,
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
     ) {
-        self.pre_draw(state);
-
         self.draw_main_ui(state, scene_man, res_man);
-    }
 
-    /** This runs after all systems, and draws the collected UI elements to the framebuffer */
-    pub fn end_frame(&mut self, state: &mut AppState, scene: &mut Scene) {
         self.draw();
 
-        if !state.input.over_ui && state.input.m1 == ButtonState::Depressed {
-            handle_mouse_on_scene(state, scene);
+        if let Some(scene) = scene_man.get_main_scene_mut() {
+            if !state.input.over_ui && state.input.m1 == ButtonState::Depressed {
+                handle_mouse_on_scene(state, scene);
+            }
         }
     }
 
@@ -445,7 +447,7 @@ impl InterfaceManager {
 
                 let rotation = na::Rotation3::new(actual_up * ang_dir_to_tangent);
 
-                let obj_to_tang = rotation.transform_vector(&obj_to_cam) * (scale + 0.2);
+                let obj_to_tang = rotation.transform_vector(&obj_to_cam) * scale * 1.1;
                 let tang_point = Point3::from(trans.trans) + obj_to_tang;
 
                 let (canvas_x, canvas_y, in_front) = state.camera.world_to_canvas(

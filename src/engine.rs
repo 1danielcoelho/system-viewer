@@ -32,8 +32,7 @@ impl Engine {
 
     pub fn update(&mut self, state: &mut AppState) {
         // Startup the UI frame, collecting UI elements
-        self.int_man
-            .begin_frame(state, &mut self.scene_man, &mut self.res_man);
+        self.int_man.begin_frame(state);
 
         // Run the input manager after begin frame to allow the UI a change to intercept input
         self.input_man.run(state);
@@ -41,10 +40,10 @@ impl Engine {
         if let Some(scene) = self.scene_man.get_main_scene_mut() {
             // Run all systems
             self.sys_man.run(state, scene);
-
-            // Draw the UI elements
-            self.int_man.end_frame(state, scene);
         }
+
+        // Draw the UI elements
+        self.int_man.end_frame(state, &mut self.scene_man, &mut self.res_man);
     }
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
