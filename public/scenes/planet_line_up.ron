@@ -1,6 +1,6 @@
 (
     name: "Planet line up",
-    description: "All planets lined up next to eachother for size comparison",
+    description: "All planets lined up next to eachother",
     time: "J2000",
     simulation_scale: 500,
     reference: "599",
@@ -20,7 +20,17 @@
         0,
     ],
     bodies: {
-        "major_bodies": ["5", "599", "10"],
-        "jovian_satellites": ["501", "502", "503", "504", "505", "506", "507", "508", "509", "510"]
+        "major_bodies": {
+            "10":  CustomVector(2451545.0, 0, 0, 0, 0, 0, 0),
+            "199": CustomVector(2451545.0, 700, 0, 0, 0, 0, 0),
+            "299": CustomVector(2451545.0, 710, 0, 0, 0, 0, 0),
+            "399": CustomVector(2451545.0, 720, 0, 0, 0, 0, 0),
+            "499": CustomVector(2451545.0, 730, 0, 0, 0, 0, 0),
+            "599": CustomVector(2451545.0, 740, 0, 0, 0, 0, 0),
+            "699": CustomVector(2451545.0, 750, 0, 0, 0, 0, 0),
+            "799": CustomVector(2451545.0, 760, 0, 0, 0, 0, 0),
+            "899": CustomVector(2451545.0, 770, 0, 0, 0, 0, 0),
+            "999": CustomVector(2451545.0, 780, 0, 0, 0, 0, 0),
+        },        
     },
 )
