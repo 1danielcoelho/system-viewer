@@ -452,9 +452,7 @@ response |= ui.add(label);
 > - Being able to independently change the target while orbiting doesn't work so great with locked pitch. I'll just abandon this for now and always snap target to 0 when orbiting
 > - Always look directly at target when starting a track
 > - Big old glitch when clicking a body in the scene hierarchy
-
-# Cleanup for MVP
-- Initial splash screen with picker for different scenes
+> - Initial splash screen with picker for different scenes
     > - Scenes can be baked in, and load a subset of objects from json each
     > - Load data from new json databases, J2000 N-body simulation
         > - For some reason planets don't have masses?
@@ -466,8 +464,6 @@ response |= ui.add(label);
         > - Show SceneDescriptions on ui
         > - Parse json body databases on demand
         > - Single ron file with list of scenes. Each item would have a scene name, description, number of bodies and a list of body_ids and dbs to check. When clicking it, it would parse all required dbs and fetch the bodies required
-        - I think I should put the scene description inside the created Scene?
-            - Because I need to be able to reset the scene to start e.g. reset time and camera
 > - Simple menu on top right with time, fps, body count, tracked object (+ untrack button) and cog menu
     > - Controls to set simulation speed right there
     > - Object list (can click to go to and track)
@@ -475,20 +471,44 @@ response |= ui.add(label);
     > - Option to go back to splash screen
     > - Fix scenes not loading meshes
     >     - This is because we were relying on the test scene to load the meshes and stuff
-    - Option to reset to start
-        - Just open the current scene again
-    - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
 > - Controls and manipulation tweaks    
     > - Show object name on hover, open details on click    
     >    - Track object on click
     > - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
         > - Have the "go to thing" system be more aware of the thing's size. It's impossible to find phobos and deimos for example, because they're too small    
+
+# Cleanup for MVP
+- Refactor body database
+    - Keep existing databases for body data (mass, size, color, albedo, etc.)
+    - Additional "state_vectors.json" file for known, reference state vectors (single file, each id has n state vectors, each vector contains epoch, sorted by epoch)
+    - Additional "osc_elements.json" for reference osculating elements (single file, each id has n elements, each element contains epoch and reference, sorted by epoch)
+    - Scenes in ron files
+        - Separate folder for scenes
+        - One scene per ron file (instead of scene_list.ron)
+        - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
+            - How to handle the choice between osc_element and state_vector?
+- Scene handling
+    - I think I should put the scene description inside the created Scene?
+    - Set time, camera position and reference according to scene description
+    - Reset seleciton when opening scene
+    - Option to reset to start
+        - Just open the current scene again
+    - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
+- Do something for movement speed, it's almost always unexpected
 - Okay-ish results on the simulation for now, we can improve later
-- Basic solar system simulation at J2000 with bodies in the right size, good colors/textures, sun with OK brightness
-- Fix firefox dragging bug
+- Basic solar system simulation at J2000 with bodies in the right size
+- Passable materials/colors for bodies
+- Correct-ish sun brightness
 - Update egui
-- I think I have to not use the localstorage or show a popup about storing data in the browser
-- Cleanup github repo and properly handle licensing
+- I think I have to not use the localstorage or show a popup about storing data in the browser?
+- Cleanup github repo and properly handle licensing like on my blog
+
+# Known bugs
+- Fix firefox dragging bug
+- Hover label shouldn't show on top of selected label or other windows
+- Should be able to click through the hover label (it blocks all mouse clicks)
+- Position of labels when body is off screen is not correct, it flails everywhere
+- Need better prediction of label size to prevent it from ever leaving the canvas
 
 # Lerp when going to / point towards
 
