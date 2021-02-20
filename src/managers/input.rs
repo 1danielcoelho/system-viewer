@@ -39,10 +39,23 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
 
     let lock_pitch = true;
 
-    if state.input.scroll_delta_y < 0 {
-        state.move_speed *= 1.1;
-    } else if state.input.scroll_delta_y > 0 {
-        state.move_speed *= 0.9;
+    // Zoom in/out
+    if state.input.modifiers.alt && state.camera.reference_translation.is_some() {
+        if state.input.scroll_delta_y < 0 {
+            state.camera.pos *= 0.9;
+            state.camera.target *= 0.9;
+        } else if state.input.scroll_delta_y > 0 {
+            state.camera.pos *= 1.1;
+            state.camera.target *= 1.1;
+        }
+    }
+    // Change speed
+    else {
+        if state.input.scroll_delta_y < 0 {
+            state.move_speed *= 1.1;
+        } else if state.input.scroll_delta_y > 0 {
+            state.move_speed *= 0.9;
+        }
     }
     state.input.scroll_delta_y = 0; // We have to "consume" this as it isn't cleared otherwise
 

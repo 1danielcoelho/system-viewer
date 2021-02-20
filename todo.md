@@ -423,6 +423,35 @@ response |= ui.add(label);
     > - Comets don't just have one magnitude, they have many
         > - Comet mass estimation
         >     - I think this is impossible given that JPL has *no* mass values for any comet
+> - Bugs
+> - Maybe have alt + scrollwheel be zoom
+> - If you are above an object and look down, the label goes on the wrong location
+> - Labels disappear when too close to near plane
+> - I kind of want these labels to always be on the screen, even if the object is out (like an arrow indicator in games)
+> - Offset of label to body is incorrect
+> - Labels seem like 1 frame behind somehow?
+> - Labels projection math doesn't work if body is reference (maybe using/not using the camera reference would fix it?)
+> - Labels freak out if they're behind and we have a body as reference, or even when having no reference at all
+> - Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
+> - Clear out confusion of what should happen when we click/reference a body
+    > - Label should expand to show distance and body info (just distance for now)
+    > - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
+    > - Once tracking, left click and drag will orbit, mouse wheel will zoom
+        > - I'll not worry about mouse wheel zoom for now because that's the speed control.... I'm not sure what I'll do about that yet but its easy to zoom by just moving around with the keyboard. Maybe I'll even expose FOV better for actual zooming instead
+        > - Probably better to do it with Alt+Left click and drag, or else I'll have to watch out for what happens if we release drag on top of a clickable, etc.
+            > - It seems like the modifiers only capture if the canvas has focus, and Alt removes focus...
+        > - I thought it would be a problem that I'll have to update position based on reference_transform before the transform update system would get to run, but it is not a problem at all: The camera's position to its reference only ever changes from input data, so it will be fine. I just do everything wrt. reference transform and later on that gets updated instead
+    > - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
+    > - The label on the top toolbar should change to yellow when tracking to highlight what's going on
+    > - Maybe change it to red if we try orbiting without a tracked target
+    > - Change tracking remove icon to X, as it kind of looks like you'll delete the body if you click on it
+> - It doesn't look like it orbits about the actual target...
+> - Moving the cursor over UI during drag cancels the drag
+    > - Maybe the simplest thing is to not pass the updated mouse position to egui during mouse capture
+> - Click and drag should also capture the cursor
+> - Being able to independently change the target while orbiting doesn't work so great with locked pitch. I'll just abandon this for now and always snap target to 0 when orbiting
+> - Always look directly at target when starting a track
+> - Big old glitch when clicking a body in the scene hierarchy
 
 # Cleanup for MVP
 - Initial splash screen with picker for different scenes
@@ -461,36 +490,9 @@ response |= ui.add(label);
 - I think I have to not use the localstorage or show a popup about storing data in the browser
 - Cleanup github repo and properly handle licensing
 
-# Bugs
-> - If you are above an object and look down, the label goes on the wrong location
-> - Labels disappear when too close to near plane
-> - I kind of want these labels to always be on the screen, even if the object is out (like an arrow indicator in games)
-> - Offset of label to body is incorrect
-> - Labels seem like 1 frame behind somehow?
-> - Labels projection math doesn't work if body is reference (maybe using/not using the camera reference would fix it?)
-> - Labels freak out if they're behind and we have a body as reference, or even when having no reference at all
-> - Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
-> - Clear out confusion of what should happen when we click/reference a body
-    > - Label should expand to show distance and body info (just distance for now)
-    > - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
-    > - Once tracking, left click and drag will orbit, mouse wheel will zoom
-        > - I'll not worry about mouse wheel zoom for now because that's the speed control.... I'm not sure what I'll do about that yet but its easy to zoom by just moving around with the keyboard. Maybe I'll even expose FOV better for actual zooming instead
-        > - Probably better to do it with Alt+Left click and drag, or else I'll have to watch out for what happens if we release drag on top of a clickable, etc.
-            > - It seems like the modifiers only capture if the canvas has focus, and Alt removes focus...
-        > - I thought it would be a problem that I'll have to update position based on reference_transform before the transform update system would get to run, but it is not a problem at all: The camera's position to its reference only ever changes from input data, so it will be fine. I just do everything wrt. reference transform and later on that gets updated instead
-    > - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
-    > - The label on the top toolbar should change to yellow when tracking to highlight what's going on
-    > - Maybe change it to red if we try orbiting without a tracked target
-    > - Change tracking remove icon to X, as it kind of looks like you'll delete the body if you click on it
-> - It doesn't look like it orbits about the actual target...
-> - Moving the cursor over UI during drag cancels the drag
-    > - Maybe the simplest thing is to not pass the updated mouse position to egui during mouse capture
-> - Click and drag should also capture the cursor
-> - Being able to independently change the target while orbiting doesn't work so great with locked pitch. I'll just abandon this for now and always snap target to 0 when orbiting
-> - Always look directly at target when starting a track
-> - Big old glitch when clicking a body in the scene hierarchy
+# Lerp when going to / point towards
 
-# Lerp when going to
+# Window that shows all the controls (ultra extra nice to have: rebind them)
 
 # Planet trails (or something). It's impossible to see anything from far away
 
