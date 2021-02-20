@@ -389,24 +389,57 @@ impl InterfaceManager {
                             let ref_name = match scene_man.get_main_scene() {
                                 Some(scene) => match state.camera.reference_entity {
                                     Some(reference) => {
-                                        scene.get_entity_name(reference).unwrap_or_default()
+                                        Some(scene.get_entity_name(reference).unwrap_or_default())
                                     }
-                                    None => "Not tracking",
+                                    None => None,
                                 },
-                                None => "No scene!",
+                                None => None,
                             };
 
-                            let clear_resp = ui
-                                .add(
-                                    egui::Button::new("🗑")
-                                        .enabled(state.camera.reference_entity.is_some()),
-                                )
-                                .on_hover_text("Stop tracking this body");
-                            if clear_resp.clicked {
-                                state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+                            let mut style = ui.ctx().style().deref().clone();
+                            style.visuals.widgets.noninteractive.bg_stroke.width = 1.0;
+                            style.spacing.window_padding = egui::vec2(0.0, 0.0);
+                            style.visuals.widgets.active.fg_stroke.width = 3.0;
+                            style.visuals.widgets.noninteractive.bg_fill =
+                                style.visuals.widgets.inactive.bg_fill;
+
+                            if ref_name.is_some() {
+                                style.visuals.widgets.noninteractive.bg_fill =
+                                    egui::Srgba::from_rgba_unmultiplied(255, 255, 0, 20);
+                            } else if state.input.modifiers.alt
+                                && state.input.m0 != ButtonState::Depressed
+                            {
+                                style.visuals.widgets.noninteractive.bg_fill =
+                                    egui::Srgba::from_rgba_unmultiplied(255, 0, 0, 25);
                             }
 
-                            ui.label(ref_name);
+                            egui::Frame::popup(&style).show(ui, |ui| {
+                                ui.label("");
+
+                                ui.add(
+                                    egui::Label::new(ref_name.unwrap_or("Not tracking"))
+                                        .text_style(egui::TextStyle::Monospace)
+                                        .text_color(match ref_name {
+                                            Some(_) => egui::Srgba::from_rgba_unmultiplied(
+                                                255, 255, 255, 255,
+                                            ),
+                                            None => egui::Srgba::from_rgba_unmultiplied(
+                                                255, 255, 255, 100,
+                                            ),
+                                        }),
+                                );
+
+                                let clear_resp = ui
+                                    .add(
+                                        egui::Button::new("❌")
+                                            .enabled(state.camera.reference_entity.is_some()),
+                                    )
+                                    .on_hover_text("Stop tracking this body");
+                                if clear_resp.clicked {
+                                    state.camera.next_reference_entity =
+                                        Some(ReferenceChange::Clear);
+                                }
+                            });
                         });
                     });
                 })
@@ -547,7 +580,7 @@ impl InterfaceManager {
 
                         ui.horizontal(|ui| {
                             if state.camera.reference_entity == Some(*selected_entity) {
-                                let but_res = ui.button("🗑").on_hover_text("Stop tracking");
+                                let but_res = ui.button("❌").on_hover_text("Stop tracking");
                                 if but_res.clicked {
                                     entity_to_track = Some(ReferenceChange::Clear);
                                 }

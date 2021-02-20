@@ -449,11 +449,11 @@ response |= ui.add(label);
     - Option to reset to start
         - Just open the current scene again
     - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
-- Controls and manipulation tweaks    
+> - Controls and manipulation tweaks    
     > - Show object name on hover, open details on click    
     >    - Track object on click
-    - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
-        - Have the "go to thing" system be more aware of the thing's size. It's impossible to find phobos and deimos for example, because they're too small    
+    > - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
+        > - Have the "go to thing" system be more aware of the thing's size. It's impossible to find phobos and deimos for example, because they're too small    
 - Okay-ish results on the simulation for now, we can improve later
 - Basic solar system simulation at J2000 with bodies in the right size, good colors/textures, sun with OK brightness
 - Fix firefox dragging bug
@@ -470,7 +470,7 @@ response |= ui.add(label);
 > - Labels projection math doesn't work if body is reference (maybe using/not using the camera reference would fix it?)
 > - Labels freak out if they're behind and we have a body as reference, or even when having no reference at all
 > - Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
-- Clear out confusion of what should happen when we click/reference a body
+> - Clear out confusion of what should happen when we click/reference a body
     > - Label should expand to show distance and body info (just distance for now)
     > - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
     > - Once tracking, left click and drag will orbit, mouse wheel will zoom
@@ -479,7 +479,9 @@ response |= ui.add(label);
             > - It seems like the modifiers only capture if the canvas has focus, and Alt removes focus...
         > - I thought it would be a problem that I'll have to update position based on reference_transform before the transform update system would get to run, but it is not a problem at all: The camera's position to its reference only ever changes from input data, so it will be fine. I just do everything wrt. reference transform and later on that gets updated instead
     > - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
-    - The label on the top toolbar should change to yellow when tracking to highlight what's going on
+    > - The label on the top toolbar should change to yellow when tracking to highlight what's going on
+    > - Maybe change it to red if we try orbiting without a tracked target
+    > - Change tracking remove icon to X, as it kind of looks like you'll delete the body if you click on it
 > - It doesn't look like it orbits about the actual target...
 > - Moving the cursor over UI during drag cancels the drag
     > - Maybe the simplest thing is to not pass the updated mouse position to egui during mouse capture
