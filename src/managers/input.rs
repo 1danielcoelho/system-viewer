@@ -1,7 +1,5 @@
-use na::*;
-
 use crate::app_state::{AppState, ButtonState};
-use crate::components::TransformComponent;
+use na::*;
 
 pub struct InputManager {
     last_mouse_x: i32,

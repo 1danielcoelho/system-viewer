@@ -126,12 +126,18 @@ impl InterfaceManager {
     fn pre_draw(&mut self, state: &mut AppState) {
         state.input.over_ui = false;
 
-        // TODO: Fill in more data in raw_input
         let mut raw_input = self.web_input.new_frame();
-        raw_input.mouse_pos = Some(egui::Pos2 {
-            x: state.input.mouse_x as f32,
-            y: state.input.mouse_y as f32,
-        });
+
+        // If we have pointer lock then we don't really want to use the UI (we're rotating/orbiting/etc.)
+        // so don't give the updated mouse position to egui
+        let window = web_sys::window().unwrap();
+        let doc = window.document().unwrap();
+        if let None = doc.pointer_lock_element() {
+            raw_input.mouse_pos = Some(egui::Pos2 {
+                x: state.input.mouse_x as f32,
+                y: state.input.mouse_y as f32,
+            });
+        }
 
         // HACK: Currently the UI sets the button state to handled if mouse down happens over it...
         raw_input.mouse_down = state.input.m0 != ButtonState::Depressed;
@@ -1095,7 +1101,7 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
             state.selection.clear();
 
             if entity.is_some() {
-                state.selection.insert(entity.unwrap()); 
+                state.selection.insert(entity.unwrap());
             }
         } else {
             if entity.is_some() {
