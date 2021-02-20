@@ -1,6 +1,6 @@
 use crate::components::Component;
 use crate::managers::details_ui::DetailsUI;
-use crate::managers::resource::body_description::BodyDescription;
+use crate::managers::resource::body_description::OrbitalElements;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::utils::transform::Transform;
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub struct OrbitalComponent {
     enabled: bool,
 
-    pub desc: BodyDescription,
+    pub elements: OrbitalElements,
     pub baked_eccentric_anomaly_times: Vec<Jdn>,
     pub circle_to_final_ellipse: Transform<f64>,
 }
@@ -44,10 +44,5 @@ impl Component for OrbitalComponent {
 }
 
 impl DetailsUI for OrbitalComponent {
-    fn draw_details_ui(&mut self, ui: &mut Ui) {
-        ui.columns(2, |cols| {
-            cols[0].label("Name:");
-            cols[1].label(&self.desc.name);
-        });
-    }
+    fn draw_details_ui(&mut self, ui: &mut Ui) {}
 }

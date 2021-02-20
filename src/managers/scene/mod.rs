@@ -202,7 +202,8 @@ impl SceneManager {
 
         log::info!("Loaded new scene '{}'", new_scene.name);
 
-        self.descriptions.insert(new_scene.name, new_scene);
+        let name = new_scene.name.clone();
+        self.descriptions.insert(name, new_scene);
         return Ok(());
     }
 
@@ -667,7 +668,7 @@ impl SceneManager {
 
                 // resolve what to pass to free_body (osc elements or state vectors)
                 if let Some(motion) =
-                    resolve_motion_type(body_id, motion_type, &db_state_vectors, &db_osc_elements)
+                    resolve_motion_type(body_id, motion_type, &db_state_vectors, &db_osc_elements, time)
                 {
                     add_free_body(scene, time, body.unwrap(), &motion, res_man);
                 } else {

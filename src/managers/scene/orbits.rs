@@ -146,10 +146,10 @@ pub fn add_free_body(
     );
 
     // Check if we have a state vector close to the target epoch
-    let state_vector = body
-        .state_vectors
-        .iter()
-        .find(|vec| (vec.jdn_date.0 - epoch.0).abs() < 0.01);
+    let state_vector = match motion {
+        ResolvedBodyMotionType::Vector(vec) => Some(vec),
+        ResolvedBodyMotionType::Elements(_) => None,
+    };
     if state_vector.is_none() {
         log::warn!(
             "Body '{}' doesn't have a state vector usable for epoch '{}'",
@@ -186,11 +186,77 @@ pub fn add_free_body(
     }
 }
 
+/// Function that receives a `BodyMotionType` and produces a `ResolvedMotionType`, either using the custom values
+/// or fetching the closest reference state vector/osculating elements from the database
 pub fn resolve_motion_type(
     body_id: &str,
     received_type: &BodyMotionType,
     state_vectors: &HashMap<String, Vec<StateVector>>,
     osc_elements: &HashMap<String, Vec<OrbitalElements>>,
+    default_time: Jdn,
 ) -> Option<ResolvedBodyMotionType> {
-    return None;
+    match received_type {
+        BodyMotionType::DefaultVector => {
+            let vectors = state_vectors.get(body_id);
+            if vectors.is_none() {
+                return None;
+            };
+
+            let vectors = vectors.unwrap();
+            if vectors.len() < 1 {
+                return None;
+            }
+
+            // Search for vector closest to default_time
+            // Have to do min_by_key manually because Rust
+            // Technically we could early out here when delta starts increasing but what the hell, this is one-off code
+            let mut lowest_index: usize = 0;
+            let mut lowest_delta: f64 = std::f64::INFINITY;
+            for (index, vec) in vectors.iter().enumerate() {
+                let delta = (vec.jdn_date.0 - default_time.0).abs();
+                if delta < lowest_delta {
+                    lowest_index = index;
+                    lowest_delta = delta;
+                }
+            }
+
+            if lowest_delta > 0.1 {
+                log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
+            }
+
+            return Some(ResolvedBodyMotionType::Vector(vectors[lowest_index].clone()));
+        }
+        BodyMotionType::DefaultElements => {
+            let elements = osc_elements.get(body_id);
+            if elements.is_none() {
+                return None;
+            };
+
+            let elements = elements.unwrap();
+            if elements.len() < 1 {
+                return None;
+            }
+
+            // Search for elements closest to default_time
+            // Have to do min_by_key manually because Rust
+            // Technically we could early out here when delta starts increasing but what the hell, this is one-off code
+            let mut lowest_index: usize = 0;
+            let mut lowest_delta: f64 = std::f64::INFINITY;
+            for (index, el) in elements.iter().enumerate() {
+                let delta = (el.epoch.0 - default_time.0).abs();
+                if delta < lowest_delta {
+                    lowest_index = index;
+                    lowest_delta = delta;
+                }
+            }
+
+            if lowest_delta > 0.1 {
+                log::warn!("Using orbital elements '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", elements[lowest_index], lowest_delta, default_time.0, body_id);
+            }
+
+            return Some(ResolvedBodyMotionType::Elements(elements[lowest_index].clone()));
+        }
+        BodyMotionType::CustomVector(vec) => return Some(ResolvedBodyMotionType::Vector(vec.clone())),
+        BodyMotionType::CustomElements(els) => return Some(ResolvedBodyMotionType::Elements(els.clone())),
+    };
 }

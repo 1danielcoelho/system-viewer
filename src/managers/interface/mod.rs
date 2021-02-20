@@ -940,8 +940,8 @@ impl InterfaceManager {
                             ui.set_min_height(ui.available_size().y);
 
                             egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                                for (name, desc) in scene_man.descriptions.iter() {
-                                    ui.radio_value(&mut self.selected_scene_desc_name, *name, {
+                                for (name, _) in scene_man.descriptions.iter() {
+                                    ui.radio_value(&mut self.selected_scene_desc_name, name.to_owned(), {
                                         if name == &main_name {
                                             name.to_owned() + " (active)"
                                         } else {

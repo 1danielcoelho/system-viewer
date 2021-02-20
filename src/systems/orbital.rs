@@ -26,7 +26,7 @@ impl OrbitalSystem {
 
         let eccentric_anomaly = get_eccentric_anomaly(
             current_time,
-            orbit_comp.desc.osc_elements[0].sidereal_orbit_period_days,
+            orbit_comp.elements.sidereal_orbit_period_days,
             &orbit_comp.baked_eccentric_anomaly_times,
         );
 
