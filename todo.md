@@ -474,6 +474,8 @@ response |= ui.add(label);
     > - Label should expand to show distance and body info (just distance for now)
     > - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
     - Once tracking, left click and drag will orbit, mouse wheel will zoom
+        - Probably better to do it with Alt+Left click and drag, or else I'll have to watch out for what happens if we release drag on top of a clickable, etc.
+            > - It seems like the modifiers only capture if the canvas has focus, and Alt removes focus...
     > - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
     - The label on the top toolbar should change to yellow when tracking to highlight what's going on
 > - Big old glitch when clicking a body in the scene hierarchy

@@ -268,6 +268,16 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
+                // Capture these during mouse move as other behavior depends on it (hiding labels, orbit, etc.)
+                let modifiers = egui::Modifiers {
+                    alt: event.alt_key(),
+                    ctrl: event.ctrl_key(),
+                    shift: event.shift_key(),
+                    mac_cmd: event.meta_key(),
+                    command: event.ctrl_key() || event.meta_key(),
+                };
+                s.input.modifiers = modifiers;
+
                 // With pointer lock client_x and client_y don't actually change, so we need movement_*
                 if s.input.m1 == ButtonState::Pressed {
                     s.input.mouse_x += event.movement_x();
@@ -353,6 +363,8 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
 
                 let modifiers = modifiers_from_event(&event);
                 s.input.modifiers = modifiers;
+
+                log::info!("Modifiers: {:?}", modifiers);
 
                 let key = event.key();
                 handle_key_press(&key, &modifiers, s, true);

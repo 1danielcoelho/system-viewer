@@ -541,7 +541,7 @@ impl InterfaceManager {
 
                         ui.horizontal(|ui| {
                             if state.camera.reference_entity == Some(*selected_entity) {
-                                let but_res = ui.button("🗑").on_hover_text("Clear tracking");
+                                let but_res = ui.button("🗑").on_hover_text("Stop tracking");
                                 if but_res.clicked {
                                     entity_to_track = Some(ReferenceChange::Clear);
                                 }
@@ -1088,15 +1088,19 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
 
     state.hovered.clear();
 
-    if state.input.m0 == ButtonState::Pressed {
-        state.selection.clear();
+    // Alt-drag is orbit when we're tracking something, but for consistency I guess we shouldn't
+    // count it as a click or show hover labels even if we have nothing tracked
+    if !state.input.modifiers.alt {
+        if state.input.m0 == ButtonState::Pressed {
+            state.selection.clear();
 
-        if entity.is_some() {
-            state.selection.insert(entity.unwrap());
-        }
-    } else {
-        if entity.is_some() {
-            state.hovered.insert(entity.unwrap());
+            if entity.is_some() {
+                state.selection.insert(entity.unwrap()); 
+            }
+        } else {
+            if entity.is_some() {
+                state.hovered.insert(entity.unwrap());
+            }
         }
     }
 }
