@@ -414,14 +414,16 @@ impl InterfaceManager {
             let ui = ref_mut.as_ref().unwrap();
 
             let mut cam_pos = state.camera.pos;
+            let mut cam_target = state.camera.target;
             if let Some(reference) = state.camera.reference_translation {
                 cam_pos += reference;
+                cam_target += reference;
             }
 
             let world_to_ndc = state.camera.p * state.camera.v;
 
             // If we have up locked to +Z, we need to calculate the real up vector
-            let forward = (state.camera.target - cam_pos).normalize();
+            let forward = (cam_target - cam_pos).normalize();
             let right = forward.cross(&state.camera.up).normalize();
 
             for selected_entity in &state.selection {
