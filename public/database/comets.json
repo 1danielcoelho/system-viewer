@@ -1,1 +1,2191 @@
-{"c00001_0": {"name": "Halley", "type": "comet", "albedo": 0.04, "radius": 0.0055, "mass": 300000000000000.0}, "c00002_0": {"name": "Encke", "type": "comet", "albedo": 0.046, "radius": 0.0024, "rotation_period": 0.46179166666666666, "mass": 34743501474580.23}, "c00003_0": {"name": "Biela", "type": "comet"}, "c00004_0": {"name": "Faye", "type": "comet", "radius": 0.00177, "mass": 13936690604194.953}, "c00005_0": {"name": "Brorsen", "type": "comet"}, "c00006_0": {"name": "d'Arrest", "type": "comet", "radius": 0.0016, "mass": 10294370807283.035}, "c00007_0": {"name": "Pons-Winnecke", "type": "comet", "radius": 0.0026, "mass": 44173305983595.35}, "c00008_0": {"name": "Tuttle", "type": "comet", "radius": 0.00225, "mass": 28627763055836.98}, "c00009_0": {"name": "Tempel", "type": "comet", "albedo": 0.05, "radius": 0.003, "rotation_period": 1.6958333333333335, "mass": 79000000000000.0}, "c00010_0": {"name": "Tempel", "type": "comet", "albedo": 0.022, "radius": 0.0053, "rotation_period": 0.3720833333333333, "mass": 374168711590790.06}, "c00011_0": {"name": "Tempel-Swift-LINEAR", "type": "comet"}, "c00012_0": {"name": "Pons-Brooks", "type": "comet"}, "c00013_0": {"name": "Olbers", "type": "comet"}, "c00014_0": {"name": "Wolf", "type": "comet", "radius": 0.00233, "rotation_period": 0.3758333333333333, "mass": 31791251353585.246}, "c00015_0": {"name": "Finlay", "type": "comet"}, "c00016_0": {"name": "Brooks", "type": "comet"}, "c00017_0": {"name": "Holmes", "type": "comet", "radius": 0.00171, "mass": 12566900915199.098}, "c00018_0": {"name": "Perrine-Mrkos", "type": "comet"}, "c00019_0": {"name": "Borrelly", "type": "comet", "albedo": 0.022, "radius": 0.0024, "mass": 79000000000000.0}, "c00020_0": {"name": "Westphal", "type": "comet"}, "c00021_0": {"name": "Giacobini-Zinner", "type": "comet", "radius": 0.001, "mass": 2513274122871.8345}, "c00022_0": {"name": "Kopff", "type": "comet", "albedo": 0.05, "radius": 0.0015, "mass": 8482300164692.441}, "c00023_0": {"name": "Brorsen-Metcalf", "type": "comet"}, "c00024_0": {"name": "Schaumasse", "type": "comet", "radius": 0.0013, "mass": 5521663247949.419}, "c00025_0": {"name": "Neujmin", "type": "comet"}, "c00026_0": {"name": "Grigg-Skjellerup", "type": "comet", "radius": 0.0013, "mass": 5521663247949.419}, "c00027_0": {"name": "Crommelin", "type": "comet"}, "c00028_0": {"name": "Neujmin", "type": "comet", "albedo": 0.025, "radius": 0.0107, "mass": 3078868871305280.0}, "c00029_0": {"name": "Schwassmann-Wachmann", "type": "comet", "albedo": 0.033, "radius": 0.030199999999999998, "mass": 6.922463723692562e+16}, "c00030_0": {"name": "Reinmuth", "type": "comet", "radius": 0.0039, "mass": 149084907694634.3}, "c00031_0": {"name": "Schwassmann-Wachmann", "type": "comet", "radius": 0.0031, "mass": 74872949394474.81}, "c00032_0": {"name": "\"Comas Sola\"", "type": "comet", "radius": 0.004200000000000001, "mass": 186203453215328.56}, "c00033_0": {"name": "Daniel", "type": "comet", "radius": 0.0013, "mass": 5521663247949.419}, "c00034_0": {"name": "Gale", "type": "comet"}, "c00035_0": {"name": "Herschel-Rigollet", "type": "comet"}, "c00036_0": {"name": "Whipple", "type": "comet", "radius": 0.00228, "mass": 29788209576768.23}, "c00037_0": {"name": "Forbes", "type": "comet", "radius": 0.0009599999999999999, "mass": 2223584094373.135}, "c00038_0": {"name": "Stephan-Oterma", "type": "comet"}, "c00039_0": {"name": "Oterma", "type": "comet"}, "c00040_0": {"name": "Vaisala", "type": "comet", "radius": 0.0021000000000000003, "mass": 23275431651916.07}, "c00041_0": {"name": "Tuttle-Giacobini-Kresak", "type": "comet", "radius": 0.0007, "mass": 862053024145.0392}, "c00042_0": {"name": "Neujmin", "type": "comet", "radius": 0.0011, "mass": 3345167857542.412}, "c00043_0": {"name": "Wolf-Harrington", "type": "comet", "radius": 0.0018, "mass": 14657414684588.537}, "c00044_0": {"name": "Reinmuth", "type": "comet", "radius": 0.00161, "mass": 10488599144772.693}, "c00045_0": {"name": "Honda-Mrkos-Pajdusakova", "type": "comet", "radius": 0.0008, "mass": 1286796350910.3794}, "c00046_0": {"name": "Wirtanen", "type": "comet", "radius": 0.0006, "mass": 542867210540.3161}, "c00047_0": {"name": "Ashbrook-Jackson", "type": "comet", "radius": 0.0028, "rotation_period": 0.65, "mass": 55171393545282.51}, "c00048_0": {"name": "Johnson", "type": "comet", "radius": 0.00287, "mass": 59413556477100.26}, "c00049_0": {"name": "Arend-Rigaux", "type": "comet", "albedo": 0.028, "radius": 0.00424, "rotation_period": 0.5604166666666667, "mass": 191574380334484.47}, "c00050_0": {"name": "Arend", "type": "comet", "radius": 0.00095, "mass": 2154818401097.2388}, "c00051_0": {"name": "Harrington", "type": "comet", "radius": 0.0024, "mass": 34743501474580.23}, "c00051_a": {"name": "Harrington", "type": "comet", "radius": 0.0024, "mass": 34743501474580.23}, "c00051_d": {"name": "Harrington", "type": "comet"}, "c00052_0": {"name": "Harrington-Abell", "type": "comet", "radius": 0.0013, "mass": 5521663247949.419}, "c00053_0": {"name": "\"Van Biesbroeck\"", "type": "comet", "radius": 0.00333, "mass": 92805253252307.9}, "c00054_0": {"name": "\"de Vico-Swift-NEAT\"", "type": "comet"}, "c00055_0": {"name": "Tempel-Tuttle", "type": "comet", "albedo": 0.06, "radius": 0.0018, "mass": 14657414684588.537}, "c00056_0": {"name": "Slaughter-Burnham", "type": "comet", "radius": 0.00156, "mass": 9541434092456.598}, "c00057_0": {"name": "duToit-Neujmin-Delporte", "type": "comet"}, "c00057_a": {"name": "duToit-Neujmin-Delporte", "type": "comet"}, "c00058_0": {"name": "Jackson-Neujmin", "type": "comet"}, "c00059_0": {"name": "Kearns-Kwee", "type": "comet", "radius": 0.00079, "mass": 1239142160266.6062}, "c00060_0": {"name": "Tsuchinshan", "type": "comet"}, "c00061_0": {"name": "Shajn-Schaldach", "type": "comet", "radius": 0.0012, "mass": 4342937684322.529}, "c00062_0": {"name": "Tsuchinshan", "type": "comet"}, "c00063_0": {"name": "Wild", "type": "comet", "radius": 0.00145, "mass": 7662030322840.145}, "c00064_0": {"name": "Swift-Gehrels", "type": "comet", "radius": 0.0016, "mass": 10294370807283.035}, "c00065_0": {"name": "Gunn", "type": "comet", "radius": 0.0054, "mass": 395750196483890.56}, "c00066_0": {"name": "\"du Toit\"", "type": "comet"}, "c00067_0": {"name": "Churyumov-Gerasimenko", "type": "comet", "radius": 0.002, "rotation_period": 0.5317237499999999, "mass": 10000000000000.0}, "c00068_0": {"name": "Klemola", "type": "comet", "radius": 0.0022, "mass": 26761342860339.297}, "c00069_0": {"name": "Taylor", "type": "comet"}, "c00070_0": {"name": "Kojima", "type": "comet", "radius": 0.0015, "mass": 8482300164692.441}, "c00071_0": {"name": "Clark", "type": "comet", "radius": 0.00068, "mass": 790253809002.8369}, "c00072_0": {"name": "Denning-Fujikawa", "type": "comet"}, "c00073_0": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_b": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_c": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_e": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_g": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_h": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_j": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_k": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_l": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_m": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_n": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_p": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_q": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_r": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_s": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_t": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_u": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_v": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_w": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_x": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_y": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073_z": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073aa": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ab": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ac": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ad": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ae": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073af": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ag": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ah": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ai": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073aj": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ak": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073al": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073am": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073an": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ao": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ap": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073aq": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ar": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073as": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073at": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073au": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073av": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073aw": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ax": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ay": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073az": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073ba": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bb": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bc": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bd": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073be": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bf": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bg": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bh": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bi": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bj": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bk": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bl": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bm": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bn": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bo": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bp": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bq": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073br": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bs": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00073bt": {"name": "Schwassmann-Wachmann", "type": "comet"}, "c00074_0": {"name": "Smirnova-Chernykh", "type": "comet", "radius": 0.0022299999999999998, "mass": 27871121774953.43}, "c00075_0": {"name": "Kohoutek", "type": "comet", "radius": 0.0023, "mass": 30579006252981.605}, "c00076_0": {"name": "West-Kohoutek-Ikemura", "type": "comet", "radius": 0.00033, "mass": 90319532153.64511}, "c00077_0": {"name": "Longmore", "type": "comet", "radius": 0.0040999999999999995, "mass": 173217365822449.6}, "c00078_0": {"name": "Gehrels", "type": "comet"}, "c00079_0": {"name": "\"du Toit-Hartley\"", "type": "comet", "radius": 0.0014, "mass": 6896424193160.313}, "c00080_0": {"name": "Peters-Hartley", "type": "comet"}, "c00081_0": {"name": "Wild", "type": "comet", "radius": 0.002, "mass": 23000000000000.0}, "c00082_0": {"name": "Gehrels", "type": "comet", "radius": 0.00073, "mass": 977706359457.2323}, "c00083_0": {"name": "Russell", "type": "comet"}, "c00084_0": {"name": "Giclas", "type": "comet", "radius": 0.0009, "mass": 1832176835573.5671}, "c00085_0": {"name": "Boethin", "type": "comet"}, "c00086_0": {"name": "Wild", "type": "comet", "radius": 0.00043, "mass": 199822885687.17093}, "c00087_0": {"name": "Bus", "type": "comet", "radius": 0.00028000000000000003, "mass": 55171393545.282524}, "c00088_0": {"name": "Howell", "type": "comet", "radius": 0.0022, "mass": 26761342860339.297}, "c00089_0": {"name": "Russell", "type": "comet", "radius": 0.0014, "mass": 6896424193160.313}, "c00090_0": {"name": "Gehrels", "type": "comet", "radius": 0.0039, "mass": 149084907694634.3}, "c00091_0": {"name": "Russell", "type": "comet"}, "c00092_0": {"name": "Sanguin", "type": "comet", "radius": 0.0011899999999999999, "mass": 4235266507624.576}, "c00093_0": {"name": "Lovas", "type": "comet", "rotation_period": 0.7583333333333333}, "c00094_0": {"name": "Russell", "type": "comet", "rotation_period": 0.8624999999999999}, "c00096_0": {"name": "Machholz", "type": "comet", "radius": 0.0032, "mass": 82354966458264.28}, "c00097_0": {"name": "Metcalf-Brewington", "type": "comet", "radius": 0.0017, "mass": 12347715765669.32}, "c00098_0": {"name": "Takamizawa", "type": "comet", "radius": 0.0027, "mass": 49468774560486.32}, "c00099_0": {"name": "Kowal", "type": "comet", "radius": 0.0050999999999999995, "mass": 333388325673071.6}, "c00100_0": {"name": "Hartley", "type": "comet"}, "c00101_0": {"name": "Chernykh", "type": "comet", "radius": 0.0028, "mass": 55171393545282.51}, "c00101_b": {"name": "Chernykh", "type": "comet"}, "c00102_0": {"name": "Shoemaker", "type": "comet", "radius": 0.0016, "mass": 10294370807283.035}, "c00103_0": {"name": "Hartley", "type": "comet", "radius": 0.0008, "rotation_period": 0.7541666666666668, "mass": 1286796350910.3794}, "c00104_0": {"name": "Kowal", "type": "comet", "radius": 0.001, "mass": 2513274122871.8345}, "c00105_0": {"name": "\"Singer Brewster\"", "type": "comet", "radius": 0.0011, "mass": 3345167857542.412}, "c00106_0": {"name": "Schuster", "type": "comet", "radius": 0.00094, "mass": 2087485274071.3796}, "c00108_0": {"name": "Ciffreo", "type": "comet", "radius": 0.0016, "mass": 10294370807283.035}, "c00109_0": {"name": "Swift-Tuttle", "type": "comet", "radius": 0.013, "mass": 5521663247949420.0}, "c00110_0": {"name": "Hartley", "type": "comet", "radius": 0.00215, "rotation_period": 0.4230416666666667, "mass": 24977860710896.367}, "c00111_0": {"name": "Helin-Roman-Crockett", "type": "comet", "radius": 0.0006, "mass": 542867210540.3161}, "c00112_0": {"name": "Urata-Niijima", "type": "comet", "radius": 0.0009, "mass": 1832176835573.5671}, "c00113_0": {"name": "Spitaler", "type": "comet", "radius": 0.0011, "mass": 3345167857542.412}, "c00114_0": {"name": "Wiseman-Skiff", "type": "comet", "radius": 0.00078, "mass": 1192679261557.0747}, "c00115_0": {"name": "Maury", "type": "comet", "radius": 0.00111, "mass": 3437231601937.33}, "c00116_0": {"name": "Wild", "type": "comet"}, "c00117_0": {"name": "Helin-Roman-Alu", "type": "comet", "radius": 0.0045, "mass": 229022104446695.84}, "c00118_0": {"name": "Shoemaker-Levy", "type": "comet", "radius": 0.0024, "mass": 34743501474580.23}, "c00119_0": {"name": "Parker-Hartley", "type": "comet"}, "c00120_0": {"name": "Mueller", "type": "comet", "radius": 0.0015, "mass": 8482300164692.441}, "c00121_0": {"name": "Shoemaker-Holt", "type": "comet", "radius": 0.0016200000000000001, "mass": 10685255305065.045}, "c00122_0": {"name": "\"de Vico\"", "type": "comet"}, "c00123_0": {"name": "West-Hartley", "type": "comet", "rotation_period": 0.15416666666666667}, "c00124_0": {"name": "Mrkos", "type": "comet"}, "c00125_0": {"name": "Spacewatch", "type": "comet", "radius": 0.0008, "mass": 1286796350910.3794}, "c00126_0": {"name": "IRAS", "type": "comet", "radius": 0.0016, "mass": 10294370807283.035}, "c00127_0": {"name": "Holt-Olmstead", "type": "comet"}, "c00128_0": {"name": "Shoemaker-Holt", "type": "comet"}, "c00128_a": {"name": "Shoemaker-Holt", "type": "comet"}, "c00128_b": {"name": "Shoemaker-Holt", "type": "comet", "radius": 0.0023, "mass": 30579006252981.605}, "c00129_0": {"name": "Shoemaker-Levy", "type": "comet"}, "c00130_0": {"name": "McNaught-Hughes", "type": "comet", "radius": 0.0021000000000000003, "mass": 23275431651916.07}, "c00131_0": {"name": "Mueller", "type": "comet"}, "c00132_0": {"name": "Helin-Roman-Alu", "type": "comet"}, "c00134_0": {"name": "Kowal-Vavrova", "type": "comet"}, "c00135_0": {"name": "Shoemaker-Levy", "type": "comet", "radius": 0.0019, "mass": 17238547208777.91}, "c00136_0": {"name": "Mueller", "type": "comet"}, "c00137_0": {"name": "Shoemaker-Levy", "type": "comet", "radius": 0.0029, "rotation_period": 0.32083333333333336, "mass": 61296242582721.16}, "c00138_0": {"name": "Shoemaker-Levy", "type": "comet"}, "c00139_0": {"name": "Vaisala-Oterma", "type": "comet"}, "c00140_0": {"name": "Bowell-Skiff", "type": "comet"}, "c00141_0": {"name": "Machholz", "type": "comet"}, "c00141_a": {"name": "Machholz", "type": "comet"}, "c00141_d": {"name": "Machholz", "type": "comet"}, "c00142_0": {"name": "Ge-Wang", "type": "comet"}, "c00143_0": {"name": "Kowal-Mrkos", "type": "comet"}, "c00144_0": {"name": "Kushida", "type": "comet"}, "c00145_0": {"name": "Shoemaker-Levy", "type": "comet"}, "c00146_0": {"name": "Shoemaker-LINEAR", "type": "comet"}, "c00147_0": {"name": "Kushida-Muramatsu", "type": "comet", "radius": 0.00020999999999999998, "mass": 23275431651.916054}, "c00148_0": {"name": "Anderson-LINEAR", "type": "comet"}, "c00149_0": {"name": "Mueller", "type": "comet", "rotation_period": 0.49500000000000005}, "c00150_0": {"name": "LONEOS", "type": "comet"}, "c00151_0": {"name": "Helin", "type": "comet", "radius": 0.004200000000000001, "mass": 186203453215328.56}, "c00152_0": {"name": "Helin-Lawrence", "type": "comet"}, "c00153_0": {"name": "Ikeya-Zhang", "type": "comet"}, "c00154_0": {"name": "Brewington", "type": "comet"}, "c00155_0": {"name": "Shoemaker", "type": "comet"}, "c00156_0": {"name": "Russell-LINEAR", "type": "comet"}, "c00157_0": {"name": "Tritton", "type": "comet"}, "c00158_0": {"name": "Kowal-LINEAR", "type": "comet"}, "c00159_0": {"name": "LONEOS", "type": "comet"}, "c00160_0": {"name": "LINEAR", "type": "comet"}, "c00161_0": {"name": "Hartley-IRAS", "type": "comet"}, "c00162_0": {"name": "\"Siding Spring\"", "type": "comet", "rotation_period": 1.368875}, "c00163_0": {"name": "NEAT", "type": "comet"}, "c00164_0": {"name": "Christensen", "type": "comet"}, "c00165_0": {"name": "LINEAR", "type": "comet"}, "c00166_0": {"name": "NEAT", "type": "comet"}, "c00167_0": {"name": "CINEOS", "type": "comet", "albedo": 0.053, "radius": 0.033085, "mass": 9.101925503680874e+16}, "c00168_0": {"name": "Hergenrother", "type": "comet"}, "c00169_0": {"name": "NEAT", "type": "comet", "rotation_period": 0.34870833333333334}, "c00170_0": {"name": "Christensen", "type": "comet"}, "c00171_0": {"name": "Spahr", "type": "comet"}, "c00172_0": {"name": "Yeung", "type": "comet"}, "c00173_0": {"name": "Mueller", "type": "comet"}, "c00175_0": {"name": "Hergenrother", "type": "comet"}, "c00177_0": {"name": "Barnard", "type": "comet"}, "c00178_0": {"name": "Hug-Bell", "type": "comet"}, "c00179_0": {"name": "Jedicke", "type": "comet"}, "c00180_0": {"name": "NEAT", "type": "comet"}, "c00181_0": {"name": "Shoemaker-Levy", "type": "comet"}, "c00182_0": {"name": "LONEOS", "type": "comet"}, "c00183_0": {"name": "Korlevic-Juric", "type": "comet"}, "c00184_0": {"name": "Lovas", "type": "comet", "radius": 0.0031, "mass": 74872949394474.81}, "c00185_0": {"name": "Petriew", "type": "comet"}, "c00186_0": {"name": "Garradd", "type": "comet"}, "c00187_0": {"name": "LINEAR", "type": "comet"}, "c00188_0": {"name": "LINEAR-Mueller", "type": "comet"}, "c00189_0": {"name": "NEAT", "type": "comet"}, "c00190_0": {"name": "Mueller", "type": "comet"}, "c00191_0": {"name": "McNaught", "type": "comet"}, "c00192_0": {"name": "Shoemaker-Levy", "type": "comet"}, "c00193_0": {"name": "LINEAR-NEAT", "type": "comet"}, "c00194_0": {"name": "LINEAR", "type": "comet"}, "c00195_0": {"name": "Hill", "type": "comet"}, "c00196_0": {"name": "Tichy", "type": "comet"}, "c00197_0": {"name": "LINEAR", "type": "comet"}, "c00198_0": {"name": "ODAS", "type": "comet"}, "c00199_0": {"name": "Shoemaker", "type": "comet"}, "c00200_0": {"name": "Larsen", "type": "comet"}, "c00201_0": {"name": "LONEOS", "type": "comet"}, "c00202_0": {"name": "Scotti", "type": "comet"}, "c00203_0": {"name": "Korlevic", "type": "comet"}, "c00204_0": {"name": "LINEAR-NEAT", "type": "comet"}, "c00205_0": {"name": "Giacobini", "type": "comet"}, "c00205_a": {"name": "Giacobini", "type": "comet"}, "c00205_b": {"name": "Giacobini", "type": "comet"}, "c00205_c": {"name": "Giacobini", "type": "comet"}, "c00206_0": {"name": "Barnard-Boattini", "type": "comet"}, "c00207_0": {"name": "NEAT", "type": "comet"}, "c00208_0": {"name": "McMillan", "type": "comet"}, "c00209_0": {"name": "LINEAR", "type": "comet"}, "c00210_0": {"name": "Christensen", "type": "comet"}, "c00211_0": {"name": "Hill", "type": "comet"}, "c00212_0": {"name": "NEAT", "type": "comet", "albedo": 0.096, "radius": 0.00085, "mass": 1543464470708.665}, "c00213_0": {"name": "\"Van Ness\"", "type": "comet"}, "c00213_b": {"name": "\"Van Ness\"", "type": "comet"}, "c00214_0": {"name": "LINEAR", "type": "comet"}, "c00215_0": {"name": "NEAT", "type": "comet"}, "c00216_0": {"name": "LINEAR", "type": "comet"}, "c00217_0": {"name": "LINEAR", "type": "comet"}, "c00218_0": {"name": "LINEAR", "type": "comet"}, "c00219_0": {"name": "LINEAR", "type": "comet"}, "c00220_0": {"name": "McNaught", "type": "comet"}, "c00221_0": {"name": "LINEAR", "type": "comet"}, "c00222_0": {"name": "LINEAR", "type": "comet"}, "c00223_0": {"name": "Skiff", "type": "comet"}, "c00224_0": {"name": "LINEAR-NEAT", "type": "comet"}, "c00225_0": {"name": "LINEAR", "type": "comet"}, "c00226_0": {"name": "Pigott-LINEAR-Kowalski", "type": "comet"}, "c00227_0": {"name": "Catalina-LINEAR", "type": "comet"}, "c00228_0": {"name": "LINEAR", "type": "comet"}, "c00229_0": {"name": "Gibbs", "type": "comet"}, "c00230_0": {"name": "LINEAR", "type": "comet"}, "c00231_0": {"name": "LINEAR-NEAT", "type": "comet"}, "c00232_0": {"name": "Hill", "type": "comet"}, "c00233_0": {"name": "\"La Sagra\"", "type": "comet"}, "c00234_0": {"name": "LINEAR", "type": "comet"}, "c00235_0": {"name": "LINEAR", "type": "comet"}, "c00236_0": {"name": "LINEAR", "type": "comet"}, "c00237_0": {"name": "LINEAR", "type": "comet"}, "c00238_0": {"name": "Read", "type": "comet"}, "c00239_0": {"name": "LINEAR", "type": "comet"}, "c00240_0": {"name": "NEAT", "type": "comet"}, "c00241_0": {"name": "LINEAR", "type": "comet"}, "c00242_0": {"name": "Spahr", "type": "comet"}, "c00243_0": {"name": "NEAT", "type": "comet"}, "c00244_0": {"name": "Scotti", "type": "comet"}, "c00245_0": {"name": "WISE", "type": "comet"}, "c00246_0": {"name": "NEAT", "type": "comet"}, "c00247_0": {"name": "LINEAR", "type": "comet"}, "c00248_0": {"name": "Gibbs", "type": "comet"}, "c00249_0": {"name": "LINEAR", "type": "comet"}, "c00250_0": {"name": "Larson", "type": "comet"}, "c00251_0": {"name": "LINEAR", "type": "comet"}, "c00252_0": {"name": "LINEAR", "type": "comet"}, "c00253_0": {"name": "PANSTARRS", "type": "comet"}, "c00254_0": {"name": "McNaught", "type": "comet"}, "c00255_0": {"name": "Levy", "type": "comet"}, "c00256_0": {"name": "LINEAR", "type": "comet"}, "c00257_0": {"name": "Catalina", "type": "comet"}, "c00258_0": {"name": "PANSTARRS", "type": "comet"}, "c00259_0": {"name": "Garradd", "type": "comet"}, "c00260_0": {"name": "McNaught", "type": "comet"}, "c00261_0": {"name": "Larson", "type": "comet"}, "c00262_0": {"name": "McNaught-Russell", "type": "comet"}, "c00263_0": {"name": "Gibbs", "type": "comet"}, "c00264_0": {"name": "Larsen", "type": "comet"}, "c00265_0": {"name": "LINEAR", "type": "comet"}, "c00266_0": {"name": "Christensen", "type": "comet"}, "c00267_0": {"name": "LONEOS", "type": "comet"}, "c00268_0": {"name": "Bernardi", "type": "comet"}, "c00269_0": {"name": "Jedicke", "type": "comet"}, "c00270_0": {"name": "Gehrels", "type": "comet"}, "c00271_0": {"name": "\"van Houten-Lemmon\"", "type": "comet"}, "c00272_0": {"name": "NEAT", "type": "comet"}, "c00273_0": {"name": "Pons-Gambart", "type": "comet"}, "c00274_0": {"name": "Tombaugh-Tenagra", "type": "comet"}, "c00275_0": {"name": "Hermann", "type": "comet"}, "c00276_0": {"name": "Vorobjov", "type": "comet"}, "c00277_0": {"name": "LINEAR", "type": "comet"}, "c00278_0": {"name": "McNaught", "type": "comet"}, "c00279_0": {"name": "\"La Sagra\"", "type": "comet"}, "c00280_0": {"name": "Larsen", "type": "comet"}, "c00281_0": {"name": "MOSS", "type": "comet"}, "c00283_0": {"name": "Spacewatch", "type": "comet"}, "c00284_0": {"name": "McNaught", "type": "comet"}, "c00285_0": {"name": "LINEAR", "type": "comet"}, "c00286_0": {"name": "Christensen", "type": "comet"}, "c00287_0": {"name": "Christensen", "type": "comet"}, "c00289_0": {"name": "Blanpain", "type": "comet"}, "c00290_0": {"name": "Jager", "type": "comet"}, "c00291_0": {"name": "NEAT", "type": "comet"}, "c00292_0": {"name": "Li", "type": "comet"}, "c00293_0": {"name": "Spacewatch", "type": "comet"}, "c00294_0": {"name": "LINEAR", "type": "comet"}, "c00295_0": {"name": "LINEAR", "type": "comet"}, "c00296_0": {"name": "Garradd", "type": "comet"}, "c00297_0": {"name": "Beshore", "type": "comet"}, "c00298_0": {"name": "Christensen", "type": "comet"}, "c00299_0": {"name": "Catalina-PANSTARRS", "type": "comet"}, "c00300_0": {"name": "Catalina", "type": "comet"}, "c00301_0": {"name": "LINEAR-NEAT", "type": "comet"}, "c00302_0": {"name": "Lemmon-PANSTARRS", "type": "comet"}, "c00303_0": {"name": "NEAT", "type": "comet"}, "c00304_0": {"name": "Ory", "type": "comet"}, "c00305_0": {"name": "Skiff", "type": "comet"}, "c00306_0": {"name": "LINEAR", "type": "comet"}, "c00307_0": {"name": "LINEAR", "type": "comet"}, "c00308_0": {"name": "Lagerkvist-Carsenty", "type": "comet"}, "c00309_0": {"name": "LINEAR", "type": "comet"}, "c00310_0": {"name": "Hill", "type": "comet"}, "c00311_0": {"name": "PANSTARRS", "type": "comet"}, "c00312_0": {"name": "NEAT", "type": "comet"}, "c00313_0": {"name": "Gibbs", "type": "comet"}, "c00314_0": {"name": "Montani", "type": "comet"}, "c00315_0": {"name": "LONEOS", "type": "comet"}, "c00316_0": {"name": "LONEOS-Christensen", "type": "comet"}, "c00317_0": {"name": "WISE", "type": "comet"}, "c00318_0": {"name": "McNaught-Hartley", "type": "comet"}, "c00319_0": {"name": "Catalina-McNaught", "type": "comet"}, "c00320_0": {"name": "McNaught", "type": "comet"}, "c00321_0": {"name": "SOHO", "type": "comet"}, "c00322_0": {"name": "SOHO", "type": "comet"}, "c00323_0": {"name": "SOHO", "type": "comet"}, "c00324_0": {"name": "\"La Sagra\"", "type": "comet", "albedo": 0.01, "radius": 0.0008, "mass": 1286796350910.3794}, "c00325_0": {"name": "Yang-Gao", "type": "comet"}, "c00326_0": {"name": "Hill", "type": "comet"}, "c00327_0": {"name": "\"Van Ness\"", "type": "comet"}, "c00328_0": {"name": "LONEOS-Tucker", "type": "comet"}, "c00329_0": {"name": "LINEAR-Catalina", "type": "comet"}, "c00330_0": {"name": "Catalina", "type": "comet"}, "c00331_0": {"name": "Gibbs", "type": "comet"}, "c00332_0": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_a": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_b": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_c": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_d": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_e": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_f": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_g": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_h": {"name": "Ikeya-Murakami", "type": "comet"}, "c00332_i": {"name": "Ikeya-Murakami", "type": "comet"}, "c00333_0": {"name": "LINEAR", "type": "comet", "rotation_period": 0.8766666666666666}, "c00334_0": {"name": "NEAT", "type": "comet"}, "c00335_0": {"name": "Gibbs", "type": "comet"}, "c00336_0": {"name": "McNaught", "type": "comet"}, "c00337_0": {"name": "WISE", "type": "comet"}, "c00338_0": {"name": "McNaught", "type": "comet"}, "c00339_0": {"name": "Gibbs", "type": "comet"}, "c00340_0": {"name": "Boattini", "type": "comet"}, "c00341_0": {"name": "Gibbs", "type": "comet"}, "c00342_0": {"name": "SOHO", "type": "comet"}, "c00343_0": {"name": "NEAT-LONEOS", "type": "comet"}, "c00344_0": {"name": "Read", "type": "comet"}, "c00345_0": {"name": "LINEAR", "type": "comet", "magnitude": 14.4}, "c00346_0": {"name": "Catalina", "type": "comet"}, "c00347_0": {"name": "PANSTARRS", "type": "comet", "magnitude": 16.6}, "c00348_0": {"name": "PANSTARRS", "type": "comet"}, "c00349_0": {"name": "Lemmon", "type": "comet", "magnitude": 15.7, "albedo": 0.104, "radius": 0.0014915, "mass": 8338916646677.396}, "c00350_0": {"name": "McNaught", "type": "comet"}, "c00351_0": {"name": "Wiegert-PANSTARRS", "type": "comet"}, "c00352_0": {"name": "Skiff", "type": "comet"}, "c00353_0": {"name": "McNaught", "type": "comet"}, "c00354_0": {"name": "LINEAR", "type": "comet"}, "c00355_0": {"name": "LINEAR-NEAT", "type": "comet"}, "c00356_0": {"name": "WISE", "type": "comet"}, "c00357_0": {"name": "Hill", "type": "comet"}, "c00358_0": {"name": "PANSTARRS", "type": "comet"}, "c00359_0": {"name": "LONEOS", "type": "comet"}, "c00360_0": {"name": "WISE", "type": "comet"}, "c00361_0": {"name": "Spacewatch", "type": "comet", "magnitude": 14.7}, "c00363_0": {"name": "Lemmon", "type": "comet"}, "c00364_0": {"name": "PANSTARRS", "type": "comet"}, "c00365_0": {"name": "PANSTARRS", "type": "comet", "magnitude": 18.3}, "c00366_0": {"name": "Spacewatch", "type": "comet"}, "c00367_0": {"name": "Catalina", "type": "comet"}, "c00368_0": {"name": "NEAT", "type": "comet"}, "c00369_0": {"name": "Hill", "type": "comet"}, "c00370_0": {"name": "NEAT", "type": "comet"}, "c00371_0": {"name": "LINEAR-Skiff", "type": "comet"}, "c00372_0": {"name": "McNaught", "type": "comet"}, "c00373_0": {"name": "Rinner", "type": "comet"}, "c00374_0": {"name": "Larson", "type": "comet"}, "c00375_0": {"name": "Hill", "type": "comet"}, "c00376_0": {"name": "LONEOS", "type": "comet"}, "c00377_0": {"name": "Scotti", "type": "comet"}, "c00378_0": {"name": "McNaught", "type": "comet"}, "c00379_0": {"name": "Spacewatch", "type": "comet"}, "c00380_0": {"name": "PANSTARRS", "type": "comet"}, "c00381_0": {"name": "LINEAR-Spacewatch", "type": "comet"}, "c00382_0": {"name": "Larson", "type": "comet"}, "c00383_0": {"name": "Christensen", "type": "comet"}, "c00384_0": {"name": "Kowalski", "type": "comet"}, "c00385_0": {"name": "Hill", "type": "comet"}, "c00386_0": {"name": "PANSTARRS", "type": "comet"}, "c00387_0": {"name": "Boattini", "type": "comet"}, "c00388_0": {"name": "Gibbs", "type": "comet"}, "c00389_0": {"name": "\"Siding Spring\"", "type": "comet"}, "c00390_0": {"name": "Gibbs", "type": "comet"}, "c00391_0": {"name": "Kowalski", "type": "comet"}, "c00392_0": {"name": "LINEAR", "type": "comet"}, "c00393_0": {"name": "Spacewatch-Hill", "type": "comet"}, "c00394_0": {"name": "PANSTARRS", "type": "comet"}, "c00395_0": {"name": "Catalina-NEAT", "type": "comet"}, "c00396_0": {"name": "Leonard", "type": "comet"}, "c00397_0": {"name": "Lemmon", "type": "comet"}, "c00398_0": {"name": "Boattini", "type": "comet"}, "c00399_0": {"name": "PANSTARRS", "type": "comet"}, "c00400_0": {"name": "PANSTARRS", "type": "comet", "magnitude": 17.0}, "c00401_0": {"name": "McNaught", "type": "comet"}, "c00402_0": {"name": "LINEAR", "type": "comet"}, "c00403_0": {"name": "CATALINA", "type": "comet"}, "c00404_0": {"name": "Bressi", "type": "comet"}, "c00405_0": {"name": "Lemmon", "type": "comet"}, "c00406_0": {"name": "Gibbs", "type": "comet"}, "c00407_0": {"name": "PANSTARRS", "type": "comet"}, "c00408_0": {"name": "Novichonok", "type": "comet"}, "c00409_0": {"name": "LONEOS-Hill", "type": "comet"}}
+{
+    "c00001_0": {
+        "name": "Halley",
+        "type": "comet",
+        "albedo": 0.04,
+        "radius": 0.0055,
+        "mass": 300000000000000.0
+    },
+    "c00002_0": {
+        "name": "Encke",
+        "type": "comet",
+        "albedo": 0.046,
+        "radius": 0.0024,
+        "rotation_period": 0.46179166666666666,
+        "mass": 34743501474580.23
+    },
+    "c00003_0": {
+        "name": "Biela",
+        "type": "comet"
+    },
+    "c00004_0": {
+        "name": "Faye",
+        "type": "comet",
+        "radius": 0.00177,
+        "mass": 13936690604194.953
+    },
+    "c00005_0": {
+        "name": "Brorsen",
+        "type": "comet"
+    },
+    "c00006_0": {
+        "name": "d'Arrest",
+        "type": "comet",
+        "radius": 0.0016,
+        "mass": 10294370807283.035
+    },
+    "c00007_0": {
+        "name": "Pons-Winnecke",
+        "type": "comet",
+        "radius": 0.0026,
+        "mass": 44173305983595.35
+    },
+    "c00008_0": {
+        "name": "Tuttle",
+        "type": "comet",
+        "radius": 0.00225,
+        "mass": 28627763055836.98
+    },
+    "c00009_0": {
+        "name": "Tempel",
+        "type": "comet",
+        "albedo": 0.05,
+        "radius": 0.003,
+        "rotation_period": 1.6958333333333335,
+        "mass": 79000000000000.0
+    },
+    "c00010_0": {
+        "name": "Tempel",
+        "type": "comet",
+        "albedo": 0.022,
+        "radius": 0.0053,
+        "rotation_period": 0.3720833333333333,
+        "mass": 374168711590790.06
+    },
+    "c00011_0": {
+        "name": "Tempel-Swift-LINEAR",
+        "type": "comet"
+    },
+    "c00012_0": {
+        "name": "Pons-Brooks",
+        "type": "comet"
+    },
+    "c00013_0": {
+        "name": "Olbers",
+        "type": "comet"
+    },
+    "c00014_0": {
+        "name": "Wolf",
+        "type": "comet",
+        "radius": 0.00233,
+        "rotation_period": 0.3758333333333333,
+        "mass": 31791251353585.246
+    },
+    "c00015_0": {
+        "name": "Finlay",
+        "type": "comet"
+    },
+    "c00016_0": {
+        "name": "Brooks",
+        "type": "comet"
+    },
+    "c00017_0": {
+        "name": "Holmes",
+        "type": "comet",
+        "radius": 0.00171,
+        "mass": 12566900915199.098
+    },
+    "c00018_0": {
+        "name": "Perrine-Mrkos",
+        "type": "comet"
+    },
+    "c00019_0": {
+        "name": "Borrelly",
+        "type": "comet",
+        "albedo": 0.022,
+        "radius": 0.0024,
+        "mass": 79000000000000.0
+    },
+    "c00020_0": {
+        "name": "Westphal",
+        "type": "comet"
+    },
+    "c00021_0": {
+        "name": "Giacobini-Zinner",
+        "type": "comet",
+        "radius": 0.001,
+        "mass": 2513274122871.8345
+    },
+    "c00022_0": {
+        "name": "Kopff",
+        "type": "comet",
+        "albedo": 0.05,
+        "radius": 0.0015,
+        "mass": 8482300164692.441
+    },
+    "c00023_0": {
+        "name": "Brorsen-Metcalf",
+        "type": "comet"
+    },
+    "c00024_0": {
+        "name": "Schaumasse",
+        "type": "comet",
+        "radius": 0.0013,
+        "mass": 5521663247949.419
+    },
+    "c00025_0": {
+        "name": "Neujmin",
+        "type": "comet"
+    },
+    "c00026_0": {
+        "name": "Grigg-Skjellerup",
+        "type": "comet",
+        "radius": 0.0013,
+        "mass": 5521663247949.419
+    },
+    "c00027_0": {
+        "name": "Crommelin",
+        "type": "comet"
+    },
+    "c00028_0": {
+        "name": "Neujmin",
+        "type": "comet",
+        "albedo": 0.025,
+        "radius": 0.0107,
+        "mass": 3078868871305280.0
+    },
+    "c00029_0": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet",
+        "albedo": 0.033,
+        "radius": 0.030199999999999998,
+        "mass": 6.922463723692562e+16
+    },
+    "c00030_0": {
+        "name": "Reinmuth",
+        "type": "comet",
+        "radius": 0.0039,
+        "mass": 149084907694634.3
+    },
+    "c00031_0": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet",
+        "radius": 0.0031,
+        "mass": 74872949394474.81
+    },
+    "c00032_0": {
+        "name": "\"Comas Sola\"",
+        "type": "comet",
+        "radius": 0.004200000000000001,
+        "mass": 186203453215328.56
+    },
+    "c00033_0": {
+        "name": "Daniel",
+        "type": "comet",
+        "radius": 0.0013,
+        "mass": 5521663247949.419
+    },
+    "c00034_0": {
+        "name": "Gale",
+        "type": "comet"
+    },
+    "c00035_0": {
+        "name": "Herschel-Rigollet",
+        "type": "comet"
+    },
+    "c00036_0": {
+        "name": "Whipple",
+        "type": "comet",
+        "radius": 0.00228,
+        "mass": 29788209576768.23
+    },
+    "c00037_0": {
+        "name": "Forbes",
+        "type": "comet",
+        "radius": 0.0009599999999999999,
+        "mass": 2223584094373.135
+    },
+    "c00038_0": {
+        "name": "Stephan-Oterma",
+        "type": "comet"
+    },
+    "c00039_0": {
+        "name": "Oterma",
+        "type": "comet"
+    },
+    "c00040_0": {
+        "name": "Vaisala",
+        "type": "comet",
+        "radius": 0.0021000000000000003,
+        "mass": 23275431651916.07
+    },
+    "c00041_0": {
+        "name": "Tuttle-Giacobini-Kresak",
+        "type": "comet",
+        "radius": 0.0007,
+        "mass": 862053024145.0392
+    },
+    "c00042_0": {
+        "name": "Neujmin",
+        "type": "comet",
+        "radius": 0.0011,
+        "mass": 3345167857542.412
+    },
+    "c00043_0": {
+        "name": "Wolf-Harrington",
+        "type": "comet",
+        "radius": 0.0018,
+        "mass": 14657414684588.537
+    },
+    "c00044_0": {
+        "name": "Reinmuth",
+        "type": "comet",
+        "radius": 0.00161,
+        "mass": 10488599144772.693
+    },
+    "c00045_0": {
+        "name": "Honda-Mrkos-Pajdusakova",
+        "type": "comet",
+        "radius": 0.0008,
+        "mass": 1286796350910.3794
+    },
+    "c00046_0": {
+        "name": "Wirtanen",
+        "type": "comet",
+        "radius": 0.0006,
+        "mass": 542867210540.3161
+    },
+    "c00047_0": {
+        "name": "Ashbrook-Jackson",
+        "type": "comet",
+        "radius": 0.0028,
+        "rotation_period": 0.65,
+        "mass": 55171393545282.51
+    },
+    "c00048_0": {
+        "name": "Johnson",
+        "type": "comet",
+        "radius": 0.00287,
+        "mass": 59413556477100.26
+    },
+    "c00049_0": {
+        "name": "Arend-Rigaux",
+        "type": "comet",
+        "albedo": 0.028,
+        "radius": 0.00424,
+        "rotation_period": 0.5604166666666667,
+        "mass": 191574380334484.47
+    },
+    "c00050_0": {
+        "name": "Arend",
+        "type": "comet",
+        "radius": 0.00095,
+        "mass": 2154818401097.2388
+    },
+    "c00051_0": {
+        "name": "Harrington",
+        "type": "comet",
+        "radius": 0.0024,
+        "mass": 34743501474580.23
+    },
+    "c00051_a": {
+        "name": "Harrington",
+        "type": "comet",
+        "radius": 0.0024,
+        "mass": 34743501474580.23
+    },
+    "c00051_d": {
+        "name": "Harrington",
+        "type": "comet"
+    },
+    "c00052_0": {
+        "name": "Harrington-Abell",
+        "type": "comet",
+        "radius": 0.0013,
+        "mass": 5521663247949.419
+    },
+    "c00053_0": {
+        "name": "\"Van Biesbroeck\"",
+        "type": "comet",
+        "radius": 0.00333,
+        "mass": 92805253252307.9
+    },
+    "c00054_0": {
+        "name": "\"de Vico-Swift-NEAT\"",
+        "type": "comet"
+    },
+    "c00055_0": {
+        "name": "Tempel-Tuttle",
+        "type": "comet",
+        "albedo": 0.06,
+        "radius": 0.0018,
+        "mass": 14657414684588.537
+    },
+    "c00056_0": {
+        "name": "Slaughter-Burnham",
+        "type": "comet",
+        "radius": 0.00156,
+        "mass": 9541434092456.598
+    },
+    "c00057_0": {
+        "name": "duToit-Neujmin-Delporte",
+        "type": "comet"
+    },
+    "c00057_a": {
+        "name": "duToit-Neujmin-Delporte",
+        "type": "comet"
+    },
+    "c00058_0": {
+        "name": "Jackson-Neujmin",
+        "type": "comet"
+    },
+    "c00059_0": {
+        "name": "Kearns-Kwee",
+        "type": "comet",
+        "radius": 0.00079,
+        "mass": 1239142160266.6062
+    },
+    "c00060_0": {
+        "name": "Tsuchinshan",
+        "type": "comet"
+    },
+    "c00061_0": {
+        "name": "Shajn-Schaldach",
+        "type": "comet",
+        "radius": 0.0012,
+        "mass": 4342937684322.529
+    },
+    "c00062_0": {
+        "name": "Tsuchinshan",
+        "type": "comet"
+    },
+    "c00063_0": {
+        "name": "Wild",
+        "type": "comet",
+        "radius": 0.00145,
+        "mass": 7662030322840.145
+    },
+    "c00064_0": {
+        "name": "Swift-Gehrels",
+        "type": "comet",
+        "radius": 0.0016,
+        "mass": 10294370807283.035
+    },
+    "c00065_0": {
+        "name": "Gunn",
+        "type": "comet",
+        "radius": 0.0054,
+        "mass": 395750196483890.56
+    },
+    "c00066_0": {
+        "name": "\"du Toit\"",
+        "type": "comet"
+    },
+    "c00067_0": {
+        "name": "Churyumov-Gerasimenko",
+        "type": "comet",
+        "radius": 0.002,
+        "rotation_period": 0.5317237499999999,
+        "mass": 10000000000000.0
+    },
+    "c00068_0": {
+        "name": "Klemola",
+        "type": "comet",
+        "radius": 0.0022,
+        "mass": 26761342860339.297
+    },
+    "c00069_0": {
+        "name": "Taylor",
+        "type": "comet"
+    },
+    "c00070_0": {
+        "name": "Kojima",
+        "type": "comet",
+        "radius": 0.0015,
+        "mass": 8482300164692.441
+    },
+    "c00071_0": {
+        "name": "Clark",
+        "type": "comet",
+        "radius": 0.00068,
+        "mass": 790253809002.8369
+    },
+    "c00072_0": {
+        "name": "Denning-Fujikawa",
+        "type": "comet"
+    },
+    "c00073_0": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_b": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_c": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_e": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_g": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_h": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_j": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_k": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_l": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_m": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_n": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_p": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_q": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_r": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_s": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_t": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_u": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_v": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_w": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_x": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_y": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073_z": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073aa": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ab": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ac": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ad": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ae": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073af": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ag": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ah": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ai": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073aj": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ak": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073al": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073am": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073an": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ao": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ap": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073aq": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ar": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073as": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073at": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073au": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073av": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073aw": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ax": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ay": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073az": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073ba": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bb": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bc": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bd": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073be": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bf": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bg": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bh": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bi": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bj": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bk": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bl": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bm": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bn": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bo": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bp": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bq": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073br": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bs": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00073bt": {
+        "name": "Schwassmann-Wachmann",
+        "type": "comet"
+    },
+    "c00074_0": {
+        "name": "Smirnova-Chernykh",
+        "type": "comet",
+        "radius": 0.0022299999999999998,
+        "mass": 27871121774953.43
+    },
+    "c00075_0": {
+        "name": "Kohoutek",
+        "type": "comet",
+        "radius": 0.0023,
+        "mass": 30579006252981.605
+    },
+    "c00076_0": {
+        "name": "West-Kohoutek-Ikemura",
+        "type": "comet",
+        "radius": 0.00033,
+        "mass": 90319532153.64511
+    },
+    "c00077_0": {
+        "name": "Longmore",
+        "type": "comet",
+        "radius": 0.0040999999999999995,
+        "mass": 173217365822449.6
+    },
+    "c00078_0": {
+        "name": "Gehrels",
+        "type": "comet"
+    },
+    "c00079_0": {
+        "name": "\"du Toit-Hartley\"",
+        "type": "comet",
+        "radius": 0.0014,
+        "mass": 6896424193160.313
+    },
+    "c00080_0": {
+        "name": "Peters-Hartley",
+        "type": "comet"
+    },
+    "c00081_0": {
+        "name": "Wild",
+        "type": "comet",
+        "radius": 0.002,
+        "mass": 23000000000000.0
+    },
+    "c00082_0": {
+        "name": "Gehrels",
+        "type": "comet",
+        "radius": 0.00073,
+        "mass": 977706359457.2323
+    },
+    "c00083_0": {
+        "name": "Russell",
+        "type": "comet"
+    },
+    "c00084_0": {
+        "name": "Giclas",
+        "type": "comet",
+        "radius": 0.0009,
+        "mass": 1832176835573.5671
+    },
+    "c00085_0": {
+        "name": "Boethin",
+        "type": "comet"
+    },
+    "c00086_0": {
+        "name": "Wild",
+        "type": "comet",
+        "radius": 0.00043,
+        "mass": 199822885687.17093
+    },
+    "c00087_0": {
+        "name": "Bus",
+        "type": "comet",
+        "radius": 0.00028000000000000003,
+        "mass": 55171393545.282524
+    },
+    "c00088_0": {
+        "name": "Howell",
+        "type": "comet",
+        "radius": 0.0022,
+        "mass": 26761342860339.297
+    },
+    "c00089_0": {
+        "name": "Russell",
+        "type": "comet",
+        "radius": 0.0014,
+        "mass": 6896424193160.313
+    },
+    "c00090_0": {
+        "name": "Gehrels",
+        "type": "comet",
+        "radius": 0.0039,
+        "mass": 149084907694634.3
+    },
+    "c00091_0": {
+        "name": "Russell",
+        "type": "comet"
+    },
+    "c00092_0": {
+        "name": "Sanguin",
+        "type": "comet",
+        "radius": 0.0011899999999999999,
+        "mass": 4235266507624.576
+    },
+    "c00093_0": {
+        "name": "Lovas",
+        "type": "comet",
+        "rotation_period": 0.7583333333333333
+    },
+    "c00094_0": {
+        "name": "Russell",
+        "type": "comet",
+        "rotation_period": 0.8624999999999999
+    },
+    "c00096_0": {
+        "name": "Machholz",
+        "type": "comet",
+        "radius": 0.0032,
+        "mass": 82354966458264.28
+    },
+    "c00097_0": {
+        "name": "Metcalf-Brewington",
+        "type": "comet",
+        "radius": 0.0017,
+        "mass": 12347715765669.32
+    },
+    "c00098_0": {
+        "name": "Takamizawa",
+        "type": "comet",
+        "radius": 0.0027,
+        "mass": 49468774560486.32
+    },
+    "c00099_0": {
+        "name": "Kowal",
+        "type": "comet",
+        "radius": 0.0050999999999999995,
+        "mass": 333388325673071.6
+    },
+    "c00100_0": {
+        "name": "Hartley",
+        "type": "comet"
+    },
+    "c00101_0": {
+        "name": "Chernykh",
+        "type": "comet",
+        "radius": 0.0028,
+        "mass": 55171393545282.51
+    },
+    "c00101_b": {
+        "name": "Chernykh",
+        "type": "comet"
+    },
+    "c00102_0": {
+        "name": "Shoemaker",
+        "type": "comet",
+        "radius": 0.0016,
+        "mass": 10294370807283.035
+    },
+    "c00103_0": {
+        "name": "Hartley",
+        "type": "comet",
+        "radius": 0.0008,
+        "rotation_period": 0.7541666666666668,
+        "mass": 1286796350910.3794
+    },
+    "c00104_0": {
+        "name": "Kowal",
+        "type": "comet",
+        "radius": 0.001,
+        "mass": 2513274122871.8345
+    },
+    "c00105_0": {
+        "name": "\"Singer Brewster\"",
+        "type": "comet",
+        "radius": 0.0011,
+        "mass": 3345167857542.412
+    },
+    "c00106_0": {
+        "name": "Schuster",
+        "type": "comet",
+        "radius": 0.00094,
+        "mass": 2087485274071.3796
+    },
+    "c00108_0": {
+        "name": "Ciffreo",
+        "type": "comet",
+        "radius": 0.0016,
+        "mass": 10294370807283.035
+    },
+    "c00109_0": {
+        "name": "Swift-Tuttle",
+        "type": "comet",
+        "radius": 0.013,
+        "mass": 5521663247949420.0
+    },
+    "c00110_0": {
+        "name": "Hartley",
+        "type": "comet",
+        "radius": 0.00215,
+        "rotation_period": 0.4230416666666667,
+        "mass": 24977860710896.367
+    },
+    "c00111_0": {
+        "name": "Helin-Roman-Crockett",
+        "type": "comet",
+        "radius": 0.0006,
+        "mass": 542867210540.3161
+    },
+    "c00112_0": {
+        "name": "Urata-Niijima",
+        "type": "comet",
+        "radius": 0.0009,
+        "mass": 1832176835573.5671
+    },
+    "c00113_0": {
+        "name": "Spitaler",
+        "type": "comet",
+        "radius": 0.0011,
+        "mass": 3345167857542.412
+    },
+    "c00114_0": {
+        "name": "Wiseman-Skiff",
+        "type": "comet",
+        "radius": 0.00078,
+        "mass": 1192679261557.0747
+    },
+    "c00115_0": {
+        "name": "Maury",
+        "type": "comet",
+        "radius": 0.00111,
+        "mass": 3437231601937.33
+    },
+    "c00116_0": {
+        "name": "Wild",
+        "type": "comet"
+    },
+    "c00117_0": {
+        "name": "Helin-Roman-Alu",
+        "type": "comet",
+        "radius": 0.0045,
+        "mass": 229022104446695.84
+    },
+    "c00118_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet",
+        "radius": 0.0024,
+        "mass": 34743501474580.23
+    },
+    "c00119_0": {
+        "name": "Parker-Hartley",
+        "type": "comet"
+    },
+    "c00120_0": {
+        "name": "Mueller",
+        "type": "comet",
+        "radius": 0.0015,
+        "mass": 8482300164692.441
+    },
+    "c00121_0": {
+        "name": "Shoemaker-Holt",
+        "type": "comet",
+        "radius": 0.0016200000000000001,
+        "mass": 10685255305065.045
+    },
+    "c00122_0": {
+        "name": "\"de Vico\"",
+        "type": "comet"
+    },
+    "c00123_0": {
+        "name": "West-Hartley",
+        "type": "comet",
+        "rotation_period": 0.15416666666666667
+    },
+    "c00124_0": {
+        "name": "Mrkos",
+        "type": "comet"
+    },
+    "c00125_0": {
+        "name": "Spacewatch",
+        "type": "comet",
+        "radius": 0.0008,
+        "mass": 1286796350910.3794
+    },
+    "c00126_0": {
+        "name": "IRAS",
+        "type": "comet",
+        "radius": 0.0016,
+        "mass": 10294370807283.035
+    },
+    "c00127_0": {
+        "name": "Holt-Olmstead",
+        "type": "comet"
+    },
+    "c00128_0": {
+        "name": "Shoemaker-Holt",
+        "type": "comet"
+    },
+    "c00128_a": {
+        "name": "Shoemaker-Holt",
+        "type": "comet"
+    },
+    "c00128_b": {
+        "name": "Shoemaker-Holt",
+        "type": "comet",
+        "radius": 0.0023,
+        "mass": 30579006252981.605
+    },
+    "c00129_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet"
+    },
+    "c00130_0": {
+        "name": "McNaught-Hughes",
+        "type": "comet",
+        "radius": 0.0021000000000000003,
+        "mass": 23275431651916.07
+    },
+    "c00131_0": {
+        "name": "Mueller",
+        "type": "comet"
+    },
+    "c00132_0": {
+        "name": "Helin-Roman-Alu",
+        "type": "comet"
+    },
+    "c00134_0": {
+        "name": "Kowal-Vavrova",
+        "type": "comet"
+    },
+    "c00135_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet",
+        "radius": 0.0019,
+        "mass": 17238547208777.91
+    },
+    "c00136_0": {
+        "name": "Mueller",
+        "type": "comet"
+    },
+    "c00137_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet",
+        "radius": 0.0029,
+        "rotation_period": 0.32083333333333336,
+        "mass": 61296242582721.16
+    },
+    "c00138_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet"
+    },
+    "c00139_0": {
+        "name": "Vaisala-Oterma",
+        "type": "comet"
+    },
+    "c00140_0": {
+        "name": "Bowell-Skiff",
+        "type": "comet"
+    },
+    "c00141_0": {
+        "name": "Machholz",
+        "type": "comet"
+    },
+    "c00141_a": {
+        "name": "Machholz",
+        "type": "comet"
+    },
+    "c00141_d": {
+        "name": "Machholz",
+        "type": "comet"
+    },
+    "c00142_0": {
+        "name": "Ge-Wang",
+        "type": "comet"
+    },
+    "c00143_0": {
+        "name": "Kowal-Mrkos",
+        "type": "comet"
+    },
+    "c00144_0": {
+        "name": "Kushida",
+        "type": "comet"
+    },
+    "c00145_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet"
+    },
+    "c00146_0": {
+        "name": "Shoemaker-LINEAR",
+        "type": "comet"
+    },
+    "c00147_0": {
+        "name": "Kushida-Muramatsu",
+        "type": "comet",
+        "radius": 0.00020999999999999998,
+        "mass": 23275431651.916054
+    },
+    "c00148_0": {
+        "name": "Anderson-LINEAR",
+        "type": "comet"
+    },
+    "c00149_0": {
+        "name": "Mueller",
+        "type": "comet",
+        "rotation_period": 0.49500000000000005
+    },
+    "c00150_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00151_0": {
+        "name": "Helin",
+        "type": "comet",
+        "radius": 0.004200000000000001,
+        "mass": 186203453215328.56
+    },
+    "c00152_0": {
+        "name": "Helin-Lawrence",
+        "type": "comet"
+    },
+    "c00153_0": {
+        "name": "Ikeya-Zhang",
+        "type": "comet"
+    },
+    "c00154_0": {
+        "name": "Brewington",
+        "type": "comet"
+    },
+    "c00155_0": {
+        "name": "Shoemaker",
+        "type": "comet"
+    },
+    "c00156_0": {
+        "name": "Russell-LINEAR",
+        "type": "comet"
+    },
+    "c00157_0": {
+        "name": "Tritton",
+        "type": "comet"
+    },
+    "c00158_0": {
+        "name": "Kowal-LINEAR",
+        "type": "comet"
+    },
+    "c00159_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00160_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00161_0": {
+        "name": "Hartley-IRAS",
+        "type": "comet"
+    },
+    "c00162_0": {
+        "name": "\"Siding Spring\"",
+        "type": "comet",
+        "rotation_period": 1.368875
+    },
+    "c00163_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00164_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00165_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00166_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00167_0": {
+        "name": "CINEOS",
+        "type": "comet",
+        "albedo": 0.053,
+        "radius": 0.033085,
+        "mass": 9.101925503680874e+16
+    },
+    "c00168_0": {
+        "name": "Hergenrother",
+        "type": "comet"
+    },
+    "c00169_0": {
+        "name": "NEAT",
+        "type": "comet",
+        "rotation_period": 0.34870833333333334
+    },
+    "c00170_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00171_0": {
+        "name": "Spahr",
+        "type": "comet"
+    },
+    "c00172_0": {
+        "name": "Yeung",
+        "type": "comet"
+    },
+    "c00173_0": {
+        "name": "Mueller",
+        "type": "comet"
+    },
+    "c00175_0": {
+        "name": "Hergenrother",
+        "type": "comet"
+    },
+    "c00177_0": {
+        "name": "Barnard",
+        "type": "comet"
+    },
+    "c00178_0": {
+        "name": "Hug-Bell",
+        "type": "comet"
+    },
+    "c00179_0": {
+        "name": "Jedicke",
+        "type": "comet"
+    },
+    "c00180_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00181_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet"
+    },
+    "c00182_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00183_0": {
+        "name": "Korlevic-Juric",
+        "type": "comet"
+    },
+    "c00184_0": {
+        "name": "Lovas",
+        "type": "comet",
+        "radius": 0.0031,
+        "mass": 74872949394474.81
+    },
+    "c00185_0": {
+        "name": "Petriew",
+        "type": "comet"
+    },
+    "c00186_0": {
+        "name": "Garradd",
+        "type": "comet"
+    },
+    "c00187_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00188_0": {
+        "name": "LINEAR-Mueller",
+        "type": "comet"
+    },
+    "c00189_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00190_0": {
+        "name": "Mueller",
+        "type": "comet"
+    },
+    "c00191_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00192_0": {
+        "name": "Shoemaker-Levy",
+        "type": "comet"
+    },
+    "c00193_0": {
+        "name": "LINEAR-NEAT",
+        "type": "comet"
+    },
+    "c00194_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00195_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00196_0": {
+        "name": "Tichy",
+        "type": "comet"
+    },
+    "c00197_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00198_0": {
+        "name": "ODAS",
+        "type": "comet"
+    },
+    "c00199_0": {
+        "name": "Shoemaker",
+        "type": "comet"
+    },
+    "c00200_0": {
+        "name": "Larsen",
+        "type": "comet"
+    },
+    "c00201_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00202_0": {
+        "name": "Scotti",
+        "type": "comet"
+    },
+    "c00203_0": {
+        "name": "Korlevic",
+        "type": "comet"
+    },
+    "c00204_0": {
+        "name": "LINEAR-NEAT",
+        "type": "comet"
+    },
+    "c00205_0": {
+        "name": "Giacobini",
+        "type": "comet"
+    },
+    "c00205_a": {
+        "name": "Giacobini",
+        "type": "comet"
+    },
+    "c00205_b": {
+        "name": "Giacobini",
+        "type": "comet"
+    },
+    "c00205_c": {
+        "name": "Giacobini",
+        "type": "comet"
+    },
+    "c00206_0": {
+        "name": "Barnard-Boattini",
+        "type": "comet"
+    },
+    "c00207_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00208_0": {
+        "name": "McMillan",
+        "type": "comet"
+    },
+    "c00209_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00210_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00211_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00212_0": {
+        "name": "NEAT",
+        "type": "comet",
+        "albedo": 0.096,
+        "radius": 0.00085,
+        "mass": 1543464470708.665
+    },
+    "c00213_0": {
+        "name": "\"Van Ness\"",
+        "type": "comet"
+    },
+    "c00213_b": {
+        "name": "\"Van Ness\"",
+        "type": "comet"
+    },
+    "c00214_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00215_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00216_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00217_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00218_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00219_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00220_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00221_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00222_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00223_0": {
+        "name": "Skiff",
+        "type": "comet"
+    },
+    "c00224_0": {
+        "name": "LINEAR-NEAT",
+        "type": "comet"
+    },
+    "c00225_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00226_0": {
+        "name": "Pigott-LINEAR-Kowalski",
+        "type": "comet"
+    },
+    "c00227_0": {
+        "name": "Catalina-LINEAR",
+        "type": "comet"
+    },
+    "c00228_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00229_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00230_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00231_0": {
+        "name": "LINEAR-NEAT",
+        "type": "comet"
+    },
+    "c00232_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00233_0": {
+        "name": "\"La Sagra\"",
+        "type": "comet"
+    },
+    "c00234_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00235_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00236_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00237_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00238_0": {
+        "name": "Read",
+        "type": "comet"
+    },
+    "c00239_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00240_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00241_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00242_0": {
+        "name": "Spahr",
+        "type": "comet"
+    },
+    "c00243_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00244_0": {
+        "name": "Scotti",
+        "type": "comet"
+    },
+    "c00245_0": {
+        "name": "WISE",
+        "type": "comet"
+    },
+    "c00246_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00247_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00248_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00249_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00250_0": {
+        "name": "Larson",
+        "type": "comet"
+    },
+    "c00251_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00252_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00253_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00254_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00255_0": {
+        "name": "Levy",
+        "type": "comet"
+    },
+    "c00256_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00257_0": {
+        "name": "Catalina",
+        "type": "comet"
+    },
+    "c00258_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00259_0": {
+        "name": "Garradd",
+        "type": "comet"
+    },
+    "c00260_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00261_0": {
+        "name": "Larson",
+        "type": "comet"
+    },
+    "c00262_0": {
+        "name": "McNaught-Russell",
+        "type": "comet"
+    },
+    "c00263_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00264_0": {
+        "name": "Larsen",
+        "type": "comet"
+    },
+    "c00265_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00266_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00267_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00268_0": {
+        "name": "Bernardi",
+        "type": "comet"
+    },
+    "c00269_0": {
+        "name": "Jedicke",
+        "type": "comet"
+    },
+    "c00270_0": {
+        "name": "Gehrels",
+        "type": "comet"
+    },
+    "c00271_0": {
+        "name": "\"van Houten-Lemmon\"",
+        "type": "comet"
+    },
+    "c00272_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00273_0": {
+        "name": "Pons-Gambart",
+        "type": "comet"
+    },
+    "c00274_0": {
+        "name": "Tombaugh-Tenagra",
+        "type": "comet"
+    },
+    "c00275_0": {
+        "name": "Hermann",
+        "type": "comet"
+    },
+    "c00276_0": {
+        "name": "Vorobjov",
+        "type": "comet"
+    },
+    "c00277_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00278_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00279_0": {
+        "name": "\"La Sagra\"",
+        "type": "comet"
+    },
+    "c00280_0": {
+        "name": "Larsen",
+        "type": "comet"
+    },
+    "c00281_0": {
+        "name": "MOSS",
+        "type": "comet"
+    },
+    "c00283_0": {
+        "name": "Spacewatch",
+        "type": "comet"
+    },
+    "c00284_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00285_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00286_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00287_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00289_0": {
+        "name": "Blanpain",
+        "type": "comet"
+    },
+    "c00290_0": {
+        "name": "Jager",
+        "type": "comet"
+    },
+    "c00291_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00292_0": {
+        "name": "Li",
+        "type": "comet"
+    },
+    "c00293_0": {
+        "name": "Spacewatch",
+        "type": "comet"
+    },
+    "c00294_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00295_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00296_0": {
+        "name": "Garradd",
+        "type": "comet"
+    },
+    "c00297_0": {
+        "name": "Beshore",
+        "type": "comet"
+    },
+    "c00298_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00299_0": {
+        "name": "Catalina-PANSTARRS",
+        "type": "comet"
+    },
+    "c00300_0": {
+        "name": "Catalina",
+        "type": "comet"
+    },
+    "c00301_0": {
+        "name": "LINEAR-NEAT",
+        "type": "comet"
+    },
+    "c00302_0": {
+        "name": "Lemmon-PANSTARRS",
+        "type": "comet"
+    },
+    "c00303_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00304_0": {
+        "name": "Ory",
+        "type": "comet"
+    },
+    "c00305_0": {
+        "name": "Skiff",
+        "type": "comet"
+    },
+    "c00306_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00307_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00308_0": {
+        "name": "Lagerkvist-Carsenty",
+        "type": "comet"
+    },
+    "c00309_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00310_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00311_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00312_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00313_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00314_0": {
+        "name": "Montani",
+        "type": "comet"
+    },
+    "c00315_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00316_0": {
+        "name": "LONEOS-Christensen",
+        "type": "comet"
+    },
+    "c00317_0": {
+        "name": "WISE",
+        "type": "comet"
+    },
+    "c00318_0": {
+        "name": "McNaught-Hartley",
+        "type": "comet"
+    },
+    "c00319_0": {
+        "name": "Catalina-McNaught",
+        "type": "comet"
+    },
+    "c00320_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00321_0": {
+        "name": "SOHO",
+        "type": "comet"
+    },
+    "c00322_0": {
+        "name": "SOHO",
+        "type": "comet"
+    },
+    "c00323_0": {
+        "name": "SOHO",
+        "type": "comet"
+    },
+    "c00324_0": {
+        "name": "\"La Sagra\"",
+        "type": "comet",
+        "albedo": 0.01,
+        "radius": 0.0008,
+        "mass": 1286796350910.3794
+    },
+    "c00325_0": {
+        "name": "Yang-Gao",
+        "type": "comet"
+    },
+    "c00326_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00327_0": {
+        "name": "\"Van Ness\"",
+        "type": "comet"
+    },
+    "c00328_0": {
+        "name": "LONEOS-Tucker",
+        "type": "comet"
+    },
+    "c00329_0": {
+        "name": "LINEAR-Catalina",
+        "type": "comet"
+    },
+    "c00330_0": {
+        "name": "Catalina",
+        "type": "comet"
+    },
+    "c00331_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00332_0": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_a": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_b": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_c": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_d": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_e": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_f": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_g": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_h": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00332_i": {
+        "name": "Ikeya-Murakami",
+        "type": "comet"
+    },
+    "c00333_0": {
+        "name": "LINEAR",
+        "type": "comet",
+        "rotation_period": 0.8766666666666666
+    },
+    "c00334_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00335_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00336_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00337_0": {
+        "name": "WISE",
+        "type": "comet"
+    },
+    "c00338_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00339_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00340_0": {
+        "name": "Boattini",
+        "type": "comet"
+    },
+    "c00341_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00342_0": {
+        "name": "SOHO",
+        "type": "comet"
+    },
+    "c00343_0": {
+        "name": "NEAT-LONEOS",
+        "type": "comet"
+    },
+    "c00344_0": {
+        "name": "Read",
+        "type": "comet"
+    },
+    "c00345_0": {
+        "name": "LINEAR",
+        "type": "comet",
+        "magnitude": 14.4
+    },
+    "c00346_0": {
+        "name": "Catalina",
+        "type": "comet"
+    },
+    "c00347_0": {
+        "name": "PANSTARRS",
+        "type": "comet",
+        "magnitude": 16.6
+    },
+    "c00348_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00349_0": {
+        "name": "Lemmon",
+        "type": "comet",
+        "magnitude": 15.7,
+        "albedo": 0.104,
+        "radius": 0.0014915,
+        "mass": 8338916646677.396
+    },
+    "c00350_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00351_0": {
+        "name": "Wiegert-PANSTARRS",
+        "type": "comet"
+    },
+    "c00352_0": {
+        "name": "Skiff",
+        "type": "comet"
+    },
+    "c00353_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00354_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00355_0": {
+        "name": "LINEAR-NEAT",
+        "type": "comet"
+    },
+    "c00356_0": {
+        "name": "WISE",
+        "type": "comet"
+    },
+    "c00357_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00358_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00359_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00360_0": {
+        "name": "WISE",
+        "type": "comet"
+    },
+    "c00361_0": {
+        "name": "Spacewatch",
+        "type": "comet",
+        "magnitude": 14.7
+    },
+    "c00363_0": {
+        "name": "Lemmon",
+        "type": "comet"
+    },
+    "c00364_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00365_0": {
+        "name": "PANSTARRS",
+        "type": "comet",
+        "magnitude": 18.3
+    },
+    "c00366_0": {
+        "name": "Spacewatch",
+        "type": "comet"
+    },
+    "c00367_0": {
+        "name": "Catalina",
+        "type": "comet"
+    },
+    "c00368_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00369_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00370_0": {
+        "name": "NEAT",
+        "type": "comet"
+    },
+    "c00371_0": {
+        "name": "LINEAR-Skiff",
+        "type": "comet"
+    },
+    "c00372_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00373_0": {
+        "name": "Rinner",
+        "type": "comet"
+    },
+    "c00374_0": {
+        "name": "Larson",
+        "type": "comet"
+    },
+    "c00375_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00376_0": {
+        "name": "LONEOS",
+        "type": "comet"
+    },
+    "c00377_0": {
+        "name": "Scotti",
+        "type": "comet"
+    },
+    "c00378_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00379_0": {
+        "name": "Spacewatch",
+        "type": "comet"
+    },
+    "c00380_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00381_0": {
+        "name": "LINEAR-Spacewatch",
+        "type": "comet"
+    },
+    "c00382_0": {
+        "name": "Larson",
+        "type": "comet"
+    },
+    "c00383_0": {
+        "name": "Christensen",
+        "type": "comet"
+    },
+    "c00384_0": {
+        "name": "Kowalski",
+        "type": "comet"
+    },
+    "c00385_0": {
+        "name": "Hill",
+        "type": "comet"
+    },
+    "c00386_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00387_0": {
+        "name": "Boattini",
+        "type": "comet"
+    },
+    "c00388_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00389_0": {
+        "name": "\"Siding Spring\"",
+        "type": "comet"
+    },
+    "c00390_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00391_0": {
+        "name": "Kowalski",
+        "type": "comet"
+    },
+    "c00392_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00393_0": {
+        "name": "Spacewatch-Hill",
+        "type": "comet"
+    },
+    "c00394_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00395_0": {
+        "name": "Catalina-NEAT",
+        "type": "comet"
+    },
+    "c00396_0": {
+        "name": "Leonard",
+        "type": "comet"
+    },
+    "c00397_0": {
+        "name": "Lemmon",
+        "type": "comet"
+    },
+    "c00398_0": {
+        "name": "Boattini",
+        "type": "comet"
+    },
+    "c00399_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00400_0": {
+        "name": "PANSTARRS",
+        "type": "comet",
+        "magnitude": 17.0
+    },
+    "c00401_0": {
+        "name": "McNaught",
+        "type": "comet"
+    },
+    "c00402_0": {
+        "name": "LINEAR",
+        "type": "comet"
+    },
+    "c00403_0": {
+        "name": "CATALINA",
+        "type": "comet"
+    },
+    "c00404_0": {
+        "name": "Bressi",
+        "type": "comet"
+    },
+    "c00405_0": {
+        "name": "Lemmon",
+        "type": "comet"
+    },
+    "c00406_0": {
+        "name": "Gibbs",
+        "type": "comet"
+    },
+    "c00407_0": {
+        "name": "PANSTARRS",
+        "type": "comet"
+    },
+    "c00408_0": {
+        "name": "Novichonok",
+        "type": "comet"
+    },
+    "c00409_0": {
+        "name": "LONEOS-Hill",
+        "type": "comet"
+    }
+}

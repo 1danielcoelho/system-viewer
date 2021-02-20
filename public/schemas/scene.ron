@@ -1,0 +1,55 @@
+(
+    name: "Jovian system",
+    description: "Solar system barycenter, Sun, Jupiter and it's system barycenter, as well as 10 of its moons",
+    time: "J2000",                      // String, can be just J2000 or a JDN date
+    simulation_scale: 500,              // Times, as in "500x speed"
+    tracking: "599",                    // Id of body set as initial tracking reference
+    camera_pos: [                       // Position in Mm of camera, wrt. `tracking`'s transform at `time`
+        0,
+        1,
+        2,
+    ],
+    camera_up: [                        // Normalized. Likely just [0, 0, 1] for locked pitch
+        0,
+        0,
+        1,
+    ],
+    camera_target: [                    // Camera target position in Mm, wrt. `tracking`'s transform at `time`
+        0,
+        0,
+        0,
+    ],
+    bodies: {                           // Bodies to include in scene
+        "major_bodies": {
+            "5": DefaultVector,         // These are the 4 variants of the enum:
+            "599": DefaultElements, 
+            "10": CustomVector(
+                2451549.0,              // JDN
+                -1064.370056259101,     // X position, Mm
+                -422.65698219907523,    // Y position, Mm
+                30.780917082776547,     // Z position, Mm
+                9.37050660738451e-06,   // X velocity, Mm/s
+                -1.276907231068214e-05, // Y velocity, Mm/s
+                -1.648053401510433e-07  // Z velocity, Mm/s
+            ),
+            "499": CustomElements(
+                ref_id: "10",           // id of the reference body
+                epoch: 2459000.5,       // JDN
+                e: 0.107059296335647,   // Eccentricity, absolute [0, 1] value
+                a: 467823.1174440739,   // Semi-major axis, Mm
+                i: 0.01903295635127428, // Inclination, radians
+                O: 2.877313561239668,   // Longitude of ascending node, radians
+                w: 5.779506327455486,   // Argument of periapsis, radians
+                M: 2.335896329826738,   // Mean anomaly, radians
+                p: 2019.91375564515     // Sidereal orbital period, days (86400s)
+            ),
+        },
+        "jovian_satellites": {
+            "5": DefaultVector,
+            "6": DefaultVector,
+            "12454": DefaultVector,
+            "553": DefaultVector,
+            "5355": DefaultVector,
+        },
+    },
+)

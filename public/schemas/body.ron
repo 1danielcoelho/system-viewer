@@ -1,0 +1,15 @@
+{
+    "body_id": (
+        name: "Sun",                    // User-facing name
+        type: "star",                   // star, planet, satellite, asteroid, comet, artificial, barycenter
+        meta: {},                       // data sources, future proofing, etc.
+        mass: 2,                        // number, kg
+        radius: 2,                      // Mm
+        albedo: 2,                      // absolute value
+        magnitude: 2,                   // absolute value
+        rotation_period: 2,             // days (86400s)        
+        rotation_axis: [0.1, 0.8, 0.2], // J2000 ecliptic rectangular right-handed normalized
+        spec_smassii: "Sk",             // string, spectral class
+        spec_tholen: "B",               // string, spectral class        
+    )
+}

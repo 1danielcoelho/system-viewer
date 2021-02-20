@@ -1,0 +1,26 @@
+(
+    name: "Planet line up",
+    description: "All planets lined up next to eachother for size comparison",
+    time: "J2000",
+    simulation_scale: 500,
+    reference: "599",
+    camera_pos: [
+        0,
+        1,
+        2,
+    ],
+    camera_up: [
+        0,
+        0,
+        1,
+    ],
+    camera_target: [
+        0,
+        0,
+        0,
+    ],
+    bodies: {
+        "major_bodies": ["5", "599", "10"],
+        "jovian_satellites": ["501", "502", "503", "504", "505", "506", "507", "508", "509", "510"]
+    },
+)
