@@ -85,9 +85,6 @@ def elements_to_state_vectors(elements, t):
     f_vel_y = vel_x * (cosw * sino + sinw * cosi * coso) + vel_y * (cosw * cosi * coso - sinw * sino)
     f_vel_z = vel_x * (sinw * sini) + vel_y * (cosw * sini)
 
-    # TODO: Our osculating elements are wrt the sun, but our state vectors wrt the solar system barycenter,
-    # and the sun is moving wrt that barycenter
-
     return [
         J2000,
         f_pos_x,
@@ -156,15 +153,22 @@ def test_elements_to_state_vectors():
 
 
 def ensure_j2000_state_vector(database):
-    for db in database.values():
+    osc_elements_db = database['osc_elements']
+    state_vectors_db = database['state_vectors']
+
+    count = 0
+    for db_name, db in database.items():
+        if db_name in ['state_vectors', 'osc_elements']:
+            continue
+
         for body_id, body in db.items():
-            if 'osc_elements' not in body:
+            if body_id not in osc_elements_db:
                 continue
 
             # Don't do anything if the body already has a state vector for J2000
             try:
                 has_j2000_vec = False
-                for vec in body['state_vectors']:
+                for vec in state_vectors_db[body_id]:
                     if vec[0] == J2000:
                         has_j2000_vec = True
                         break
@@ -176,7 +180,7 @@ def ensure_j2000_state_vector(database):
 
             # Find osculating elements closest to J2000
             elements = {}
-            for el in body['osc_elements']:
+            for el in osc_elements_db[body_id]:
                 if el['ref_id'] != '10':
                     continue
 
@@ -190,15 +194,20 @@ def ensure_j2000_state_vector(database):
 
             new_vec = elements_to_state_vectors(elements, J2000)
             new_vec = helio_to_ssb(new_vec)
-            print(f'Computed state vectors for body {body_id} ("{body["name"]}"): {new_vec}')
+            count += 1
 
-            if 'state_vectors' not in body:
-                body['state_vectors'] = []
-            body['state_vectors'].append(new_vec)
+            if body_id not in state_vectors_db:
+                state_vectors_db[body_id] = []
+            state_vectors_db[body_id].append(new_vec)
+            state_vectors_db[body_id].sort(key=lambda vec: vec[0])
+
+    return count
 
 
 def run(database):
-    ensure_j2000_state_vector(database)
+    print("Computing state vectors...")
+    computed = ensure_j2000_state_vector(database)
+    print(f"Computed {computed} state vectors")
 
 
 if __name__ == "__main__":

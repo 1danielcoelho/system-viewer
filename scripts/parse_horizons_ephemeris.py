@@ -80,10 +80,17 @@ def get_body_type(body_id):
 def add_horizons_data(database):
     """ Parse horizons data from files and load it into the database """
 
+    state_vectors_db = database['state_vectors']
+    osc_elements_db = database['osc_elements']
+
+    count = 0
+
     horizon_file_names = glob.glob(horizons_elements_pattern) + glob.glob(horizons_vectors_pattern)
     for filename in horizon_file_names:
         with open(filename) as f:
             data = f.read()
+
+            count += 1
 
             name, body_id = re.findall(target_body_name_re, data)[0]
             ref_name, ref_id = re.findall(center_body_name_re, data)[0]
@@ -91,6 +98,7 @@ def add_horizons_data(database):
             database_name = get_body_database(body_id)
             db = database[database_name]
 
+            body_id = str(body_id)
             if body_id not in db:
                 db[body_id] = {}
             body_entry = db[body_id]
@@ -145,9 +153,9 @@ def add_horizons_data(database):
 
             # Orbital elements
             if 'osculating elements' in horizons_output_type:
-                if 'osc_elements' not in body_entry:
-                    body_entry['osc_elements'] = []
-                osc_elements = body_entry['osc_elements']
+                if body_id not in osc_elements_db:
+                    osc_elements_db[body_id] = []
+                osc_elements = osc_elements_db[body_id]
                 osc_elements.sort(key=lambda els: els['epoch'])
 
                 all_parsed_elements = []
@@ -193,9 +201,9 @@ def add_horizons_data(database):
                         osc_elements.append(parsed_element)
 
             elif 'cartesian states' in horizons_output_type:
-                if 'state_vectors' not in body_entry:
-                    body_entry['state_vectors'] = []
-                state_vectors = body_entry['state_vectors']
+                if body_id not in state_vectors_db:
+                    state_vectors_db[body_id] = []
+                state_vectors = state_vectors_db[body_id]
                 state_vectors.sort(key=lambda vec: vec[0])
 
                 all_parsed_vectors = []
@@ -230,6 +238,8 @@ def add_horizons_data(database):
                     if not found:
                         state_vectors.append(parsed_vector)
 
+    return count
+
 
 def handle_database_exceptions(database):
     """ Handle annoying exceptions before saving the database
@@ -250,7 +260,7 @@ def handle_database_exceptions(database):
 
     # Sun shouldn't have gotten any osc_elements yet since all our elements are heliocentric
     try:
-        database['major_bodies']['10']['osc_elements'] = [fake_osc_elements]
+        database['osc_elements']['10'] = [fake_osc_elements]
     except KeyError:
         pass
 
@@ -265,11 +275,11 @@ def handle_database_exceptions(database):
         database['major_bodies']['1']['magnitude'] = 0
         database['major_bodies']['1']['rotation_period'] = 0
         database['major_bodies']['1']['rotation_axis'] = [0, 0, 0]
-        database['major_bodies']['1']['osc_elements'][0]['ref_id'] = '10'
-        del database['major_bodies']['1']['state_vectors']
+        database['osc_elements']['1'][0]['ref_id'] = '10'
+        del database['state_vectors']['1']
         database['major_bodies']['199']['name'] = 'Mercury'
-        database['major_bodies']['199']['osc_elements'] = [copy.deepcopy(fake_osc_elements)]
-        database['major_bodies']['199']['osc_elements'][0]['ref_id'] = '1'
+        database['osc_elements']['199'] = [copy.deepcopy(fake_osc_elements)]
+        database['osc_elements']['199'][0]['ref_id'] = '1'
     except KeyError:
         pass
 
@@ -284,19 +294,20 @@ def handle_database_exceptions(database):
         database['major_bodies']['2']['magnitude'] = 0
         database['major_bodies']['2']['rotation_period'] = 0
         database['major_bodies']['2']['rotation_axis'] = [0, 0, 0]
-        database['major_bodies']['2']['osc_elements'][0]['ref_id'] = '10'
-        del database['major_bodies']['2']['state_vectors']
+        database['osc_elements']['2'][0]['ref_id'] = '10'
+        del database['state_vectors']['2']
         database['major_bodies']['299']['name'] = 'Venus'
-        database['major_bodies']['299']['osc_elements'] = [copy.deepcopy(fake_osc_elements)]
-        database['major_bodies']['299']['osc_elements'][0]['ref_id'] = '2'
+        database['osc_elements']['299'] = [copy.deepcopy(fake_osc_elements)]
+        database['osc_elements']['299'][0]['ref_id'] = '2'
     except KeyError:
         pass
 
 
 def run(database):
-    add_horizons_data(database)
-
+    print("Parsing HORIZONS output files...")
+    count = add_horizons_data(database)
     handle_database_exceptions(database)
+    print(f"Parsed {count} HORIZONS output files")
 
 
 if __name__ == "__main__":

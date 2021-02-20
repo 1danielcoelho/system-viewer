@@ -189,6 +189,7 @@ values = [
 
 
 def add_jpl_data(database):
+    count = 0
     for name, mass, radius, density, magnitude, albedo in values:
         if mass == 0:
             continue
@@ -206,12 +207,17 @@ def add_jpl_data(database):
                 print(f'Found divergent mass for body {body["name"]}: HORIZONS value: "{body_mass:E} kg"; JPL value: "{mass_kg:E} kg" (divergence of {divergence_pct:.2f} %)')
 
         except KeyError:
-            print('Assigning body %s the mass %s because it didn\'t have one' % (body['name'], mass_kg))
+            # print('Assigning body %s the mass %s because it didn\'t have one' % (body['name'], mass_kg))
             body['mass'] = mass_kg
+
+        count += 1
+    return count
 
 
 def run(database):
-    add_jpl_data(database)
+    print("Parsing JPL satellite physical parameters...")
+    count = add_jpl_data(database)
+    print(f"Parsed {count} JPL satellite physical parameters")
 
 
 if __name__ == "__main__":

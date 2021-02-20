@@ -18,7 +18,10 @@ only_with_mass = False  # Only fetch objects whose mass can be estimated
 def add_small_body_data(database):
     db_asteroids = database['asteroids']
     db_comets = database['comets']
+    db_osc_elements = database['osc_elements']
 
+    count_asteroid = 0
+    count_comet = 0
     with open(main_file, "r") as f:
         # Skip header
         f.readline()
@@ -35,7 +38,7 @@ def add_small_body_data(database):
             is_comet = line[0] == 'c'
 
             vals = line.split(',')
-            body_id = vals[0]
+            body_id_str = str(vals[0])
             body_name = vals[1]
             body_gm = vals[4]
             body_diameter = vals[5]
@@ -43,7 +46,7 @@ def add_small_body_data(database):
             body_albedo = vals[7]
             body_rot_per = vals[8]
 
-            assert(body_id)
+            assert(body_id_str)
 
             body = {}
             body['name'] = body_name
@@ -91,12 +94,18 @@ def add_small_body_data(database):
             elif skip_asteroid or skip_comet:
                 continue
 
-            body['osc_elements'] = [elements]
-            if is_asteroid:
-                db_asteroids[body_id] = body
-            else:
-                db_comets[body_id] = body
+            if body_id_str not in db_osc_elements:
+                db_osc_elements[body_id_str] = []
+            db_osc_elements[body_id_str].append(elements)
 
+            if is_asteroid:
+                db_asteroids[body_id_str] = body
+                count_asteroid += 1
+            else:
+                db_comets[body_id_str] = body
+                count_comet += 1
+
+    count_spectral = 0
     with open(spectral_file, "r") as f:
         # Skip header
         f.readline()
@@ -109,7 +118,7 @@ def add_small_body_data(database):
             is_asteroid = line[0] == 'a'
 
             vals = line.split(',')
-            body_id = vals[0]
+            body_id = str(vals[0])
             body_name = vals[1]
             body_smassii = vals[2].strip()
             body_tholen = vals[3].strip()
@@ -126,13 +135,19 @@ def add_small_body_data(database):
                 if body_tholen:
                     body['spec_tholen'] = body_tholen
 
+                count_spectral += 1
+
             except KeyError:
                 # print(f"Failed to find body with id {body_id}, name '{body_name}' to unload spectral info into")
                 pass
 
+    return count_asteroid, count_comet, count_spectral
+
 
 def run(database):
-    add_small_body_data(database)
+    print("Parsing HORIZONS small body database dump...")
+    count_asteroid, count_comet, count_spectral = add_small_body_data(database)
+    print(f"Parsed {count_asteroid} asteroids, {count_comet} comets and spectral data for {count_spectral} of those from HORIZONS small body database dump")
 
 
 if __name__ == "__main__":

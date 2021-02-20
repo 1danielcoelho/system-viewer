@@ -479,9 +479,9 @@ response |= ui.add(label);
 
 # Cleanup for MVP
 - Refactor body database
-    - Keep existing databases for body data (mass, size, color, albedo, etc.)
-    - Additional "state_vectors.json" file for known, reference state vectors (single file, each id has n state vectors, each vector contains epoch, sorted by epoch)
-    - Additional "osc_elements.json" for reference osculating elements (single file, each id has n elements, each element contains epoch and reference, sorted by epoch)
+    > - Keep existing databases for body data (mass, size, color, albedo, etc.)
+    > - Additional "state_vectors.json" file for known, reference state vectors (single file, each id has n state vectors, each vector contains epoch, sorted by epoch)
+    > - Additional "osc_elements.json" for reference osculating elements (single file, each id has n elements, each element contains epoch and reference, sorted by epoch)
     - Scenes in ron files
         - Separate folder for scenes
         - One scene per ron file (instead of scene_list.ron)

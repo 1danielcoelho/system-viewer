@@ -13,7 +13,9 @@ files = [
     "saturnian_satellites",
     "other_satellites",
     "major_bodies",
-    "artificial"
+    "artificial",
+    "state_vectors",
+    "osc_elements",
 ]
 
 
@@ -30,7 +32,10 @@ def load_database():
 
 
 def get_body_by_name(database, name):
-    for base in database.values():
+    for base_name, base in database.items():
+        if base_name in ['state_vectors', 'osc_elements']:
+            continue
+
         for body in base.values():
             if body['name'] == name:
                 return body
@@ -40,15 +45,10 @@ def get_body_by_name(database, name):
 
 def save_database(database):
     """ Write database back to their individual files """
-    def order(item):
-        try:
-            return float(item[0])
-        except ValueError:
-            return item[0]
 
     # Sort all databases
     for db_name in database.keys():
-        database[db_name] = {k: v for k, v in sorted(database[db_name].items(), key=lambda item: order(item))}
+        database[db_name] = {k: v for k, v in sorted(database[db_name].items(), key=lambda item: item)}
 
     # Write database to files
     for filename in database:

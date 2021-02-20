@@ -13,16 +13,21 @@ def estimate_body_data(database):
     # Estimate body radius from magnitude and albedo
     # Source: https://space.stackexchange.com/questions/36/how-can-i-derive-an-asteroid-mass-size-estimate-from-jpl-parameters
     # https://en.wikipedia.org/wiki/Absolute_magnitude#Solar_System_bodies_(H)
-    for db in database.values():
+    count_radii = 0
+    for db_name, db in database.items():
+        if db_name in ['state_vectors', 'osc_elements']:
+            continue
+
         for body_id, body in db.items():
             if 'radius' not in body and 'magnitude' in body and 'albedo' in body:
                 diameter_km = (1329.0 / sqrt(body['albedo'])) * 10 ** (-0.2 * body['magnitude'])
                 body['radius'] = diameter_km / 2000.0
-                print(f'Estimated radius {body["radius"]} Mm for body "{body_id}" (name "{body["name"]}")')
+                count_radii += 1
 
     # Estimate asteroid mass by using standard densities
     # https://space.stackexchange.com/questions/2882/method-to-estimate-asteroid-density-based-on-spectral-type
     # https://en.wikipedia.org/wiki/Standard_asteroid_physical_characteristics#:~:text=For%20many%20asteroids%20a%20value,and%205.32%20g%2Fcm3.
+    count_mass = 0
     db = database['asteroids']
     for body_id, body in db.items():
         if 'mass' not in body and 'radius' in body:
@@ -65,9 +70,11 @@ def estimate_body_data(database):
             mass = volume * density
             # print(f'Estimated asteroid mass {mass:E} kg from density {density} kg/Mm3 for body "{body_id}" (name "{body["name"]}")')
             body['mass'] = mass
+            count_mass += 1
 
     # Known comets have an average density of 0.6E21 kg/Mm3
     # https://en.wikipedia.org/wiki/Comet_nucleus#Size
+    count_comet_mass = 0
     db = database['comets']
     for body_id, body in db.items():
         if 'radius' in body and 'mass' not in body:
@@ -76,6 +83,7 @@ def estimate_body_data(database):
             mass = volume * density
             # print(f'Estimated comet mass {mass:E} kg from density {density} kg/Mm3 for body "{body_id}" (name "{body["name"]}")')
             body['mass'] = mass
+            count_comet_mass += 1
 
     # A handful of comets have better size estimations which can lead to better mass
     # https://en.wikipedia.org/wiki/Comet_nucleus#Size
@@ -90,9 +98,13 @@ def estimate_body_data(database):
     load_mass('c00081_0', 2.3E13)  # 81P/Wild
     load_mass('c00067_0', 1E13)  # 67P/Churyumov-Gerasimenko
 
+    return count_radii, count_mass, count_comet_mass
+
 
 def run(database):
-    estimate_body_data(database)
+    print("Estimating asteroid and comet parameters...")
+    count_radii, count_mass, count_comet_mass = estimate_body_data(database)
+    print(f"Estimatated {count_radii} body radii, {count_mass} asteroid masses and {count_comet_mass} comet masses")
 
 
 if __name__ == "__main__":
