@@ -275,17 +275,45 @@ impl SceneManager {
             .borrow_mut()
             .set_uniform_value(UniformName::EmissiveFactor, UniformValue::Vec3(sun_color));
 
+        let sun_color2: [f32; 3] = [1.0, 0.3, 0.1];
+        let sun_mat2 = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");
+        sun_mat2
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .set_uniform_value(UniformName::EmissiveFactor, UniformValue::Vec3(sun_color2));
+
         let ent = scene.new_entity(Some("sun"));
         let trans_comp = scene.add_component::<TransformComponent>(ent);
-        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(1.0, 1.0, 1.0);
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 5.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.1, 0.1, 0.1);
         let mesh_comp = scene.add_component::<MeshComponent>(ent);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
         mesh_comp.set_material_override(sun_mat.clone(), 0);
         let light_comp = scene.add_component::<LightComponent>(ent);
         light_comp.color = Vector3::new(sun_color[0], sun_color[1], sun_color[2]);
-        light_comp.intensity = 25.0;
+        light_comp.intensity = 20.0;
         light_comp.light_type = LightType::Point;
+
+        let ent = scene.new_entity(Some("sun2"));
+        let trans_comp = scene.add_component::<TransformComponent>(ent);
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, -5.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(0.1, 0.1, 0.1);
+        let mesh_comp = scene.add_component::<MeshComponent>(ent);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(sun_mat2.clone(), 0);
+        let light_comp = scene.add_component::<LightComponent>(ent);
+        light_comp.color = Vector3::new(sun_color2[0], sun_color2[1], sun_color2[2]);
+        light_comp.intensity = 15.0;
+        light_comp.light_type = LightType::Point;
+
+        let ent = scene.new_entity(Some("sphere"));
+        let trans_comp = scene.add_component::<TransformComponent>(ent);
+        trans_comp.get_local_transform_mut().trans = Vector3::new(0.0, 0.0, 0.0);
+        trans_comp.get_local_transform_mut().scale = Vector3::new(1.0, 1.0, 1.0);
+        let mesh_comp = scene.add_component::<MeshComponent>(ent);
+        mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         let ent = scene.new_entity(Some("cube"));
         let trans_comp = scene.add_component::<TransformComponent>(ent);
@@ -293,6 +321,7 @@ impl SceneManager {
         trans_comp.get_local_transform_mut().scale = Vector3::new(1.0, 1.0, 1.0);
         let mesh_comp = scene.add_component::<MeshComponent>(ent);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("cube"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
 
         // let mut rng = rand::thread_rng();
         // for _ in 0..500 {

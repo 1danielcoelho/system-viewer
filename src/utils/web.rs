@@ -242,12 +242,20 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                         if s.input.m0 == ButtonState::Depressed {
                             s.input.m0 = ButtonState::Pressed;
                         }
+
+                        if s.input.modifiers.alt {
+                            canvas_clone.request_pointer_lock();
+                            s.input.mouse_x = event.client_x();
+                            s.input.mouse_y = event.client_y();
+                        }
                     }
 
                     // 1 is the mouse wheel click
                     2 => {
                         s.input.m1 = ButtonState::Pressed;
                         canvas_clone.request_pointer_lock();
+                        s.input.mouse_x = event.client_x();
+                        s.input.mouse_y = event.client_y();
                     }
                     _ => {}
                 };
@@ -278,8 +286,11 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 };
                 s.input.modifiers = modifiers;
 
+                let window = web_sys::window().unwrap();
+                let doc = window.document().unwrap();
+
                 // With pointer lock client_x and client_y don't actually change, so we need movement_*
-                if s.input.m1 == ButtonState::Pressed {
+                if let Some(_) = doc.pointer_lock_element() {
                     s.input.mouse_x += event.movement_x();
                     s.input.mouse_y += event.movement_y();
                 } else {
@@ -309,14 +320,14 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                     // 1 is the mouse wheel click
                     2 => {
                         s.input.m1 = ButtonState::Depressed;
-
-                        // Release pointer lock
-                        let window = web_sys::window().unwrap();
-                        let doc = window.document().unwrap();
-                        doc.exit_pointer_lock();
                     }
                     _ => {}
                 };
+
+                // Release pointer lock
+                let window = web_sys::window().unwrap();
+                let doc = window.document().unwrap();
+                doc.exit_pointer_lock();
             });
         };
 
@@ -363,8 +374,6 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
 
                 let modifiers = modifiers_from_event(&event);
                 s.input.modifiers = modifiers;
-
-                log::info!("Modifiers: {:?}", modifiers);
 
                 let key = event.key();
                 handle_key_press(&key, &modifiers, s, true);

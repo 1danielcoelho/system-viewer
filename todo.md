@@ -476,8 +476,14 @@ response |= ui.add(label);
     - Once tracking, left click and drag will orbit, mouse wheel will zoom
         - Probably better to do it with Alt+Left click and drag, or else I'll have to watch out for what happens if we release drag on top of a clickable, etc.
             > - It seems like the modifiers only capture if the canvas has focus, and Alt removes focus...
+        - I thought it would be a problem that I'll have to update position based on reference_transform before the transform update system would get to run, but it is not a problem at all: The camera's position to its reference only ever changes from input data, so it will be fine. I just do everything wrt. reference transform and later on that gets updated instead
     > - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
     - The label on the top toolbar should change to yellow when tracking to highlight what's going on
+> - It doesn't look like it orbits about the actual target...
+- Moving the cursor over UI during drag cancels the drag
+> - Click and drag should also capture the cursor
+> - Being able to independently change the target while orbiting doesn't work so great with locked pitch. I'll just abandon this for now and always snap target to 0 when orbiting
+> - Always look directly at target when starting a track
 > - Big old glitch when clicking a body in the scene hierarchy
 
 # Lerp when going to

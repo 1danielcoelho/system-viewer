@@ -95,12 +95,17 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let trans = world_to_new * old_to_world;
 
     state.camera.pos = trans.transform_point(&state.camera.pos);
-    state.camera.target = trans.transform_point(&state.camera.target);
     state.camera.up = Unit::new_normalize(trans.transform_vector(&state.camera.up));
 
     match new_entity {
-        ReferenceChange::Track(new_entity) => state.camera.reference_entity = Some(*new_entity),
-        ReferenceChange::Clear => state.camera.reference_entity = None,
+        ReferenceChange::Track(new_entity) => {
+            state.camera.target = Point3::new(0.0, 0.0, 0.0);
+            state.camera.reference_entity = Some(*new_entity);
+        }
+        ReferenceChange::Clear => {
+            state.camera.target = trans.transform_point(&state.camera.target);
+            state.camera.reference_entity = None;
+        }
     };
     state.camera.next_reference_entity = None;
 }
