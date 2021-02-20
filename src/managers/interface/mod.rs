@@ -468,6 +468,12 @@ impl InterfaceManager {
                 if obj_v.z > 0.0 {
                     ndc.x *= -1.0;
                     ndc.y *= -1.0;
+                    ndc.z = 0.0;
+
+                    // Make sure it's pushed out of the NDC box so that it never shows in the middle of the screen
+                    // if it's behind us, but always on the edge 
+                    let ndc_dir = ndc.coords.normalize();
+                    ndc += ndc_dir * 2.0;
                 }
 
                 let mut canvas_x = (state.canvas_width as f64 * (ndc.x + 1.0) / 2.0) as i32 + 1;
