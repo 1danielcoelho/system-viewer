@@ -2,7 +2,7 @@ use crate::app_state::{AppState, ButtonState, ReferenceChange, SimulationScale};
 use crate::components::{MeshComponent, OrbitalComponent, PhysicsComponent, TransformComponent};
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::scene::{Scene, SceneManager};
+use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
@@ -426,6 +426,8 @@ impl InterfaceManager {
             let forward = (cam_target - cam_pos).normalize();
             let right = forward.cross(&state.camera.up).normalize();
 
+            let mut response: Option<egui::Response> = None;
+
             for selected_entity in &state.selection {
                 let name = scene.get_entity_name(*selected_entity);
                 if name.is_none() {
@@ -471,7 +473,7 @@ impl InterfaceManager {
                     ndc.z = 0.0;
 
                     // Make sure it's pushed out of the NDC box so that it never shows in the middle of the screen
-                    // if it's behind us, but always on the edge 
+                    // if it's behind us, but always on the edge
                     let ndc_dir = ndc.coords.normalize();
                     ndc += ndc_dir * 2.0;
                 }
@@ -491,15 +493,48 @@ impl InterfaceManager {
                     .max(margin + expected_height / 2)
                     .min((state.canvas_height - expected_height as u32) as i32);
 
-                let response = egui::Window::new(name)
+                let mut entity_to_track: Option<ReferenceChange> = None;
+                let mut entity_to_go_to: Option<Entity> = None;
+
+                let label_response = egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {
                         x: canvas_x as f32,
                         y: canvas_y as f32 - 20.0, // TODO: Find actual size
                     })
                     .resizable(false)
                     .scroll(false)
-                    .collapsible(false)
-                    .show(&ui.ctx(), |ui| {});
+                    .show(&ui.ctx(), |ui| {
+                        ui.label(format!("Distance: {:.3} Mm", distance));
+
+                        ui.horizontal(|ui| {
+                            if state.camera.reference_entity == Some(*selected_entity) {
+                                let but_res = ui.button("🗑").on_hover_text("Clear tracking");
+                                if but_res.clicked {
+                                    entity_to_track = Some(ReferenceChange::Clear);
+                                }
+                            } else {
+                                let but_res = ui.button("🎥").on_hover_text("Track");
+                                if but_res.clicked {
+                                    entity_to_track =
+                                        Some(ReferenceChange::Track(*selected_entity));
+                                }
+                            }
+
+                            let but_res = ui.button("🔍").on_hover_text("Go to");
+                            if but_res.clicked {
+                                entity_to_go_to = Some(*selected_entity);
+                            }
+                        });
+                    })
+                    .unwrap();
+
+                state.camera.next_reference_entity = entity_to_track;
+                state.camera.entity_going_to = entity_to_go_to;
+
+                match response {
+                    Some(ref mut response) => *response |= label_response,
+                    None => response = Some(label_response),
+                };
             }
 
             for hovered_entity in &state.hovered {
@@ -513,7 +548,7 @@ impl InterfaceManager {
                 }
                 let name = name.unwrap();
 
-                let response = egui::Window::new(name)
+                egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {
                         x: state.input.mouse_x as f32,
                         y: state.input.mouse_y as f32,
@@ -522,6 +557,10 @@ impl InterfaceManager {
                     .scroll(false)
                     .collapsible(false)
                     .show(&ui.ctx(), |ui| {});
+            }
+
+            if let Some(response) = response {
+                handle_output!(state, response);
             }
         });
     }
@@ -720,7 +759,7 @@ impl InterfaceManager {
                                             ui.button("🎥").on_hover_text("Track this entity");
                                         if but_res.clicked {
                                             state.camera.next_reference_entity =
-                                                Some(ReferenceChange::NewEntity(selection));
+                                                Some(ReferenceChange::Track(selection));
                                         }
 
                                         but_res
@@ -974,9 +1013,6 @@ impl InterfaceManager {
                                     if ui.button(name).clicked {
                                         state.selection.clear();
                                         state.selection.insert(entity.current);
-
-                                        state.camera.next_reference_entity =
-                                            Some(ReferenceChange::NewEntity(entity.current));
                                     }
                                 }
                             }

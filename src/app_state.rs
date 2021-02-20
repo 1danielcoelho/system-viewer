@@ -22,7 +22,7 @@ impl SimulationScale {
 
 #[derive(Serialize, Deserialize)]
 pub enum ReferenceChange {
-    NewEntity(Entity),
+    Track(Entity),
     Clear,
 }
 
@@ -45,6 +45,10 @@ pub struct Camera {
     // to None when done). We need this because our transforms are only finalized (due to physics and stuff) after it runs
     #[serde(skip)]
     pub next_reference_entity: Option<ReferenceChange>,
+
+    // Entity we're currently lerping/pointing to
+    #[serde(skip)]
+    pub entity_going_to: Option<Entity>,
 
     // Calculated once per frame after inputs are accounted for
     #[serde(skip)]
@@ -90,7 +94,7 @@ impl Camera {
         return (
             (canvas_width as f64 * (ndc.x + 1.0) / 2.0) as i32 + 1,
             (canvas_height as f64 * (1.0 - ndc.y) / 2.0) as i32 + 1,
-            ndc.z > 0.0  && ndc.z < 1.0
+            ndc.z > 0.0 && ndc.z < 1.0,
         );
     }
 }
@@ -213,6 +217,7 @@ impl AppState {
                 reference_entity: None,
                 reference_translation: None,
                 next_reference_entity: None,
+                entity_going_to: None,
                 v: Matrix4::identity(),
                 p: Matrix4::identity(),
                 v_inv: Matrix4::identity(),

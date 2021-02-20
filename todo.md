@@ -471,11 +471,14 @@ response |= ui.add(label);
 > - Labels freak out if they're behind and we have a body as reference, or even when having no reference at all
 - Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
 - Clear out confusion of what should happen when we click/reference a body
-    - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
+    > - Label should expand to show distance and body info (just distance for now)
+    > - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
     - Once tracking, left click and drag will orbit, mouse wheel will zoom
-    - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
+    > - You should be able to select other things when tracking, but you'll remain tracking the same object regardless of your selection
     - The label on the top toolbar should change to yellow when tracking to highlight what's going on
 > - Big old glitch when clicking a body in the scene hierarchy
+
+# Lerp when going to
 
 # Planet trails (or something). It's impossible to see anything from far away
 

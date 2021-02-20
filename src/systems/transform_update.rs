@@ -1,17 +1,18 @@
+use crate::app_state::ReferenceChange;
 use crate::app_state::{AppState, ButtonState};
+use crate::components::TransformComponent;
 use crate::managers::scene::Scene;
-use crate::{app_state::ReferenceChange, components::TransformComponent};
-use na::{Matrix4, Point3, Translation3, Unit};
+use na::*;
 
 pub struct TransformUpdateSystem {}
 impl TransformUpdateSystem {
     pub fn run(&self, state: &mut AppState, scene: &mut Scene) {
         concatenate_parent_transforms(scene);
 
-        rebase_camera_transform(state, scene);
-        
-        focus_camera_on_selection(state, scene);
-        
+        handle_reference_changes(state, scene);
+
+        handle_go_to(state, scene);
+
         update_reference_translation(state, scene);
     }
 }
@@ -58,20 +59,20 @@ fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
 /// that entity's transform instead.
 ///
 /// This function expects that world transforms are finalized.
-fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
+fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let old_entity = &mut state.camera.reference_entity;
     let new_entity = &mut state.camera.next_reference_entity;
 
     // Don't do anything if asked to changed to the same entity
-    if let Some(ReferenceChange::NewEntity(entity)) = new_entity {
+    if let Some(ReferenceChange::Track(entity)) = new_entity {
         if old_entity.is_some() && *entity == old_entity.unwrap() {
             *new_entity = None;
         }
     }
-
     if new_entity.is_none() {
         return;
     }
+
     let new_entity = new_entity.as_ref().unwrap();
 
     let old_to_world = match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
@@ -80,7 +81,7 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
     };
 
     let world_to_new = match new_entity {
-        ReferenceChange::NewEntity(new_entity) => Translation3::from(
+        ReferenceChange::Track(new_entity) => Translation3::from(
             -scene
                 .get_component::<TransformComponent>(*new_entity)
                 .unwrap()
@@ -98,29 +99,34 @@ fn rebase_camera_transform(state: &mut AppState, scene: &mut Scene) {
     state.camera.up = Unit::new_normalize(trans.transform_vector(&state.camera.up));
 
     match new_entity {
-        ReferenceChange::NewEntity(new_entity) => state.camera.reference_entity = Some(*new_entity),
+        ReferenceChange::Track(new_entity) => state.camera.reference_entity = Some(*new_entity),
         ReferenceChange::Clear => state.camera.reference_entity = None,
     };
     state.camera.next_reference_entity = None;
 }
 
-fn focus_camera_on_selection(state: &mut AppState, scene: &mut Scene) {
-    if state.input.f != ButtonState::Pressed {
+fn handle_go_to(state: &mut AppState, scene: &mut Scene) {
+    if state.camera.entity_going_to.is_none() {
         return;
     }
+    let target_entity = state.camera.entity_going_to.unwrap();
 
-    let target_entity = state.selection.iter().next();
-    if target_entity.is_none() {
-        return;
+    let transform = scene
+        .get_component::<TransformComponent>(target_entity)
+        .unwrap()
+        .get_world_transform();
+
+    let offset = transform.scale.mean() * 2.0;
+
+    let mut target_pos = transform.trans;
+    let mut camera_pos = target_pos + Vector3::new(offset, offset, offset);
+
+    if let Some(reference_trans) = state.camera.reference_translation {
+        target_pos -= reference_trans;
+        camera_pos -= reference_trans;
     }
-    let target_entity = target_entity.unwrap();
 
-    // Set the target entity as our reference first
-    if state.camera.reference_entity != Some(*target_entity) {
-        state.camera.next_reference_entity = Some(ReferenceChange::NewEntity(*target_entity));
-        rebase_camera_transform(state, scene);
-    }
-
-    state.camera.pos = Point3::new(100.0, 100.0, 100.0);
-    state.camera.target = Point3::new(0.0, 0.0, 0.0);
+    state.camera.pos = Point3::from(camera_pos);
+    state.camera.target = Point3::from(target_pos);
+    state.camera.entity_going_to = None;
 }
