@@ -205,174 +205,207 @@ impl InterfaceManager {
             style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
             ui.ctx().set_style(style);
 
-            egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
-                let num_bodies = scene_man
-                    .get_main_scene()
-                    .unwrap()
-                    .physics
-                    .get_num_components();
+            let response = egui::TopPanel::top(egui::Id::new("top panel"))
+                .show(&ui.ctx(), |ui| {
+                    let num_bodies = scene_man
+                        .get_main_scene()
+                        .unwrap()
+                        .physics
+                        .get_num_components();
 
-                let sim_date_str = format!(
-                    "{}",
-                    julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
-                );
+                    let sim_date_str = format!(
+                        "{}",
+                        julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
+                    );
 
-                ui.with_layout(egui::Layout::left_to_right(), |ui| {
-                    egui::menu::menu(ui, "⚙", |ui| {
-                        if ui.button("Reset scene").clicked {}
+                    ui.with_layout(egui::Layout::left_to_right(), |ui| {
+                        egui::menu::menu(ui, "⚙", |ui| {
+                            let mut total_res = ui.button("Reset scene");
+                            if total_res.clicked {}
 
-                        if ui.button("Scene browser").clicked {
-                            self.open_windows.scene_browser = !self.open_windows.scene_browser;
-                        }
-
-                        ui.separator();
-
-                        if ui.button("About").clicked {
-                            self.open_windows.about = !self.open_windows.about;
-                        }
-
-                        if DEBUG {
-                            ui.separator();
-                            ui.separator();
-
-                            if ui.button("New").clicked {
-                                let new_scene_name =
-                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
-                                scene_man.set_scene(&new_scene_name, res_man, Some(state));
+                            let res = ui.button("Scene browser");
+                            if res.clicked {
+                                self.open_windows.scene_browser = !self.open_windows.scene_browser;
                             }
-
-                            if ui.button("Open").clicked {}
-
-                            if ui.button("Save").clicked {}
+                            total_res |= res;
 
                             ui.separator();
 
-                            if ui.button("Close").clicked {
-                                let new_scene_name =
-                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
-                                scene_man.set_scene(&new_scene_name, res_man, Some(state));
+                            let res = ui.button("About");
+                            if res.clicked {
+                                self.open_windows.about = !self.open_windows.about;
                             }
+                            total_res |= res;
 
-                            if ui.button("Inject GLB...").clicked {
-                                prompt_for_bytes_file("glb_inject", ".glb");
-                            }
+                            if DEBUG {
+                                ui.separator();
+                                ui.separator();
 
-                            ui.separator();
-
-                            if ui.button("Debug").clicked {
-                                self.open_windows.debug = !self.open_windows.debug;
-                            }
-
-                            if ui.button("Scene hierarchy").clicked {
-                                self.open_windows.scene_hierarchy =
-                                    !self.open_windows.scene_hierarchy;
-                            }
-
-                            ui.separator();
-
-                            if ui.button("Organize windows").clicked {
-                                ui.ctx().memory().reset_areas();
-                            }
-
-                            if ui.button("Close all").clicked {
-                                self.open_windows.debug = false;
-                                self.open_windows.scene_hierarchy = false;
-                                self.open_windows.about = false;
-                                self.open_windows.scene_browser = false;
-                            }
-
-                            ui.separator();
-
-                            if ui
-                                .button("Clear Egui memory")
-                                .on_hover_text("Forget scroll, collapsing headers etc")
-                                .clicked
-                            {
-                                *ui.ctx().memory() = Default::default();
-                            }
-
-                            if ui
-                                .button("Reset app state")
-                                .on_hover_text("Clears app state from local storage")
-                                .clicked
-                            {
-                                state.pending_reset = true;
-                            }
-                        }
-                    });
-
-                    if ui
-                        .add(
-                            egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
-                                .text_style(egui::TextStyle::Monospace),
-                        )
-                        .clicked
-                    {
-                        log::info!("Clicked on clock!");
-                    }
-
-                    let mut sim_speed_in_units = match state.simulation_scale {
-                        SimulationScale::Seconds => state.simulation_speed * 86400.0,
-                        SimulationScale::Days => state.simulation_speed,
-                        SimulationScale::Years => state.simulation_speed / 365.0,
-                    };
-
-                    ui.horizontal(|ui| {
-                        ui.add(
-                            egui::DragValue::f64(&mut sim_speed_in_units)
-                                .speed(0.001)
-                                .suffix("x speed"),
-                        );
-                    });
-
-                    state.simulation_speed = match state.simulation_scale {
-                        SimulationScale::Seconds => sim_speed_in_units / 86400.0,
-                        SimulationScale::Days => sim_speed_in_units,
-                        SimulationScale::Years => sim_speed_in_units * 365.0,
-                    };
-
-                    if ui
-                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
-                        .clicked
-                    {
-                        log::info!("Clicked on clock!");
-                    }
-
-                    if ui
-                        .add(
-                            egui::Button::new(format!("{} bodies", num_bodies))
-                                .text_style(egui::TextStyle::Monospace),
-                        )
-                        .clicked
-                    {
-                        self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
-                    }
-
-                    ui.horizontal(|ui| {
-                        let ref_name = match scene_man.get_main_scene() {
-                            Some(scene) => match state.camera.reference_entity {
-                                Some(reference) => {
-                                    scene.get_entity_name(reference).unwrap_or_default()
+                                let res = ui.button("New");
+                                if res.clicked {
+                                    let new_scene_name = scene_man
+                                        .new_scene("New scene")
+                                        .unwrap()
+                                        .identifier
+                                        .clone();
+                                    scene_man.set_scene(&new_scene_name, res_man, Some(state));
                                 }
-                                None => "Not tracking",
-                            },
-                            None => "No scene!",
+                                total_res |= res;
+
+                                total_res |= ui.button("Open");
+
+                                total_res |= ui.button("Save");
+
+                                ui.separator();
+
+                                let res = ui.button("Close");
+                                if res.clicked {
+                                    let new_scene_name = scene_man
+                                        .new_scene("New scene")
+                                        .unwrap()
+                                        .identifier
+                                        .clone();
+                                    scene_man.set_scene(&new_scene_name, res_man, Some(state));
+                                }
+                                total_res |= res;
+
+                                let res = ui.button("Inject GLB...");
+                                if res.clicked {
+                                    prompt_for_bytes_file("glb_inject", ".glb");
+                                }
+                                total_res |= res;
+
+                                ui.separator();
+
+                                let res = ui.button("Debug");
+                                if res.clicked {
+                                    self.open_windows.debug = !self.open_windows.debug;
+                                }
+                                total_res |= res;
+
+                                let res = ui.button("Scene hierarchy");
+                                if res.clicked {
+                                    self.open_windows.scene_hierarchy =
+                                        !self.open_windows.scene_hierarchy;
+                                }
+                                total_res |= res;
+
+                                ui.separator();
+
+                                let res = ui.button("Organize windows");
+                                if res.clicked {
+                                    ui.ctx().memory().reset_areas();
+                                }
+                                total_res |= res;
+
+                                let res = ui.button("Close all");
+                                if res.clicked {
+                                    self.open_windows.debug = false;
+                                    self.open_windows.scene_hierarchy = false;
+                                    self.open_windows.about = false;
+                                    self.open_windows.scene_browser = false;
+                                }
+                                total_res |= res;
+
+                                ui.separator();
+
+                                let res = ui
+                                    .button("Clear Egui memory")
+                                    .on_hover_text("Forget scroll, collapsing headers etc");
+                                if res.clicked {
+                                    *ui.ctx().memory() = Default::default();
+                                }
+                                total_res |= res;
+
+                                let res = ui
+                                    .button("Reset app state")
+                                    .on_hover_text("Clears app state from local storage");
+                                if res.clicked {
+                                    state.pending_reset = true;
+                                }
+                                total_res |= res;
+                            }
+
+                            handle_output!(state, total_res);
+                        });
+
+                        if ui
+                            .add(
+                                egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
+                                    .text_style(egui::TextStyle::Monospace),
+                            )
+                            .clicked
+                        {
+                            log::info!("Clicked on clock!");
+                        }
+
+                        let mut sim_speed_in_units = match state.simulation_scale {
+                            SimulationScale::Seconds => state.simulation_speed * 86400.0,
+                            SimulationScale::Days => state.simulation_speed,
+                            SimulationScale::Years => state.simulation_speed / 365.0,
                         };
 
-                        let clear_resp = ui
+                        ui.horizontal(|ui| {
+                            ui.add(
+                                egui::DragValue::f64(&mut sim_speed_in_units)
+                                    .speed(0.001)
+                                    .suffix("x speed"),
+                            );
+                        });
+
+                        state.simulation_speed = match state.simulation_scale {
+                            SimulationScale::Seconds => sim_speed_in_units / 86400.0,
+                            SimulationScale::Days => sim_speed_in_units,
+                            SimulationScale::Years => sim_speed_in_units * 365.0,
+                        };
+
+                        if ui
                             .add(
-                                egui::Button::new("🗑")
-                                    .enabled(state.camera.reference_entity.is_some()),
+                                egui::Button::new(sim_date_str)
+                                    .text_style(egui::TextStyle::Monospace),
                             )
-                            .on_hover_text("Stop tracking this body");
-                        if clear_resp.clicked {
-                            state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+                            .clicked
+                        {
+                            log::info!("Clicked on clock!");
                         }
 
-                        ui.label(ref_name);
+                        if ui
+                            .add(
+                                egui::Button::new(format!("{} bodies", num_bodies))
+                                    .text_style(egui::TextStyle::Monospace),
+                            )
+                            .clicked
+                        {
+                            self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
+                        }
+
+                        ui.horizontal(|ui| {
+                            let ref_name = match scene_man.get_main_scene() {
+                                Some(scene) => match state.camera.reference_entity {
+                                    Some(reference) => {
+                                        scene.get_entity_name(reference).unwrap_or_default()
+                                    }
+                                    None => "Not tracking",
+                                },
+                                None => "No scene!",
+                            };
+
+                            let clear_resp = ui
+                                .add(
+                                    egui::Button::new("🗑")
+                                        .enabled(state.camera.reference_entity.is_some()),
+                                )
+                                .on_hover_text("Stop tracking this body");
+                            if clear_resp.clicked {
+                                state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+                            }
+
+                            ui.label(ref_name);
+                        });
                     });
-                });
-            });
+                })
+                .1;
+            handle_output!(state, response);
 
             let mut style = ui.ctx().style().deref().clone();
             style.visuals.widgets.noninteractive.bg_fill = old_fill;

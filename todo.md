@@ -469,7 +469,7 @@ response |= ui.add(label);
 > - Labels seem like 1 frame behind somehow?
 > - Labels projection math doesn't work if body is reference (maybe using/not using the camera reference would fix it?)
 > - Labels freak out if they're behind and we have a body as reference, or even when having no reference at all
-- Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
+> - Clicking the UI doesn't always consume the click, so that e.g. it may clear selection when clicking on cog
 - Clear out confusion of what should happen when we click/reference a body
     > - Label should expand to show distance and body info (just distance for now)
     > - Selecting and tracking should be separate things: Selecting a body will show its name and two buttons: Go to and track
