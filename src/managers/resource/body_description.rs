@@ -1,4 +1,4 @@
-use crate::utils::units::{Jdn, Mm, Rad, J2000_JDN};
+use crate::utils::units::{Jdn, Mm, Rad};
 use na::{Point3, Vector3};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -104,22 +104,16 @@ pub struct BodyDescription {
 
     #[serde(rename = "type")]
     pub body_type: BodyType,
-    
+
     #[serde(default)]
     pub meta: HashMap<String, String>,
-    
-    pub mass: Option<f32>,                   // Kg
-    pub radius: Option<f32>,                 // Mm
-    pub albedo: Option<f32>,                 // Abs
-    pub magnitude: Option<f32>,              // Abs
-    pub rotation_period: Option<f32>,        // Days (86400s)
-    pub rotation_axis: Option<Vector3<f64>>, // J2000 ecliptic rectangular right-handed normalized
-    pub spec_smassii: Option<String>,        // Spectral class
-    pub spec_tholen: Option<String>,         // Spectral class
-    
-    #[serde(default)]
-    pub osc_elements: Vec<OrbitalElements>,
-    
-    #[serde(default)]
-    pub state_vectors: Vec<StateVector>,
+
+    pub mass: Option<f32>,               // Kg
+    pub radius: Option<f32>,             // Mm
+    pub albedo: Option<f32>,             // Abs
+    pub magnitude: Option<f32>,          // Abs
+    pub rotation_period: Option<f32>,    // Days (86400s)
+    pub rotation_axis: Option<[f64; 3]>, // J2000 ecliptic rectangular right-handed normalized
+    pub spec_smassii: Option<String>,    // Spectral class
+    pub spec_tholen: Option<String>,     // Spectral class
 }

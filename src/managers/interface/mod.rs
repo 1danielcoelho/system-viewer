@@ -7,7 +7,6 @@ use crate::managers::ResourceManager;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::{prompt_for_bytes_file, UICTX};
-use egui::Layout;
 use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::*;
@@ -72,7 +71,7 @@ pub struct InterfaceManager {
     backend: gui_backend::WebBackend,
     web_input: WebInput,
     open_windows: OpenWindows,
-    selected_scene_desc_index: u32,
+    selected_scene_desc_name: String,
 
     frame_times: VecDeque<f64>,
     time_of_last_update: f64,
@@ -90,7 +89,7 @@ impl InterfaceManager {
                 scene_browser: true,
                 about: false,
             },
-            selected_scene_desc_index: 0,
+            selected_scene_desc_name: String::from(""),
             frame_times: vec![16.66; 15].into_iter().collect(),
             time_of_last_update: -2.0,
             last_frame_rate: 60.0, // Optimism
@@ -941,30 +940,23 @@ impl InterfaceManager {
                             ui.set_min_height(ui.available_size().y);
 
                             egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                                for (index, scene) in scene_man.descriptions.0.iter().enumerate() {
-                                    ui.radio_value(
-                                        &mut self.selected_scene_desc_index,
-                                        index as u32,
-                                        {
-                                            if &scene.name == &main_name {
-                                                scene.name.to_owned() + " (active)"
-                                            } else {
-                                                scene.name.to_owned()
-                                            }
-                                        },
-                                    );
+                                for (name, desc) in scene_man.descriptions.iter() {
+                                    ui.radio_value(&mut self.selected_scene_desc_name, *name, {
+                                        if name == &main_name {
+                                            name.to_owned() + " (active)"
+                                        } else {
+                                            name.to_owned()
+                                        }
+                                    });
                                 }
                             });
                         });
 
-                        let selected_is_active = match scene_man
-                            .descriptions
-                            .0
-                            .get(self.selected_scene_desc_index as usize)
-                        {
-                            Some(desc) => &desc.name == &main_name,
-                            None => false,
-                        };
+                        let selected_is_active =
+                            match scene_man.descriptions.get(&self.selected_scene_desc_name) {
+                                Some(desc) => &desc.name == &main_name,
+                                None => false,
+                            };
 
                         // HACK: 32.0 is the height of the button. I have no idea how to do this programmatically
                         // Maybe with a bottom up layout, but there is some type of egui crash when I put a ScrollArea
@@ -974,10 +966,8 @@ impl InterfaceManager {
                         egui::ScrollArea::from_max_height(height).show(&mut cols[1], |ui| {
                             ui.set_min_height(height);
 
-                            if let Some(desc) = scene_man
-                                .descriptions
-                                .0
-                                .get(self.selected_scene_desc_index as usize)
+                            if let Some(desc) =
+                                scene_man.descriptions.get(&self.selected_scene_desc_name)
                             {
                                 ui.columns(2, |cols| {
                                     cols[0].label("Name:");
@@ -1022,11 +1012,11 @@ impl InterfaceManager {
                         cols[1].columns(2, |cols| {
                             cols[0].with_layout(egui::Layout::right_to_left(), |ui| {
                                 if ui.button("   Open   ").clicked {
-                                    let name = &scene_man.descriptions.0
-                                        [self.selected_scene_desc_index as usize]
-                                        .name
-                                        .clone();
-                                    scene_man.set_scene(name, res_man, Some(state));
+                                    scene_man.set_scene(
+                                        &self.selected_scene_desc_name,
+                                        res_man,
+                                        Some(state),
+                                    );
                                 }
                             });
 
@@ -1038,11 +1028,7 @@ impl InterfaceManager {
                                     )
                                     .on_hover_text("Close this scene");
                                 if close_resp.clicked {
-                                    let name = &scene_man.descriptions.0
-                                        [self.selected_scene_desc_index as usize]
-                                        .name
-                                        .clone();
-                                    scene_man.delete_scene(name);
+                                    scene_man.delete_scene(&self.selected_scene_desc_name);
                                 }
                             });
                         });

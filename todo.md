@@ -487,6 +487,7 @@ response |= ui.add(label);
         - One scene per ron file (instead of scene_list.ron)
         - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
             - How to handle the choice between osc_element and state_vector?
+    - Add some default color/texture to the body schema. I think I had colors for all planets from before?
 - Scene handling
     - I think I should put the scene description inside the created Scene?
     - Set time, camera position and reference according to scene description

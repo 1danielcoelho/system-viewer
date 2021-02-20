@@ -1,6 +1,6 @@
 use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
 use crate::fetch_bytes;
-use crate::managers::resource::body_description::BodyDescription;
+use crate::managers::resource::body_description::{BodyDescription, OrbitalElements, StateVector};
 use crate::managers::resource::material::UniformName;
 use crate::managers::resource::texture::TextureUnit;
 use crate::utils::gl::GL;
@@ -151,6 +151,8 @@ pub struct ResourceManager {
     textures: HashMap<String, Rc<RefCell<Texture>>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
     bodies: HashMap<String, HashMap<String, BodyDescription>>,
+    state_vectors: HashMap<String, Vec<StateVector>>,
+    osc_elements: HashMap<String, Vec<OrbitalElements>>,
 }
 impl ResourceManager {
     pub fn new() -> Self {
@@ -159,6 +161,8 @@ impl ResourceManager {
             textures: HashMap::new(),
             materials: HashMap::new(),
             bodies: HashMap::new(),
+            state_vectors: HashMap::new(),
+            osc_elements: HashMap::new(),
         };
 
         return new_res_man;
@@ -585,6 +589,24 @@ impl ResourceManager {
 
     pub fn set_body_database(&mut self, db_name: &str, db: HashMap<String, BodyDescription>) {
         self.bodies.insert(db_name.to_owned(), db);
+    }
+
+    /// Weird function to move the state vectors database out of the res manager to satisfy the borrow checker
+    /// in place where that would alias with a mutable reference to the res manager
+    pub fn take_state_vectors_database(&mut self) -> HashMap<String, Vec<StateVector>> {
+        return self.state_vectors;
+    }
+
+    pub fn set_state_vectors_database(&mut self, db: HashMap<String, Vec<StateVector>>) {
+        self.state_vectors = db;
+    }
+
+    pub fn take_osc_elements_database(&mut self) -> HashMap<String, Vec<OrbitalElements>> {
+        return self.osc_elements;
+    }
+
+    pub fn set_osc_elements_database(&mut self, db: HashMap<String, Vec<OrbitalElements>>) {
+        self.osc_elements = db;
     }
 
     pub fn get_body(&self, db_name: &str, body_id: &str) -> Result<&BodyDescription, String> {

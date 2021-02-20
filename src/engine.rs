@@ -43,12 +43,14 @@ impl Engine {
         }
 
         // Draw the UI elements
-        self.int_man.end_frame(state, &mut self.scene_man, &mut self.res_man);
+        self.int_man
+            .end_frame(state, &mut self.scene_man, &mut self.res_man);
     }
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
         match content_type {
-            "scene_list" => self.receive_scene_list_text(url, text),
+            "auto_load_manifest" => self.receive_auto_load_manifest_text(url, text),
+            "scene" => self.receive_scene_text(url, text),
             "database" => self.receive_database_text(url, text),
             _ => log::error!(
                 "Unexpected content_type for receive_text: '{}'. url: '{}'",
@@ -58,17 +60,23 @@ impl Engine {
         }
     }
 
-    pub fn receive_scene_list_text(&mut self, url: &str, text: &str) {
+    fn receive_auto_load_manifest_text(&mut self, url: &str, text: &str) {
         log::info!(
-            "Loading scene descriptions from '{}' (length {})",
+            "Loading auto load manifest from '{}' (length {})",
             url,
             text.len()
         );
 
-        self.scene_man.receive_scene_description_vec(text).unwrap();
+        //self.scene_man.receive_scene_description_vec(text).unwrap();
     }
 
-    pub fn receive_database_text(&mut self, url: &str, text: &str) {
+    fn receive_scene_text(&mut self, url: &str, text: &str) {
+        log::info!("Loading scene from '{}' (length {})", url, text.len());
+
+        //self.scene_man.receive_scene_description_vec(text).unwrap();
+    }
+
+    fn receive_database_text(&mut self, url: &str, text: &str) {
         log::info!(
             "Loading database file from '{}' (length {})",
             url,
@@ -91,7 +99,7 @@ impl Engine {
         }
     }
 
-    pub fn receive_texture_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
+    fn receive_texture_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
         log::info!(
             "Loading texture from file '{}' ({} bytes)",
             file_identifier,
@@ -101,7 +109,7 @@ impl Engine {
         self.res_man.create_texture(file_identifier, data, None);
     }
 
-    pub fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8], inject: bool) {
+    fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8], inject: bool) {
         log::info!(
             "Loading GLTF from file '{}' ({} bytes)",
             file_identifier,

@@ -1,10 +1,17 @@
+use std::collections::HashMap;
+
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
-use crate::managers::resource::body_description::{BodyDescription, BodyType};
+use crate::managers::resource::body_description::{
+    BodyDescription, BodyType, OrbitalElements, StateVector,
+};
+use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::units::Jdn;
 use nalgebra::Vector3;
+
+use super::description::ResolvedBodyMotionType;
 
 impl SceneManager {
     // pub fn load_bodies_into_scene(
@@ -116,6 +123,7 @@ pub fn add_free_body(
     scene: &mut Scene,
     epoch: Jdn,
     body: &BodyDescription,
+    motion: &ResolvedBodyMotionType,
     res_man: &mut ResourceManager,
 ) {
     if body.body_type == BodyType::Barycenter {
@@ -176,4 +184,13 @@ pub fn add_free_body(
         light_comp.intensity = 5E10;
         light_comp.light_type = LightType::Point;
     }
+}
+
+pub fn resolve_motion_type(
+    body_id: &str,
+    received_type: &BodyMotionType,
+    state_vectors: &HashMap<String, Vec<StateVector>>,
+    osc_elements: &HashMap<String, Vec<OrbitalElements>>,
+) -> Option<ResolvedBodyMotionType> {
+    return None;
 }

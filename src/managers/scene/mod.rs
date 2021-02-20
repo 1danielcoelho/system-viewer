@@ -4,12 +4,13 @@ use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::scene::description::{SceneDescription, SceneDescriptionVec};
-use crate::managers::scene::orbits::add_free_body;
+use crate::managers::scene::description::SceneDescription;
+use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
 use crate::utils::units::J2000_JDN;
 use crate::utils::{string::get_unique_name, transform::Transform};
 use na::Vector3;
 use std::collections::HashMap;
+use web_sys::console::warn;
 
 pub use scene::*;
 
@@ -28,14 +29,14 @@ enum LoadSceneResult<'a> {
 pub struct SceneManager {
     main: Option<String>,
     loaded_scenes: HashMap<String, Scene>,
-    pub descriptions: SceneDescriptionVec,
+    pub descriptions: HashMap<String, SceneDescription>,
 }
 impl SceneManager {
     pub fn new() -> Self {
         let mut new_man = Self {
             main: None,
             loaded_scenes: HashMap::new(),
-            descriptions: SceneDescriptionVec(Vec::new()),
+            descriptions: HashMap::new(),
         };
 
         new_man.new_scene("empty");
@@ -195,13 +196,13 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    pub fn receive_scene_description_vec(&mut self, serialized: &str) -> Result<(), String> {
-        let new_vec: SceneDescriptionVec = ron::de::from_str(serialized)
+    pub fn receive_serialized_scene(&mut self, serialized: &str) -> Result<(), String> {
+        let new_scene: SceneDescription = ron::de::from_str(serialized)
             .map_err(|e| format!("RON deserialization error:\n{}", e).to_owned())?;
 
-        log::info!("Loaded {} new scene descriptions", new_vec.0.len());
+        log::info!("Loaded new scene '{}'", new_scene.name);
 
-        self.descriptions = new_vec;
+        self.descriptions.insert(new_scene.name, new_scene);
         return Ok(());
     }
 
@@ -630,13 +631,7 @@ impl SceneManager {
         identifier: &str,
         res_man: &mut ResourceManager,
     ) -> LoadSceneResult {
-        let desc = self
-            .descriptions
-            .0
-            .iter()
-            .find(|desc| desc.name == identifier)
-            .cloned()
-            .unwrap();
+        let desc = self.descriptions.get(identifier).cloned().unwrap();
 
         // Make Rust happy
         let name = desc.name.clone();
@@ -644,6 +639,9 @@ impl SceneManager {
         let time = J2000_JDN;
 
         let scene = self.new_scene(&name).unwrap();
+
+        let db_state_vectors = res_man.take_state_vectors_database();
+        let db_osc_elements = res_man.take_osc_elements_database();
 
         for (db_name, body_ids) in bodies.iter() {
             let db = res_man.take_body_database(db_name);
@@ -657,7 +655,7 @@ impl SceneManager {
             }
             let db = db.unwrap();
 
-            for body_id in body_ids.iter() {
+            for (body_id, motion_type) in body_ids.iter() {
                 let body = db.get(body_id.as_str());
                 if body.is_none() {
                     log::warn!(
@@ -667,11 +665,21 @@ impl SceneManager {
                     );
                 }
 
-                add_free_body(scene, time, body.unwrap(), res_man);
+                // resolve what to pass to free_body (osc elements or state vectors)
+                if let Some(motion) =
+                    resolve_motion_type(body_id, motion_type, &db_state_vectors, &db_osc_elements)
+                {
+                    add_free_body(scene, time, body.unwrap(), &motion, res_man);
+                } else {
+                    log::warn!("Failed to resolve motion for body '{}'", body_id);
+                }
             }
 
             res_man.set_body_database(db_name, db);
         }
+
+        res_man.set_state_vectors_database(db_state_vectors);
+        res_man.set_osc_elements_database(db_osc_elements);
 
         // Grid
         let grid = scene.new_entity(Some("grid"));
