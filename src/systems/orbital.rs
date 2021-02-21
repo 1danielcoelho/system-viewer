@@ -22,7 +22,7 @@ impl OrbitalSystem {
         trans_comp: &mut TransformComponent,
         orbit_comp: &OrbitalComponent,
     ) {
-        let current_time = Jdn(state.sim_time_days + J2000_JDN.0);
+        let current_time = Jdn(state.sim_time_s / 86400.0 + J2000_JDN.0);
 
         let eccentric_anomaly = get_eccentric_anomaly(
             current_time,

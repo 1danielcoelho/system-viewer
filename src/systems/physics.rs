@@ -55,8 +55,9 @@ fn collect_gravity(scene: &mut Scene) {
             let other_comp = &phys_comps[j];
 
             let delta = other_comp.trans.trans - pos;
-            let dist = delta.magnitude();            
-            let force: Vector3<f64> = delta.normalize() * GRAVITATION_CONSTANT * mass * other_comp.mass / (dist * dist);
+            let dist = delta.magnitude();
+            let force: Vector3<f64> =
+                delta.normalize() * GRAVITATION_CONSTANT * mass * other_comp.mass / (dist * dist);
 
             phys_comps[i].force_sum += force;
             phys_comps[j].force_sum += -force;
@@ -70,7 +71,7 @@ fn update_comp(state: &AppState, phys_comp: &mut PhysicsComponent) {
         return;
     }
 
-    let dt_s = state.sim_delta_time_days * 86400.0;
+    let dt_s = state.sim_delta_time_s;
 
     // TODO: What if the object is scaled? Should that affect its linear/rotational motion?
 
@@ -93,8 +94,8 @@ fn update_comp(state: &AppState, phys_comp: &mut PhysicsComponent) {
 
     // Update position and rotation
     phys_comp.trans.trans += lin_vel * dt_s;
-    let new_rot =
-        phys_comp.trans.rot.quaternion() + 0.5 * ang_vel_q * phys_comp.trans.rot.quaternion() * dt_s; // todo
+    let new_rot = phys_comp.trans.rot.quaternion()
+        + 0.5 * ang_vel_q * phys_comp.trans.rot.quaternion() * dt_s; // todo
     phys_comp.trans.rot = UnitQuaternion::new_normalize(new_rot);
 
     // Clear accumulators

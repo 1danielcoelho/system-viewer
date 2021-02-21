@@ -173,13 +173,13 @@ pub struct AppState {
     pub last_frame_s: f64,
 
     #[serde(skip)]
-    pub sim_time_days: f64,
+    pub sim_time_s: f64,
 
     #[serde(skip)]
     pub real_time_s: f64,
 
     #[serde(skip)]
-    pub sim_delta_time_days: f64, // Affected by simulation speed
+    pub sim_delta_time_s: f64, // Affected by simulation speed
 
     #[serde(skip)]
     pub real_delta_time_s: f64, // Not affected by simulation speed
@@ -187,7 +187,6 @@ pub struct AppState {
     #[serde(skip)]
     pub time_of_last_save: f64,
 
-    pub simulation_scale: SimulationScale,
     pub simulation_speed: f64,
     pub simulation_paused: bool,
     pub move_speed: f64,
@@ -210,13 +209,12 @@ impl AppState {
             canvas_width: 0,
             start_s: js_sys::Date::now(),
             last_frame_s: 0.0,
-            sim_time_days: 0.,
+            sim_time_s: 0.,
             real_time_s: 0.,
-            sim_delta_time_days: 0.,
+            sim_delta_time_s: 0.,
             real_delta_time_s: 0.,
             time_of_last_save: 0.,
-            simulation_scale: SimulationScale::Seconds,
-            simulation_speed: 1. / 86400.0,
+            simulation_speed: 1.,
             simulation_paused: true,
             move_speed: 5.0,
             rotate_speed: 2.0,

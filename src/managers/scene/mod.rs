@@ -117,8 +117,10 @@ impl SceneManager {
                     }
                 }
 
+                // TODO: Proper handling of time (would involve rolling simulation/orbits forward/back
+                // to match target time, for now let's just all sit at J2000)
                 assert!(desc.time == String::from("J2000"));
-                state.sim_time_days = 0.0;
+                state.sim_time_s = 0.0;
             }
         } else {
             log::warn!("Scene with identifier '{}' not found!", identifier);

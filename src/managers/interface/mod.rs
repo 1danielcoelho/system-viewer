@@ -222,7 +222,7 @@ impl InterfaceManager {
 
                     let sim_date_str = format!(
                         "{}",
-                        julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
+                        julian_date_number_to_date(Jdn(state.sim_time_s / 86400.0 + J2000_JDN.0))
                     );
 
                     ui.with_layout(egui::Layout::left_to_right(), |ui| {
@@ -346,25 +346,13 @@ impl InterfaceManager {
                             log::info!("Clicked on clock!");
                         }
 
-                        let mut sim_speed_in_units = match state.simulation_scale {
-                            SimulationScale::Seconds => state.simulation_speed * 86400.0,
-                            SimulationScale::Days => state.simulation_speed,
-                            SimulationScale::Years => state.simulation_speed / 365.0,
-                        };
-
                         ui.horizontal(|ui| {
                             ui.add(
-                                egui::DragValue::f64(&mut sim_speed_in_units)
+                                egui::DragValue::f64(&mut state.simulation_speed)
                                     .speed(0.001)
                                     .suffix("x speed"),
                             );
                         });
-
-                        state.simulation_speed = match state.simulation_scale {
-                            SimulationScale::Seconds => sim_speed_in_units / 86400.0,
-                            SimulationScale::Days => sim_speed_in_units,
-                            SimulationScale::Years => sim_speed_in_units * 365.0,
-                        };
 
                         if ui
                             .add(
@@ -646,14 +634,14 @@ impl InterfaceManager {
                 .show(&ui.ctx(), |ui| {
                     let mut response = ui.columns(2, |cols| {
                         cols[0].label("Simulation time since reference:");
-                        cols[1].label(format!("{:.2} days", state.sim_time_days))
+                        cols[1].label(format!("{:.2} seconds", state.sim_time_s))
                     });
 
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Simulation date:");
                         cols[1].label(format!(
                             "{}",
-                            julian_date_number_to_date(Jdn(state.sim_time_days + J2000_JDN.0))
+                            julian_date_number_to_date(Jdn(state.sim_time_s / 86400.0 + J2000_JDN.0))
                         ))
                     });
 
@@ -667,52 +655,11 @@ impl InterfaceManager {
                         cols[1].label(format!("{:.2}", frame_rate))
                     });
 
-                    let mut sim_scale = state.simulation_scale;
-                    let mut sim_speed_in_units = match state.simulation_scale {
-                        SimulationScale::Seconds => state.simulation_speed * 86400.0,
-                        SimulationScale::Days => state.simulation_speed,
-                        SimulationScale::Years => state.simulation_speed / 365.0,
-                    };
-
                     response |= ui.columns(2, |cols| {
                         cols[0].label("Simulation scale:");
 
-                        cols[1]
-                            .horizontal(|ui| {
-                                ui.add(egui::DragValue::f64(&mut sim_speed_in_units).speed(0.01));
-
-                                egui::combo_box(
-                                    ui,
-                                    egui::Id::new("Simulation scale"),
-                                    state.simulation_scale.to_str(),
-                                    |ui| {
-                                        ui.selectable_value(
-                                            &mut sim_scale,
-                                            SimulationScale::Years,
-                                            SimulationScale::Years.to_str(),
-                                        );
-                                        ui.selectable_value(
-                                            &mut sim_scale,
-                                            SimulationScale::Days,
-                                            SimulationScale::Days.to_str(),
-                                        );
-                                        ui.selectable_value(
-                                            &mut sim_scale,
-                                            SimulationScale::Seconds,
-                                            SimulationScale::Seconds.to_str(),
-                                        );
-                                    },
-                                );
-                            })
-                            .1
+                        cols[1].add(egui::DragValue::f64(&mut state.simulation_speed).speed(0.01))
                     });
-
-                    state.simulation_scale = sim_scale;
-                    state.simulation_speed = match sim_scale {
-                        SimulationScale::Seconds => sim_speed_in_units / 86400.0,
-                        SimulationScale::Days => sim_speed_in_units,
-                        SimulationScale::Years => sim_speed_in_units * 365.0,
-                    };
 
                     ui.separator();
 

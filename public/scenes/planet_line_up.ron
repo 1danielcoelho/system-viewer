@@ -3,7 +3,7 @@
     name: "Planet line up",
     description: "All planets lined up next to eachother",
     time: "J2000",
-    simulation_scale: 500,
+    simulation_scale: 200,
     tracking: "599",
     camera_pos: [
         -112,

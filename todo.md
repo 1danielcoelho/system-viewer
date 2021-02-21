@@ -488,7 +488,7 @@ response |= ui.add(label);
         > - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
         - Allow leaving camera pos/target/up as None and just use reference, so that it does a GoTo when loading the scene and figures it out by itself
         - Actually implement setting initial time and reference from scene desc
-            - Set initial time
+            > - Set initial time
             > - Metadata component
                 > - Move entity names onto it
                     > - Gave up on this for now because names are fetched very frequently by the UI, and I don't want to go through get_component every time
