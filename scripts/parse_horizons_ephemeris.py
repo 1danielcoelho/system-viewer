@@ -105,7 +105,6 @@ def add_horizons_data(database):
 
             body_entry['name'] = name
             body_entry['type'] = get_body_type(body_id)
-            body_entry['meta'] = {}
 
             # Mass
             mass_matches = re.findall(mass_re, data)

@@ -507,15 +507,19 @@ response |= ui.add(label);
     > - Unload scene when switching away from it
 
 # Cleanup for MVP
-- Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
-- Add some default color/texture to the body schema. I think I had colors for all planets from before?
+- Improve visuals a bit
+    - Add some default color/texture to the body schema. I think I had colors for all planets from before?
+    - Passable materials/colors for bodies
+    - Correct-ish sun brightness
+    - https://www.solarsystemscope.com/textures/
+- Good sample scenes    
+    - Basic solar system simulation at J2000 with bodies in the right size
+        - Okay-ish results on the simulation for now, we can improve later
 - Do something for movement speed, it's almost always unexpected
-- Okay-ish results on the simulation for now, we can improve later
-- Basic solar system simulation at J2000 with bodies in the right size
-- Passable materials/colors for bodies
+    - I also have FOV basically unused...
+- Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
 - Compare that relative size
-- Correct-ish sun brightness
 - Update egui
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
@@ -530,6 +534,9 @@ response |= ui.add(label);
 - Should be able to click through the hover label (it blocks all mouse clicks)
 - Position of labels when body is off screen is not correct, it flails everywhere
 - Need better prediction of label size to prevent it from ever leaving the canvas
+
+# Let user upload his own scene ron files
+- Allow download of sample ron schema
 
 # Expand on framerate limiter to allow frame stepping
 

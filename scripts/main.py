@@ -4,6 +4,7 @@ import generate_state_vectors
 import parse_horizons_ephemeris
 import parse_jpl_satellite_physical_params
 import parse_small_body_db_results
+import add_body_colors
 
 if __name__ == "__main__":
     db = load_database()
@@ -17,5 +18,7 @@ if __name__ == "__main__":
     estimate_asteroid_parameters.run(db)
 
     generate_state_vectors.run(db)
+
+    add_body_colors.run(db)
 
     save_database(db)

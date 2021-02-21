@@ -2,7 +2,6 @@
     "body_id": (
         name: "Sun",                    // User-facing name
         type: "star",                   // star, planet, satellite, asteroid, comet, artificial, barycenter
-        meta: {},                       // data sources, future proofing, etc.
         mass: 2,                        // number, kg
         radius: 2,                      // Mm
         albedo: 2,                      // absolute value
@@ -11,5 +10,9 @@
         rotation_axis: [0.1, 0.8, 0.2], // J2000 ecliptic rectangular right-handed normalized
         spec_smassii: "Sk",             // string, spectral class
         spec_tholen: "B",               // string, spectral class        
+        material: "venus"               // Material to use if its different than the default for the body type
+        material_params: {              // Optional string to string map of uniforms for the target material shader
+            "diffuse_color": "c9c9c9"   // sRGB hex diffuse color
+        },            
     )
 }

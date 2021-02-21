@@ -116,4 +116,10 @@ pub struct BodyDescription {
     pub rotation_axis: Option<[f64; 3]>, // J2000 ecliptic rectangular right-handed normalized
     pub spec_smassii: Option<String>,    // Spectral class
     pub spec_tholen: Option<String>,     // Spectral class
+    
+    #[serde(default)]
+    pub material: Option<String>,
+
+    #[serde(default)]
+    pub material_params: Option<HashMap<String, String>>,
 }

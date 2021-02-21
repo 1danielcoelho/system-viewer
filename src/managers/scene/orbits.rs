@@ -1,9 +1,13 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use super::description::ResolvedBodyMotionType;
 use crate::components::light::LightType;
 use crate::components::{
     LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
 };
 use crate::managers::resource::body_description::{BodyDescription, BodyType};
+use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
@@ -168,7 +172,7 @@ pub fn add_free_body(
 
         let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
-        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
+        mesh_comp.set_material_override(get_body_material(body, res_man), 0);
     }
 
     let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
@@ -222,6 +226,39 @@ pub fn add_free_body(
     if let Some(spec) = &body.spec_tholen {
         meta_comp.set_metadata("body_spec_tholen", &spec);
     }
+}
+
+pub fn get_body_material(
+    body: &BodyDescription,
+    res_man: &mut ResourceManager,
+) -> Option<Rc<RefCell<Material>>> {
+    return match body.material.clone().unwrap_or(String::from("")).as_str() {
+        "mercury" => {
+            let mat = res_man.get_or_create_material("gltf_metal_rough").unwrap();
+            let mat_mut = mat.borrow_mut();
+            mat_mut.set_uniform_value(UniformName::BaseColor, UniformValue::Vec3());
+
+            Some(mat)
+        }
+        "venus" => {}
+        "earth" => {}
+        "mars" => {}
+        "jupiter" => {}
+        "saturn" => {}
+        "uranus" => {}
+        "neptune" => {}
+        "pluto" => {}
+        _ => match body.body_type {
+            BodyType::Star => {}
+            BodyType::Planet => {}
+            BodyType::Satellite => {}
+            BodyType::Asteroid => {}
+            BodyType::Comet => {}
+            BodyType::Artificial => {}
+            BodyType::Barycenter => {}
+            BodyType::Other => {}
+        },
+    };
 }
 
 /// Function that receives a `BodyMotionType` and produces a `ResolvedMotionType`, either using the custom values
