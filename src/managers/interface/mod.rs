@@ -972,12 +972,24 @@ impl InterfaceManager {
                         // TODO: There has to be a simpler way of just centering two buttons on that space
                         cols[1].columns(2, |cols| {
                             cols[0].with_layout(egui::Layout::right_to_left(), |ui| {
-                                if ui.button("   Open   ").clicked {
-                                    scene_man.set_scene(
-                                        &self.selected_scene_desc_name,
-                                        res_man,
-                                        state,
-                                    );
+                                if selected_is_active {
+                                    if ui.button("   Reset   ").clicked {
+                                        // HACK
+                                        scene_man.set_scene("empty", res_man, state);
+                                        scene_man.set_scene(
+                                            &self.selected_scene_desc_name,
+                                            res_man,
+                                            state,
+                                        );
+                                    }
+                                } else {
+                                    if ui.button("   Open   ").clicked {
+                                        scene_man.set_scene(
+                                            &self.selected_scene_desc_name,
+                                            res_man,
+                                            state,
+                                        );
+                                    }
                                 }
                             });
 

@@ -497,18 +497,18 @@ response |= ui.add(label);
             > - How to handle the choice between osc_element and state_vector?
                 > - This is worthless now as I don't want the ellipses back for the MVP
             >- Crash when closing a scene (should reset to empty)
-
-# Cleanup for MVP
-- Add some default color/texture to the body schema. I think I had colors for all planets from before?
-- Scene handling
+> - Scene handling
     > - I think I should put the scene description inside the created Scene?
     > - Set time, camera position and reference according to scene description
     > - Reset seleciton when opening scene
-    - Option to reset to start
-        - Just open the current scene again
-        - Change open button to 'reset'
-    - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
+    > - Option to reset to start
+        > - Just open the current scene again
+        > - Change open button to 'reset'
     > - Unload scene when switching away from it
+
+# Cleanup for MVP
+- Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
+- Add some default color/texture to the body schema. I think I had colors for all planets from before?
 - Do something for movement speed, it's almost always unexpected
 - Okay-ish results on the simulation for now, we can improve later
 - Basic solar system simulation at J2000 with bodies in the right size
