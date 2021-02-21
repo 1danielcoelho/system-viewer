@@ -168,6 +168,7 @@ pub fn add_free_body(
 
         let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
     }
 
     let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);

@@ -15,7 +15,9 @@ impl InputManager {
 
     pub fn run(&mut self, state: &mut AppState) {
         process_input(state, self.last_mouse_x, self.last_mouse_y);
-        update_camera_transforms(state);
+        state
+            .camera
+            .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
 
         self.last_mouse_x = state.input.mouse_x;
         self.last_mouse_y = state.input.mouse_y;
@@ -166,20 +168,4 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
     if !lock_pitch {
         state.camera.up = Unit::new_unchecked(cam_up);
     }
-}
-
-fn update_camera_transforms(state: &mut AppState) {
-    state.camera.p = Matrix4::new_perspective(
-        state.canvas_width as f64 / state.canvas_height as f64,
-        state.camera.fov_v.to_radians() as f64,
-        state.camera.near as f64,
-        state.camera.far as f64,
-    );
-    state.camera.p_inv = state.camera.p.try_inverse().unwrap();
-
-    state.camera.v = Matrix4::look_at_rh(&state.camera.pos, &state.camera.target, &state.camera.up);
-    if let Some(trans) = state.camera.reference_translation {
-        state.camera.v *= Translation3::from(-trans).to_homogeneous();
-    }
-    state.camera.v_inv = state.camera.v.try_inverse().unwrap();
 }

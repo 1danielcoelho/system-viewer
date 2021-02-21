@@ -624,7 +624,8 @@ impl InterfaceManager {
                     .resizable(false)
                     .scroll(false)
                     .collapsible(false)
-                    .show(&ui.ctx(), |_| {});
+                    .show(&ui.ctx(), |_| {})
+                    .unwrap();
             }
 
             if let Some(response) = response {

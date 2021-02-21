@@ -9,11 +9,11 @@ impl TransformUpdateSystem {
     pub fn run(&self, state: &mut AppState, scene: &mut Scene) {
         concatenate_parent_transforms(scene);
 
+        update_reference_translation(state, scene);
+
         handle_reference_changes(state, scene);
 
         handle_go_to(state, scene);
-
-        update_reference_translation(state, scene);
     }
 }
 
@@ -58,7 +58,8 @@ fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
 /// If we have a `state.camera.next_reference_entity`, this will update the camera `pos`/`target`/`up` to be with respect to
 /// that entity's transform instead.
 ///
-/// This function expects that world transforms are finalized.
+/// This function expects that world transforms are finalized, and that referen_translation is
+/// up-to-date
 fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let old_entity = &mut state.camera.reference_entity;
     let new_entity = &mut state.camera.next_reference_entity;
@@ -81,13 +82,11 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let new_entity = new_entity.as_ref().unwrap();
     match new_entity {
         ReferenceChange::TrackKeepLocation(new_entity) => {
-            let old_to_world =
-                match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
-                    Some(old_comp) => {
-                        Translation3::from(old_comp.get_world_transform().trans).to_homogeneous()
-                    }
-                    None => Matrix4::identity(),
-                };
+
+            let old_to_world = match state.camera.reference_translation {
+                Some(old_trans) => Translation3::from(old_trans).to_homogeneous(),
+                None => Matrix4::identity(),
+            };
 
             let world_to_new = Translation3::from(
                 -scene
@@ -109,13 +108,10 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
             state.camera.reference_entity = Some(*new_entity);
         }
         ReferenceChange::Clear => {
-            let old_to_world =
-                match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
-                    Some(old_comp) => {
-                        Translation3::from(old_comp.get_world_transform().trans).to_homogeneous()
-                    }
-                    None => Matrix4::identity(),
-                };
+            let old_to_world = match state.camera.reference_translation {
+                Some(old_trans) => Translation3::from(old_trans).to_homogeneous(),
+                None => Matrix4::identity(),
+            };
 
             state.camera.pos = old_to_world.transform_point(&state.camera.pos);
             state.camera.up = Unit::new_normalize(old_to_world.transform_vector(&state.camera.up));
@@ -123,8 +119,16 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
             state.camera.reference_entity = None;
         }
     };
-    
-    state.camera.next_reference_entity = None;
+
+    // If we changed reference, we need to cache the reference translation again
+    // so that other calculations done this frame are correct
+    update_reference_translation(state, scene);
+
+    state
+        .camera
+        .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
+
+    state.camera.next_reference_entity = None; 
 }
 
 fn handle_go_to(state: &mut AppState, scene: &mut Scene) {

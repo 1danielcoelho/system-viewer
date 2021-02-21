@@ -98,6 +98,22 @@ impl Camera {
             ndc.z > 0.0 && ndc.z < 1.0,
         );
     }
+
+    pub fn update_transforms(&mut self, aspect_ratio: f64) {
+        self.p = Matrix4::new_perspective(
+            aspect_ratio,
+            self.fov_v.to_radians() as f64,
+            self.near as f64,
+            self.far as f64,
+        );
+        self.p_inv = self.p.try_inverse().unwrap();
+
+        self.v = Matrix4::look_at_rh(&self.pos, &self.target, &self.up);
+        if let Some(trans) = self.reference_translation {
+            self.v *= Translation3::from(-trans).to_homogeneous();
+        }
+        self.v_inv = self.v.try_inverse().unwrap();
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

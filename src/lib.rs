@@ -78,7 +78,10 @@ pub fn initialize() {
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
-    fetch_text("public/scenes/_auto_load_manifest.txt", "auto_load_manifest");
+    fetch_text(
+        "public/scenes/_auto_load_manifest.txt",
+        "auto_load_manifest",
+    );
 
     fetch_text("public/database/artificial.json", "body_database");
     fetch_text("public/database/asteroids.json", "body_database");
@@ -131,6 +134,14 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
     STATE.with(|s| {
         if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
             let s = ref_mut_s.as_mut().unwrap();
+
+            // Framerate limiter
+            // let limit_fps = 1.0;
+            // let now_s = (js_sys::Date::now() - s.start_s) / 1000.0;
+            // let real_delta_s = now_s - s.last_frame_s;
+            // if real_delta_s < 1.0 / limit_fps {
+            //     return;
+            // }
 
             update_state(s, window, canvas);
 

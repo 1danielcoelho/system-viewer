@@ -489,16 +489,16 @@ response |= ui.add(label);
         - Allow leaving camera pos/target/up as None and just use reference, so that it does a GoTo when loading the scene and figures it out by itself
         - Actually implement setting initial time and reference from scene desc
             - Set initial time
-            - Metadata component
+            > - Metadata component
                 > - Move entity names onto it
                     > - Gave up on this for now because names are fetched very frequently by the UI, and I don't want to go through get_component every time
                     > - Will have to have some consumer code start using entity ids for display though
                 > - Store body id and description on it
                 > - Linear search for body id when setting reference (I don't see it being that useful yet)
-                - Fix 1 frame flicker when setting camera reference at first
+                > - Fix 1 frame flicker when setting camera reference at first
             > - How to handle the choice between osc_element and state_vector?
                 > - This is worthless now as I don't want the ellipses back for the MVP
-            - Crash when closing a scene
+            - Crash when closing a scene (should reset to empty)
     - Add some default color/texture to the body schema. I think I had colors for all planets from before?
 - Scene handling
     > - I think I should put the scene description inside the created Scene?
@@ -506,6 +506,7 @@ response |= ui.add(label);
     > - Reset seleciton when opening scene
     - Option to reset to start
         - Just open the current scene again
+        - Change open button to 'reset'
     - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
     > - Unload scene when switching away from it
 - Do something for movement speed, it's almost always unexpected
@@ -520,11 +521,16 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 
 # Known bugs
+- Real weird "headlight" effect when I get close to any mesh?
+- What's the point of saving state if I dump it every time any scene is loaded anyway?
+- Hover labels shouldn't show when right click and dragging
 - Fix firefox dragging bug
 - Hover label shouldn't show on top of selected label or other windows
 - Should be able to click through the hover label (it blocks all mouse clicks)
 - Position of labels when body is off screen is not correct, it flails everywhere
 - Need better prediction of label size to prevent it from ever leaving the canvas
+
+# Expand on framerate limiter to allow frame stepping
 
 # Lerp when going to / point towards
 
