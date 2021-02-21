@@ -641,7 +641,9 @@ impl InterfaceManager {
                         cols[0].label("Simulation date:");
                         cols[1].label(format!(
                             "{}",
-                            julian_date_number_to_date(Jdn(state.sim_time_s / 86400.0 + J2000_JDN.0))
+                            julian_date_number_to_date(Jdn(
+                                state.sim_time_s / 86400.0 + J2000_JDN.0
+                            ))
                         ))
                     });
 
@@ -987,7 +989,7 @@ impl InterfaceManager {
                                     )
                                     .on_hover_text("Close this scene");
                                 if close_resp.clicked {
-                                    scene_man.delete_scene(&self.selected_scene_desc_name);
+                                    scene_man.set_scene("empty", res_man, state);
                                 }
                             });
                         });

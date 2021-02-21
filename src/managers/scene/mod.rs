@@ -80,9 +80,9 @@ impl SceneManager {
         }
 
         // Discard previous scene and reset state
-        if let Some(main) = &self.main {
-            self.loaded_scenes.remove(main);
-        }        
+        if let Some(main) = self.main.clone() {
+            self.delete_scene(&main);
+        }
         *state = AppState::new();
 
         // Set new scene
@@ -188,13 +188,22 @@ impl SceneManager {
     /// Completely unloads the scene with `identifier`. The next time `set_scene` is called with
     /// `identifier`, it may need to be re-constructed
     pub fn delete_scene(&mut self, identifier: &str) {
+        // Never delete the empty scene as that is our "fallback" scene
+        if identifier == "empty" {
+            return;
+        }
+
         if let Some(main_name) = self.main.as_ref() {
             if main_name == identifier {
                 self.main = Some(String::from("empty"));
             }
         }
 
-        log::info!("Unloading scene '{}'", identifier);
+        log::info!(
+            "Unloading scene '{}'. Scene is now '{:?}'",
+            identifier,
+            self.main
+        );
 
         self.loaded_scenes.remove(identifier);
     }

@@ -42,17 +42,25 @@ fn concatenate_parent_transforms(scene: &mut Scene) {
 /// This so that the camera and other consumers don't have to all poke around the scene to find it
 /// Plus this way it is always up to date and a single consistent value throughout all uses
 fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
-    state.camera.reference_translation = if let Some(ref_ent) = state.camera.reference_entity {
-        Some(
-            scene
-                .get_component::<TransformComponent>(ref_ent)
-                .unwrap()
-                .get_world_transform()
-                .trans,
-        )
-    } else {
-        None
-    };
+    if state.camera.reference_entity.is_none() {
+        state.camera.reference_translation = None;
+        return;
+    }
+
+    let ref_ent = state.camera.reference_entity.unwrap();
+
+    let trans = scene
+        .get_component::<TransformComponent>(ref_ent)
+        .and_then(|c| Some(c.get_world_transform().trans));
+
+    if trans.is_none() {
+        log::warn!(
+            "Found no transform component for tracked entity '{:?}'",
+            ref_ent
+        );
+    }
+
+    state.camera.reference_translation = trans;
 }
 
 /// If we have a `state.camera.next_reference_entity`, this will update the camera `pos`/`target`/`up` to be with respect to
@@ -82,7 +90,6 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let new_entity = new_entity.as_ref().unwrap();
     match new_entity {
         ReferenceChange::TrackKeepLocation(new_entity) => {
-
             let old_to_world = match state.camera.reference_translation {
                 Some(old_trans) => Translation3::from(old_trans).to_homogeneous(),
                 None => Matrix4::identity(),
@@ -128,7 +135,7 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
         .camera
         .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
 
-    state.camera.next_reference_entity = None; 
+    state.camera.next_reference_entity = None;
 }
 
 fn handle_go_to(state: &mut AppState, scene: &mut Scene) {
