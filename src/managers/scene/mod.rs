@@ -82,6 +82,8 @@ impl SceneManager {
 
             state.camera.next_reference_entity = Some(ReferenceChange::Clear);
             state.camera.entity_going_to = None;
+            state.selection.clear();
+            state.hovered.clear();
 
             // Check if we have a description for that scene (they should have same name)
             if let Some(desc) = self.descriptions.get(identifier) {

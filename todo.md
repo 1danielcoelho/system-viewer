@@ -485,18 +485,20 @@ response |= ui.add(label);
     - Scenes in ron files
         > - Separate folder for scenes
         > - One scene per ron file (instead of scene_list.ron)
-        - Actually implement setting initial time and reference from scene desc
         > - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
+        - Actually implement setting initial time and reference from scene desc
             - Metadata component
                 - Move entity names onto it
-                - Store body id and description on it
-                - Linear search for body id when setting reference (I don't see it being that useful yet)
+                    - Will have to have some consumer code start using entity ids for display though
+                > - Store body id and description on it
+                > - Linear search for body id when setting reference (I don't see it being that useful yet)
+                - Fix 1 frame flicker when setting camera reference at first
             - How to handle the choice between osc_element and state_vector?
     - Add some default color/texture to the body schema. I think I had colors for all planets from before?
 - Scene handling
-    - I think I should put the scene description inside the created Scene?
-    - Set time, camera position and reference according to scene description
-    - Reset seleciton when opening scene
+    > - I think I should put the scene description inside the created Scene?
+    > - Set time, camera position and reference according to scene description
+    > - Reset seleciton when opening scene
     - Option to reset to start
         - Just open the current scene again
     - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
@@ -511,7 +513,6 @@ response |= ui.add(label);
 - Update egui
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
-
 
 # Known bugs
 - Fix firefox dragging bug
