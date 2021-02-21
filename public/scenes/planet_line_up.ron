@@ -1,13 +1,14 @@
+#![enable(implicit_some)]
 (
     name: "Planet line up",
     description: "All planets lined up next to eachother",
     time: "J2000",
     simulation_scale: 500,
-    reference: "599",
+    tracking: "599",
     camera_pos: [
-        0,
-        1,
-        2,
+        -112,
+        1319,
+        116,
     ],
     camera_up: [
         0,

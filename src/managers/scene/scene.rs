@@ -1,6 +1,6 @@
 use crate::components::{
-    Component, LightComponent, MeshComponent, OrbitalComponent, PhysicsComponent,
-    TransformComponent,
+    Component, LightComponent, MeshComponent, MetadataComponent, OrbitalComponent,
+    PhysicsComponent, TransformComponent,
 };
 use crate::managers::scene::component_storage::{
     ComponentStorage, HashStorage, PackedStorage, SparseStorage,
@@ -46,8 +46,7 @@ pub struct Scene {
     pub transform: SparseStorage<TransformComponent>,
     pub light: HashStorage<LightComponent>,
     pub orbital: HashStorage<OrbitalComponent>,
-
-    _private: (),
+    pub metadata: HashStorage<MetadataComponent>,
 }
 
 // Main interface
@@ -67,7 +66,7 @@ impl Scene {
             transform: SparseStorage::new(entity_to_index.clone()),
             light: HashStorage::new(),
             orbital: HashStorage::new(),
-            _private: (),
+            metadata: HashStorage::new(),
         }
     }
 

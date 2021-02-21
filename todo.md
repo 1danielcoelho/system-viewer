@@ -486,7 +486,11 @@ response |= ui.add(label);
         > - Separate folder for scenes
         > - One scene per ron file (instead of scene_list.ron)
         - Actually implement setting initial time and reference from scene desc
-        - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
+        > - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
+            - Metadata component
+                - Move entity names onto it
+                - Store body id and description on it
+                - Linear search for body id when setting reference (I don't see it being that useful yet)
             - How to handle the choice between osc_element and state_vector?
     - Add some default color/texture to the body schema. I think I had colors for all planets from before?
 - Scene handling
@@ -496,14 +500,18 @@ response |= ui.add(label);
     - Option to reset to start
         - Just open the current scene again
     - Have a few nice scenes setup (e.g. tons of asteroids, all jupiter's satellites, etc.)
+    - Unload scene when switching away from it
 - Do something for movement speed, it's almost always unexpected
 - Okay-ish results on the simulation for now, we can improve later
 - Basic solar system simulation at J2000 with bodies in the right size
 - Passable materials/colors for bodies
+- Rings?
+- Compare that relative size
 - Correct-ish sun brightness
 - Update egui
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
+
 
 # Known bugs
 - Fix firefox dragging bug

@@ -1,9 +1,10 @@
+#![enable(implicit_some)]
 (
     name: "Jovian system",
     description: "Solar system barycenter, Sun, Jupiter and it's system barycenter, as well as 10 of its moons",
     time: "J2000",
     simulation_scale: 500,
-    reference: "599",
+    tracking: "599",
     camera_pos: [
         0,
         1,

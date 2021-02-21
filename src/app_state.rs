@@ -22,7 +22,8 @@ impl SimulationScale {
 
 #[derive(Serialize, Deserialize)]
 pub enum ReferenceChange {
-    Track(Entity),
+    TrackKeepLocation(Entity),
+    TrackKeepCoords(Entity),
     Clear,
 }
 

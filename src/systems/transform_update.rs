@@ -64,7 +64,12 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let new_entity = &mut state.camera.next_reference_entity;
 
     // Don't do anything if asked to changed to the same entity
-    if let Some(ReferenceChange::Track(entity)) = new_entity {
+    if let Some(ReferenceChange::TrackKeepLocation(entity)) = new_entity {
+        if old_entity.is_some() && *entity == old_entity.unwrap() {
+            *new_entity = None;
+        }
+    }
+    if let Some(ReferenceChange::TrackKeepCoords(entity)) = new_entity {
         if old_entity.is_some() && *entity == old_entity.unwrap() {
             *new_entity = None;
         }
@@ -74,39 +79,51 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     }
 
     let new_entity = new_entity.as_ref().unwrap();
-
-    let old_to_world = match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
-        Some(old_comp) => Translation3::from(old_comp.get_world_transform().trans).to_homogeneous(),
-        None => Matrix4::identity(),
-    };
-
-    let world_to_new = match new_entity {
-        ReferenceChange::Track(new_entity) => Translation3::from(
-            -scene
-                .get_component::<TransformComponent>(*new_entity)
-                .unwrap()
-                .get_world_transform()
-                .trans,
-        )
-        .to_homogeneous(),
-        ReferenceChange::Clear => Matrix4::identity(),
-    };
-
-    let trans = world_to_new * old_to_world;
-
-    state.camera.pos = trans.transform_point(&state.camera.pos);
-    state.camera.up = Unit::new_normalize(trans.transform_vector(&state.camera.up));
-
     match new_entity {
-        ReferenceChange::Track(new_entity) => {
+        ReferenceChange::TrackKeepLocation(new_entity) => {
+            let old_to_world =
+                match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
+                    Some(old_comp) => {
+                        Translation3::from(old_comp.get_world_transform().trans).to_homogeneous()
+                    }
+                    None => Matrix4::identity(),
+                };
+
+            let world_to_new = Translation3::from(
+                -scene
+                    .get_component::<TransformComponent>(*new_entity)
+                    .unwrap()
+                    .get_world_transform()
+                    .trans,
+            )
+            .to_homogeneous();
+
+            let trans = world_to_new * old_to_world;
+
+            state.camera.pos = trans.transform_point(&state.camera.pos);
+            state.camera.up = Unit::new_normalize(trans.transform_vector(&state.camera.up));
             state.camera.target = Point3::new(0.0, 0.0, 0.0);
             state.camera.reference_entity = Some(*new_entity);
         }
+        ReferenceChange::TrackKeepCoords(new_entity) => {
+            state.camera.reference_entity = Some(*new_entity);
+        }
         ReferenceChange::Clear => {
-            state.camera.target = trans.transform_point(&state.camera.target);
+            let old_to_world =
+                match old_entity.and_then(|e| scene.get_component::<TransformComponent>(e)) {
+                    Some(old_comp) => {
+                        Translation3::from(old_comp.get_world_transform().trans).to_homogeneous()
+                    }
+                    None => Matrix4::identity(),
+                };
+
+            state.camera.pos = old_to_world.transform_point(&state.camera.pos);
+            state.camera.up = Unit::new_normalize(old_to_world.transform_vector(&state.camera.up));
+            state.camera.target = old_to_world.transform_point(&state.camera.target);
             state.camera.reference_entity = None;
         }
     };
+    
     state.camera.next_reference_entity = None;
 }
 

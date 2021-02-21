@@ -1,5 +1,7 @@
 use crate::app_state::{AppState, ButtonState, ReferenceChange, SimulationScale};
-use crate::components::{MeshComponent, OrbitalComponent, PhysicsComponent, TransformComponent};
+use crate::components::{
+    MeshComponent, MetadataComponent, OrbitalComponent, PhysicsComponent, TransformComponent,
+};
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Entity, Scene, SceneManager};
@@ -582,7 +584,7 @@ impl InterfaceManager {
                                 let but_res = ui.button("🎥").on_hover_text("Track");
                                 if but_res.clicked {
                                     entity_to_track =
-                                        Some(ReferenceChange::Track(*selected_entity));
+                                        Some(ReferenceChange::TrackKeepLocation(*selected_entity));
                                 }
                             }
 
@@ -825,7 +827,7 @@ impl InterfaceManager {
                                             ui.button("🎥").on_hover_text("Track this entity");
                                         if but_res.clicked {
                                             state.camera.next_reference_entity =
-                                                Some(ReferenceChange::Track(selection));
+                                                Some(ReferenceChange::TrackKeepLocation(selection));
                                         }
 
                                         but_res
@@ -863,6 +865,12 @@ impl InterfaceManager {
                                 scene.get_component_mut::<PhysicsComponent>(selection)
                             {
                                 ui.collapsing("Physics component", |ui| comp.draw_details_ui(ui));
+                            }
+
+                            if let Some(comp) =
+                                scene.get_component_mut::<MetadataComponent>(selection)
+                            {
+                                ui.collapsing("Metadata component", |ui| comp.draw_details_ui(ui));
                             }
                         }
                     }
@@ -989,8 +997,12 @@ impl InterfaceManager {
                                 });
 
                                 ui.columns(2, |cols| {
-                                    cols[0].label("Reference");
-                                    cols[1].label(&desc.reference);
+                                    cols[0].label("Tracking");
+                                    cols[1].label(
+                                        desc.tracking
+                                            .as_ref()
+                                            .unwrap_or(&String::from("Not tracking")),
+                                    );
                                 });
 
                                 let mut num_bodies = 0;

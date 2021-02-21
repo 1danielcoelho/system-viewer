@@ -3,7 +3,6 @@
     description: "Solar system barycenter, Sun, barycenters of all planets, all major planets, the Moon, Phobos and Deimos",
     time: "J2000",
     simulation_scale: 500,
-    reference: "599",
     camera_pos: [
         0.0,
         1.0,

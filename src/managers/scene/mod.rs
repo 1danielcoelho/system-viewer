@@ -2,15 +2,12 @@ use super::ResourceManager;
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
-use crate::managers::resource::body_description::OrbitalElements;
-use crate::managers::resource::body_description::StateVector;
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::scene::description::{BodyMotionType, SceneDescription};
+use crate::managers::scene::description::SceneDescription;
 use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
 use crate::utils::string::get_unique_name;
 use crate::utils::transform::Transform;
-use crate::utils::units::{Jdn, Mm, Rad};
 use crate::utils::units::J2000_JDN;
 use na::*;
 pub use scene::*;
@@ -80,15 +77,37 @@ impl SceneManager {
             res_man.provision_scene_assets(found_scene);
             self.main = Some(identifier.to_string());
 
+            // Need a new reference to the scene here because reusing found_scene trips borrow checker
+            let main_scene = self.get_main_scene().unwrap();
+
             state.camera.next_reference_entity = Some(ReferenceChange::Clear);
             state.camera.entity_going_to = None;
 
             // Check if we have a description for that scene (they should have same name)
             if let Some(desc) = self.descriptions.get(identifier) {
+                state.simulation_speed = desc.simulation_scale;
+
+                // Camera target (already wrt. reference)
                 state.camera.pos = desc.camera_pos;
                 state.camera.up = desc.camera_up;
                 state.camera.target = desc.camera_target;
-                state.simulation_speed = desc.simulation_scale;
+                if let Some(tracking) = &desc.tracking {
+                    // Ugh.. this shouldn't be too often though
+                    for (entity, component) in main_scene.metadata.iter() {
+                        if let Some(id) = component.get_metadata("body_id") {
+                            if id == tracking {
+                                state.camera.next_reference_entity =
+                                    Some(ReferenceChange::TrackKeepCoords(*entity));
+
+                                log::info!(
+                                    "Setting initial tracked entity to '{:?}'",
+                                    main_scene.get_entity_name(*entity)
+                                );
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 assert!(desc.time == String::from("J2000"));
                 state.sim_time_days = 0.0;

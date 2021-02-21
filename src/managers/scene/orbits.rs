@@ -1,6 +1,8 @@
 use super::description::ResolvedBodyMotionType;
 use crate::components::light::LightType;
-use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
+use crate::components::{
+    LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
+};
 use crate::managers::resource::body_description::{BodyDescription, BodyType};
 use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
@@ -178,6 +180,46 @@ pub fn add_free_body(
         light_comp.color = Vector3::new(1.0, 1.0, 1.0);
         light_comp.intensity = 5E10;
         light_comp.light_type = LightType::Point;
+    }
+
+    let meta_comp = scene.add_component::<MetadataComponent>(body_ent);
+    meta_comp.set_metadata(
+        "body_id",
+        &body.id.as_ref().unwrap_or(&String::from("None")),
+    );
+    meta_comp.set_metadata("body_type", &format!("{:?}", body.body_type));
+    for (key, value) in body.meta.iter() {
+        meta_comp.set_metadata(key, value);
+    }
+    if let Some(mass) = body.mass {
+        meta_comp.set_metadata("body_mass", &mass.to_string());
+    }
+    if let Some(radius) = body.radius {
+        meta_comp.set_metadata("body_radius", &radius.to_string());
+    }
+    if let Some(albedo) = body.albedo {
+        meta_comp.set_metadata("body_albedo", &albedo.to_string());
+    }
+    if let Some(magnitude) = body.magnitude {
+        meta_comp.set_metadata("body_magnitude", &magnitude.to_string());
+    }
+    if let Some(rotation_period) = body.rotation_period {
+        meta_comp.set_metadata("body_rotation_period", &rotation_period.to_string());
+    }
+    if let Some(rotation_axis) = body.rotation_axis {
+        meta_comp.set_metadata(
+            "body_rotation_period",
+            &format!(
+                "[{}, {}, {}]",
+                rotation_axis[0], rotation_axis[1], rotation_axis[2]
+            ),
+        );
+    }
+    if let Some(spec) = &body.spec_smassii {
+        meta_comp.set_metadata("body_spec_smassii", &spec);
+    }
+    if let Some(spec) = &body.spec_tholen {
+        meta_comp.set_metadata("body_spec_tholen", &spec);
     }
 }
 
