@@ -73,17 +73,23 @@ impl SceneManager {
             self.load_scene(identifier, res_man);
         }
 
+        // Don't start resetting/unloading stuff if we have nowhere else to go
+        // If this failed to load I'm sure we'll have another error message about it too
+        if self.get_scene(identifier).is_none() {
+            return;
+        }
+
+        // Discard previous scene and reset state
+        if let Some(main) = &self.main {
+            self.loaded_scenes.remove(main);
+        }        
+        *state = AppState::new();
+
+        // Set new scene
         if let Some(found_scene) = self.get_scene_mut(identifier) {
             res_man.provision_scene_assets(found_scene);
             self.main = Some(identifier.to_string());
-
-            // Need a new reference to the scene here because reusing found_scene trips borrow checker
             let main_scene = self.get_main_scene().unwrap();
-
-            state.camera.next_reference_entity = Some(ReferenceChange::Clear);
-            state.camera.entity_going_to = None;
-            state.selection.clear();
-            state.hovered.clear();
 
             // Check if we have a description for that scene (they should have same name)
             if let Some(desc) = self.descriptions.get(identifier) {
