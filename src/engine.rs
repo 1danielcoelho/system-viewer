@@ -14,7 +14,7 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new() -> Self {
-        let mut new_engine = Self {
+        let new_engine = Self {
             scene_man: SceneManager::new(),
             res_man: ResourceManager::new(),
             sys_man: SystemManager::new(),
@@ -22,10 +22,6 @@ impl Engine {
             input_man: InputManager::new(),
             int_man: InterfaceManager::new(),
         };
-
-        new_engine
-            .scene_man
-            .set_scene("empty", &mut new_engine.res_man, None);
 
         return new_engine;
     }

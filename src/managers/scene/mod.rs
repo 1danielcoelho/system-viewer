@@ -1,30 +1,23 @@
 use super::ResourceManager;
-use crate::app_state::AppState;
+use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::description::SceneDescription;
 use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
+use crate::utils::string::get_unique_name;
+use crate::utils::transform::Transform;
 use crate::utils::units::J2000_JDN;
-use crate::utils::{string::get_unique_name, transform::Transform};
 use na::Vector3;
-use std::collections::HashMap;
-use web_sys::console::warn;
-
 pub use scene::*;
+use std::collections::HashMap;
 
 pub mod component_storage;
 pub mod description;
 pub mod gltf;
 pub mod orbits;
 mod scene;
-
-enum LoadSceneResult<'a> {
-    HardCoded(&'a mut Scene),
-    FromDesc(&'a mut Scene, SceneDescription),
-    Failed(),
-}
 
 pub struct SceneManager {
     main: Option<String>,
@@ -63,12 +56,12 @@ impl SceneManager {
     }
 
     /// Sets the current scene to one with `identifier`. Will load/create the scene
-    /// if we can/know how to. This includes constructing new `Scene` from `SceneDescription`s
+    /// if we can/know how to. This includes constructing new `Scene`s from `SceneDescription`s
     pub fn set_scene(
         &mut self,
         identifier: &str,
         res_man: &mut ResourceManager,
-        state: Option<&mut AppState>,
+        state: &mut AppState,
     ) {
         if let Some(main) = &self.main {
             if main.as_str() == identifier {
@@ -77,32 +70,32 @@ impl SceneManager {
         };
 
         if !self.loaded_scenes.contains_key(identifier) {
-            let res = self.load_scene(identifier, res_man);
-
-            // Setup app state just like the scene wants (time, camera position, etc.)
-            if let Some(state) = state {
-                if let LoadSceneResult::FromDesc(scene, desc) = res {
-                    state.camera.pos = desc.camera_pos;
-                    state.camera.up = desc.camera_up;
-                    state.camera.target = desc.camera_target;
-                    state.simulation_speed = desc.simulation_scale;
-
-                    // TODO properly
-                    assert!(desc.time == String::from("J2000"));
-                    state.sim_time_days = 0.0;
-                }
-            }
+            self.load_scene(identifier, res_man);
         }
 
         if let Some(found_scene) = self.get_scene_mut(identifier) {
             res_man.provision_scene_assets(found_scene);
             self.main = Some(identifier.to_string());
+
+            state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+            state.camera.entity_going_to = None;
+
+            // Check if we have a description for that scene (they should have same name)
+            if let Some(desc) = self.descriptions.get(identifier) {
+                state.camera.pos = desc.camera_pos;
+                state.camera.up = desc.camera_up;
+                state.camera.target = desc.camera_target;
+                state.simulation_speed = desc.simulation_scale;
+
+                assert!(desc.time == String::from("J2000"));
+                state.sim_time_days = 0.0;
+            }
         } else {
             log::warn!("Scene with identifier '{}' not found!", identifier);
         }
     }
 
-    fn load_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) -> LoadSceneResult {
+    fn load_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) -> &mut Scene {
         match identifier {
             "test" => self.load_test_scene(res_man),
             "teal" => self.load_teal_sphere_scene(res_man),
@@ -207,7 +200,7 @@ impl SceneManager {
         return Ok(());
     }
 
-    fn load_teal_sphere_scene(&mut self, res_man: &mut ResourceManager) -> LoadSceneResult {
+    fn load_teal_sphere_scene(&mut self, res_man: &mut ResourceManager) -> &mut Scene {
         let scene = self.new_scene("teal_sphere").unwrap();
 
         // Floor
@@ -263,10 +256,10 @@ impl SceneManager {
         let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
-        return LoadSceneResult::HardCoded(scene);
+        return scene;
     }
 
-    fn load_test_scene(&mut self, res_man: &mut ResourceManager) -> LoadSceneResult {
+    fn load_test_scene(&mut self, res_man: &mut ResourceManager) -> &mut Scene {
         let scene = self.new_scene("test").unwrap();
 
         let sun_color: [f32; 3] = [1.0, 1.0, 0.8];
@@ -359,10 +352,10 @@ impl SceneManager {
         let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
-        return LoadSceneResult::HardCoded(scene);
+        return scene;
     }
 
-    fn load_planetarium_scene(&mut self, res_man: &mut ResourceManager) -> LoadSceneResult {
+    fn load_planetarium_scene(&mut self, res_man: &mut ResourceManager) -> &mut Scene {
         let scene = self.new_scene("planetarium").unwrap();
 
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "sun_mat");
@@ -624,14 +617,14 @@ impl SceneManager {
         let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
-        return LoadSceneResult::HardCoded(scene);
+        return scene;
     }
 
     fn load_scene_from_desc(
         &mut self,
         identifier: &str,
         res_man: &mut ResourceManager,
-    ) -> LoadSceneResult {
+    ) -> &mut Scene {
         let desc = self.descriptions.get(identifier).cloned().unwrap();
 
         // Make Rust happy
@@ -640,9 +633,6 @@ impl SceneManager {
         let time = J2000_JDN;
 
         let scene = self.new_scene(&name).unwrap();
-
-        let db_state_vectors = res_man.take_state_vectors_database();
-        let db_osc_elements = res_man.take_osc_elements_database();
 
         for (db_name, body_ids) in bodies.iter() {
             let db = res_man.take_body_database(db_name);
@@ -667,9 +657,7 @@ impl SceneManager {
                 }
 
                 // resolve what to pass to free_body (osc elements or state vectors)
-                if let Some(motion) =
-                    resolve_motion_type(body_id, motion_type, &db_state_vectors, &db_osc_elements, time)
-                {
+                if let Some(motion) = resolve_motion_type(body_id, motion_type, res_man, time) {
                     add_free_body(scene, time, body.unwrap(), &motion, res_man);
                 } else {
                     log::warn!("Failed to resolve motion for body '{}'", body_id);
@@ -678,9 +666,6 @@ impl SceneManager {
 
             res_man.set_body_database(db_name, db);
         }
-
-        res_man.set_state_vectors_database(db_state_vectors);
-        res_man.set_osc_elements_database(db_osc_elements);
 
         // Grid
         let grid = scene.new_entity(Some("grid"));
@@ -696,6 +681,6 @@ impl SceneManager {
         let mesh_comp = scene.add_component::<MeshComponent>(axes);
         mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
 
-        return LoadSceneResult::FromDesc(scene, desc);
+        return scene;
     }
 }

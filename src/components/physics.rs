@@ -85,8 +85,6 @@ impl DetailsUI for PhysicsComponent {
             cols[1].add(egui::DragValue::f64(&mut self.mass));
         });
 
-        ui.collapsing("Inv inertia:", |ui| {});
-
         ui.collapsing("Last transform:", |ui| {
             ui.columns(2, |cols| {
                 cols[0].label("Pos [Mm]:");

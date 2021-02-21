@@ -6,26 +6,20 @@ extern crate ron;
 extern crate serde;
 extern crate wasm_bindgen;
 
-use crate::utils::web::local_storage_remove;
-use crate::{
-    app_state::AppState,
-    engine::Engine,
-    utils::{
-        gl::setup_gl_context,
-        web::{force_full_canvas, get_canvas, get_gl_context, setup_event_handlers},
-    },
+use crate::app_state::AppState;
+use crate::engine::Engine;
+use crate::utils::gl::setup_gl_context;
+use crate::utils::web::{
+    force_full_canvas, get_canvas, get_gl_context, local_storage_remove, setup_event_handlers,
 };
 use egui::Ui;
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
-use winit::{
-    event::Event,
-    event_loop::{ControlFlow, EventLoop},
-    platform::web::WindowBuilderExtWebSys,
-    window::{Window, WindowBuilder},
-};
+use winit::event::Event;
+use winit::event_loop::{ControlFlow, EventLoop};
+use winit::platform::web::WindowBuilderExtWebSys;
+use winit::window::{Window, WindowBuilder};
 
 mod app_state;
 mod components;
@@ -102,7 +96,7 @@ pub async fn start_loop() {
                 if let Ok(mut ref_mut_e) = e.try_borrow_mut() {
                     let e = ref_mut_e.as_mut().unwrap();
 
-                    e.scene_man.set_scene("test", &mut e.res_man, Some(s));
+                    e.scene_man.set_scene("test", &mut e.res_man, s);
                 }
             });
         }

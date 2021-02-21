@@ -7,9 +7,10 @@ use crate::managers::scene::component_storage::{
 };
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
+use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::hash::Hash;
 use std::rc::Rc;
-use std::{cmp::Reverse, hash::Hash};
 
 #[derive(Debug, Copy, Clone, Eq, Hash, Serialize, Deserialize)]
 pub struct Entity(u32);

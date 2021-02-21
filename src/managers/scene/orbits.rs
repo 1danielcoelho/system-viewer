@@ -1,17 +1,12 @@
-use std::collections::HashMap;
-
+use super::description::ResolvedBodyMotionType;
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
-use crate::managers::resource::body_description::{
-    BodyDescription, BodyType, OrbitalElements, StateVector,
-};
+use crate::managers::resource::body_description::{BodyDescription, BodyType};
 use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::units::Jdn;
 use nalgebra::Vector3;
-
-use super::description::ResolvedBodyMotionType;
 
 impl SceneManager {
     // pub fn load_bodies_into_scene(
@@ -145,7 +140,7 @@ pub fn add_free_body(
         scene.identifier
     );
 
-    // Check if we have a state vector close to the target epoch
+    // TODO: Handle elements
     let state_vector = match motion {
         ResolvedBodyMotionType::Vector(vec) => Some(vec),
         ResolvedBodyMotionType::Elements(_) => None,
@@ -191,13 +186,12 @@ pub fn add_free_body(
 pub fn resolve_motion_type(
     body_id: &str,
     received_type: &BodyMotionType,
-    state_vectors: &HashMap<String, Vec<StateVector>>,
-    osc_elements: &HashMap<String, Vec<OrbitalElements>>,
+    res_man: &mut ResourceManager,
     default_time: Jdn,
 ) -> Option<ResolvedBodyMotionType> {
     match received_type {
         BodyMotionType::DefaultVector => {
-            let vectors = state_vectors.get(body_id);
+            let vectors = res_man.get_state_vectors().get(body_id);
             if vectors.is_none() {
                 return None;
             };
@@ -224,10 +218,12 @@ pub fn resolve_motion_type(
                 log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
             }
 
-            return Some(ResolvedBodyMotionType::Vector(vectors[lowest_index].clone()));
+            return Some(ResolvedBodyMotionType::Vector(
+                vectors[lowest_index].clone(),
+            ));
         }
         BodyMotionType::DefaultElements => {
-            let elements = osc_elements.get(body_id);
+            let elements = res_man.get_osc_elements().get(body_id);
             if elements.is_none() {
                 return None;
             };
@@ -254,9 +250,15 @@ pub fn resolve_motion_type(
                 log::warn!("Using orbital elements '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", elements[lowest_index], lowest_delta, default_time.0, body_id);
             }
 
-            return Some(ResolvedBodyMotionType::Elements(elements[lowest_index].clone()));
+            return Some(ResolvedBodyMotionType::Elements(
+                elements[lowest_index].clone(),
+            ));
         }
-        BodyMotionType::CustomVector(vec) => return Some(ResolvedBodyMotionType::Vector(vec.clone())),
-        BodyMotionType::CustomElements(els) => return Some(ResolvedBodyMotionType::Elements(els.clone())),
+        BodyMotionType::CustomVector(vec) => {
+            return Some(ResolvedBodyMotionType::Vector(vec.clone()))
+        }
+        BodyMotionType::CustomElements(els) => {
+            return Some(ResolvedBodyMotionType::Elements(els.clone()))
+        }
     };
 }

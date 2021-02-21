@@ -591,22 +591,12 @@ impl ResourceManager {
         self.bodies.insert(db_name.to_owned(), db);
     }
 
-    /// Weird function to move the state vectors database out of the res manager to satisfy the borrow checker
-    /// in place where that would alias with a mutable reference to the res manager
-    pub fn take_state_vectors_database(&mut self) -> HashMap<String, Vec<StateVector>> {
-        return self.state_vectors;
+    pub fn get_state_vectors(&mut self) -> &HashMap<String, Vec<StateVector>> {
+        return &self.state_vectors;
     }
 
-    pub fn set_state_vectors_database(&mut self, db: HashMap<String, Vec<StateVector>>) {
-        self.state_vectors = db;
-    }
-
-    pub fn take_osc_elements_database(&mut self) -> HashMap<String, Vec<OrbitalElements>> {
-        return self.osc_elements;
-    }
-
-    pub fn set_osc_elements_database(&mut self, db: HashMap<String, Vec<OrbitalElements>>) {
-        self.osc_elements = db;
+    pub fn get_osc_elements(&mut self) -> &HashMap<String, Vec<OrbitalElements>> {
+        return &self.osc_elements;
     }
 
     pub fn get_body(&self, db_name: &str, body_id: &str) -> Result<&BodyDescription, String> {

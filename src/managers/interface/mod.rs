@@ -184,7 +184,7 @@ impl InterfaceManager {
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
     ) {
-        self.draw_pop_ups(state, scene_man, res_man);
+        self.draw_pop_ups(state, scene_man);
 
         self.draw_main_toolbar(state, scene_man, res_man);
 
@@ -253,7 +253,7 @@ impl InterfaceManager {
                                         .unwrap()
                                         .identifier
                                         .clone();
-                                    scene_man.set_scene(&new_scene_name, res_man, Some(state));
+                                    scene_man.set_scene(&new_scene_name, res_man, state);
                                 }
                                 total_res |= res;
 
@@ -270,7 +270,7 @@ impl InterfaceManager {
                                         .unwrap()
                                         .identifier
                                         .clone();
-                                    scene_man.set_scene(&new_scene_name, res_man, Some(state));
+                                    scene_man.set_scene(&new_scene_name, res_man, state);
                                 }
                                 total_res |= res;
 
@@ -468,12 +468,7 @@ impl InterfaceManager {
         self.draw_scene_browser(state, scene_man, res_man);
     }
 
-    fn draw_pop_ups(
-        &mut self,
-        state: &mut AppState,
-        scene_man: &mut SceneManager,
-        res_man: &mut ResourceManager,
-    ) {
+    fn draw_pop_ups(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
         let scene = scene_man.get_main_scene();
         if scene.is_none() {
             return;
@@ -627,7 +622,7 @@ impl InterfaceManager {
                     .resizable(false)
                     .scroll(false)
                     .collapsible(false)
-                    .show(&ui.ctx(), |ui| {});
+                    .show(&ui.ctx(), |_| {});
             }
 
             if let Some(response) = response {
@@ -941,13 +936,17 @@ impl InterfaceManager {
 
                             egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
                                 for (name, _) in scene_man.descriptions.iter() {
-                                    ui.radio_value(&mut self.selected_scene_desc_name, name.to_owned(), {
-                                        if name == &main_name {
-                                            name.to_owned() + " (active)"
-                                        } else {
-                                            name.to_owned()
-                                        }
-                                    });
+                                    ui.radio_value(
+                                        &mut self.selected_scene_desc_name,
+                                        name.to_owned(),
+                                        {
+                                            if name == &main_name {
+                                                name.to_owned() + " (active)"
+                                            } else {
+                                                name.to_owned()
+                                            }
+                                        },
+                                    );
                                 }
                             });
                         });
@@ -1015,7 +1014,7 @@ impl InterfaceManager {
                                     scene_man.set_scene(
                                         &self.selected_scene_desc_name,
                                         res_man,
-                                        Some(state),
+                                        state,
                                     );
                                 }
                             });

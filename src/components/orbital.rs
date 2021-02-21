@@ -5,7 +5,6 @@ use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::utils::transform::Transform;
 use crate::utils::units::Jdn;
-use egui::Ui;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -43,6 +42,4 @@ impl Component for OrbitalComponent {
     }
 }
 
-impl DetailsUI for OrbitalComponent {
-    fn draw_details_ui(&mut self, ui: &mut Ui) {}
-}
+impl DetailsUI for OrbitalComponent {}

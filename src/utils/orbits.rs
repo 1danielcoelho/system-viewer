@@ -1,61 +1,15 @@
-use crate::managers::resource::body_description::{BodyDescription, BodyType, OrbitalElements};
+use crate::managers::resource::body_description::OrbitalElements;
 use crate::utils::transform::Transform;
-use crate::utils::units::{Au, Deg, Jdn, Mm, Rad, J2000_JDN};
+use crate::utils::units::{Au, Deg, Jdn, Rad, J2000_JDN};
 use na::{Point3, UnitQuaternion, Vector3};
-use regex::Regex;
 use std::f64::consts::PI;
-
-lazy_static! {
-    static ref TARGET_BODY_NAME_RE: Regex = Regex::new(r"Target body name: ([^;]+?) \(").unwrap();
-    static ref TARGET_BODY_ID_RE: Regex =
-        Regex::new(r"Target body name: [^;]+? \((\d+)\)").unwrap();
-    static ref CENTER_BODY_NAME_RE: Regex = Regex::new(r"Center body name: ([^;]+?) \(").unwrap();
-    static ref CENTER_BODY_ID_RE: Regex =
-        Regex::new(r"Center body name: [^;]+? \((\d+)\)").unwrap();
-    static ref ECCENTRICITY_RE: Regex = Regex::new(r" EC= ([\d\-+eE.]+)").unwrap();
-    static ref PERIAPSIS_DISTANCE_RE: Regex = Regex::new(r" QR= ([\d\-+eE.]+)").unwrap();
-    static ref INCLINATION_RE: Regex = Regex::new(r" IN= ([\d\-+eE.]+)").unwrap();
-    static ref LONG_ASC_NODE_RE: Regex = Regex::new(r" OM= ([\d\-+eE.]+)").unwrap();
-    static ref ARG_PERIAPSIS_RE: Regex = Regex::new(r" W = ([\d\-+eE.]+)").unwrap();
-    static ref TIME_OF_PERIAPSIS_RE: Regex = Regex::new(r" Tp= ([\d\-+eE.]+)").unwrap();
-    static ref MEAN_MOTION_RE: Regex = Regex::new(r" N = ([\d\-+eE.]+)").unwrap();
-    static ref MEAN_ANOMALY_RE: Regex = Regex::new(r" MA= ([\d-+eE.]+)").unwrap();
-    static ref TRUE_ANOMALY_RE: Regex = Regex::new(r" TA= ([\d\-+eE.]+)").unwrap();
-    static ref SEMI_MAJOR_AXIS_RE: Regex = Regex::new(r" A = ([\d\-+eE.]+)").unwrap();
-    static ref APOAPSIS_DISTANCE_RE: Regex = Regex::new(r" AD= ([\d\-+eE.]+)").unwrap();
-    static ref SIDERAL_ORBIT_PERIOD_RE: Regex = Regex::new(r" PR= ([\d\-+eE.]+)").unwrap();
-    static ref MEAN_RADIUS_RE: Regex =
-        Regex::new(r"[R,r]adius[ \t\(\)IAU,]+km[ \t\)=]+([\d.x ]+)").unwrap();
-}
 
 /// Mm3 / (kg s2)
 pub const GRAVITATION_CONSTANT: f64 = 6.743E-29;
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
 
-fn float_from_match(s: &str, regex: &Regex) -> Option<f64> {
-    return regex
-        .captures(s)
-        .and_then(|c| c.get(1))
-        .and_then(|m| Some(m.as_str()))
-        .and_then(|s| s.parse().ok());
-}
-
-fn int_from_match(s: &str, regex: &Regex) -> Option<u32> {
-    return regex
-        .captures(s)
-        .and_then(|c| c.get(1))
-        .and_then(|m| Some(m.as_str()))
-        .and_then(|s| s.parse().ok());
-}
-
-fn string_from_match(s: &str, regex: &Regex) -> Option<String> {
-    return regex
-        .captures(s)
-        .and_then(|c| c.get(1))
-        .and_then(|m| Some(m.as_str().to_owned()));
-}
-
+#[allow(dead_code)]
 pub fn elements_to_circle_transform(elements: &OrbitalElements) -> Transform<f64> {
     let mut result = Transform::identity();
 

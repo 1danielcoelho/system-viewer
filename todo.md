@@ -483,8 +483,9 @@ response |= ui.add(label);
     > - Additional "state_vectors.json" file for known, reference state vectors (single file, each id has n state vectors, each vector contains epoch, sorted by epoch)
     > - Additional "osc_elements.json" for reference osculating elements (single file, each id has n elements, each element contains epoch and reference, sorted by epoch)
     - Scenes in ron files
-        - Separate folder for scenes
-        - One scene per ron file (instead of scene_list.ron)
+        > - Separate folder for scenes
+        > - One scene per ron file (instead of scene_list.ron)
+        - Actually implement setting initial time and reference from scene desc
         - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
             - How to handle the choice between osc_element and state_vector?
     - Add some default color/texture to the body schema. I think I had colors for all planets from before?
