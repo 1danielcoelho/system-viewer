@@ -476,17 +476,15 @@ response |= ui.add(label);
     >    - Track object on click
     > - Switch camera to orbit mode when tracking an object, mouse wheel to zoom
         > - Have the "go to thing" system be more aware of the thing's size. It's impossible to find phobos and deimos for example, because they're too small    
-
-# Cleanup for MVP
-- Refactor body database
+>- Refactor body database
     > - Keep existing databases for body data (mass, size, color, albedo, etc.)
     > - Additional "state_vectors.json" file for known, reference state vectors (single file, each id has n state vectors, each vector contains epoch, sorted by epoch)
     > - Additional "osc_elements.json" for reference osculating elements (single file, each id has n elements, each element contains epoch and reference, sorted by epoch)
-    - Scenes in ron files
+    > - Scenes in ron files
         > - Separate folder for scenes
         > - One scene per ron file (instead of scene_list.ron)
         > - Each scene can contain a custom state_vector/osc_element for a body. If it's not available, it will be fetched on the databases and estimated back/forward from reference data
-        - Allow leaving camera pos/target/up as None and just use reference, so that it does a GoTo when loading the scene and figures it out by itself
+        > - Allow leaving camera pos/target/up as None and just use reference, so that it does a GoTo when loading the scene and figures it out by itself
         > - Actually implement setting initial time and reference from scene desc
             > - Set initial time
             > - Metadata component
@@ -499,7 +497,9 @@ response |= ui.add(label);
             > - How to handle the choice between osc_element and state_vector?
                 > - This is worthless now as I don't want the ellipses back for the MVP
             >- Crash when closing a scene (should reset to empty)
-    - Add some default color/texture to the body schema. I think I had colors for all planets from before?
+
+# Cleanup for MVP
+- Add some default color/texture to the body schema. I think I had colors for all planets from before?
 - Scene handling
     > - I think I should put the scene description inside the created Scene?
     > - Set time, camera position and reference according to scene description
@@ -521,6 +521,7 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 
 # Known bugs
+- Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
 - Real weird "headlight" effect when I get close to any mesh?
 - What's the point of saving state if I dump it every time any scene is loaded anyway?
 - Hover labels shouldn't show when right click and dragging

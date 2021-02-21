@@ -96,9 +96,18 @@ impl SceneManager {
                 state.simulation_speed = desc.simulation_scale;
 
                 // Camera target (already wrt. reference)
-                state.camera.pos = desc.camera_pos;
-                state.camera.up = desc.camera_up;
-                state.camera.target = desc.camera_target;
+                let mut need_go_to: bool = false;
+                if desc.camera_pos.is_some()
+                    && desc.camera_target.is_some()
+                    && desc.camera_up.is_some()
+                {
+                    state.camera.pos = desc.camera_pos.unwrap();
+                    state.camera.up = desc.camera_up.unwrap();
+                    state.camera.target = desc.camera_target.unwrap();
+                } else {
+                    need_go_to = true;
+                }
+
                 if let Some(tracking) = &desc.tracking {
                     // Ugh.. this shouldn't be too often though
                     for (entity, component) in main_scene.metadata.iter() {
@@ -106,6 +115,10 @@ impl SceneManager {
                             if id == tracking {
                                 state.camera.next_reference_entity =
                                     Some(ReferenceChange::TrackKeepCoords(*entity));
+
+                                if need_go_to {
+                                    state.camera.entity_going_to = Some(*entity);
+                                }
 
                                 log::info!(
                                     "Setting initial tracked entity to '{:?}'",

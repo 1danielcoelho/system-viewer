@@ -5,17 +5,17 @@
     simulation_scale: 500,              // Times, as in "500x speed"
     tracking: "599",                    // Id of body set as initial tracking reference
     camera_pos: [                       // Position in Mm of camera, wrt. `tracking`'s transform at `time`
-        0,
+        0,                              // Optional. If either this, up or target aren't present, it will do a goto to `tracking`
         1,
         2,
     ],
     camera_up: [                        // Normalized. Likely just [0, 0, 1] for locked pitch
-        0,
+        0,                              // Optional. If either this, up or target aren't present, it will do a goto to `tracking`
         0,
         1,
     ],
     camera_target: [                    // Camera target position in Mm, wrt. `tracking`'s transform at `time`
-        0,
+        0,                              // Optional. If either this, up or target aren't present, it will do a goto to `tracking`
         0,
         0,
     ],

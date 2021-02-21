@@ -26,8 +26,14 @@ pub struct SceneDescription {
     
     #[serde(default)]
     pub tracking: Option<String>,
-    pub camera_pos: Point3<f64>,
-    pub camera_up: Unit<Vector3<f64>>,
-    pub camera_target: Point3<f64>,
+    
+    #[serde(default)]
+    pub camera_pos: Option<Point3<f64>>,
+    
+    #[serde(default)]
+    pub camera_up: Option<Unit<Vector3<f64>>>,
+
+    #[serde(default)]
+    pub camera_target: Option<Point3<f64>>,
     pub bodies: HashMap<String, HashMap<String, BodyMotionType>>,
 }

@@ -1,3 +1,4 @@
+#![enable(implicit_some)]
 (
     name: "Planets and inner moons",
     description: "Solar system barycenter, Sun, barycenters of all planets, all major planets, the Moon, Phobos and Deimos",
