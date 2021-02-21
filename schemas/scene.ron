@@ -23,26 +23,18 @@
         "major_bodies": {
             "5": DefaultVector,         // These are the 4 variants of the enum:
             "599": DefaultElements, 
-            "10": CustomVector(
-                2451549.0,              // JDN
-                -1064.370056259101,     // X position, Mm
-                -422.65698219907523,    // Y position, Mm
-                30.780917082776547,     // Z position, Mm
-                9.37050660738451e-06,   // X velocity, Mm/s
-                -1.276907231068214e-05, // Y velocity, Mm/s
-                -1.648053401510433e-07  // Z velocity, Mm/s
-            ),
-            "499": CustomElements(
-                ref_id: "10",           // id of the reference body
-                epoch: 2459000.5,       // JDN
-                e: 0.107059296335647,   // Eccentricity, absolute [0, 1] value
-                a: 467823.1174440739,   // Semi-major axis, Mm
-                i: 0.01903295635127428, // Inclination, radians
-                O: 2.877313561239668,   // Longitude of ascending node, radians
-                w: 5.779506327455486,   // Argument of periapsis, radians
-                M: 2.335896329826738,   // Mean anomaly, radians
-                p: 2019.91375564515     // Sidereal orbital period, days (86400s)
-            ),
+            "10": CustomVector(((2451549.0, 0, 1, 2, 0, 1, 2))),
+            "499": CustomElements((
+                ref_id: "10",
+                epoch: (34234.0),
+                a: (23),
+                e: 0.3,
+                i: (423),
+                O: (32),
+                w: (34),
+                M: (34),
+                p: 44,
+            )),
         },
         "jovian_satellites": {
             "5": DefaultVector,

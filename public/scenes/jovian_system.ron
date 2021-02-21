@@ -20,7 +20,21 @@
         0,
     ],
     bodies: {
-        "major_bodies": ["5", "599", "10"],
-        "jovian_satellites": ["501", "502", "503", "504", "505", "506", "507", "508", "509", "510"]
+        "major_bodies": {
+            "5": DefaultVector,
+            "599": DefaultVector,
+            "10": DefaultVector,
+        },  
+        "jovian_satellites": {
+            "501": DefaultVector,
+            "502": DefaultVector,
+            "503": DefaultVector,
+            "504": DefaultVector,
+            "505": DefaultVector,
+            "506": DefaultVector,
+            "507": DefaultVector,
+            "508": DefaultVector,
+            "509": DefaultVector,
+        }
     },
 )

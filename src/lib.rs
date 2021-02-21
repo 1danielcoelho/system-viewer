@@ -78,15 +78,17 @@ pub fn initialize() {
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
 
-    fetch_text("public/scene_list.ron", "scene_list");
+    fetch_text("public/scenes/_auto_load_manifest.txt", "auto_load_manifest");
 
-    fetch_text("public/database/artificial.json", "database");
-    fetch_text("public/database/asteroids.json", "database");
-    fetch_text("public/database/comets.json", "database");
-    fetch_text("public/database/jovian_satellites.json", "database");
-    fetch_text("public/database/major_bodies.json", "database");
-    fetch_text("public/database/other_satellites.json", "database");
-    fetch_text("public/database/saturnian_satellites.json", "database");
+    fetch_text("public/database/artificial.json", "body_database");
+    fetch_text("public/database/asteroids.json", "body_database");
+    fetch_text("public/database/comets.json", "body_database");
+    fetch_text("public/database/jovian_satellites.json", "body_database");
+    fetch_text("public/database/major_bodies.json", "body_database");
+    fetch_text("public/database/other_satellites.json", "body_database");
+    fetch_text("public/database/saturnian_satellites.json", "body_database");
+    fetch_text("public/database/state_vectors.json", "vectors_database");
+    fetch_text("public/database/osc_elements.json", "elements_database");
 
     STATE.with(|s| {
         if let Ok(mut ref_mut_s) = s.try_borrow_mut() {

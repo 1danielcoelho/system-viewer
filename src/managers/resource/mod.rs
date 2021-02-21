@@ -551,28 +551,69 @@ impl ResourceManager {
         return None;
     }
 
-    pub fn load_database_file(&mut self, url: &str, text: &str) -> Result<(), String> {
-        let mut parsed_data: HashMap<String, BodyDescription> = serde_json::de::from_str(text)
-            .map_err(|e| format!("Database deserialization error:\n{}", e).to_owned())?;
+    pub fn load_database_file(&mut self, url: &str, content_type: &str, text: &str) {
+        match content_type {
+            "body_database" => {
+                let mut parsed_data: HashMap<String, BodyDescription> =
+                    serde_json::de::from_str(text)
+                        .map_err(|e| format!("Database deserialization error:\n{}", e).to_owned())
+                        .unwrap();
 
-        // TODO: Do I need the ids in the bodies as well?
-        for (key, val) in parsed_data.iter_mut() {
-            val.id = Some(key.clone());
+                // TODO: Do I need the ids in the bodies as well?
+                for (key, val) in parsed_data.iter_mut() {
+                    val.id = Some(key.clone());
+                }
+
+                let database_name: String = std::path::Path::new(url)
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+
+                let num_parsed = parsed_data.len();
+                self.bodies.insert(database_name, parsed_data);
+
+                log::info!("Parsed {} bodies from database '{}'", num_parsed, url);
+            }
+            "vectors_database" => {
+                let parsed_data: HashMap<String, Vec<StateVector>> = serde_json::de::from_str(text)
+                    .map_err(|e| format!("Database deserialization error:\n{}", e).to_owned())
+                    .unwrap();
+
+                let num_parsed = parsed_data.len();
+                self.state_vectors = parsed_data;
+
+                log::info!(
+                    "Parsed {} state vectors from database '{}'",
+                    num_parsed,
+                    url
+                );
+            }
+            "elements_database" => {
+                let parsed_data: HashMap<String, Vec<OrbitalElements>> =
+                    serde_json::de::from_str(text)
+                        .map_err(|e| format!("Database deserialization error:\n{}", e).to_owned())
+                        .unwrap();
+
+                let num_parsed = parsed_data.len();
+                self.osc_elements = parsed_data;
+
+                log::info!(
+                    "Parsed {} orbital elements from database '{}'",
+                    num_parsed,
+                    url
+                );
+            }
+            _ => {
+                log::error!(
+                    "Unexpected database content type '{}' with url '{}'",
+                    content_type,
+                    url
+                );
+                return;
+            }
         }
-
-        let database_name: String = std::path::Path::new(url)
-            .file_stem()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_owned();
-
-        let num_bodies = parsed_data.len();
-        self.bodies.insert(database_name, parsed_data);
-
-        log::info!("Parsed {} bodies from database '{}'", num_bodies, url);
-
-        return Ok(());
     }
 
     pub fn take_body_database(

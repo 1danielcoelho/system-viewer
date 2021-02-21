@@ -1,5 +1,6 @@
 use crate::app_state::AppState;
 use crate::managers::scene::SceneManager;
+use crate::fetch_text;
 use crate::managers::{
     EventManager, InputManager, InterfaceManager, ResourceManager, SystemManager,
 };
@@ -47,7 +48,9 @@ impl Engine {
         match content_type {
             "auto_load_manifest" => self.receive_auto_load_manifest_text(url, text),
             "scene" => self.receive_scene_text(url, text),
-            "database" => self.receive_database_text(url, text),
+            "body_database" | "vectors_database" | "elements_database" => {
+                self.receive_database_text(url, content_type, text)
+            }
             _ => log::error!(
                 "Unexpected content_type for receive_text: '{}'. url: '{}'",
                 content_type,
@@ -63,23 +66,25 @@ impl Engine {
             text.len()
         );
 
-        //self.scene_man.receive_scene_description_vec(text).unwrap();
+        for line in text.lines() {
+            fetch_text(&("public/scenes/".to_owned() + line), "scene");
+        }
     }
 
     fn receive_scene_text(&mut self, url: &str, text: &str) {
         log::info!("Loading scene from '{}' (length {})", url, text.len());
 
-        //self.scene_man.receive_scene_description_vec(text).unwrap();
+        self.scene_man.receive_serialized_scene(text);
     }
 
-    fn receive_database_text(&mut self, url: &str, text: &str) {
+    fn receive_database_text(&mut self, url: &str, content_type: &str, text: &str) {
         log::info!(
             "Loading database file from '{}' (length {})",
             url,
             text.len()
         );
 
-        self.res_man.load_database_file(url, text).unwrap();
+        self.res_man.load_database_file(url, content_type, text);
     }
 
     pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {

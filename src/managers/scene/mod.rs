@@ -2,14 +2,17 @@ use super::ResourceManager;
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
+use crate::managers::resource::body_description::OrbitalElements;
+use crate::managers::resource::body_description::StateVector;
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::scene::description::SceneDescription;
+use crate::managers::scene::description::{BodyMotionType, SceneDescription};
 use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
 use crate::utils::string::get_unique_name;
 use crate::utils::transform::Transform;
+use crate::utils::units::{Jdn, Mm, Rad};
 use crate::utils::units::J2000_JDN;
-use na::Vector3;
+use na::*;
 pub use scene::*;
 use std::collections::HashMap;
 
@@ -189,15 +192,19 @@ impl SceneManager {
         return self.loaded_scenes.get_mut(identifier);
     }
 
-    pub fn receive_serialized_scene(&mut self, serialized: &str) -> Result<(), String> {
-        let new_scene: SceneDescription = ron::de::from_str(serialized)
-            .map_err(|e| format!("RON deserialization error:\n{}", e).to_owned())?;
+    pub fn receive_serialized_scene(&mut self, serialized: &str) {
+        let new_desc: Result<SceneDescription, String> = ron::de::from_str(serialized)
+            .map_err(|e| format!("RON deserialization error:\n{}", e).to_owned());
+        if let Err(e) = new_desc {
+            log::error!("{}", e);
+            return;
+        }
+        let new_desc = new_desc.unwrap();
 
-        log::info!("Loaded new scene '{}'", new_scene.name);
+        log::info!("Loaded new scene description '{}'", new_desc.name);
 
-        let name = new_scene.name.clone();
-        self.descriptions.insert(name, new_scene);
-        return Ok(());
+        let name = new_desc.name.clone();
+        self.descriptions.insert(name, new_desc);
     }
 
     fn load_teal_sphere_scene(&mut self, res_man: &mut ResourceManager) -> &mut Scene {
