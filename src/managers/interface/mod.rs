@@ -6,6 +6,7 @@ use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::ResourceManager;
+use crate::utils::egui::is_position_over_egui;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::{prompt_for_bytes_file, UICTX};
@@ -186,11 +187,11 @@ impl InterfaceManager {
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
     ) {
-        self.draw_pop_ups(state, scene_man);
-
         self.draw_main_toolbar(state, scene_man, res_man);
 
         self.draw_open_windows(state, scene_man, res_man);
+
+        self.draw_pop_ups(state, scene_man);
     }
 
     fn draw_main_toolbar(
@@ -593,27 +594,31 @@ impl InterfaceManager {
                 };
             }
 
-            for hovered_entity in &state.hovered {
-                if state.selection.contains(hovered_entity) {
-                    continue;
-                }
+            let hover_label_pos = egui::Pos2 {
+                x: state.input.mouse_x as f32,
+                y: state.input.mouse_y as f32,
+            };
 
-                let name = scene.get_entity_name(*hovered_entity);
-                if name.is_none() {
-                    continue;
-                }
-                let name = name.unwrap();
+            if !is_over {
+                for hovered_entity in &state.hovered {
+                    if state.selection.contains(hovered_entity) {
+                        continue;
+                    }
 
-                egui::Window::new(name)
-                    .fixed_pos(egui::Pos2 {
-                        x: state.input.mouse_x as f32,
-                        y: state.input.mouse_y as f32,
-                    })
-                    .resizable(false)
-                    .scroll(false)
-                    .collapsible(false)
-                    .show(&ui.ctx(), |_| {})
-                    .unwrap();
+                    let name = scene.get_entity_name(*hovered_entity);
+                    if name.is_none() {
+                        continue;
+                    }
+                    let name = name.unwrap();
+
+                    egui::Window::new(name)
+                        .fixed_pos(hover_label_pos)
+                        .resizable(false)
+                        .scroll(false)
+                        .collapsible(false)
+                        .show(&ui.ctx(), |_| {})
+                        .unwrap();
+                }
             }
 
             if let Some(response) = response {
@@ -1078,11 +1083,8 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
         direction: (end_world - start_world).normalize(),
     };
 
-    let entity = if let Some(hit) = raycast(&ray, &scene) {
-        scene.get_entity_from_index(hit.entity_index)
-    } else {
-        None
-    };
+    let entity =
+        raycast(&ray, &scene).and_then(|hit| scene.get_entity_from_index(hit.entity_index));
 
     state.hovered.clear();
 

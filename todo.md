@@ -509,9 +509,11 @@ response |= ui.add(label);
 # Cleanup for MVP
 - Improve visuals a bit
     > - Add some default color/texture to the body schema. I think I had colors for all planets from before?
-    - Passable materials/colors for bodies
+    > - Passable materials/colors for bodies
     - Correct-ish sun brightness
     - https://www.solarsystemscope.com/textures/
+    - Fix normal and spec/roughness maps for Earth
+    - Find a decent skybox and align it roughly
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
         - Okay-ish results on the simulation for now, we can improve later
@@ -531,6 +533,8 @@ response |= ui.add(label);
 - Hover labels shouldn't show when right click and dragging
 - Fix firefox dragging bug
 - Hover label shouldn't show on top of selected label or other windows
+    - Selected label is just another window, so the draw order depends on which was active last... not sure if this is actually a bug or not, as its very easy to work around and it may be what you want
+    - The hover label prevents the scene browser from getting a hovered state, because it blocks raycasts
 - Should be able to click through the hover label (it blocks all mouse clicks)
 - Position of labels when body is off screen is not correct, it flails everywhere
 - Need better prediction of label size to prevent it from ever leaving the canvas
