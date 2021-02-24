@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::num::ParseIntError;
 
 pub fn remove_numbered_suffix(s: &str) -> &str {
     let mut split_index: usize = s.len();
@@ -24,4 +25,12 @@ pub fn get_unique_name<T>(prefix: &str, map: &HashMap<String, T>) -> String {
     }
 
     return format!("{}_{}", prefix, suffix);
+}
+
+// Source: https://stackoverflow.com/a/52992629/2434460
+pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+        .collect()
 }

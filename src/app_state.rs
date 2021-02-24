@@ -4,22 +4,6 @@ use na::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub enum SimulationScale {
-    Seconds,
-    Days,
-    Years,
-}
-impl SimulationScale {
-    pub fn to_str(&self) -> &str {
-        match *self {
-            SimulationScale::Seconds => "seconds / real second",
-            SimulationScale::Days => "days / real second",
-            SimulationScale::Years => "years / real second",
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize)]
 pub enum ReferenceChange {
     TrackKeepLocation(Entity),

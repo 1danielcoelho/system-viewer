@@ -11,6 +11,7 @@ use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
+use crate::utils::string::decode_hex;
 use crate::utils::units::Jdn;
 use nalgebra::Vector3;
 
@@ -232,33 +233,74 @@ pub fn get_body_material(
     body: &BodyDescription,
     res_man: &mut ResourceManager,
 ) -> Option<Rc<RefCell<Material>>> {
-    return match body.material.clone().unwrap_or(String::from("")).as_str() {
-        "mercury" => {
-            let mat = res_man.get_or_create_material("gltf_metal_rough").unwrap();
-            let mat_mut = mat.borrow_mut();
-            mat_mut.set_uniform_value(UniformName::BaseColor, UniformValue::Vec3());
-
-            Some(mat)
-        }
-        "venus" => {}
-        "earth" => {}
-        "mars" => {}
-        "jupiter" => {}
-        "saturn" => {}
-        "uranus" => {}
-        "neptune" => {}
-        "pluto" => {}
+    let mat = match body.material.clone().unwrap_or(String::from("")).as_str() {
+        // TODO: Actual different materials with different uniforms and so on
+        "rocky" => Some(
+            res_man
+                .instantiate_material(
+                    "gltf_metal_rough",
+                    &("rocky_".to_owned() + &body.id.as_ref().unwrap()),
+                )
+                .unwrap(),
+        ),
+        "atmo" => Some(
+            res_man
+                .instantiate_material(
+                    "gltf_metal_rough",
+                    &("atmo_".to_owned() + &body.id.as_ref().unwrap()),
+                )
+                .unwrap(),
+        ),
+        "gas" => Some(
+            res_man
+                .instantiate_material(
+                    "gltf_metal_rough",
+                    &("gas_".to_owned() + &body.id.as_ref().unwrap()),
+                )
+                .unwrap(),
+        ),
         _ => match body.body_type {
-            BodyType::Star => {}
-            BodyType::Planet => {}
-            BodyType::Satellite => {}
-            BodyType::Asteroid => {}
-            BodyType::Comet => {}
-            BodyType::Artificial => {}
-            BodyType::Barycenter => {}
-            BodyType::Other => {}
+            // TODO
+            // BodyType::Star => {}
+            // BodyType::Planet => {}
+            // BodyType::Satellite => {}
+            // BodyType::Asteroid => {}
+            // BodyType::Comet => {}
+            // BodyType::Artificial => {}
+            // BodyType::Barycenter => {}
+            // BodyType::Other => {}
+            _ => Some(
+                res_man
+                    .instantiate_material(
+                        "gltf_metal_rough",
+                        &("gas_".to_owned() + &body.id.as_ref().unwrap()),
+                    )
+                    .unwrap(),
+            ),
         },
     };
+
+    if mat.is_some() && body.material_params.is_some() {
+        let mut mat_mut = mat.as_ref().unwrap().borrow_mut();
+        let params = body.material_params.as_ref().unwrap();
+
+        if let Some(color) = params.get("base_color") {
+            let bytes: Vec<f32> = decode_hex(color)
+                .unwrap()
+                .iter()
+                .map(|u| *u as f32 / 255.0)
+                .collect();
+
+            log::info!("parsing color {:?} for body {:?}", bytes, body.id);
+
+            mat_mut.set_uniform_value(
+                UniformName::BaseColorFactor,
+                UniformValue::Vec4([bytes[0], bytes[1], bytes[2], bytes[3]]),
+            );
+        }
+    };
+
+    return mat;
 }
 
 /// Function that receives a `BodyMotionType` and produces a `ResolvedMotionType`, either using the custom values

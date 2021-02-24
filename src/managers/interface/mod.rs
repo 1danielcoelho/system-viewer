@@ -1,4 +1,4 @@
-use crate::app_state::{AppState, ButtonState, ReferenceChange, SimulationScale};
+use crate::app_state::{AppState, ButtonState, ReferenceChange};
 use crate::components::{
     MeshComponent, MetadataComponent, OrbitalComponent, PhysicsComponent, TransformComponent,
 };
