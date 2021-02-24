@@ -17,7 +17,7 @@ materials = {
 material_parameters = {
     '10': {
         'base_color': 'FFFFFFFF',
-        'base_color_texture': '2k_sun.jpg'
+        'emissive_texture': '2k_sun.jpg'
     },
     '199': {
         'base_color': '726658FF',

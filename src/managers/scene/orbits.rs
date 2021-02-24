@@ -319,6 +319,16 @@ pub fn get_body_material(
 
             mat_mut.set_texture(TextureUnit::Normal, res_man.get_or_request_texture(path));
         }
+
+        if let Some(path) = params.get("emissive_texture") {
+            log::info!(
+                "Parsed emissive_texture {:?} for body {:?}",
+                path,
+                body.id
+            );
+
+            mat_mut.set_texture(TextureUnit::Emissive, res_man.get_or_request_texture(path));
+        }
     };
 
     return mat;
