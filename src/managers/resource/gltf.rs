@@ -1,26 +1,17 @@
-use super::{
-    intermediate_mesh::IntermediateMesh,
-    intermediate_mesh::{intermediate_to_mesh, IntermediatePrimitive},
-    material::UniformName,
-    texture::TextureUnit,
+use crate::managers::resource::collider::{AxisAlignedBoxCollider, MeshCollider};
+use crate::managers::resource::intermediate_mesh::{
+    intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
 };
+use crate::managers::resource::material::UniformName;
+use crate::managers::resource::material::{Material, UniformValue};
+use crate::managers::resource::mesh::Mesh;
+use crate::managers::resource::texture::Texture;
+use crate::managers::resource::texture::TextureUnit;
+use crate::managers::ResourceManager;
+use crate::utils::gl::GL;
 use crate::GLCTX;
-use crate::{
-    managers::{
-        resource::{
-            collider::{AxisAlignedBoxCollider, MeshCollider},
-            material::{Material, UniformValue},
-            mesh::Mesh,
-            texture::Texture,
-        },
-        ResourceManager,
-    },
-    utils::gl::GL,
-};
-use gltf::{
-    image::Format,
-    mesh::util::{ReadColors, ReadIndices, ReadTexCoords},
-};
+use gltf::image::Format;
+use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
 use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, f32::INFINITY, rc::Rc};
 use web_sys::WebGl2RenderingContext;

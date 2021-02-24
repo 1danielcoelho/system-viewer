@@ -8,6 +8,7 @@ use crate::components::{
 };
 use crate::managers::resource::body_description::{BodyDescription, BodyType};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
+use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
@@ -297,6 +298,10 @@ pub fn get_body_material(
                 UniformName::BaseColorFactor,
                 UniformValue::Vec4([bytes[0], bytes[1], bytes[2], bytes[3]]),
             );
+        }
+
+        if let Some(path) = params.get("base_color_texture") {
+            mat_mut.set_texture(TextureUnit::BaseColor, res_man.get_texture(path));
         }
     };
 

@@ -21,6 +21,40 @@ pub mod shaders;
 pub mod texture;
 
 fn load_texture_from_bytes(
+    width: u32,
+    height: u32,
+    gl_format: u32,
+    bytes: &[u8],
+    ctx: &WebGl2RenderingContext,
+) -> web_sys::WebGlTexture {
+    let gl_tex = ctx.create_texture().unwrap();
+    ctx.active_texture(GL::TEXTURE0);
+    ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
+
+    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, GL::CLAMP_TO_EDGE as i32);
+    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, GL::CLAMP_TO_EDGE as i32);
+    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
+    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
+
+    ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+        GL::TEXTURE_2D,
+        0,
+        gl_format as i32,
+        width as i32,
+        height as i32,
+        0,
+        gl_format,
+        GL::UNSIGNED_BYTE, // Just u8 for now
+        Some(bytes),
+    )
+    .unwrap();
+
+    ctx.bind_texture(GL::TEXTURE_2D, None);
+
+    return gl_tex;
+}
+
+fn load_texture_from_image_bytes(
     identifier: &str,
     bytes: &[u8],
     image_format: Option<ImageFormat>,
@@ -112,29 +146,7 @@ fn load_texture_from_bytes(
         return Err(format!("Failed to decode {:?}", image_format));
     }
 
-    let gl_tex = ctx.create_texture().unwrap();
-    ctx.active_texture(GL::TEXTURE0);
-    ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
-
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, GL::CLAMP_TO_EDGE as i32);
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, GL::CLAMP_TO_EDGE as i32);
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
-
-    ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
-        GL::TEXTURE_2D,
-        0,
-        format as i32,
-        width as i32,
-        height as i32,
-        0,
-        format,
-        GL::UNSIGNED_BYTE, // Just u8 for now
-        buf,
-    )
-    .unwrap();
-
-    ctx.bind_texture(GL::TEXTURE_2D, None);
+    let gl_tex = load_texture_from_bytes(width, height, format, buf.as_ref().unwrap(), ctx);
 
     return Ok(Rc::new(RefCell::new(Texture {
         name: identifier.to_owned(),
@@ -156,7 +168,7 @@ pub struct ResourceManager {
 }
 impl ResourceManager {
     pub fn new() -> Self {
-        let new_res_man = Self {
+        let mut new_res_man = Self {
             meshes: HashMap::new(),
             textures: HashMap::new(),
             materials: HashMap::new(),
@@ -165,7 +177,32 @@ impl ResourceManager {
             osc_elements: HashMap::new(),
         };
 
+        new_res_man.create_default_resources();
+
         return new_res_man;
+    }
+
+    /// Create resources that are used to signal that a resource is not yet available (e.g. default
+    /// texture)
+    fn create_default_resources(&mut self) {
+        GLCTX.with(|ctx| {
+            let ref_mut = ctx.borrow_mut();
+            let ctx = ref_mut.as_ref().unwrap();
+
+            let magenta: [u8; 4] = [255, 0, 255, 255];
+            let gl_tex = load_texture_from_bytes(1, 1, GL::RGBA, &magenta, &ctx);
+
+            let tex = Rc::new(RefCell::new(Texture {
+                name: String::from("default_texture"),
+                width: 1,
+                height: 1,
+                gl_format: GL::RGBA,
+                num_channels: 4,
+                gl_handle: Some(gl_tex),
+            }));
+
+            self.textures.insert("default_texture".to_string(), tex);
+        });
     }
 
     fn provision_texture(&mut self, tex: &Rc<RefCell<Texture>>) -> Option<Rc<RefCell<Texture>>> {
@@ -514,7 +551,7 @@ impl ResourceManager {
             let ref_mut = ctx.borrow_mut();
             let ctx = ref_mut.as_ref().unwrap();
 
-            match load_texture_from_bytes(identifier, bytes, image_format, &ctx) {
+            match load_texture_from_image_bytes(identifier, bytes, image_format, &ctx) {
                 Ok(tex) => {
                     log::info!("Generated texture '{}'", identifier);
 
@@ -548,7 +585,11 @@ impl ResourceManager {
             return Some(tex.clone());
         }
 
-        return None;
+        // We don't have this one, put out a request for this asset and just return
+        // the default pink texture instead
+        fetch_bytes(&("public/textures/".to_owned() + identifier), "texture");
+
+        return self.textures.get("default_texture").cloned();
     }
 
     pub fn load_database_file(&mut self, url: &str, content_type: &str, text: &str) {

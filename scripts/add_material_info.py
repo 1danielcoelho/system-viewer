@@ -29,6 +29,7 @@ material_parameters = {
     },
     '599': {
         'base_color': 'C3BEABFF',
+        'base_color_texture': '2k_jupiter.jpg'
     },
     '699': {
         'base_color': 'C9B38EFF',

@@ -99,7 +99,8 @@
         "albedo": 0.52,
         "material": "gas",
         "material_params": {
-            "base_color": "C3BEABFF"
+            "base_color": "C3BEABFF",
+            "base_color_texture": "2k_jupiter.jpg"
         }
     },
     "6": {

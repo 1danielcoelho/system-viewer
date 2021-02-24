@@ -508,7 +508,7 @@ response |= ui.add(label);
 
 # Cleanup for MVP
 - Improve visuals a bit
-    - Add some default color/texture to the body schema. I think I had colors for all planets from before?
+    > - Add some default color/texture to the body schema. I think I had colors for all planets from before?
     - Passable materials/colors for bodies
     - Correct-ish sun brightness
     - https://www.solarsystemscope.com/textures/
