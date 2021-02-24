@@ -3,8 +3,8 @@ from math import sin, cos, sqrt, atan2
 from database_utils import save_database, load_database
 
 materials = {
-    '199': 'rocky', 
-    '299': 'atmo', 
+    '199': 'rocky',
+    '299': 'atmo',
     '399': 'atmo',
     '499': 'atmo',
     '599': 'gas',
@@ -29,7 +29,7 @@ material_parameters = {
     },
     '599': {
         'base_color': 'C3BEABFF',
-        'base_color_texture': '2k_jupiter.jpg'
+        'base_color_texture': 'public/textures/2k_jupiter.jpg'
     },
     '699': {
         'base_color': 'C9B38EFF',
@@ -74,7 +74,7 @@ def add_material_info(database):
                 set_params = True
             except KeyError:
                 pass
-            
+
             if set_mat or set_params:
                 count += 1
 

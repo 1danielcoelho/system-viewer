@@ -202,7 +202,7 @@ impl AppState {
             simulation_paused: true,
             move_speed: 5.0,
             rotate_speed: 2.0,
-            light_intensity: 1.0,
+            light_intensity: 0.66,
             input: Input::default(),
             hovered: HashSet::new(),
             selection: HashSet::new(),

@@ -292,7 +292,7 @@ pub fn get_body_material(
                 .map(|u| *u as f32 / 255.0)
                 .collect();
 
-            log::info!("parsing color {:?} for body {:?}", bytes, body.id);
+            log::info!("Parsed base_color {:?} for body {:?}", bytes, body.id);
 
             mat_mut.set_uniform_value(
                 UniformName::BaseColorFactor,
@@ -301,7 +301,13 @@ pub fn get_body_material(
         }
 
         if let Some(path) = params.get("base_color_texture") {
-            mat_mut.set_texture(TextureUnit::BaseColor, res_man.get_texture(path));
+            log::info!(
+                "Parsed base_color_texture {:?} for body {:?}",
+                path,
+                body.id
+            );
+
+            mat_mut.set_texture(TextureUnit::BaseColor, res_man.get_or_request_texture(path));
         }
     };
 

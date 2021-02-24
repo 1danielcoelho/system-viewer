@@ -99,7 +99,7 @@ impl ResourceManager {
         // Base color texture
         if let Some(gltf_tex) = pbr.base_color_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
-            if let Some(tex) = self.get_texture(&tex_identifier) {
+            if let Some(tex) = self.get_or_request_texture(&tex_identifier) {
                 log::info!("\t\tBaseColor texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::BaseColor, Some(tex));
             } else {
@@ -119,7 +119,7 @@ impl ResourceManager {
         // Metallic-roughness texture
         if let Some(gltf_tex) = pbr.metallic_roughness_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
-            if let Some(tex) = self.get_texture(&tex_identifier) {
+            if let Some(tex) = self.get_or_request_texture(&tex_identifier) {
                 log::info!("\t\tMetallicRoughness texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::MetallicRoughness, Some(tex));
             } else {
@@ -144,7 +144,7 @@ impl ResourceManager {
         // Normal texture
         if let Some(gltf_tex) = material.normal_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
-            if let Some(tex) = self.get_texture(&tex_identifier) {
+            if let Some(tex) = self.get_or_request_texture(&tex_identifier) {
                 log::info!("\t\tNormal texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::Normal, Some(tex));
             } else {
@@ -159,7 +159,7 @@ impl ResourceManager {
         // Occlusion texture
         if let Some(gltf_tex) = material.occlusion_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
-            if let Some(tex) = self.get_texture(&tex_identifier) {
+            if let Some(tex) = self.get_or_request_texture(&tex_identifier) {
                 log::info!("\t\tOcclusion texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::Occlusion, Some(tex));
             } else {
@@ -174,7 +174,7 @@ impl ResourceManager {
         // Emissive texture
         if let Some(gltf_tex) = material.emissive_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
-            if let Some(tex) = self.get_texture(&tex_identifier) {
+            if let Some(tex) = self.get_or_request_texture(&tex_identifier) {
                 log::info!("\t\tEmissive texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::Emissive, Some(tex));
             } else {

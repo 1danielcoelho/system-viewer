@@ -168,7 +168,7 @@ pub struct ResourceManager {
 }
 impl ResourceManager {
     pub fn new() -> Self {
-        let mut new_res_man = Self {
+        let new_res_man = Self {
             meshes: HashMap::new(),
             textures: HashMap::new(),
             materials: HashMap::new(),
@@ -177,37 +177,12 @@ impl ResourceManager {
             osc_elements: HashMap::new(),
         };
 
-        new_res_man.create_default_resources();
-
         return new_res_man;
-    }
-
-    /// Create resources that are used to signal that a resource is not yet available (e.g. default
-    /// texture)
-    fn create_default_resources(&mut self) {
-        GLCTX.with(|ctx| {
-            let ref_mut = ctx.borrow_mut();
-            let ctx = ref_mut.as_ref().unwrap();
-
-            let magenta: [u8; 4] = [255, 0, 255, 255];
-            let gl_tex = load_texture_from_bytes(1, 1, GL::RGBA, &magenta, &ctx);
-
-            let tex = Rc::new(RefCell::new(Texture {
-                name: String::from("default_texture"),
-                width: 1,
-                height: 1,
-                gl_format: GL::RGBA,
-                num_channels: 4,
-                gl_handle: Some(gl_tex),
-            }));
-
-            self.textures.insert("default_texture".to_string(), tex);
-        });
     }
 
     fn provision_texture(&mut self, tex: &Rc<RefCell<Texture>>) -> Option<Rc<RefCell<Texture>>> {
         let tex_borrow = tex.borrow();
-        if let Some(existing_tex) = self.get_texture(&tex_borrow.name) {
+        if let Some(existing_tex) = self.get_or_request_texture(&tex_borrow.name) {
             log::info!("Reusing existing texture '{}'", existing_tex.borrow().name);
             return Some(existing_tex);
         }
@@ -580,7 +555,7 @@ impl ResourceManager {
         });
     }
 
-    pub fn get_texture(&self, identifier: &str) -> Option<Rc<RefCell<Texture>>> {
+    pub fn get_or_request_texture(&mut self, identifier: &str) -> Option<Rc<RefCell<Texture>>> {
         if let Some(tex) = self.textures.get(identifier) {
             return Some(tex.clone());
         }
@@ -589,7 +564,17 @@ impl ResourceManager {
         // the default pink texture instead
         fetch_bytes(&("public/textures/".to_owned() + identifier), "texture");
 
-        return self.textures.get("default_texture").cloned();
+        let tex = Rc::new(RefCell::new(Texture {
+            name: identifier.to_string(),
+            width: 1,
+            height: 1,
+            gl_format: GL::RGBA,
+            num_channels: 4,
+            gl_handle: None,
+        }));
+        self.textures.insert(identifier.to_string(), tex.clone());
+
+        return Some(tex);
     }
 
     pub fn load_database_file(&mut self, url: &str, content_type: &str, text: &str) {
