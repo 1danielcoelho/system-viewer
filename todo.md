@@ -506,6 +506,9 @@ response |= ui.add(label);
         > - Change open button to 'reset'
     > - Unload scene when switching away from it
 
+# Just fork egui instead of having a custom gui_backend
+- Make sure its legally OK to do that though 
+
 # Cleanup for MVP
 - Improve visuals a bit
     > - Add some default color/texture to the body schema. I think I had colors for all planets from before?

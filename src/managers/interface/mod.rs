@@ -599,7 +599,7 @@ impl InterfaceManager {
                 y: state.input.mouse_y as f32,
             };
 
-            if !is_over {
+            if !is_position_over_egui(hover_label_pos, ui.ctx()) {
                 for hovered_entity in &state.hovered {
                     if state.selection.contains(hovered_entity) {
                         continue;
