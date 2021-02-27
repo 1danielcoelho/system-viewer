@@ -511,9 +511,9 @@ response |= ui.add(label);
     >- Bottom: Right
     >- Top: Left
     >- Front: Left
-
-# Just fork egui instead of having a custom gui_backend
-- Make sure its legally OK to do that though 
+> - Just fork egui instead of having a custom gui_backend
+>- Make sure its legally OK to do that though 
+>- Doesn't work very well, because I really need egui_web, which is a subcrate within the egui repo, and I can't get cargo to use subfolder paths for git dependencies
 
 # Cleanup for MVP
 > - Improve visuals a bit
@@ -532,8 +532,14 @@ response |= ui.add(label);
     - I also have FOV basically unused...
 - Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
-- Compare that relative size
 - Update egui
+    - UI labels are not translucent anymore
+    - Clicking on Track buttons doesn't work 
+    - No way of preventing movement when typing because the has_kb_focus member is private now
+    - Still get all the old bugs with the flickering labels
+    - Can't collapse the popup windows because any click closes them
+    - Have a whole lot of duplicated/unused code in gui_backend
+- Compare that relative size
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
