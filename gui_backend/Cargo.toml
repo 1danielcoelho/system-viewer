@@ -1,59 +1,70 @@
 [package]
-name = "gui_backend"
-version = "0.2.0"
-authors = ["Daniel Coelho"]
-description = "Backend for rendering egui paint jobs to wasm-bindgen. Based on egui_web, available here: https://github.com/emilk/egui"
-license = "MIT"
+name = "egui_web"
+version = "0.9.0"
+authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
+description = "Bindings for compiling egui code to WASM for a web page"
+license = "MIT OR Apache-2.0"
 edition = "2018"
+homepage = "https://github.com/emilk/egui"
 readme = "README.md"
+repository = "https://github.com/emilk/egui"
+categories = ["gui", "web-programming"]
+keywords = ["wasm", "web", "egui", "gui", "gamedev"]
 include = [ "**/*.rs", "Cargo.toml"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-egui = { version = "0.5.0", features = ["serde"] }
+egui = { version = "0.9.0", path = "../egui" }
+epi = { version = "0.9.0", path = "../epi" }
 js-sys = "0.3"
-parking_lot = "0.11"
-serde = "1"
-serde_json = "1"
+serde = { version = "1", optional = true }
+serde_json = { version = "1", optional = true }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
+
+[features]
+default = []
+http = [
+  "epi/http",
+  "web-sys/Headers",
+  "web-sys/Request",
+  "web-sys/RequestInit",
+  "web-sys/RequestMode",
+  "web-sys/Response",
+]
+persistence = ["serde", "serde_json"]
 
 [dependencies.web-sys]
 version = "0.3"
 features = [
-  'Clipboard',
-  'ClipboardEvent',
-  'console',
-  'CssStyleDeclaration',
-  'DataTransfer',
-  'Document',
-  'DomRect',
-  'Element',
-  'Headers',
-  'HtmlCanvasElement',
-  'HtmlElement',
-  'KeyboardEvent',
-  'Location',
-  'MouseEvent',
-  'Navigator',
-  'Performance',
-  'Request',
-  'RequestInit',
-  'RequestMode',
-  'Response',
-  'Storage',
-  'Touch',
-  'TouchEvent',
-  'TouchList',
-  'WebGlBuffer',
-  'WebGlProgram',
-  'WebGlRenderingContext',
-  'WebGl2RenderingContext',
-  'WebGlShader',
-  'WebGlTexture',
-  'WebGlUniformLocation',
-  'WheelEvent',
-  'Window',
+  "Clipboard",
+  "ClipboardEvent",
+  "console",
+  "CssStyleDeclaration",
+  "DataTransfer",
+  "Document",
+  "DomRect",
+  "Element",
+  "HtmlCanvasElement",
+  "HtmlElement",
+  "KeyboardEvent",
+  "Location",
+  "MouseEvent",
+  "Navigator",
+  "Performance",
+  "Storage",
+  "Touch",
+  "TouchEvent",
+  "TouchList",
+  "WebGl2RenderingContext",
+  "WebGlBuffer",
+  "WebGlProgram",
+  "WebGlRenderingContext",
+  "WebGlShader",
+  "WebGlTexture",
+  "WebGlUniformLocation",
+  "WheelEvent",
+  "Window",
 ]
