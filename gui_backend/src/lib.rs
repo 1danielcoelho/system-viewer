@@ -86,15 +86,6 @@ pub fn canvas_element_or_die(canvas_id: &str) -> web_sys::HtmlCanvasElement {
         .unwrap_or_else(|| panic!("Failed to find canvas with id '{}'", canvas_id))
 }
 
-pub fn pos_from_mouse_event(canvas_id: &str, event: &web_sys::MouseEvent) -> egui::Pos2 {
-    let canvas = canvas_element(canvas_id).unwrap();
-    let rect = canvas.get_bounding_client_rect();
-    egui::Pos2 {
-        x: event.client_x() as f32 - rect.left() as f32,
-        y: event.client_y() as f32 - rect.top() as f32,
-    }
-}
-
 pub fn button_from_mouse_event(event: &web_sys::MouseEvent) -> Option<egui::PointerButton> {
     match event.button() {
         0 => Some(egui::PointerButton::Primary),

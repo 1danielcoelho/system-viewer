@@ -54,32 +54,6 @@ pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
     html_el.click();
 }
 
-// pub async fn fetch_text(url: String) -> String {
-//     let mut opts = RequestInit::new();
-//     opts.method("GET");
-//     opts.mode(RequestMode::Cors);
-
-//     let request = Request::new_with_str_and_init(&url, &opts).unwrap();
-
-//     request.headers().set("Accept", "text/plain").unwrap();
-
-//     let window = web_sys::window().unwrap();
-//     let resp_value = JsFuture::from(window.fetch_with_request(&request))
-//         .await
-//         .unwrap();
-
-//     // `resp_value` is a `Response` object.
-//     assert!(resp_value.is_instance_of::<Response>());
-//     let resp: Response = resp_value.dyn_into().unwrap();
-
-//     // Convert this other `Promise` into a rust `Future`.
-//     let text = JsFuture::from(resp.text().unwrap()).await.unwrap();
-//     let actual_txt = format!("{}", text.as_string().unwrap());
-//     log::info!("Response text: {}", actual_txt);
-
-//     return actual_txt;
-// }
-
 /// From https://github.com/emilk/egui/blob/650450bc3a01f8fe44ba89781597c3c8f60c2777/egui_web/src/lib.rs#L516
 fn modifiers_from_event(event: &web_sys::KeyboardEvent) -> egui::Modifiers {
     egui::Modifiers {
@@ -94,6 +68,23 @@ fn modifiers_from_event(event: &web_sys::KeyboardEvent) -> egui::Modifiers {
         // Ideally we should know if we are running or mac or not,
         // but this works good enough for now.
         command: event.ctrl_key() || event.meta_key(),
+    }
+}
+
+pub fn pos_from_mouse_event(canvas: &HtmlCanvasElement, event: &web_sys::MouseEvent) -> egui::Pos2 {
+    let rect = canvas.get_bounding_client_rect();
+    egui::Pos2 {
+        x: event.client_x() as f32 - rect.left() as f32,
+        y: event.client_y() as f32 - rect.top() as f32,
+    }
+}
+
+pub fn button_from_mouse_event(event: &web_sys::MouseEvent) -> Option<egui::PointerButton> {
+    match event.button() {
+        0 => Some(egui::PointerButton::Primary),
+        1 => Some(egui::PointerButton::Middle),
+        2 => Some(egui::PointerButton::Secondary),
+        _ => None,
     }
 }
 
@@ -213,7 +204,7 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
     };
 
     if let Some(key) = egui_key {
-        s.input.egui_keys.push(egui::Event::Key {
+        s.input.egui_events.push(egui::Event::Key {
             key,
             pressed: pressed,
             modifiers: *modifiers,
@@ -236,29 +227,38 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
-                match event.button() as i16 {
-                    0 => {
-                        // Don't revert back to "pressed" if it's already handled
-                        if s.input.m0 == ButtonState::Depressed {
-                            s.input.m0 = ButtonState::Pressed;
-                        }
+                if let Some(button) = button_from_mouse_event(&event) {
+                    let pos = pos_from_mouse_event(&canvas_clone, &event);
 
-                        if s.input.modifiers.alt {
+                    match button {
+                        egui::PointerButton::Primary => {
+                            // Don't revert back to "pressed" if it's already handled
+                            if s.input.m0 == ButtonState::Depressed {
+                                s.input.m0 = ButtonState::Pressed;
+                            }
+
+                            if s.input.modifiers.alt {
+                                canvas_clone.request_pointer_lock();
+                                s.input.mouse_x = event.client_x();
+                                s.input.mouse_y = event.client_y();
+                            }
+                        }
+                        egui::PointerButton::Secondary => {
+                            s.input.m1 = ButtonState::Pressed;
                             canvas_clone.request_pointer_lock();
                             s.input.mouse_x = event.client_x();
                             s.input.mouse_y = event.client_y();
                         }
+                        egui::PointerButton::Middle => {}
                     }
 
-                    // 1 is the mouse wheel click
-                    2 => {
-                        s.input.m1 = ButtonState::Pressed;
-                        canvas_clone.request_pointer_lock();
-                        s.input.mouse_x = event.client_x();
-                        s.input.mouse_y = event.client_y();
-                    }
-                    _ => {}
-                };
+                    s.input.egui_events.push(egui::Event::PointerButton {
+                        pos,
+                        button,
+                        pressed: true,
+                        modifiers: s.input.modifiers,
+                    });
+                }
             });
         };
 
@@ -271,6 +271,7 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
 
     // mousemove
     {
+        let canvas_clone = canvas.clone();
         let handler = move |event: web_sys::MouseEvent| {
             STATE.with(|s| {
                 let mut ref_mut = s.borrow_mut();
@@ -297,6 +298,9 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                     s.input.mouse_x = event.client_x();
                     s.input.mouse_y = event.client_y();
                 }
+
+                let pos = pos_from_mouse_event(&canvas_clone, &event);
+                s.input.egui_events.push(egui::Event::PointerMoved(pos));
             });
         };
 
@@ -309,25 +313,33 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
 
     // mouseup
     {
+        let canvas_clone = canvas.clone();
         let handler = move |event: web_sys::MouseEvent| {
             STATE.with(|s| {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
-                match event.button() as i16 {
-                    0 => s.input.m0 = ButtonState::Depressed,
+                if let Some(button) = button_from_mouse_event(&event) {
+                    let pos = pos_from_mouse_event(&canvas_clone, &event);
 
-                    // 1 is the mouse wheel click
-                    2 => {
-                        s.input.m1 = ButtonState::Depressed;
-                    }
-                    _ => {}
-                };
+                    match button {
+                        egui::PointerButton::Primary => s.input.m0 = ButtonState::Depressed,
+                        egui::PointerButton::Secondary => s.input.m1 = ButtonState::Depressed,
+                        egui::PointerButton::Middle => {}
+                    };
 
-                // Release pointer lock
-                let window = web_sys::window().unwrap();
-                let doc = window.document().unwrap();
-                doc.exit_pointer_lock();
+                    s.input.egui_events.push(egui::Event::PointerButton {
+                        pos,
+                        button,
+                        pressed: false,
+                        modifiers: s.input.modifiers,
+                    });
+
+                    // Release pointer lock
+                    let window = web_sys::window().unwrap();
+                    let doc = window.document().unwrap();
+                    doc.exit_pointer_lock();
+                }
             });
         };
 
@@ -379,23 +391,9 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 handle_key_press(&key, &modifiers, s, true);
 
                 if !modifiers.ctrl && !modifiers.command && !should_ignore_key(&key) {
-                    s.input.egui_keys.push(egui::Event::Text(key.to_owned()));
+                    s.input.egui_events.push(egui::Event::Text(key.to_owned()));
                 }
 
-                // So, shall we call prevent_default?
-                // YES:
-                // * Tab  (move to next text field)
-                //
-                // SOMETIMES:
-                // * Backspace - when entering text we don't want to go back one page.
-                //
-                // NO:
-                // * F5 / cmd-R (refresh)
-                // * cmd-shift-C (debug tools)
-                // * ...
-                //
-                // NOTE: if we call prevent_default for cmd-c/v/x, we will prevent copy/paste/cut events.
-                // Let's do things manually for now:
                 if matches!(
                     event.key().as_str(),
                     "Backspace"  // so we don't go back to previous page when deleting text

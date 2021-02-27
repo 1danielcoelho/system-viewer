@@ -36,31 +36,31 @@ pub fn handle_output_func(state: &mut AppState, output: egui::Response) {
         }
     }
 
-    if output.has_kb_focus {
-        if state.input.forward == ButtonState::Pressed {
-            state.input.forward = ButtonState::Handled;
-        }
+    // if output.has_kb_focus {
+    //     if state.input.forward == ButtonState::Pressed {
+    //         state.input.forward = ButtonState::Handled;
+    //     }
 
-        if state.input.left == ButtonState::Pressed {
-            state.input.left = ButtonState::Handled;
-        }
+    //     if state.input.left == ButtonState::Pressed {
+    //         state.input.left = ButtonState::Handled;
+    //     }
 
-        if state.input.right == ButtonState::Pressed {
-            state.input.right = ButtonState::Handled;
-        }
+    //     if state.input.right == ButtonState::Pressed {
+    //         state.input.right = ButtonState::Handled;
+    //     }
 
-        if state.input.back == ButtonState::Pressed {
-            state.input.back = ButtonState::Handled;
-        }
+    //     if state.input.back == ButtonState::Pressed {
+    //         state.input.back = ButtonState::Handled;
+    //     }
 
-        if state.input.up == ButtonState::Pressed {
-            state.input.up = ButtonState::Handled;
-        }
+    //     if state.input.up == ButtonState::Pressed {
+    //         state.input.up = ButtonState::Handled;
+    //     }
 
-        if state.input.down == ButtonState::Pressed {
-            state.input.down = ButtonState::Handled;
-        }
-    }
+    //     if state.input.down == ButtonState::Pressed {
+    //         state.input.down = ButtonState::Handled;
+    //     }
+    // }
 }
 
 struct OpenWindows {
@@ -138,15 +138,8 @@ impl InterfaceManager {
         let window = web_sys::window().unwrap();
         let doc = window.document().unwrap();
         if let None = doc.pointer_lock_element() {
-            raw_input.mouse_pos = Some(egui::Pos2 {
-                x: state.input.mouse_x as f32,
-                y: state.input.mouse_y as f32,
-            });
+            raw_input.events.append(&mut state.input.egui_events);
         }
-
-        // HACK: Currently the UI sets the button state to handled if mouse down happens over it...
-        raw_input.mouse_down = state.input.m0 != ButtonState::Depressed;
-        raw_input.events.append(&mut state.input.egui_keys);
         raw_input.modifiers = state.input.modifiers;
 
         self.backend.begin_frame(raw_input);

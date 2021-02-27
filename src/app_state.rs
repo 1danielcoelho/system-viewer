@@ -136,7 +136,7 @@ pub struct Input {
     pub modifiers: egui::Modifiers, // We can use this for the rest of the app too
 
     #[serde(skip)]
-    pub egui_keys: Vec<egui::Event>, // Mostly for typing into UI
+    pub egui_events: Vec<egui::Event>, 
 }
 
 #[derive(Serialize, Deserialize)]

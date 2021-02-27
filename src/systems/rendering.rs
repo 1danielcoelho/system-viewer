@@ -192,7 +192,7 @@ fn draw_one(
 fn draw_skybox(
     state: &AppState,
     gl: &WebGl2RenderingContext,
-    uniform_data: &mut FrameUniformValues,
+    _uniform_data: &mut FrameUniformValues,
     scene: &mut Scene,
 ) {
     if scene.skybox_mesh.is_none() || scene.skybox_trans.is_none() {
