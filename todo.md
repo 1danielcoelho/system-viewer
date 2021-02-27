@@ -536,6 +536,7 @@ response |= ui.add(label);
     - UI labels are not translucent anymore
     - Clicking on Track buttons doesn't work 
     - No way of preventing movement when typing because the has_kb_focus member is private now
+        - I opened a bug issue on egui's repo, so let's wait for that. If it's intentional we'll have to work around it somehow
     - Still get all the old bugs with the flickering labels
     - Can't collapse the popup windows because any click closes them
     - Have a whole lot of duplicated/unused code in gui_backend
