@@ -209,7 +209,7 @@ fn draw_skybox(
     v_no_trans.set_column(3, &Vector4::new(0.0, 0.0, 0.0, 1.0));
 
     let vp_inv_arr: [f32; 16] =
-        na::convert::<Matrix4<f64>, Matrix4<f32>>(v_no_trans * state.camera.p_inv)
+        na::convert::<Matrix4<f64>, Matrix4<f32>>(scene.skybox_trans.unwrap() * v_no_trans * state.camera.p_inv)
             .as_slice()
             .try_into()
             .unwrap();

@@ -6,6 +6,7 @@ use std::f64::consts::PI;
 
 /// Mm3 / (kg s2)
 pub const GRAVITATION_CONSTANT: f64 = 6.743E-29;
+pub const OBLIQUITY_OF_ECLIPTIC: Deg = Deg(23.4392794);
 const NEWTON_RAPHSON_MAX_ITER: u32 = 30;
 const NEWTON_RAPHSON_DELTA: f64 = 0.00000001;
 

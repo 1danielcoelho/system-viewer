@@ -516,15 +516,15 @@ response |= ui.add(label);
 - Make sure its legally OK to do that though 
 
 # Cleanup for MVP
-- Improve visuals a bit
+> - Improve visuals a bit
     > - Add some default color/texture to the body schema. I think I had colors for all planets from before?
     > - Passable materials/colors for bodies
-    - Correct-ish sun brightness
-    - https://www.solarsystemscope.com/textures/
-    - https://svs.gsfc.nasa.gov/4851
-    - Used https://360toolkit.co/ to convert to cubemap
+    > - https://www.solarsystemscope.com/textures/
+    > - https://svs.gsfc.nasa.gov/4851
+    > - Used https://360toolkit.co/ to convert to cubemap
+    > - Find a decent skybox and align it roughly
     - Fix normal and spec/roughness maps for Earth
-    - Find a decent skybox and align it roughly
+    - Correct-ish sun brightness
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
         - Okay-ish results on the simulation for now, we can improve later
@@ -537,8 +537,6 @@ response |= ui.add(label);
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
-
-
 
 # Known bugs
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it

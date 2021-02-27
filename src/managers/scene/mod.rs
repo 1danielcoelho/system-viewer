@@ -7,6 +7,7 @@ use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::description::SceneDescription;
 use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
+use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
 use crate::utils::transform::Transform;
 use crate::utils::units::J2000_JDN;
@@ -322,7 +323,10 @@ impl SceneManager {
         let scene = self.new_scene("test").unwrap();
 
         scene.skybox_mesh = res_man.get_or_create_mesh("quad");
-        scene.skybox_trans = Some(Matrix4::<f64>::identity());
+        scene.skybox_trans = Some(
+            Rotation3::<f64>::from_axis_angle(&Vector3::x_axis(), OBLIQUITY_OF_ECLIPTIC.to_rad().0)
+                .to_homogeneous(),
+        );
         scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
         scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
             TextureUnit::BaseColor,
