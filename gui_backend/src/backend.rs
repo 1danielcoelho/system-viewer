@@ -5,7 +5,7 @@ pub use egui::{pos2, Color32};
 // ----------------------------------------------------------------------------
 
 pub struct WebBackend {
-    ctx: egui::CtxRef,
+    pub ctx: egui::CtxRef,
     painter: Box<dyn Painter>,
     previous_frame_time: Option<f32>,
     frame_start: Option<f64>,

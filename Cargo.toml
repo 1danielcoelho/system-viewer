@@ -13,7 +13,7 @@ getrandom = { version = "0.2", features = ["js"] }
 console_error_panic_hook = "=0.1.5"
 console_log = "0.2"
 chrono = "0.4"
-egui = "0.5.0"
+egui = "0.9.0"
 futures = "0.3"
 gltf = { version = "0.15.2", features = ["extras", "names"]}
 gui_backend = { path = "gui_backend" }

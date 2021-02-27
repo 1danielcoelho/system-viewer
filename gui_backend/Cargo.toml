@@ -1,23 +1,19 @@
 [package]
-name = "egui_web"
 version = "0.9.0"
-authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
-description = "Bindings for compiling egui code to WASM for a web page"
 license = "MIT OR Apache-2.0"
+name = "gui_backend"
+authors = ["Daniel Coelho"]
+description = "Backend for rendering egui paint jobs to wasm-bindgen. Based on egui_web, available here: https://github.com/emilk/egui"
 edition = "2018"
-homepage = "https://github.com/emilk/egui"
 readme = "README.md"
-repository = "https://github.com/emilk/egui"
-categories = ["gui", "web-programming"]
-keywords = ["wasm", "web", "egui", "gui", "gamedev"]
 include = [ "**/*.rs", "Cargo.toml"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-egui = { version = "0.9.0", path = "../egui" }
-epi = { version = "0.9.0", path = "../epi" }
+egui = { version = "0.9.0" }
+epi = { version = "0.9.0" }
 js-sys = "0.3"
 serde = { version = "1", optional = true }
 serde_json = { version = "1", optional = true }

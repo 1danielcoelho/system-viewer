@@ -398,14 +398,14 @@ impl crate::Painter for WebGlPainter {
         let height = self.canvas.height() as i32;
         gl.viewport(0, 0, width, height);
 
-        let clear_color: Color32 = clear_color.into();
-        gl.clear_color(
-            clear_color[0] as f32 / 255.0,
-            clear_color[1] as f32 / 255.0,
-            clear_color[2] as f32 / 255.0,
-            clear_color[3] as f32 / 255.0,
-        );
-        gl.clear(Gl::COLOR_BUFFER_BIT);
+        // let clear_color: Color32 = clear_color.into();
+        // gl.clear_color(
+        //     clear_color[0] as f32 / 255.0,
+        //     clear_color[1] as f32 / 255.0,
+        //     clear_color[2] as f32 / 255.0,
+        //     clear_color[3] as f32 / 255.0,
+        // );
+        // gl.clear(Gl::COLOR_BUFFER_BIT);
     }
 
     fn paint_meshes(
