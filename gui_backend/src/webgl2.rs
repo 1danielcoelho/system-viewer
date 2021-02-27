@@ -6,10 +6,8 @@ use {
     web_sys::{WebGl2RenderingContext, WebGlBuffer, WebGlProgram, WebGlShader, WebGlTexture},
 };
 
-use egui::{
-    emath::{clamp, vec2},
-    epaint::{Color32, Texture},
-};
+use egui::emath::{clamp, vec2};
+use egui::Color32;
 
 type Gl = WebGl2RenderingContext;
 
@@ -193,7 +191,7 @@ impl WebGl2Painter {
         }
     }
 
-    fn paint_mesh(&self, mesh: &egui::epaint::Mesh16) -> Result<(), JsValue> {
+    fn paint_mesh(&self, mesh: &epaint::Mesh16) -> Result<(), JsValue> {
         debug_assert!(mesh.is_valid());
 
         let mut positions: Vec<f32> = Vec::with_capacity(2 * mesh.vertices.len());
@@ -352,7 +350,7 @@ impl crate::Painter for WebGl2Painter {
         &self.canvas_id
     }
 
-    fn upload_egui_texture(&mut self, texture: &Texture) {
+    fn upload_egui_texture(&mut self, texture: &egui::Texture) {
         if self.egui_texture_version == Some(texture.version) {
             return; // No change
         }
@@ -390,7 +388,7 @@ impl crate::Painter for WebGl2Painter {
         self.egui_texture_version = Some(texture.version);
     }
 
-    fn clear(&mut self, clear_color: egui::Rgba) {
+    fn clear(&mut self, _clear_color: egui::Rgba) {
         let gl = &self.gl;
 
         gl.disable(Gl::SCISSOR_TEST);

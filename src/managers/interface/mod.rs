@@ -28,7 +28,7 @@ macro_rules! handle_output {
 }
 
 pub fn handle_output_func(state: &mut AppState, output: egui::Response) {
-    if output.hovered {
+    if output.hovered() {
         state.input.over_ui = true;
 
         if state.input.m0 == ButtonState::Pressed {
@@ -128,7 +128,10 @@ impl InterfaceManager {
     fn pre_draw(&mut self, state: &mut AppState) {
         state.input.over_ui = false;
 
-        let mut raw_input = self.web_input.new_frame();
+        let mut raw_input = self.web_input.new_frame(egui::Vec2 {
+            x: state.canvas_width as f32,
+            y: state.canvas_height as f32,
+        });
 
         // If we have pointer lock then we don't really want to use the UI (we're rotating/orbiting/etc.)
         // so don't give the updated mouse position to egui
@@ -178,7 +181,9 @@ impl InterfaceManager {
         // We shouldn't need to raycast against the drawn elements because every widget we draw will optionally
         // also write to AppState if the mouse is over itself
         let (_, paint_jobs) = self.backend.end_frame().unwrap();
-        self.backend.paint(paint_jobs).expect("Failed to paint!");
+        self.backend
+            .paint(egui::Rgba::TRANSPARENT, paint_jobs)
+            .expect("Failed to paint!");
     }
 
     fn draw_main_ui(
@@ -209,232 +214,220 @@ impl InterfaceManager {
             let old_stroke = style.visuals.widgets.noninteractive.bg_stroke.width;
 
             style.visuals.widgets.noninteractive.bg_fill =
-                egui::Srgba::from_rgba_unmultiplied(255, 0, 0, 0);
+                egui::Color32::from_rgba_unmultiplied(255, 0, 0, 0);
             style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
             ui.ctx().set_style(style);
 
-            let response = egui::TopPanel::top(egui::Id::new("top panel"))
-                .show(&ui.ctx(), |ui| {
-                    let num_bodies = scene_man
-                        .get_main_scene()
-                        .unwrap()
-                        .physics
-                        .get_num_components();
+            let response = egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
+                let num_bodies = scene_man
+                    .get_main_scene()
+                    .unwrap()
+                    .physics
+                    .get_num_components();
 
-                    let sim_date_str = format!(
-                        "{}",
-                        julian_date_number_to_date(Jdn(state.sim_time_s / 86400.0 + J2000_JDN.0))
-                    );
+                let sim_date_str = format!(
+                    "{}",
+                    julian_date_number_to_date(Jdn(state.sim_time_s / 86400.0 + J2000_JDN.0))
+                );
 
-                    ui.with_layout(egui::Layout::left_to_right(), |ui| {
-                        egui::menu::menu(ui, "⚙", |ui| {
-                            let mut total_res = ui.button("Reset scene");
-                            if total_res.clicked {}
+                ui.with_layout(egui::Layout::left_to_right(), |ui| {
+                    egui::menu::menu(ui, "⚙", |ui| {
+                        let mut total_res = ui.button("Reset scene");
+                        if total_res.clicked() {}
 
-                            let res = ui.button("Scene browser");
-                            if res.clicked {
-                                self.open_windows.scene_browser = !self.open_windows.scene_browser;
+                        let res = ui.button("Scene browser");
+                        if res.clicked() {
+                            self.open_windows.scene_browser = !self.open_windows.scene_browser;
+                        }
+                        total_res |= res;
+
+                        ui.separator();
+
+                        let res = ui.button("About");
+                        if res.clicked() {
+                            self.open_windows.about = !self.open_windows.about;
+                        }
+                        total_res |= res;
+
+                        if DEBUG {
+                            ui.separator();
+                            ui.separator();
+
+                            let res = ui.button("New");
+                            if res.clicked() {
+                                let new_scene_name =
+                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
+                                scene_man.set_scene(&new_scene_name, res_man, state);
+                            }
+                            total_res |= res;
+
+                            total_res |= ui.button("Open");
+
+                            total_res |= ui.button("Save");
+
+                            ui.separator();
+
+                            let res = ui.button("Close");
+                            if res.clicked() {
+                                let new_scene_name =
+                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
+                                scene_man.set_scene(&new_scene_name, res_man, state);
+                            }
+                            total_res |= res;
+
+                            let res = ui.button("Inject GLB...");
+                            if res.clicked() {
+                                prompt_for_bytes_file("glb_inject", ".glb");
                             }
                             total_res |= res;
 
                             ui.separator();
 
-                            let res = ui.button("About");
-                            if res.clicked {
-                                self.open_windows.about = !self.open_windows.about;
+                            let res = ui.button("Debug");
+                            if res.clicked() {
+                                self.open_windows.debug = !self.open_windows.debug;
                             }
                             total_res |= res;
 
-                            if DEBUG {
-                                ui.separator();
-                                ui.separator();
-
-                                let res = ui.button("New");
-                                if res.clicked {
-                                    let new_scene_name = scene_man
-                                        .new_scene("New scene")
-                                        .unwrap()
-                                        .identifier
-                                        .clone();
-                                    scene_man.set_scene(&new_scene_name, res_man, state);
-                                }
-                                total_res |= res;
-
-                                total_res |= ui.button("Open");
-
-                                total_res |= ui.button("Save");
-
-                                ui.separator();
-
-                                let res = ui.button("Close");
-                                if res.clicked {
-                                    let new_scene_name = scene_man
-                                        .new_scene("New scene")
-                                        .unwrap()
-                                        .identifier
-                                        .clone();
-                                    scene_man.set_scene(&new_scene_name, res_man, state);
-                                }
-                                total_res |= res;
-
-                                let res = ui.button("Inject GLB...");
-                                if res.clicked {
-                                    prompt_for_bytes_file("glb_inject", ".glb");
-                                }
-                                total_res |= res;
-
-                                ui.separator();
-
-                                let res = ui.button("Debug");
-                                if res.clicked {
-                                    self.open_windows.debug = !self.open_windows.debug;
-                                }
-                                total_res |= res;
-
-                                let res = ui.button("Scene hierarchy");
-                                if res.clicked {
-                                    self.open_windows.scene_hierarchy =
-                                        !self.open_windows.scene_hierarchy;
-                                }
-                                total_res |= res;
-
-                                ui.separator();
-
-                                let res = ui.button("Organize windows");
-                                if res.clicked {
-                                    ui.ctx().memory().reset_areas();
-                                }
-                                total_res |= res;
-
-                                let res = ui.button("Close all");
-                                if res.clicked {
-                                    self.open_windows.debug = false;
-                                    self.open_windows.scene_hierarchy = false;
-                                    self.open_windows.about = false;
-                                    self.open_windows.scene_browser = false;
-                                }
-                                total_res |= res;
-
-                                ui.separator();
-
-                                let res = ui
-                                    .button("Clear Egui memory")
-                                    .on_hover_text("Forget scroll, collapsing headers etc");
-                                if res.clicked {
-                                    *ui.ctx().memory() = Default::default();
-                                }
-                                total_res |= res;
-
-                                let res = ui
-                                    .button("Reset app state")
-                                    .on_hover_text("Clears app state from local storage");
-                                if res.clicked {
-                                    state.pending_reset = true;
-                                }
-                                total_res |= res;
+                            let res = ui.button("Scene hierarchy");
+                            if res.clicked() {
+                                self.open_windows.scene_hierarchy =
+                                    !self.open_windows.scene_hierarchy;
                             }
+                            total_res |= res;
 
-                            handle_output!(state, total_res);
-                        });
+                            ui.separator();
 
-                        if ui
-                            .add(
-                                egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
-                                    .text_style(egui::TextStyle::Monospace),
-                            )
-                            .clicked
-                        {
-                            log::info!("Clicked on clock!");
+                            let res = ui.button("Organize windows");
+                            if res.clicked() {
+                                ui.ctx().memory().reset_areas();
+                            }
+                            total_res |= res;
+
+                            let res = ui.button("Close all");
+                            if res.clicked() {
+                                self.open_windows.debug = false;
+                                self.open_windows.scene_hierarchy = false;
+                                self.open_windows.about = false;
+                                self.open_windows.scene_browser = false;
+                            }
+                            total_res |= res;
+
+                            ui.separator();
+
+                            let res = ui
+                                .button("Clear Egui memory")
+                                .on_hover_text("Forget scroll, collapsing headers etc");
+                            if res.clicked() {
+                                *ui.ctx().memory() = Default::default();
+                            }
+                            total_res |= res;
+
+                            let res = ui
+                                .button("Reset app state")
+                                .on_hover_text("Clears app state from local storage");
+                            if res.clicked() {
+                                state.pending_reset = true;
+                            }
+                            total_res |= res;
                         }
 
-                        ui.horizontal(|ui| {
-                            ui.add(
-                                egui::DragValue::f64(&mut state.simulation_speed)
-                                    .speed(0.001)
-                                    .suffix("x speed"),
-                            );
-                        });
+                        handle_output!(state, total_res);
+                    });
 
-                        if ui
-                            .add(
-                                egui::Button::new(sim_date_str)
-                                    .text_style(egui::TextStyle::Monospace),
-                            )
-                            .clicked
-                        {
-                            log::info!("Clicked on clock!");
-                        }
+                    if ui
+                        .add(
+                            egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
+                                .text_style(egui::TextStyle::Monospace),
+                        )
+                        .clicked()
+                    {
+                        log::info!("Clicked on clock!");
+                    }
 
-                        if ui
-                            .add(
-                                egui::Button::new(format!("{} bodies", num_bodies))
-                                    .text_style(egui::TextStyle::Monospace),
-                            )
-                            .clicked
-                        {
-                            self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
-                        }
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::DragValue::f64(&mut state.simulation_speed)
+                                .speed(0.001)
+                                .suffix("x speed"),
+                        );
+                    });
 
-                        ui.horizontal(|ui| {
-                            let ref_name = match scene_man.get_main_scene() {
-                                Some(scene) => match state.camera.reference_entity {
-                                    Some(reference) => {
-                                        Some(scene.get_entity_name(reference).unwrap_or_default())
-                                    }
-                                    None => None,
-                                },
+                    if ui
+                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
+                        .clicked()
+                    {
+                        log::info!("Clicked on clock!");
+                    }
+
+                    if ui
+                        .add(
+                            egui::Button::new(format!("{} bodies", num_bodies))
+                                .text_style(egui::TextStyle::Monospace),
+                        )
+                        .clicked()
+                    {
+                        self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
+                    }
+
+                    ui.horizontal(|ui| {
+                        let ref_name = match scene_man.get_main_scene() {
+                            Some(scene) => match state.camera.reference_entity {
+                                Some(reference) => {
+                                    Some(scene.get_entity_name(reference).unwrap_or_default())
+                                }
                                 None => None,
-                            };
+                            },
+                            None => None,
+                        };
 
-                            let mut style = ui.ctx().style().deref().clone();
-                            style.visuals.widgets.noninteractive.bg_stroke.width = 1.0;
-                            style.spacing.window_padding = egui::vec2(0.0, 0.0);
-                            style.visuals.widgets.active.fg_stroke.width = 3.0;
+                        let mut style = ui.ctx().style().deref().clone();
+                        style.visuals.widgets.noninteractive.bg_stroke.width = 1.0;
+                        style.spacing.window_padding = egui::vec2(0.0, 0.0);
+                        style.visuals.widgets.active.fg_stroke.width = 3.0;
+                        style.visuals.widgets.noninteractive.bg_fill =
+                            style.visuals.widgets.inactive.bg_fill;
+
+                        if ref_name.is_some() {
                             style.visuals.widgets.noninteractive.bg_fill =
-                                style.visuals.widgets.inactive.bg_fill;
+                                egui::Color32::from_rgba_unmultiplied(255, 255, 0, 20);
+                        } else if state.input.modifiers.alt
+                            && state.input.m0 != ButtonState::Depressed
+                        {
+                            style.visuals.widgets.noninteractive.bg_fill =
+                                egui::Color32::from_rgba_unmultiplied(255, 0, 0, 25);
+                        }
 
-                            if ref_name.is_some() {
-                                style.visuals.widgets.noninteractive.bg_fill =
-                                    egui::Srgba::from_rgba_unmultiplied(255, 255, 0, 20);
-                            } else if state.input.modifiers.alt
-                                && state.input.m0 != ButtonState::Depressed
-                            {
-                                style.visuals.widgets.noninteractive.bg_fill =
-                                    egui::Srgba::from_rgba_unmultiplied(255, 0, 0, 25);
+                        egui::Frame::popup(&style).show(ui, |ui| {
+                            ui.label("");
+
+                            ui.add(
+                                egui::Label::new(ref_name.unwrap_or("Not tracking"))
+                                    .text_style(egui::TextStyle::Monospace)
+                                    .text_color(match ref_name {
+                                        Some(_) => egui::Color32::from_rgba_unmultiplied(
+                                            255, 255, 255, 255,
+                                        ),
+                                        None => egui::Color32::from_rgba_unmultiplied(
+                                            255, 255, 255, 100,
+                                        ),
+                                    }),
+                            );
+
+                            let clear_resp = ui
+                                .add(
+                                    egui::Button::new("❌")
+                                        .enabled(state.camera.reference_entity.is_some()),
+                                )
+                                .on_hover_text("Stop tracking this body");
+                            if clear_resp.clicked() {
+                                state.camera.next_reference_entity = Some(ReferenceChange::Clear);
                             }
-
-                            egui::Frame::popup(&style).show(ui, |ui| {
-                                ui.label("");
-
-                                ui.add(
-                                    egui::Label::new(ref_name.unwrap_or("Not tracking"))
-                                        .text_style(egui::TextStyle::Monospace)
-                                        .text_color(match ref_name {
-                                            Some(_) => egui::Srgba::from_rgba_unmultiplied(
-                                                255, 255, 255, 255,
-                                            ),
-                                            None => egui::Srgba::from_rgba_unmultiplied(
-                                                255, 255, 255, 100,
-                                            ),
-                                        }),
-                                );
-
-                                let clear_resp = ui
-                                    .add(
-                                        egui::Button::new("❌")
-                                            .enabled(state.camera.reference_entity.is_some()),
-                                    )
-                                    .on_hover_text("Stop tracking this body");
-                                if clear_resp.clicked {
-                                    state.camera.next_reference_entity =
-                                        Some(ReferenceChange::Clear);
-                                }
-                            });
                         });
                     });
-                })
-                .1;
-            handle_output!(state, response);
+                });
+            });
+            handle_output!(state, response.response);
 
             let mut style = ui.ctx().style().deref().clone();
             style.visuals.widgets.noninteractive.bg_fill = old_fill;
@@ -566,19 +559,19 @@ impl InterfaceManager {
                         ui.horizontal(|ui| {
                             if state.camera.reference_entity == Some(*selected_entity) {
                                 let but_res = ui.button("❌").on_hover_text("Stop tracking");
-                                if but_res.clicked {
+                                if but_res.clicked() {
                                     entity_to_track = Some(ReferenceChange::Clear);
                                 }
                             } else {
                                 let but_res = ui.button("🎥").on_hover_text("Track");
-                                if but_res.clicked {
+                                if but_res.clicked() {
                                     entity_to_track =
                                         Some(ReferenceChange::TrackKeepLocation(*selected_entity));
                                 }
                             }
 
                             let but_res = ui.button("🔍").on_hover_text("Go to");
-                            if but_res.clicked {
+                            if but_res.clicked() {
                                 entity_to_go_to = Some(*selected_entity);
                             }
                         });
@@ -674,7 +667,7 @@ impl InterfaceManager {
                         cols[0].label("Light intensity exponent:");
                         cols[1].add(
                             egui::DragValue::f32(&mut state.light_intensity)
-                                .range(-1000.0..=1000.0)
+                                .clamp_range(-1000.0..=1000.0)
                                 .speed(0.01),
                         )
                     });
@@ -685,7 +678,7 @@ impl InterfaceManager {
                         cols[0].label("Vertical FOV [deg]:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.camera.fov_v)
-                                .range(0.1..=120.0)
+                                .clamp_range(0.1..=120.0)
                                 .speed(0.5),
                         )
                     });
@@ -715,7 +708,7 @@ impl InterfaceManager {
                                 );
                                 r
                             })
-                            .1
+                            .response
                     });
 
                     if let Some(scene) = scene_man.get_main_scene_mut() {
@@ -734,7 +727,7 @@ impl InterfaceManager {
                                         let clear_resp = ui
                                             .button("🗑")
                                             .on_hover_text("Stop tracking this entity");
-                                        if clear_resp.clicked {
+                                        if clear_resp.clicked() {
                                             state.camera.next_reference_entity =
                                                 Some(ReferenceChange::Clear);
                                         }
@@ -742,7 +735,7 @@ impl InterfaceManager {
                                         r |= clear_resp;
                                         r
                                     })
-                                    .1;
+                                    .response;
                             };
 
                             res
@@ -755,7 +748,7 @@ impl InterfaceManager {
                         cols[0].label("Move speed [???]:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.move_speed)
-                                .range(1.0..=1000.0)
+                                .clamp_range(1.0..=1000.0)
                                 .speed(0.1),
                         )
                     });
@@ -764,7 +757,7 @@ impl InterfaceManager {
                         cols[0].label("Rotation speed:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.rotate_speed)
-                                .range(1.0..=10.0)
+                                .clamp_range(1.0..=10.0)
                                 .speed(0.1),
                         )
                     });
@@ -780,14 +773,14 @@ impl InterfaceManager {
                                         ui.label(format!("{:?}", selection));
                                         let but_res =
                                             ui.button("🎥").on_hover_text("Track this entity");
-                                        if but_res.clicked {
+                                        if but_res.clicked() {
                                             state.camera.next_reference_entity =
                                                 Some(ReferenceChange::TrackKeepLocation(selection));
                                         }
 
                                         but_res
                                     })
-                                    .1
+                                    .response
                             });
 
                             response |= ui.columns(2, |cols| {
@@ -978,7 +971,7 @@ impl InterfaceManager {
                         cols[1].columns(2, |cols| {
                             cols[0].with_layout(egui::Layout::right_to_left(), |ui| {
                                 if selected_is_active {
-                                    if ui.button("   Reset   ").clicked {
+                                    if ui.button("   Reset   ").clicked() {
                                         // HACK
                                         scene_man.set_scene("empty", res_man, state);
                                         scene_man.set_scene(
@@ -988,7 +981,7 @@ impl InterfaceManager {
                                         );
                                     }
                                 } else {
-                                    if ui.button("   Open   ").clicked {
+                                    if ui.button("   Open   ").clicked() {
                                         scene_man.set_scene(
                                             &self.selected_scene_desc_name,
                                             res_man,
@@ -1005,7 +998,7 @@ impl InterfaceManager {
                                             .enabled(selected_is_active),
                                     )
                                     .on_hover_text("Close this scene");
-                                if close_resp.clicked {
+                                if close_resp.clicked() {
                                     scene_man.set_scene("empty", res_man, state);
                                 }
                             });
@@ -1046,7 +1039,7 @@ impl InterfaceManager {
                                 }
 
                                 if let Some(name) = &entity.name {
-                                    if ui.button(name).clicked {
+                                    if ui.button(name).clicked() {
                                         state.selection.clear();
                                         state.selection.insert(entity.current);
                                     }

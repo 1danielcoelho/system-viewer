@@ -2,18 +2,13 @@ use crate::app_state::AppState;
 use crate::components::light::LightType;
 use crate::components::{MeshComponent, TransformComponent};
 use crate::glc;
-use crate::managers::resource::material::{
-    FrameUniformValues, Material, UniformName, UniformValue,
-};
-use crate::managers::resource::mesh::Mesh;
+use crate::managers::resource::material::{FrameUniformValues, UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::utils::gl::GL;
 use crate::GLCTX;
 use na::*;
-use std::cell::RefCell;
 use std::convert::TryInto;
-use std::rc::Rc;
 use web_sys::WebGl2RenderingContext;
 
 pub const NUM_LIGHTS: usize = 8;
@@ -208,11 +203,12 @@ fn draw_skybox(
     let mut v_no_trans = state.camera.v_inv.clone();
     v_no_trans.set_column(3, &Vector4::new(0.0, 0.0, 0.0, 1.0));
 
-    let vp_inv_arr: [f32; 16] =
-        na::convert::<Matrix4<f64>, Matrix4<f32>>(scene.skybox_trans.unwrap() * v_no_trans * state.camera.p_inv)
-            .as_slice()
-            .try_into()
-            .unwrap();
+    let vp_inv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(
+        scene.skybox_trans.unwrap() * v_no_trans * state.camera.p_inv,
+    )
+    .as_slice()
+    .try_into()
+    .unwrap();
 
     let old_depth_func = gl.get_parameter(GL::DEPTH_FUNC).unwrap().as_f64().unwrap() as u32;
     gl.depth_func(GL::LEQUAL);
