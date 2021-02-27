@@ -505,6 +505,12 @@ response |= ui.add(label);
         > - Just open the current scene again
         > - Change open button to 'reset'
     > - Unload scene when switching away from it
+>- Had to rotate each emitted one (from the rightmost 6 separate image options on https://360toolkit.co/)
+    >- Back: Left
+    >- Right: Left Left
+    >- Bottom: Right
+    >- Top: Left
+    >- Front: Left
 
 # Just fork egui instead of having a custom gui_backend
 - Make sure its legally OK to do that though 
@@ -531,6 +537,8 @@ response |= ui.add(label);
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
+
+
 
 # Known bugs
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it

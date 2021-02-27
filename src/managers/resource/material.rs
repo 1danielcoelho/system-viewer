@@ -26,6 +26,7 @@ pub enum UniformName {
     WVTrans,
     WVInvTranspTrans,
     WVPTrans,
+    VPInvTrans,
     LightTypes,
     LightPosDir,
     LightColors,
@@ -43,7 +44,10 @@ pub enum UniformName {
 impl UniformName {
     pub fn default_value(&self) -> UniformValue {
         match *self {
-            UniformName::WVTrans | UniformName::WVInvTranspTrans | UniformName::WVPTrans => {
+            UniformName::WVTrans
+            | UniformName::WVInvTranspTrans
+            | UniformName::WVPTrans
+            | UniformName::VPInvTrans => {
                 UniformValue::Matrix([
                     1.0, 0.0, 0.0, 0.0, //
                     0.0, 1.0, 0.0, 0.0, //
@@ -74,6 +78,7 @@ impl UniformName {
             UniformName::WVTrans => "u_wv_trans",
             UniformName::WVInvTranspTrans => "u_wv_inv_transp_trans",
             UniformName::WVPTrans => "u_wvp_trans",
+            UniformName::VPInvTrans => "u_vp_inv_trans",
             UniformName::LightTypes => "u_light_types",
             UniformName::LightPosDir => "u_light_pos_or_dir_c",
             UniformName::LightColors => "u_light_colors",

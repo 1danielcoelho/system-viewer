@@ -204,65 +204,31 @@ fn draw_skybox(
         return;
     }
 
-    let mut w = scene.skybox_trans.unwrap();
-    w.append_scaling_mut(-state.camera.far * 0.005);
-    w.append_translation_mut(&state.camera.pos.coords);
+    // Remove translation or else we can get precision issues on large coordinates
+    let mut v_no_trans = state.camera.v_inv.clone();
+    v_no_trans.set_column(3, &Vector4::new(0.0, 0.0, 0.0, 1.0));
 
-    let wv = uniform_data.v * w;
-    let wv_inv_trans = wv.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
-    let wvp = uniform_data.pv * w;
+    let vp_inv_arr: [f32; 16] =
+        na::convert::<Matrix4<f64>, Matrix4<f32>>(v_no_trans * state.camera.p_inv)
+            .as_slice()
+            .try_into()
+            .unwrap();
 
-    let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
-        .as_slice()
-        .try_into()
-        .unwrap();
-    let wv_inv_trans_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv_inv_trans)
-        .as_slice()
-        .try_into()
-        .unwrap();
-    let wvp_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wvp)
-        .as_slice()
-        .try_into()
-        .unwrap();
+    let old_depth_func = gl.get_parameter(GL::DEPTH_FUNC).unwrap().as_f64().unwrap() as u32;
+    gl.depth_func(GL::LEQUAL);
 
-    for (primitive_index, primitive) in scene
+    for primitive in scene
         .skybox_mesh
         .as_ref()
         .unwrap()
         .borrow()
         .primitives
         .iter()
-        .enumerate()
     {
         if let Some(mat) = &scene.skybox_mat {
             let mut mat_mut = mat.borrow_mut();
 
-            mat_mut.set_uniform_value(UniformName::WVTrans, UniformValue::Matrix(wv_arr));
-            mat_mut.set_uniform_value(
-                UniformName::WVInvTranspTrans,
-                UniformValue::Matrix(wv_inv_trans_arr),
-            );
-            mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
-
-            mat_mut.set_uniform_value(
-                UniformName::LightTypes,
-                UniformValue::IntArr(uniform_data.light_types.clone()),
-            );
-
-            mat_mut.set_uniform_value(
-                UniformName::LightPosDir,
-                UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
-            );
-
-            mat_mut.set_uniform_value(
-                UniformName::LightColors,
-                UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
-            );
-
-            mat_mut.set_uniform_value(
-                UniformName::LightIntensities,
-                UniformValue::FloatArr(uniform_data.light_intensities.clone()),
-            );
+            mat_mut.set_uniform_value(UniformName::VPInvTrans, UniformValue::Matrix(vp_inv_arr));
 
             mat_mut.bind_for_drawing(gl);
         }
@@ -273,4 +239,6 @@ fn draw_skybox(
             mat.borrow().unbind_from_drawing(gl);
         }
     }
+
+    gl.depth_func(old_depth_func);
 }

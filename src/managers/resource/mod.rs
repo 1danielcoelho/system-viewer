@@ -317,12 +317,14 @@ impl TempCubemap {
 
     pub fn get_target_from_index(face_index: usize) -> Option<u32> {
         match face_index {
-            TempCubemap::LEFT => Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Y),
-            TempCubemap::RIGHT => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Y),
-            TempCubemap::TOP => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Z),
-            TempCubemap::BOTTOM => Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Z),
-            TempCubemap::FRONT => Some(GL::TEXTURE_CUBE_MAP_POSITIVE_X),
-            TempCubemap::BACK => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_X),
+            TempCubemap::LEFT =>   Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Y),
+            TempCubemap::RIGHT =>  Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Y),
+
+            TempCubemap::TOP =>    Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Z),
+            TempCubemap::BOTTOM => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_X),
+
+            TempCubemap::FRONT =>  Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Z),
+            TempCubemap::BACK =>   Some(GL::TEXTURE_CUBE_MAP_POSITIVE_X),
             _ => None,
         }
     }
@@ -478,7 +480,7 @@ impl ResourceManager {
         }
 
         let default_mat = self.get_or_create_material("default");
-        let default_mat_quad = self.get_or_create_material("skybox");
+        let default_mat_quad = self.get_or_create_material("default_screenspace");
 
         let mesh: Option<Rc<RefCell<Mesh>>> = match identifier {
             "quad" => Some(generate_canvas_quad(default_mat_quad)),
@@ -582,11 +584,17 @@ impl ResourceManager {
                 "white.frag",
                 &[UniformName::WVPTrans],
             )),
+            "default_screenspace" => Some(Material::new(
+                identifier,
+                "screenspace.vert",
+                "screenspace.frag",
+                &[],
+            )),
             "skybox" => Some(Material::new(
                 identifier,
                 "screenspace.vert",
                 "skybox.frag",
-                &[UniformName::WVPTrans],
+                &[UniformName::VPInvTrans],
             )),
             "vertex_color" => Some(Material::new(
                 identifier,

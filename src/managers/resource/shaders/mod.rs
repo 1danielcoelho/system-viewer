@@ -21,15 +21,18 @@ lazy_static! {
             "color.frag",
             "white.frag",
             "skybox.frag",
-            "brdf.glsl",
-            "constants.glsl",
-            "functions.glsl",
+            "screenspace.frag",
             "gltf_metal_rough.frag",
             "phong.frag",
             "uv0.frag",
             "uv1.frag",
             "world_normals.frag",
             "world_tangents.frag",
+
+            "brdf.glsl",
+            "constants.glsl",
+            "functions.glsl",
+
             "relay_all.vert",
             "relay_color.vert",
             "screenspace.vert"

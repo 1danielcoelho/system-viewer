@@ -117,7 +117,7 @@ pub fn generate_screen_space_quad(
         fill_float_attribute_buffer(
             &ctx,
             positions.as_ptr() as u32 / 4, // Divided by 4 because the wasm_bindgen memory buffer will be interpreted as an array of floats, so the prim.positions' array pointer target address (u8* basically) needs to be divided by 4 to get the correct starting element
-            positions.len() as u32 * 2, // Multiplying by 3 because this will be moved into an f32 buffer, and we have len * 2 f32s
+            positions.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
             &mut position_buffer,
         );
         ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
