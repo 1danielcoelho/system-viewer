@@ -1,19 +1,24 @@
+use crate::app_state::AppState;
 use crate::components::light::LightType;
-use crate::managers::scene::component_storage::ComponentStorage;
-use crate::{
-    app_state::AppState,
-    components::{MeshComponent, TransformComponent},
-    glc,
-    managers::resource::material::{FrameUniformValues, UniformName, UniformValue},
-    utils::gl::GL,
+use crate::components::{MeshComponent, TransformComponent};
+use crate::glc;
+use crate::managers::resource::material::{
+    FrameUniformValues, Material, UniformName, UniformValue,
 };
-use crate::{managers::scene::Scene, GLCTX};
+use crate::managers::resource::mesh::Mesh;
+use crate::managers::scene::component_storage::ComponentStorage;
+use crate::managers::scene::Scene;
+use crate::utils::gl::GL;
+use crate::GLCTX;
 use na::*;
+use std::cell::RefCell;
 use std::convert::TryInto;
+use std::rc::Rc;
 use web_sys::WebGl2RenderingContext;
 
 pub const NUM_LIGHTS: usize = 8;
 
+#[derive(Default)]
 pub struct RenderingSystem {}
 impl RenderingSystem {
     pub fn new() -> Self {
@@ -25,178 +30,247 @@ impl RenderingSystem {
             let ref_mut = gl.borrow_mut();
             let gl = ref_mut.as_ref().unwrap();
 
-            let mut uniform_data = self.pre_draw(state, gl, scene);
-            self.draw(gl, &mut uniform_data, scene);
-            self.post_draw(gl);
+            let mut uniform_data = pre_draw(state, gl, scene);
+            draw(gl, &mut uniform_data, scene);
+            draw_skybox(state, gl, &mut uniform_data, scene);
+            post_draw(gl);
         });
     }
+}
 
-    fn pre_draw(
-        &mut self,
-        state: &AppState,
-        gl: &WebGl2RenderingContext,
-        scene: &mut Scene,
-    ) -> FrameUniformValues {
-        // Setup GL state
-        glc!(gl, gl.enable(GL::CULL_FACE));
-        glc!(gl, gl.disable(GL::SCISSOR_TEST));
-        glc!(gl, gl.enable(GL::DEPTH_TEST));
-        glc!(
-            gl,
-            gl.viewport(0, 0, state.canvas_width as i32, state.canvas_height as i32,)
-        );
-        glc!(gl, gl.clear_color(0.1, 0.1, 0.2, 1.0));
-        glc!(gl, gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
+fn pre_draw(
+    state: &AppState,
+    gl: &WebGl2RenderingContext,
+    scene: &mut Scene,
+) -> FrameUniformValues {
+    // Setup GL state
+    glc!(gl, gl.enable(GL::CULL_FACE));
+    glc!(gl, gl.disable(GL::SCISSOR_TEST));
+    glc!(gl, gl.enable(GL::DEPTH_TEST));
+    glc!(
+        gl,
+        gl.viewport(0, 0, state.canvas_width as i32, state.canvas_height as i32,)
+    );
+    glc!(gl, gl.clear_color(0.1, 0.1, 0.2, 1.0));
+    glc!(gl, gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
 
-        let mut result = FrameUniformValues {
-            v: state.camera.v,
-            pv: state.camera.p * state.camera.v,
-            light_types: Vec::new(),
-            light_colors: Vec::new(),
-            light_pos_or_dir_c: Vec::new(),
-            light_intensities: Vec::new(),
+    let mut result = FrameUniformValues {
+        v: state.camera.v,
+        pv: state.camera.p * state.camera.v,
+        light_types: Vec::new(),
+        light_colors: Vec::new(),
+        light_pos_or_dir_c: Vec::new(),
+        light_intensities: Vec::new(),
+    };
+
+    result.light_types.reserve(NUM_LIGHTS);
+    result.light_colors.reserve(NUM_LIGHTS * 3);
+    result.light_pos_or_dir_c.reserve(NUM_LIGHTS * 3);
+    result.light_intensities.reserve(NUM_LIGHTS);
+
+    // Pick lights that will affect the scene (randomly for now)
+    let mut index = 0;
+    for (ent, light) in scene.light.iter() {
+        let pos = &scene
+            .transform
+            .get_component(*ent)
+            .unwrap()
+            .get_world_transform()
+            .trans;
+
+        let pos = match light.light_type {
+            LightType::Point => result.v.transform_point(&Point3::from(*pos)).coords,
+            LightType::Directional => result.v.transform_vector(pos),
         };
 
-        result.light_types.reserve(NUM_LIGHTS);
-        result.light_colors.reserve(NUM_LIGHTS * 3);
-        result.light_pos_or_dir_c.reserve(NUM_LIGHTS * 3);
-        result.light_intensities.reserve(NUM_LIGHTS);
+        result.light_types.push(light.light_type as i32);
 
-        // Pick lights that will affect the scene (randomly for now)
-        let mut index = 0;
-        for (ent, light) in scene.light.iter() {
-            let pos = &scene
-                .transform
-                .get_component(*ent)
-                .unwrap()
-                .get_world_transform()
-                .trans;
+        result.light_colors.push(light.color.x);
+        result.light_colors.push(light.color.y);
+        result.light_colors.push(light.color.z);
 
-            let pos = match light.light_type {
-                LightType::Point => result.v.transform_point(&Point3::from(*pos)).coords,
-                LightType::Directional => result.v.transform_vector(pos),
-            };
+        result
+            .light_intensities
+            .push(light.intensity.powf(state.light_intensity));
 
-            result.light_types.push(light.light_type as i32);
+        result.light_pos_or_dir_c.push(pos.x as f32);
+        result.light_pos_or_dir_c.push(pos.y as f32);
+        result.light_pos_or_dir_c.push(pos.z as f32);
 
-            result.light_colors.push(light.color.x);
-            result.light_colors.push(light.color.y);
-            result.light_colors.push(light.color.z);
+        // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
 
-            result
-                .light_intensities
-                .push(light.intensity.powf(state.light_intensity));
+        index += 1;
+        if index >= NUM_LIGHTS {
+            break;
+        }
+    }
 
-            result.light_pos_or_dir_c.push(pos.x as f32);
-            result.light_pos_or_dir_c.push(pos.y as f32);
-            result.light_pos_or_dir_c.push(pos.z as f32);
+    return result;
+}
 
-            // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
+fn draw(gl: &WebGl2RenderingContext, uniform_data: &mut FrameUniformValues, scene: &mut Scene) {
+    for (t, m) in scene.transform.iter().zip(scene.mesh.iter()) {
+        draw_one(gl, uniform_data, t, m);
+    }
+}
 
-            index += 1;
-            if index >= NUM_LIGHTS {
-                break;
+fn post_draw(gl: &WebGl2RenderingContext) {
+    // Egui needs this disabled for now
+    glc!(gl, gl.disable(GL::DEPTH_TEST));
+}
+
+fn draw_one(
+    gl: &WebGl2RenderingContext,
+    uniform_data: &FrameUniformValues,
+    tc: &TransformComponent,
+    mc: &MeshComponent,
+) {
+    // We never do calculations in world space to evade precision problems:
+    // If we're at 15557283 and our target is at 15557284 we'd get tons of triangle jittering,
+    // but if we do it in camera space then we're at 0 and our target is at 1, which is fine
+    let w = tc.get_world_transform().to_matrix4();
+
+    let wv = uniform_data.v * w;
+    let wv_inv_trans = wv.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
+    let wvp = uniform_data.pv * w;
+
+    let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
+        .as_slice()
+        .try_into()
+        .unwrap();
+    let wv_inv_trans_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv_inv_trans)
+        .as_slice()
+        .try_into()
+        .unwrap();
+    let wvp_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wvp)
+        .as_slice()
+        .try_into()
+        .unwrap();
+
+    if let Some(mesh) = mc.get_mesh() {
+        for (primitive_index, primitive) in mesh.borrow().primitives.iter().enumerate() {
+            let resolved_mat = mc.get_resolved_material(primitive_index);
+
+            if let Some(mat) = &resolved_mat {
+                let mut mat_mut = mat.borrow_mut();
+
+                mat_mut.set_uniform_value(UniformName::WVTrans, UniformValue::Matrix(wv_arr));
+                mat_mut.set_uniform_value(
+                    UniformName::WVInvTranspTrans,
+                    UniformValue::Matrix(wv_inv_trans_arr),
+                );
+                mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
+
+                mat_mut.set_uniform_value(
+                    UniformName::LightTypes,
+                    UniformValue::IntArr(uniform_data.light_types.clone()),
+                );
+
+                mat_mut.set_uniform_value(
+                    UniformName::LightPosDir,
+                    UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
+                );
+
+                mat_mut.set_uniform_value(
+                    UniformName::LightColors,
+                    UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
+                );
+
+                mat_mut.set_uniform_value(
+                    UniformName::LightIntensities,
+                    UniformValue::FloatArr(uniform_data.light_intensities.clone()),
+                );
+
+                // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
+                mat_mut.bind_for_drawing(gl);
             }
-        }
 
-        return result;
-    }
+            primitive.draw(gl);
 
-    fn draw(
-        &self,
-        gl: &WebGl2RenderingContext,
-        uniform_data: &mut FrameUniformValues,
-        scene: &mut Scene,
-    ) {
-        for (t, m) in scene.transform.iter().zip(scene.mesh.iter()) {
-            self.draw_one(gl, uniform_data, t, m);
-        }
-    }
-
-    fn post_draw(&self, gl: &WebGl2RenderingContext) {
-        // Egui needs this disabled for now
-        glc!(gl, gl.disable(GL::DEPTH_TEST));
-    }
-
-    fn draw_one(
-        &self,
-        gl: &WebGl2RenderingContext,
-        uniform_data: &FrameUniformValues,
-        tc: &TransformComponent,
-        mc: &MeshComponent,
-    ) {
-        // We never do calculations in world space to evade precision problems:
-        // If we're at 15557283 and our target is at 15557284 we'd get tons of triangle jittering,
-        // but if we do it in camera space then we're at 0 and our target is at 1, which is fine
-        let w = tc.get_world_transform().to_matrix4();
-
-        let wv = uniform_data.v * w;
-        let wv_inv_trans = wv.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
-        let wvp = uniform_data.pv * w;
-
-        let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
-            .as_slice()
-            .try_into()
-            .unwrap();
-        let wv_inv_trans_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv_inv_trans)
-            .as_slice()
-            .try_into()
-            .unwrap();
-        let wvp_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wvp)
-            .as_slice()
-            .try_into()
-            .unwrap();
-
-        if let Some(mesh) = mc.get_mesh() {
-            for (primitive_index, primitive) in mesh.borrow().primitives.iter().enumerate() {
-                let resolved_mat = mc.get_resolved_material(primitive_index);
-
-                if let Some(mat) = &resolved_mat {
-                    let mut mat_mut = mat.borrow_mut();
-
-                    mat_mut.set_uniform_value(UniformName::WVTrans, UniformValue::Matrix(wv_arr));
-                    mat_mut.set_uniform_value(
-                        UniformName::WVInvTranspTrans,
-                        UniformValue::Matrix(wv_inv_trans_arr),
-                    );
-                    mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
-
-                    mat_mut.set_uniform_value(
-                        UniformName::LightTypes,
-                        UniformValue::IntArr(uniform_data.light_types.clone()),
-                    );
-
-                    mat_mut.set_uniform_value(
-                        UniformName::LightPosDir,
-                        UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
-                    );
-
-                    mat_mut.set_uniform_value(
-                        UniformName::LightColors,
-                        UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
-                    );
-
-                    mat_mut.set_uniform_value(
-                        UniformName::LightIntensities,
-                        UniformValue::FloatArr(uniform_data.light_intensities.clone()),
-                    );
-
-                    // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
-                    mat_mut.bind_for_drawing(gl);
-                }
-
-                primitive.draw(gl);
-
-                if let Some(mat) = &resolved_mat {
-                    mat.borrow().unbind_from_drawing(gl);
-                }
+            if let Some(mat) = &resolved_mat {
+                mat.borrow().unbind_from_drawing(gl);
             }
         }
     }
 }
 
-impl Default for RenderingSystem {
-    fn default() -> Self {
-        Self {}
+fn draw_skybox(
+    state: &AppState,
+    gl: &WebGl2RenderingContext,
+    uniform_data: &mut FrameUniformValues,
+    scene: &mut Scene,
+) {
+    if scene.skybox_mesh.is_none() || scene.skybox_trans.is_none() {
+        return;
+    }
+
+    let mut w = scene.skybox_trans.unwrap();
+    w.append_scaling_mut(-state.camera.far * 0.005);
+    w.append_translation_mut(&state.camera.pos.coords);
+
+    let wv = uniform_data.v * w;
+    let wv_inv_trans = wv.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
+    let wvp = uniform_data.pv * w;
+
+    let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
+        .as_slice()
+        .try_into()
+        .unwrap();
+    let wv_inv_trans_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv_inv_trans)
+        .as_slice()
+        .try_into()
+        .unwrap();
+    let wvp_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wvp)
+        .as_slice()
+        .try_into()
+        .unwrap();
+
+    for (primitive_index, primitive) in scene
+        .skybox_mesh
+        .as_ref()
+        .unwrap()
+        .borrow()
+        .primitives
+        .iter()
+        .enumerate()
+    {
+        if let Some(mat) = &scene.skybox_mat {
+            let mut mat_mut = mat.borrow_mut();
+
+            mat_mut.set_uniform_value(UniformName::WVTrans, UniformValue::Matrix(wv_arr));
+            mat_mut.set_uniform_value(
+                UniformName::WVInvTranspTrans,
+                UniformValue::Matrix(wv_inv_trans_arr),
+            );
+            mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
+
+            mat_mut.set_uniform_value(
+                UniformName::LightTypes,
+                UniformValue::IntArr(uniform_data.light_types.clone()),
+            );
+
+            mat_mut.set_uniform_value(
+                UniformName::LightPosDir,
+                UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
+            );
+
+            mat_mut.set_uniform_value(
+                UniformName::LightColors,
+                UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
+            );
+
+            mat_mut.set_uniform_value(
+                UniformName::LightIntensities,
+                UniformValue::FloatArr(uniform_data.light_intensities.clone()),
+            );
+
+            mat_mut.bind_for_drawing(gl);
+        }
+
+        primitive.draw(gl);
+
+        if let Some(mat) = &scene.skybox_mat {
+            mat.borrow().unbind_from_drawing(gl);
+        }
     }
 }

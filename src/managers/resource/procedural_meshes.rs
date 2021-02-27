@@ -1,3 +1,4 @@
+use crate::managers::resource::intermediate_mesh::generate_screen_space_quad;
 use crate::{
     managers::resource::{
         collider::{AxisAlignedBoxCollider, SphereCollider},
@@ -435,6 +436,10 @@ pub fn generate_ico_sphere(
             })),
         }],
     });
+}
+
+pub fn generate_canvas_quad(default_material: Option<Rc<RefCell<Material>>>) -> Rc<RefCell<Mesh>> {
+    return generate_screen_space_quad(default_material);
 }
 
 pub fn generate_cube(default_material: Option<Rc<RefCell<Material>>>) -> Rc<RefCell<Mesh>> {

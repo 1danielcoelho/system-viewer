@@ -515,6 +515,8 @@ response |= ui.add(label);
     > - Passable materials/colors for bodies
     - Correct-ish sun brightness
     - https://www.solarsystemscope.com/textures/
+    - https://svs.gsfc.nasa.gov/4851
+    - Used https://360toolkit.co/ to convert to cubemap
     - Fix normal and spec/roughness maps for Earth
     - Find a decent skybox and align it roughly
 - Good sample scenes    
@@ -528,6 +530,7 @@ response |= ui.add(label);
 - Update egui
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
+- Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
 # Known bugs
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
@@ -556,6 +559,8 @@ response |= ui.add(label);
 # I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
 
 # Good UV-mapped GLTF materials for the planets and asteroids (use blender?)
+
+# Now that I have WebGL2 I can change to native handling of BGR instead of converting
 
 # Window showing controls
 

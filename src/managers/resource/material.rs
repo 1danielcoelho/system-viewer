@@ -388,14 +388,26 @@ impl Material {
             // log::info!("\tBinding texture {} to unit {:?}", tex.name, unit);
 
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
-            gl.bind_texture(GL::TEXTURE_2D, tex.borrow().gl_handle.as_ref());
+
+            let tex_borrow = tex.borrow();
+            let target = match tex_borrow.is_cubemap {
+                false => GL::TEXTURE_2D,
+                true => GL::TEXTURE_CUBE_MAP,
+            };
+            gl.bind_texture(target, tex_borrow.gl_handle.as_ref());
         }
     }
 
     pub fn unbind_from_drawing(&self, gl: &WebGl2RenderingContext) {
-        for (unit, _) in &self.textures {
+        for (unit, tex) in &self.textures {
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
-            gl.bind_texture(GL::TEXTURE_2D, None);
+
+            let tex_borrow = tex.borrow();
+            let target = match tex_borrow.is_cubemap {
+                false => GL::TEXTURE_2D,
+                true => GL::TEXTURE_CUBE_MAP,
+            };
+            gl.bind_texture(target, None);
         }
 
         gl.use_program(None);

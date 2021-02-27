@@ -7,3 +7,4 @@ pub mod web;
 pub mod vec;
 pub mod units;
 pub mod egui;
+pub mod hashmap;

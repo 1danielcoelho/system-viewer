@@ -1,9 +1,7 @@
-use crate::{
-    managers::resource::{
-        collider::Collider, intermediate_mesh::IntermediatePrimitive, material::Material,
-    },
-    utils::gl::GL,
-};
+use crate::managers::resource::collider::Collider;
+use crate::managers::resource::intermediate_mesh::IntermediatePrimitive;
+use crate::managers::resource::material::Material;
+use crate::utils::gl::GL;
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;

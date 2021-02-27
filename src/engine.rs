@@ -1,6 +1,6 @@
 use crate::app_state::AppState;
-use crate::managers::scene::SceneManager;
 use crate::fetch_text;
+use crate::managers::scene::SceneManager;
 use crate::managers::{
     EventManager, InputManager, InterfaceManager, ResourceManager, SystemManager,
 };
@@ -89,7 +89,8 @@ impl Engine {
 
     pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {
         match content_type {
-            "texture" => self.receive_texture_bytes(url, data),
+            "cubemap_face" => self.res_man.receive_cubemap_face_file_bytes(url, data),
+            "texture" => self.res_man.receive_texture_file_bytes(url, data),
             "glb_inject" => self.receive_gltf_bytes(url, data, true),
             "glb_resource" => self.receive_gltf_bytes(url, data, false),
             _ => log::error!(
@@ -98,16 +99,6 @@ impl Engine {
                 url
             ),
         }
-    }
-
-    fn receive_texture_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
-        log::info!(
-            "Loading texture from file '{}' ({} bytes)",
-            file_identifier,
-            data.len()
-        );
-
-        self.res_man.create_texture(file_identifier, data, None);
     }
 
     fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8], inject: bool) {

@@ -2,9 +2,12 @@ use crate::components::{
     Component, LightComponent, MeshComponent, MetadataComponent, OrbitalComponent,
     PhysicsComponent, TransformComponent,
 };
+use crate::managers::resource::material::Material;
+use crate::managers::resource::mesh::Mesh;
 use crate::managers::scene::component_storage::{
     ComponentStorage, HashStorage, PackedStorage, SparseStorage,
 };
+use na::*;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::cmp::Reverse;
@@ -39,6 +42,12 @@ pub struct Scene {
     entity_to_index: Rc<RefCell<HashMap<Entity, u32>>>,
     last_used_entity: Entity,
 
+    // Not sure where these should be. I think once I expand the rendering capabilities
+    // to add shadows, multiple passes and stuff it will become more clear 
+    pub skybox_trans: Option<Matrix4<f64>>,
+    pub skybox_mesh: Option<Rc<RefCell<Mesh>>>,
+    pub skybox_mat: Option<Rc<RefCell<Material>>>,
+
     // Until there is a proper way to split member borrows in Rust I think
     // hard-coding the component types in here is the simplest way of doing things, sadly
     pub physics: PackedStorage<PhysicsComponent>,
@@ -60,6 +69,10 @@ impl Scene {
             free_indices: BinaryHeap::new(),
             entity_to_index: entity_to_index.clone(),
             last_used_entity: Entity(0),
+
+            skybox_trans: None,
+            skybox_mesh: None,
+            skybox_mat: None,
 
             physics: PackedStorage::new(),
             mesh: SparseStorage::new(entity_to_index.clone()),

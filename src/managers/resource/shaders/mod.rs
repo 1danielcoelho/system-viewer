@@ -20,6 +20,7 @@ lazy_static! {
             "basecolor.frag",
             "color.frag",
             "white.frag",
+            "skybox.frag",
             "brdf.glsl",
             "constants.glsl",
             "functions.glsl",
@@ -30,7 +31,8 @@ lazy_static! {
             "world_normals.frag",
             "world_tangents.frag",
             "relay_all.vert",
-            "relay_color.vert"
+            "relay_color.vert",
+            "screenspace.vert"
         ];
 
         let re = Regex::new("#include [\"<](.*)[\">]").unwrap();

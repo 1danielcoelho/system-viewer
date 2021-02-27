@@ -3,6 +3,7 @@ use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
 use crate::managers::resource::material::{UniformName, UniformValue};
+use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::description::SceneDescription;
 use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
@@ -319,6 +320,14 @@ impl SceneManager {
 
     fn load_test_scene(&mut self, res_man: &mut ResourceManager) -> &mut Scene {
         let scene = self.new_scene("test").unwrap();
+
+        scene.skybox_mesh = res_man.get_or_create_mesh("quad");
+        scene.skybox_trans = Some(Matrix4::<f64>::identity());
+        scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
+        scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
+            TextureUnit::BaseColor,
+            res_man.get_or_request_texture("starmap_16k", true),
+        );
 
         let sun_color: [f32; 3] = [1.0, 1.0, 0.8];
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");

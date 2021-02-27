@@ -208,7 +208,7 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
     state.real_delta_time_s = real_delta_s;
 }
 
-/** Synchronous function that JS calls to inject bytes data into the engine because we can't await for a JS promise from within the winit engine loop */
+/// Synchronous function that JS calls to inject text data into the engine because we can't await for a JS promise from within the winit engine loop
 #[wasm_bindgen]
 pub fn receive_text(url: &str, content_type: &str, text: &str) {
     log::info!(
@@ -226,7 +226,7 @@ pub fn receive_text(url: &str, content_type: &str, text: &str) {
     });
 }
 
-/** Synchronous function that JS calls to inject text data into the engine because we can't await for a JS promise from within the winit engine loop */
+/// Synchronous function that JS calls to inject bytes data into the engine because we can't await for a JS promise from within the winit engine loop
 #[wasm_bindgen]
 pub fn receive_bytes(url: &str, content_type: &str, data: &mut [u8]) {
     log::info!(

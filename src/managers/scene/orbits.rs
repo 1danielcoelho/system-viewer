@@ -307,7 +307,7 @@ pub fn get_body_material(
                 body.id
             );
 
-            mat_mut.set_texture(TextureUnit::BaseColor, res_man.get_or_request_texture(path));
+            mat_mut.set_texture(TextureUnit::BaseColor, res_man.get_or_request_texture(path, false));
         }
 
         if let Some(path) = params.get("normal_texture") {
@@ -317,7 +317,7 @@ pub fn get_body_material(
                 body.id
             );
 
-            mat_mut.set_texture(TextureUnit::Normal, res_man.get_or_request_texture(path));
+            mat_mut.set_texture(TextureUnit::Normal, res_man.get_or_request_texture(path, false));
         }
 
         if let Some(path) = params.get("emissive_texture") {
@@ -327,7 +327,7 @@ pub fn get_body_material(
                 body.id
             );
 
-            mat_mut.set_texture(TextureUnit::Emissive, res_man.get_or_request_texture(path));
+            mat_mut.set_texture(TextureUnit::Emissive, res_man.get_or_request_texture(path, false));
         }
     };
 

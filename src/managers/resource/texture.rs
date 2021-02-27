@@ -38,5 +38,8 @@ pub struct Texture {
     pub gl_format: u32,
 
     #[serde(skip)]
+    pub is_cubemap: bool,
+
+    #[serde(skip)]
     pub gl_handle: Option<WebGlTexture>,
 }

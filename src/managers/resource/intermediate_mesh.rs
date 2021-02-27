@@ -76,6 +76,83 @@ pub fn fill_short_element_buffer(
     );
 }
 
+pub fn generate_screen_space_quad(
+    default_material: Option<Rc<RefCell<Material>>>,
+) -> Rc<RefCell<Mesh>> {
+    let mut primitives: Vec<Primitive> = Vec::new();
+    primitives.reserve(1);
+
+    let positions: [f32; 4 * 2] = [
+        -1.0, -1.0, //
+        -1.0, 1.0, //
+        1.0, -1.0, //
+        1.0, 1.0, //
+    ];
+
+    let indices: [u16; 6] = [
+        0, 2, 1, //
+        1, 2, 3, //
+    ];
+
+    GLCTX.with(|ctx| {
+        let ref_mut = ctx.borrow_mut();
+        let ctx = ref_mut.as_ref().unwrap();
+
+        // Create VAO
+        let vao = ctx.create_vertex_array();
+        ctx.bind_vertex_array(vao.as_ref());
+
+        // Indices
+        let mut index_buffer = ctx.create_buffer().unwrap();
+        fill_short_element_buffer(
+            &ctx,
+            indices.as_ptr() as u32 / 2, // Divided by 2 because the wasm_bindgen memory will be interpreted as a short array, so the position of indices needs to be divided by 2 bytes to get to the correct element
+            indices.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
+            &mut index_buffer,
+        );
+        ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&index_buffer));
+
+        // Positions
+        let mut position_buffer = ctx.create_buffer().unwrap();
+        fill_float_attribute_buffer(
+            &ctx,
+            positions.as_ptr() as u32 / 4, // Divided by 4 because the wasm_bindgen memory buffer will be interpreted as an array of floats, so the prim.positions' array pointer target address (u8* basically) needs to be divided by 4 to get the correct starting element
+            positions.len() as u32 * 2, // Multiplying by 3 because this will be moved into an f32 buffer, and we have len * 2 f32s
+            &mut position_buffer,
+        );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::Position as u32,
+            2,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
+
+        ctx.bind_vertex_array(None);
+
+        primitives.push(Primitive {
+            name: String::from("0"),
+            index_count: indices.len() as i32,
+            vao: vao.unwrap(),
+            mode: GL::TRIANGLES,
+            default_material,
+            source_data: None,
+        });
+    });
+
+    let result = Rc::new(RefCell::new(Mesh {
+        name: String::from("quad"),
+        loaded: true,
+        primitives,
+        collider: None,
+    }));
+
+    return result;
+}
+
 pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
     let mut primitives: Vec<Primitive> = Vec::new();
     primitives.reserve(inter.primitives.len());
