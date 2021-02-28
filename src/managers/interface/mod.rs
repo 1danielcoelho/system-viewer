@@ -81,8 +81,8 @@ impl InterfaceManager {
             egui_consuming_pointer = ctx.wants_pointer_input();
         });
 
-        // Always reset the hovered entity even if we won't get to 
-        // hover new ones: This prevents the tooltip from sticking around if the UI 
+        // Always reset the hovered entity even if we won't get to
+        // hover new ones: This prevents the tooltip from sticking around if the UI
         // starts covering it (which can also include the label tooltip itself)
         state.hovered.clear();
         if let Some(scene) = scene_man.get_main_scene_mut() {
@@ -374,26 +374,46 @@ impl InterfaceManager {
 
                         let mut style = ui.ctx().style().deref().clone();
                         style.visuals.widgets.noninteractive.bg_stroke.width = 1.0;
+
                         style.spacing.window_padding = egui::vec2(0.0, 0.0);
-                        style.visuals.widgets.noninteractive.bg_fill =
-                            style.visuals.widgets.inactive.bg_fill;
 
                         style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
                         style.visuals.widgets.inactive.bg_stroke.width = 0.0;
 
                         style.visuals.window_shadow.extrusion = 0.0;
 
-                        if ref_name.is_some() {
-                            style.visuals.widgets.noninteractive.bg_fill =
-                                egui::Color32::from_rgba_unmultiplied(0, 80, 80, 200);
-                        } else if state.input.modifiers.alt
+                        let mut label_color = match ref_name {
+                            Some(_) => egui::Color32::from_rgba_unmultiplied(0, 80, 80, 200),
+                            None => style.visuals.widgets.inactive.bg_fill,
+                        };
+
+                        let mut text_color = match ref_name {
+                            Some(_) => egui::Color32::BLACK,
+                            None => style.visuals.widgets.inactive.fg_stroke.color,
+                        };
+
+                        let mut button_color = egui::Color32::from_rgba_unmultiplied(
+                            ((label_color.r() as f32 * 2.0).round()).clamp(0.0, 255.0) as u8,
+                            ((label_color.g() as f32 * 2.0).round()).clamp(0.0, 255.0) as u8,
+                            ((label_color.b() as f32 * 2.0).round()).clamp(0.0, 255.0) as u8,
+                            200,
+                        );
+
+                        // Make tracking button red to indicate the reason we won't be orbiting if we have
+                        // alt+click without the target
+                        if ref_name.is_none()
+                            && state.input.modifiers.alt
                             && state.input.m0 != ButtonState::Depressed
                         {
-                            style.visuals.widgets.noninteractive.bg_fill =
-                                egui::Color32::from_rgba_unmultiplied(255, 0, 0, 25);
+                            button_color = egui::Color32::from_rgba_unmultiplied(255, 0, 0, 125);
+                            label_color = egui::Color32::from_rgba_unmultiplied(255, 0, 0, 25);
+                            text_color = egui::Color32::BLACK;
                         }
 
-                        egui::Frame::popup(&style).show(ui, |ui| {
+                        style.visuals.widgets.noninteractive.bg_fill = label_color;
+                        style.visuals.widgets.inactive.bg_fill = button_color;
+
+                        egui::Frame::popup(&style.clone()).show(ui, |ui| {
                             ui.label("");
 
                             ui.add(
@@ -402,13 +422,21 @@ impl InterfaceManager {
                                     .text_color(style.visuals.widgets.inactive.fg_stroke.color),
                             );
 
-                            let clear_resp = ui
+                            style.visuals.widgets.noninteractive =
+                                old_style.visuals.widgets.noninteractive;
+                            style.spacing.window_padding = old_style.spacing.window_padding;
+                            ui.set_style(style.clone());
+                            ui.ctx().set_style(style.clone());
+
+                            if ui
                                 .add(
                                     egui::Button::new("❌")
-                                        .enabled(state.camera.reference_entity.is_some()),
+                                        .enabled(state.camera.reference_entity.is_some())
+                                        .text_color(text_color),
                                 )
-                                .on_hover_text("Stop tracking this body");
-                            if clear_resp.clicked() {
+                                .on_hover_text("Stop tracking this body")
+                                .clicked()
+                            {
                                 state.camera.next_reference_entity = Some(ReferenceChange::Clear);
                             }
                         });
@@ -565,7 +593,7 @@ impl InterfaceManager {
             }
 
             // It's important to offset the tooltip here so that egui doesn't
-            // claim the pointer is over any UI. Also without this the cursor is on 
+            // claim the pointer is over any UI. Also without this the cursor is on
             // top of the text anyway
             let hover_label_pos = egui::Pos2 {
                 x: state.input.mouse_x as f32 + 10.0,

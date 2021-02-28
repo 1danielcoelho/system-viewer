@@ -530,6 +530,7 @@ response |= ui.add(label);
         - Okay-ish results on the simulation for now, we can improve later
 - Do something for movement speed, it's almost always unexpected
     - I also have FOV basically unused...
+- Do something about near/far camera distance
 - Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
 - Update egui
@@ -537,7 +538,9 @@ response |= ui.add(label);
     > - Clicking on Track buttons doesn't work 
     > - No way of preventing movement when typing because the has_kb_focus member is private now
       >  - I opened a bug issue on egui's repo, so let's wait for that. If it's intentional we'll have to work around it somehow
-    - Maybe make the clear tracking style a little bit more visible
+    > - Maybe make the clear tracking style a little bit more visible
+    - Maybe add a colored "Tracking" button to the selection tooltip
+    - Can't click on main toolbar stop tracking button if the selected widget is opened for some reason
     - Fix scroll wheel not scrolling scroll panels
     > - Still get all the old bugs with the flickering labels
     > - Can't collapse the popup windows because any click closes them
@@ -546,6 +549,8 @@ response |= ui.add(label);
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
+
+# Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 
 # Known bugs
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
