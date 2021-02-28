@@ -93,20 +93,6 @@ pub async fn start_loop() {
     fetch_text("public/database/state_vectors.json", "vectors_database");
     fetch_text("public/database/osc_elements.json", "elements_database");
 
-    STATE.with(|s| {
-        if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
-            let s = ref_mut_s.as_mut().unwrap();
-
-            ENGINE.with(|e| {
-                if let Ok(mut ref_mut_e) = e.try_borrow_mut() {
-                    let e = ref_mut_e.as_mut().unwrap();
-
-                    e.scene_man.set_scene("test", &mut e.res_man, s);
-                }
-            });
-        }
-    });
-
     let event_loop = EventLoop::new();
 
     let window = WindowBuilder::new()

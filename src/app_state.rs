@@ -201,6 +201,7 @@ pub struct AppState {
     pub camera: Camera,
 
     pub open_windows: OpenWindows,
+    pub last_scene_identifier: String,
 }
 impl AppState {
     pub fn new() -> Self {
@@ -244,6 +245,7 @@ impl AppState {
                 p_inv: Matrix4::identity(),
             },
             open_windows: Default::default(),
+            last_scene_identifier: String::new(),
         }
     }
 

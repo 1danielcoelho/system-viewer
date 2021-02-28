@@ -25,6 +25,10 @@ pub struct SceneManager {
     main: Option<String>,
     loaded_scenes: HashMap<String, Scene>,
     pub descriptions: HashMap<String, SceneDescription>,
+
+    // If this is larger than zero we have scene fetch requests
+    // in flight, and may receive a new scene any second
+    pub num_scenes_expected: u32,
 }
 impl SceneManager {
     pub fn new() -> Self {
@@ -32,8 +36,10 @@ impl SceneManager {
             main: None,
             loaded_scenes: HashMap::new(),
             descriptions: HashMap::new(),
+            num_scenes_expected: 0,
         };
 
+        // Don't actually call set_scene here as we don't want to trigger all that stuff
         new_man.new_scene("empty");
         new_man.main = Some(String::from("empty"));
 
@@ -99,35 +105,38 @@ impl SceneManager {
                 state.simulation_speed = desc.simulation_scale;
 
                 // Camera target (already wrt. reference)
+                // If the identifier is the same as last_scene we're loading from state, so keep our camera transform
                 let mut need_go_to: bool = false;
-                if desc.camera_pos.is_some()
-                    && desc.camera_target.is_some()
-                    && desc.camera_up.is_some()
-                {
-                    state.camera.pos = desc.camera_pos.unwrap();
-                    state.camera.up = desc.camera_up.unwrap();
-                    state.camera.target = desc.camera_target.unwrap();
-                } else {
-                    need_go_to = true;
-                }
+                if state.last_scene_identifier.as_str() != identifier {
+                    if desc.camera_pos.is_some()
+                        && desc.camera_target.is_some()
+                        && desc.camera_up.is_some()
+                    {
+                        state.camera.pos = desc.camera_pos.unwrap();
+                        state.camera.up = desc.camera_up.unwrap();
+                        state.camera.target = desc.camera_target.unwrap();
+                    } else {
+                        need_go_to = true;
+                    }
 
-                if let Some(focus) = &desc.focus {
-                    // Ugh.. this shouldn't be too often though
-                    for (entity, component) in main_scene.metadata.iter() {
-                        if let Some(id) = component.get_metadata("body_id") {
-                            if id == focus {
-                                state.camera.next_reference_entity =
-                                    Some(ReferenceChange::FocusKeepCoords(*entity));
+                    if let Some(focus) = &desc.focus {
+                        // Ugh.. this shouldn't be too often though
+                        for (entity, component) in main_scene.metadata.iter() {
+                            if let Some(id) = component.get_metadata("body_id") {
+                                if id == focus {
+                                    state.camera.next_reference_entity =
+                                        Some(ReferenceChange::FocusKeepCoords(*entity));
 
-                                if need_go_to {
-                                    state.camera.entity_going_to = Some(*entity);
+                                    if need_go_to {
+                                        state.camera.entity_going_to = Some(*entity);
+                                    }
+
+                                    log::info!(
+                                        "Setting initial focused entity to '{:?}'",
+                                        main_scene.get_entity_name(*entity)
+                                    );
+                                    break;
                                 }
-
-                                log::info!(
-                                    "Setting initial focused entity to '{:?}'",
-                                    main_scene.get_entity_name(*entity)
-                                );
-                                break;
                             }
                         }
                     }
@@ -141,6 +150,10 @@ impl SceneManager {
         } else {
             log::warn!("Scene with identifier '{}' not found!", identifier);
         }
+
+        // Do this last because we'll check whether we should goto something or keep our state
+        // by comparing against this
+        state.last_scene_identifier = identifier.to_string();
     }
 
     fn load_scene(

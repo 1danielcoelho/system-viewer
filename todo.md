@@ -568,8 +568,9 @@ response |= ui.add(label);
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
 # Persistence
-- Save which scene was last opened and try loading it when opening again
+> - Save which scene was last opened and try loading it when opening again
 - Textures get reloaded when we reload/open new scenes
+- Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
 
 # Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 
@@ -594,6 +595,8 @@ response |= ui.add(label);
 # Good UV-mapped GLTF materials for the planets and asteroids (use blender?)
 
 # Now that I have WebGL2 I can change to native handling of BGR instead of converting
+
+# Apparently there should be flags I could set to let opengl do the linear to srgb conversion on its own?
 
 # N-body simulation
 - Integration sample scenes with known 3-body patterns to test stability

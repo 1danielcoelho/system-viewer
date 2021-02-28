@@ -1,9 +1,14 @@
+use std::borrow::BorrowMut;
+
+use web_sys::console::info;
+
 use crate::app_state::AppState;
 use crate::fetch_text;
 use crate::managers::scene::SceneManager;
 use crate::managers::{
     EventManager, InputManager, InterfaceManager, ResourceManager, SystemManager,
 };
+use crate::STATE;
 
 pub struct Engine {
     pub res_man: ResourceManager,
@@ -66,15 +71,39 @@ impl Engine {
             text.len()
         );
 
-        for line in text.lines() {
-            fetch_text(&("public/scenes/".to_owned() + line), "scene");
+        let files: Vec<&str> = text.lines().collect();
+        self.scene_man.num_scenes_expected = files.len() as u32;
+        log::info!(
+            "Expecting {} new scenes",
+            self.scene_man.num_scenes_expected
+        );
+
+        for file in files.iter() {
+            fetch_text(&("public/scenes/".to_owned() + file), "scene");
         }
     }
 
     fn receive_scene_text(&mut self, url: &str, text: &str) {
         log::info!("Loading scene from '{}' (length {})", url, text.len());
 
+        self.scene_man.num_scenes_expected -= 1;
         self.scene_man.receive_serialized_scene(text);
+
+        if self.scene_man.num_scenes_expected == 0 {
+            STATE.with(|s| {
+                if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
+                    let s = ref_mut_s.as_mut().unwrap();
+                    let s_ref = s.borrow_mut();
+
+                    let identifier = s_ref.last_scene_identifier.clone();
+
+                    if !identifier.is_empty() {
+                        self.scene_man
+                            .set_scene(&identifier, &mut self.res_man, s_ref);
+                    }
+                }
+            });
+        }
     }
 
     fn receive_database_text(&mut self, url: &str, content_type: &str, text: &str) {
