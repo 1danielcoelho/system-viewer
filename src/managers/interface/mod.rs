@@ -13,6 +13,7 @@ use crate::{prompt_for_bytes_file, UICTX};
 use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::*;
+use std::borrow::BorrowMut;
 use std::collections::VecDeque;
 
 pub mod details_ui;
@@ -198,14 +199,18 @@ impl InterfaceManager {
             let mut ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_mut().unwrap();
 
-            let mut style = ui.ctx().style().deref().clone();
-            let old_fill = style.visuals.widgets.noninteractive.bg_fill;
-            let old_stroke = style.visuals.widgets.noninteractive.bg_stroke.width;
+            let old_style = ui.ctx().style().deref().clone();
+            let mut style = old_style.clone();
 
             style.visuals.widgets.noninteractive.bg_fill =
-                egui::Color32::from_rgba_unmultiplied(255, 0, 0, 0);
+                egui::Color32::from_rgba_unmultiplied(0, 0, 0, 0);
             style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
-            ui.ctx().set_style(style);
+
+            style.visuals.widgets.inactive.bg_fill =
+                egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200);
+            style.visuals.widgets.inactive.bg_stroke.width = 0.0;
+
+            ui.ctx().set_style(style.clone());
 
             egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
                 let num_bodies = scene_man
@@ -221,105 +226,101 @@ impl InterfaceManager {
 
                 ui.with_layout(egui::Layout::left_to_right(), |ui| {
                     egui::menu::menu(ui, "⚙", |ui| {
-                        let mut total_res = ui.button("Reset scene");
-                        if total_res.clicked() {}
+                        egui::Frame::dark_canvas(ui.style())
+                            .fill(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200))
+                            .show(ui, |ui| {
+                                let mut total_res = ui.button("Reset scene");
+                                if total_res.clicked() {}
 
-                        let res = ui.button("Scene browser");
-                        if res.clicked() {
-                            self.open_windows.scene_browser = !self.open_windows.scene_browser;
-                        }
-                        total_res |= res;
+                                let res = ui.button("Scene browser");
+                                if res.clicked() {
+                                    self.open_windows.scene_browser =
+                                        !self.open_windows.scene_browser;
+                                }
+                                total_res |= res;
 
-                        ui.separator();
+                                ui.separator();
 
-                        let res = ui.button("About");
-                        if res.clicked() {
-                            self.open_windows.about = !self.open_windows.about;
-                        }
-                        total_res |= res;
+                                let res = ui.button("About");
+                                if res.clicked() {
+                                    self.open_windows.about = !self.open_windows.about;
+                                }
+                                total_res |= res;
 
-                        if DEBUG {
-                            ui.separator();
-                            ui.separator();
+                                if DEBUG {
+                                    ui.separator();
 
-                            let res = ui.button("New");
-                            if res.clicked() {
-                                let new_scene_name =
-                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
-                                scene_man.set_scene(&new_scene_name, res_man, state);
-                            }
-                            total_res |= res;
+                                    if ui.button("New").clicked() {
+                                        let new_scene_name = scene_man
+                                            .new_scene("New scene")
+                                            .unwrap()
+                                            .identifier
+                                            .clone();
+                                        scene_man.set_scene(&new_scene_name, res_man, state);
+                                    }
 
-                            total_res |= ui.button("Open");
+                                    ui.button("Open");
 
-                            total_res |= ui.button("Save");
+                                    ui.button("Save");
 
-                            ui.separator();
+                                    ui.separator();
 
-                            let res = ui.button("Close");
-                            if res.clicked() {
-                                let new_scene_name =
-                                    scene_man.new_scene("New scene").unwrap().identifier.clone();
-                                scene_man.set_scene(&new_scene_name, res_man, state);
-                            }
-                            total_res |= res;
+                                    if ui.button("Close").clicked() {
+                                        let new_scene_name = scene_man
+                                            .new_scene("New scene")
+                                            .unwrap()
+                                            .identifier
+                                            .clone();
+                                        scene_man.set_scene(&new_scene_name, res_man, state);
+                                    }
 
-                            let res = ui.button("Inject GLB...");
-                            if res.clicked() {
-                                prompt_for_bytes_file("glb_inject", ".glb");
-                            }
-                            total_res |= res;
+                                    if ui.button("Inject GLB...").clicked() {
+                                        prompt_for_bytes_file("glb_inject", ".glb");
+                                    }
 
-                            ui.separator();
+                                    ui.separator();
 
-                            let res = ui.button("Debug");
-                            if res.clicked() {
-                                self.open_windows.debug = !self.open_windows.debug;
-                            }
-                            total_res |= res;
+                                    if ui.button("Debug").clicked() {
+                                        self.open_windows.debug = !self.open_windows.debug;
+                                    }
 
-                            let res = ui.button("Scene hierarchy");
-                            if res.clicked() {
-                                self.open_windows.scene_hierarchy =
-                                    !self.open_windows.scene_hierarchy;
-                            }
-                            total_res |= res;
+                                    if ui.button("Scene hierarchy").clicked() {
+                                        self.open_windows.scene_hierarchy =
+                                            !self.open_windows.scene_hierarchy;
+                                    }
 
-                            ui.separator();
+                                    ui.separator();
 
-                            let res = ui.button("Organize windows");
-                            if res.clicked() {
-                                ui.ctx().memory().reset_areas();
-                            }
-                            total_res |= res;
+                                    if ui.button("Organize windows").clicked() {
+                                        ui.ctx().memory().reset_areas();
+                                    }
 
-                            let res = ui.button("Close all");
-                            if res.clicked() {
-                                self.open_windows.debug = false;
-                                self.open_windows.scene_hierarchy = false;
-                                self.open_windows.about = false;
-                                self.open_windows.scene_browser = false;
-                            }
-                            total_res |= res;
+                                    if ui.button("Close all").clicked() {
+                                        self.open_windows.debug = false;
+                                        self.open_windows.scene_hierarchy = false;
+                                        self.open_windows.about = false;
+                                        self.open_windows.scene_browser = false;
+                                    }
 
-                            ui.separator();
+                                    ui.separator();
 
-                            let res = ui
-                                .button("Clear Egui memory")
-                                .on_hover_text("Forget scroll, collapsing headers etc");
-                            if res.clicked() {
-                                *ui.ctx().memory() = Default::default();
-                            }
-                            total_res |= res;
+                                    if ui
+                                        .button("Clear Egui memory")
+                                        .on_hover_text("Forget scroll, collapsing headers etc")
+                                        .clicked()
+                                    {
+                                        *ui.ctx().memory() = Default::default();
+                                    }
 
-                            let res = ui
-                                .button("Reset app state")
-                                .on_hover_text("Clears app state from local storage");
-                            if res.clicked() {
-                                state.pending_reset = true;
-                            }
-                            total_res |= res;
-                        }
+                                    if ui
+                                        .button("Reset app state")
+                                        .on_hover_text("Clears app state from local storage")
+                                        .clicked()
+                                    {
+                                        state.pending_reset = true;
+                                    }
+                                }
+                            });
                     });
 
                     if ui
@@ -371,13 +372,17 @@ impl InterfaceManager {
                         let mut style = ui.ctx().style().deref().clone();
                         style.visuals.widgets.noninteractive.bg_stroke.width = 1.0;
                         style.spacing.window_padding = egui::vec2(0.0, 0.0);
-                        style.visuals.widgets.active.fg_stroke.width = 3.0;
                         style.visuals.widgets.noninteractive.bg_fill =
                             style.visuals.widgets.inactive.bg_fill;
 
+                        style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
+                        style.visuals.widgets.inactive.bg_stroke.width = 0.0;
+
+                        style.visuals.window_shadow.extrusion = 0.0;
+
                         if ref_name.is_some() {
                             style.visuals.widgets.noninteractive.bg_fill =
-                                egui::Color32::from_rgba_unmultiplied(255, 255, 0, 20);
+                                egui::Color32::from_rgba_unmultiplied(0, 80, 80, 200);
                         } else if state.input.modifiers.alt
                             && state.input.m0 != ButtonState::Depressed
                         {
@@ -391,14 +396,7 @@ impl InterfaceManager {
                             ui.add(
                                 egui::Label::new(ref_name.unwrap_or("Not tracking"))
                                     .text_style(egui::TextStyle::Monospace)
-                                    .text_color(match ref_name {
-                                        Some(_) => egui::Color32::from_rgba_unmultiplied(
-                                            255, 255, 255, 255,
-                                        ),
-                                        None => egui::Color32::from_rgba_unmultiplied(
-                                            255, 255, 255, 100,
-                                        ),
-                                    }),
+                                    .text_color(style.visuals.widgets.inactive.fg_stroke.color),
                             );
 
                             let clear_resp = ui
@@ -415,10 +413,7 @@ impl InterfaceManager {
                 });
             });
 
-            let mut style = ui.ctx().style().deref().clone();
-            style.visuals.widgets.noninteractive.bg_fill = old_fill;
-            style.visuals.widgets.noninteractive.bg_stroke.width = old_stroke;
-            ui.ctx().set_style(style);
+            ui.ctx().set_style(old_style);
         });
     }
 

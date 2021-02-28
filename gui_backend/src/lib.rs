@@ -51,12 +51,6 @@ pub fn now_sec() -> f64 {
         / 1000.0
 }
 
-pub fn seconds_since_midnight() -> f64 {
-    let d = js_sys::Date::new_0();
-    let seconds = (d.get_hours() * 60 + d.get_minutes()) * 60 + d.get_seconds();
-    seconds as f64 + 1e-3 * (d.get_milliseconds() as f64)
-}
-
 pub fn screen_size_in_native_points() -> Option<egui::Vec2> {
     let window = web_sys::window()?;
     Some(egui::Vec2::new(
@@ -84,32 +78,6 @@ pub fn canvas_element(canvas_id: &str) -> Option<web_sys::HtmlCanvasElement> {
 pub fn canvas_element_or_die(canvas_id: &str) -> web_sys::HtmlCanvasElement {
     crate::canvas_element(canvas_id)
         .unwrap_or_else(|| panic!("Failed to find canvas with id '{}'", canvas_id))
-}
-
-pub fn button_from_mouse_event(event: &web_sys::MouseEvent) -> Option<egui::PointerButton> {
-    match event.button() {
-        0 => Some(egui::PointerButton::Primary),
-        1 => Some(egui::PointerButton::Middle),
-        2 => Some(egui::PointerButton::Secondary),
-        _ => None,
-    }
-}
-
-pub fn pos_from_touch_event(event: &web_sys::TouchEvent) -> egui::Pos2 {
-    let t = event.touches().get(0).unwrap();
-    egui::Pos2 {
-        x: t.page_x() as f32,
-        y: t.page_y() as f32,
-    }
-}
-
-pub fn canvas_size_in_points(canvas_id: &str) -> egui::Vec2 {
-    let canvas = canvas_element(canvas_id).unwrap();
-    let pixels_per_point = native_pixels_per_point();
-    egui::vec2(
-        canvas.width() as f32 / pixels_per_point,
-        canvas.height() as f32 / pixels_per_point,
-    )
 }
 
 pub fn resize_canvas_to_screen_size(canvas_id: &str, max_size_points: egui::Vec2) -> Option<()> {

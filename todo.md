@@ -533,13 +533,14 @@ response |= ui.add(label);
 - Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
 - Update egui
-    - UI labels are not translucent anymore
+    > - UI labels are not translucent anymore
     > - Clicking on Track buttons doesn't work 
     > - No way of preventing movement when typing because the has_kb_focus member is private now
       >  - I opened a bug issue on egui's repo, so let's wait for that. If it's intentional we'll have to work around it somehow
+    - Maybe make the clear tracking style a little bit more visible
     - Still get all the old bugs with the flickering labels
     > - Can't collapse the popup windows because any click closes them
-    - Have a whole lot of duplicated/unused code in gui_backend
+    > - Have a whole lot of duplicated/unused code in gui_backend
 - Compare that relative size
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
