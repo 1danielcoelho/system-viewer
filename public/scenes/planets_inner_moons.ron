@@ -21,6 +21,7 @@
     ],
     bodies: {
         "major_bodies": {
+            "10": DefaultVector,
             "199": DefaultVector,
             "299": DefaultVector,
             "399": DefaultVector,
