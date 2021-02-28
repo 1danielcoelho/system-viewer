@@ -514,6 +514,19 @@ response |= ui.add(label);
 > - Just fork egui instead of having a custom gui_backend
 >- Make sure its legally OK to do that though 
 >- Doesn't work very well, because I really need egui_web, which is a subcrate within the egui repo, and I can't get cargo to use subfolder paths for git dependencies
+> - Update egui
+    > - UI labels are not translucent anymore
+    > - Clicking on Track buttons doesn't work 
+    > - No way of preventing movement when typing because the has_kb_focus member is private now
+      >  - I opened a bug issue on egui's repo, so let's wait for that. If it's intentional we'll have to work around it somehow
+    > - Maybe make the clear tracking style a little bit more visible
+    > - Maybe add a colored "Tracking" button to the selection tooltip
+    > - Can't click on main toolbar stop tracking button if the selected widget is opened for some reason
+    > - Fix scroll wheel not scrolling scroll panels
+    > - Still get all the old bugs with the flickering labels
+    > - Can't collapse the popup windows because any click closes them
+    > - Have a whole lot of duplicated/unused code in gui_backend
+    > - Hover labels show when right-click dragging
 
 # Cleanup for MVP
 > - Improve visuals a bit
@@ -533,22 +546,12 @@ response |= ui.add(label);
 - Do something about near/far camera distance
 - Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
-- Update egui
-    > - UI labels are not translucent anymore
-    > - Clicking on Track buttons doesn't work 
-    > - No way of preventing movement when typing because the has_kb_focus member is private now
-      >  - I opened a bug issue on egui's repo, so let's wait for that. If it's intentional we'll have to work around it somehow
-    > - Maybe make the clear tracking style a little bit more visible
-    > - Maybe add a colored "Tracking" button to the selection tooltip
-    > - Can't click on main toolbar stop tracking button if the selected widget is opened for some reason
-    - Fix scroll wheel not scrolling scroll panels
-    > - Still get all the old bugs with the flickering labels
-    > - Can't collapse the popup windows because any click closes them
-    > - Have a whole lot of duplicated/unused code in gui_backend
 - Compare that relative size
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
+
+# Restore F to track something
 
 # Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 

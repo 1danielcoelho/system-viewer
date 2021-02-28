@@ -6,7 +6,6 @@ use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::ResourceManager;
-use crate::utils::egui::is_position_over_egui;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::{prompt_for_bytes_file, UICTX};
@@ -108,6 +107,10 @@ impl InterfaceManager {
             raw_input.events.append(&mut state.input.egui_events);
         }
         raw_input.modifiers = state.input.modifiers;
+        raw_input.scroll_delta = egui::Vec2 {
+            x: state.input.scroll_delta_x as f32,
+            y: -state.input.scroll_delta_y as f32,
+        };
 
         self.backend.begin_frame(raw_input);
         let rect = self.backend.ctx.available_rect();
@@ -126,6 +129,7 @@ impl InterfaceManager {
         }
 
         let mut has_kb: bool = false;
+        let mut egui_consuming_pointer: bool = false;
 
         UICTX.with(|ui| {
             let mut ui = ui.borrow_mut();
@@ -139,33 +143,42 @@ impl InterfaceManager {
 
             let ui_ref = ui.as_ref().unwrap();
             has_kb = ui_ref.ctx().wants_keyboard_input();
+            egui_consuming_pointer = ui_ref.ctx().wants_pointer_input();
         });
 
-        // Consume keyboard input if egui has keyboard focus, to prevent
-        // the input manager from also handling these
-        if has_kb {
-            if state.input.forward == ButtonState::Pressed {
-                state.input.forward = ButtonState::Handled;
+        // Suppress our inputs if egui wants it instead
+        {
+            if egui_consuming_pointer {
+                state.input.scroll_delta_x = 0;
+                state.input.scroll_delta_y = 0;
             }
 
-            if state.input.left == ButtonState::Pressed {
-                state.input.left = ButtonState::Handled;
-            }
+            // Consume keyboard input if egui has keyboard focus, to prevent
+            // the input manager from also handling these
+            if has_kb {
+                if state.input.forward == ButtonState::Pressed {
+                    state.input.forward = ButtonState::Handled;
+                }
 
-            if state.input.right == ButtonState::Pressed {
-                state.input.right = ButtonState::Handled;
-            }
+                if state.input.left == ButtonState::Pressed {
+                    state.input.left = ButtonState::Handled;
+                }
 
-            if state.input.back == ButtonState::Pressed {
-                state.input.back = ButtonState::Handled;
-            }
+                if state.input.right == ButtonState::Pressed {
+                    state.input.right = ButtonState::Handled;
+                }
 
-            if state.input.up == ButtonState::Pressed {
-                state.input.up = ButtonState::Handled;
-            }
+                if state.input.back == ButtonState::Pressed {
+                    state.input.back = ButtonState::Handled;
+                }
 
-            if state.input.down == ButtonState::Pressed {
-                state.input.down = ButtonState::Handled;
+                if state.input.up == ButtonState::Pressed {
+                    state.input.up = ButtonState::Handled;
+                }
+
+                if state.input.down == ButtonState::Pressed {
+                    state.input.down = ButtonState::Handled;
+                }
             }
         }
     }
@@ -1055,9 +1068,9 @@ fn handle_pointer_on_scene(state: &mut AppState, scene: &mut Scene) {
     let entity =
         raycast(&ray, &scene).and_then(|hit| scene.get_entity_from_index(hit.entity_index));
 
-    // Alt-drag is orbit when we're tracking something, but for consistency I guess we shouldn't
-    // count it as a click or show hover labels even if we have nothing tracked
-    if !state.input.modifiers.alt {
+    let window = web_sys::window().unwrap();
+    let doc = window.document().unwrap();
+    if let None = doc.pointer_lock_element() {
         if state.input.m0 == ButtonState::Pressed {
             state.selection.clear();
 

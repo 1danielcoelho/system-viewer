@@ -357,8 +357,8 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                 let mut ref_mut = s.borrow_mut();
                 let s = ref_mut.as_mut().unwrap();
 
-                s.input.scroll_delta_x = event.delta_x().signum() as i32;
-                s.input.scroll_delta_y = event.delta_y().signum() as i32;
+                s.input.scroll_delta_x += event.delta_x() as i32;
+                s.input.scroll_delta_y += event.delta_y() as i32;
 
                 event.stop_propagation();
                 event.prevent_default();
