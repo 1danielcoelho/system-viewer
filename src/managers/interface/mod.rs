@@ -387,10 +387,7 @@ impl InterfaceManager {
                             None => style.visuals.widgets.inactive.bg_fill,
                         };
 
-                        let mut text_color = match ref_name {
-                            Some(_) => egui::Color32::BLACK,
-                            None => style.visuals.widgets.inactive.fg_stroke.color,
-                        };
+                        let mut text_color = style.visuals.widgets.inactive.fg_stroke.color;
 
                         let mut button_color = egui::Color32::from_rgba_unmultiplied(
                             ((label_color.r() as f32 * 2.0).round()).clamp(0.0, 255.0) as u8,
@@ -568,10 +565,19 @@ impl InterfaceManager {
 
                         ui.horizontal(|ui| {
                             if state.camera.reference_entity == Some(*selected_entity) {
+                                let mut style = ui.ctx().style().deref().clone();
+                                let old_bg_fill = style.visuals.widgets.inactive.bg_fill;
+                                style.visuals.widgets.inactive.bg_fill =
+                                    egui::Color32::from_rgba_unmultiplied(0, 160, 160, 200);
+                                ui.set_style(style.clone());
+
                                 let but_res = ui.button("❌").on_hover_text("Stop tracking");
                                 if but_res.clicked() {
                                     entity_to_track = Some(ReferenceChange::Clear);
                                 }
+
+                                style.visuals.widgets.inactive.bg_fill = old_bg_fill;
+                                ui.set_style(style);
                             } else {
                                 let but_res = ui.button("🎥").on_hover_text("Track");
                                 if but_res.clicked() {
@@ -588,8 +594,13 @@ impl InterfaceManager {
                     })
                     .unwrap();
 
-                state.camera.next_reference_entity = entity_to_track;
-                state.camera.entity_going_to = entity_to_go_to;
+                if let Some(ent) = entity_to_track {
+                    state.camera.next_reference_entity = Some(ent);
+                }
+
+                if let Some(ent) = entity_to_go_to {
+                    state.camera.entity_going_to = Some(ent);
+                }
             }
 
             // It's important to offset the tooltip here so that egui doesn't
