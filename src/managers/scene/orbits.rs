@@ -286,11 +286,12 @@ pub fn get_body_material(
         let params = body.material_params.as_ref().unwrap();
 
         if let Some(color) = params.get("base_color") {
-            let bytes: Vec<f32> = decode_hex(color)
+            let mut bytes: Vec<f32> = decode_hex(color)
                 .unwrap()
                 .iter()
                 .map(|u| *u as f32 / 255.0)
                 .collect();
+            bytes.resize(4, 1.0);
 
             log::info!("Parsed base_color {:?} for body {:?}", bytes, body.id);
 
@@ -307,27 +308,28 @@ pub fn get_body_material(
                 body.id
             );
 
-            mat_mut.set_texture(TextureUnit::BaseColor, res_man.get_or_request_texture(path, false));
+            mat_mut.set_texture(
+                TextureUnit::BaseColor,
+                res_man.get_or_request_texture(path, false),
+            );
         }
 
         if let Some(path) = params.get("normal_texture") {
-            log::info!(
-                "Parsed normal_texture {:?} for body {:?}",
-                path,
-                body.id
-            );
+            log::info!("Parsed normal_texture {:?} for body {:?}", path, body.id);
 
-            mat_mut.set_texture(TextureUnit::Normal, res_man.get_or_request_texture(path, false));
+            mat_mut.set_texture(
+                TextureUnit::Normal,
+                res_man.get_or_request_texture(path, false),
+            );
         }
 
         if let Some(path) = params.get("emissive_texture") {
-            log::info!(
-                "Parsed emissive_texture {:?} for body {:?}",
-                path,
-                body.id
-            );
+            log::info!("Parsed emissive_texture {:?} for body {:?}", path, body.id);
 
-            mat_mut.set_texture(TextureUnit::Emissive, res_man.get_or_request_texture(path, false));
+            mat_mut.set_texture(
+                TextureUnit::Emissive,
+                res_man.get_or_request_texture(path, false),
+            );
         }
     };
 

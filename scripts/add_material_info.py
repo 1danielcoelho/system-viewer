@@ -28,7 +28,7 @@ material_parameters = {
         'base_color_texture': '2k_venus_atmosphere.jpg'
     },
     '301': {
-        'base_color': 'cfcfd1',
+        'base_color': 'CFCFD1FF',
         'base_color_texture': '2k_moon.jpg',
     },
     '399': {
