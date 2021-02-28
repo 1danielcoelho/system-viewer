@@ -328,10 +328,10 @@ impl SceneManager {
                 .to_homogeneous(),
         );
         scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
-        scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
-            TextureUnit::BaseColor,
-            res_man.get_or_request_texture("starmap_16k", true),
-        );
+        // scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
+        //     TextureUnit::BaseColor,
+        //     res_man.get_or_request_texture("starmap_16k", true),
+        // );
 
         let sun_color: [f32; 3] = [1.0, 1.0, 0.8];
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");

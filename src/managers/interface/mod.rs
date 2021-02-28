@@ -13,7 +13,6 @@ use crate::{prompt_for_bytes_file, UICTX};
 use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::*;
-use std::borrow::BorrowMut;
 use std::collections::VecDeque;
 
 pub mod details_ui;
@@ -73,18 +72,22 @@ impl InterfaceManager {
 
         self.draw();
 
-        let mut over_ui: bool = false;
+        let mut egui_consuming_pointer: bool = false;
         UICTX.with(|ui| {
             let ui = ui.borrow();
             let ui_ref = ui.as_ref().unwrap();
             let ctx = ui_ref.ctx();
 
-            over_ui = ctx.is_pointer_over_area();
+            egui_consuming_pointer = ctx.wants_pointer_input();
         });
 
+        // Always reset the hovered entity even if we won't get to 
+        // hover new ones: This prevents the tooltip from sticking around if the UI 
+        // starts covering it (which can also include the label tooltip itself)
+        state.hovered.clear();
         if let Some(scene) = scene_man.get_main_scene_mut() {
-            if !over_ui {
-                handle_mouse_on_scene(state, scene);
+            if !egui_consuming_pointer {
+                handle_pointer_on_scene(state, scene);
             }
         }
     }
@@ -259,9 +262,9 @@ impl InterfaceManager {
                                         scene_man.set_scene(&new_scene_name, res_man, state);
                                     }
 
-                                    ui.button("Open");
+                                    if ui.button("Open").clicked() {};
 
-                                    ui.button("Save");
+                                    if ui.button("Save").clicked() {};
 
                                     ui.separator();
 
@@ -429,7 +432,7 @@ impl InterfaceManager {
             self.draw_scene_hierarchy_window(state, main_scene);
         }
 
-        self.draw_about_window(state);
+        self.draw_about_window();
         self.draw_scene_browser(state, scene_man, res_man);
     }
 
@@ -561,31 +564,34 @@ impl InterfaceManager {
                 state.camera.entity_going_to = entity_to_go_to;
             }
 
+            // It's important to offset the tooltip here so that egui doesn't
+            // claim the pointer is over any UI. Also without this the cursor is on 
+            // top of the text anyway
             let hover_label_pos = egui::Pos2 {
-                x: state.input.mouse_x as f32,
-                y: state.input.mouse_y as f32,
+                x: state.input.mouse_x as f32 + 10.0,
+                y: state.input.mouse_y as f32 + 10.0,
             };
-
-            if !is_position_over_egui(hover_label_pos, ui.ctx()) {
-                for hovered_entity in &state.hovered {
-                    if state.selection.contains(hovered_entity) {
-                        continue;
-                    }
-
-                    let name = scene.get_entity_name(*hovered_entity);
-                    if name.is_none() {
-                        continue;
-                    }
-                    let name = name.unwrap();
-
-                    egui::Window::new(name)
-                        .fixed_pos(hover_label_pos)
-                        .resizable(false)
-                        .scroll(false)
-                        .collapsible(false)
-                        .show(&ui.ctx(), |_| {})
-                        .unwrap();
+            for hovered_entity in &state.hovered {
+                if state.selection.contains(hovered_entity) {
+                    continue;
                 }
+
+                let name = scene.get_entity_name(*hovered_entity);
+                if name.is_none() {
+                    continue;
+                }
+                let name = name.unwrap();
+
+                egui::Window::new(name)
+                    .fixed_pos(hover_label_pos)
+                    .resizable(false)
+                    .scroll(false)
+                    .collapsible(false)
+                    .title_bar(false)
+                    .show(&ui.ctx(), |ui| {
+                        ui.label(name);
+                    })
+                    .unwrap();
             }
         });
     }
@@ -775,7 +781,7 @@ impl InterfaceManager {
         });
     }
 
-    fn draw_about_window(&mut self, state: &mut AppState) {
+    fn draw_about_window(&mut self) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
@@ -989,7 +995,7 @@ impl InterfaceManager {
     }
 }
 
-fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
+fn handle_pointer_on_scene(state: &mut AppState, scene: &mut Scene) {
     let end_world = state.camera.canvas_to_world(
         state.input.mouse_x,
         state.input.mouse_y,
@@ -1009,8 +1015,6 @@ fn handle_mouse_on_scene(state: &mut AppState, scene: &mut Scene) {
 
     let entity =
         raycast(&ray, &scene).and_then(|hit| scene.get_entity_from_index(hit.entity_index));
-
-    state.hovered.clear();
 
     // Alt-drag is orbit when we're tracking something, but for consistency I guess we shouldn't
     // count it as a click or show hover labels even if we have nothing tracked
