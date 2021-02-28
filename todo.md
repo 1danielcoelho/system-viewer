@@ -541,8 +541,8 @@ response |= ui.add(label);
 > Starfield skybox
 > - Expand on framerate limiter to allow frame stepping
     > - I'll do this only if I need to, for whatever reason. Don't really need this
-
-# Cleanup for MVP
+> - It doesn't save the focused entity or the last opened scene
+> - Also save egui state somehow
 > - Improve visuals a bit
     > - Add some default color/texture to the body schema. I think I had colors for all planets from before?
     > - Passable materials/colors for bodies
@@ -550,6 +550,9 @@ response |= ui.add(label);
     > - https://svs.gsfc.nasa.gov/4851
     > - Used https://360toolkit.co/ to convert to cubemap
     > - Find a decent skybox and align it roughly
+
+# Cleanup for MVP
+- Improve visuals a bit
     - Fix normal and spec/roughness maps for Earth
     - Correct-ish sun brightness
 - Good sample scenes    
@@ -564,9 +567,9 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
-# It doesn't save the focused entity or the last opened scene
-
-# Textures get reloaded when we reload/open new scenes
+# Persistence
+- Save which scene was last opened and try loading it when opening again
+- Textures get reloaded when we reload/open new scenes
 
 # Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 

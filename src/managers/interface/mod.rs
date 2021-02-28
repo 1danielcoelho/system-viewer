@@ -18,19 +18,9 @@ pub mod details_ui;
 
 const DEBUG: bool = false;
 
-struct OpenWindows {
-    debug: bool,
-    scene_hierarchy: bool,
-    scene_browser: bool,
-    settings: bool,
-    controls: bool,
-    about: bool,
-}
-
 pub struct InterfaceManager {
     backend: gui_backend::WebBackend,
     web_input: WebInput,
-    open_windows: OpenWindows,
     selected_scene_desc_name: String,
 
     frame_times: VecDeque<f64>,
@@ -39,23 +29,20 @@ pub struct InterfaceManager {
 }
 impl InterfaceManager {
     pub fn new() -> Self {
-        return Self {
+        let new_man = Self {
             backend: gui_backend::WebBackend::new("rustCanvas")
                 .expect("Failed to make a web backend for egui"),
             web_input: Default::default(),
-            open_windows: OpenWindows {
-                debug: false,
-                scene_hierarchy: false,
-                scene_browser: true,
-                settings: false,
-                controls: false,
-                about: false,
-            },
             selected_scene_desc_name: String::from(""),
             frame_times: vec![16.66; 15].into_iter().collect(),
             time_of_last_update: -2.0,
             last_frame_rate: 60.0, // Optimism
         };
+
+        log::info!("Loading egui state...");
+        gui_backend::load_memory(&new_man.backend.ctx);
+
+        return new_man;
     }
 
     /// This runs before all systems, and starts collecting all the UI elements we'll draw, as
@@ -265,22 +252,22 @@ impl InterfaceManager {
                                 ui.separator();
 
                                 if ui.button("Scene browser").clicked() {
-                                    self.open_windows.scene_browser =
-                                        !self.open_windows.scene_browser;
+                                    state.open_windows.scene_browser =
+                                        !state.open_windows.scene_browser;
                                 }
 
                                 ui.separator();
 
                                 if ui.button("Settings").clicked() {
-                                    self.open_windows.settings = !self.open_windows.settings;
+                                    state.open_windows.settings = !state.open_windows.settings;
                                 }
 
                                 if ui.button("Controls").clicked() {
-                                    self.open_windows.controls = !self.open_windows.controls;
+                                    state.open_windows.controls = !state.open_windows.controls;
                                 }
 
                                 if ui.button("About").clicked() {
-                                    self.open_windows.about = !self.open_windows.about;
+                                    state.open_windows.about = !state.open_windows.about;
                                 }
 
                                 if DEBUG {
@@ -295,7 +282,7 @@ impl InterfaceManager {
                                     ui.separator();
 
                                     if ui.button("Debug").clicked() {
-                                        self.open_windows.debug = !self.open_windows.debug;
+                                        state.open_windows.debug = !state.open_windows.debug;
                                     }
 
                                     if ui.button("Organize windows").clicked() {
@@ -303,10 +290,10 @@ impl InterfaceManager {
                                     }
 
                                     if ui.button("Close all windows").clicked() {
-                                        self.open_windows.debug = false;
-                                        self.open_windows.scene_hierarchy = false;
-                                        self.open_windows.about = false;
-                                        self.open_windows.scene_browser = false;
+                                        state.open_windows.debug = false;
+                                        state.open_windows.scene_hierarchy = false;
+                                        state.open_windows.about = false;
+                                        state.open_windows.scene_browser = false;
                                     }
 
                                     ui.separator();
@@ -367,7 +354,7 @@ impl InterfaceManager {
                         )
                         .clicked()
                     {
-                        self.open_windows.scene_hierarchy = !self.open_windows.scene_hierarchy;
+                        state.open_windows.scene_hierarchy = !state.open_windows.scene_hierarchy;
                     }
 
                     ui.horizontal(|ui| {
@@ -466,8 +453,8 @@ impl InterfaceManager {
             self.draw_scene_hierarchy_window(state, main_scene);
         }
 
-        self.draw_about_window();
-        self.draw_controls_window();
+        self.draw_about_window(state);
+        self.draw_controls_window(state);
         self.draw_settings_window(state);
         self.draw_scene_browser(state, scene_man, res_man);
     }
@@ -477,8 +464,10 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
+            let mut open_window = state.open_windows.settings;
+
             egui::Window::new("Settings")
-                .open(&mut self.open_windows.settings)
+                .open(&mut open_window)
                 .resizable(false)
                 .show(&ui.ctx(), |ui| {
                     egui::Grid::new("settings").show(ui, |ui| {
@@ -518,6 +507,8 @@ impl InterfaceManager {
                         ui.end_row();
                     });
                 });
+
+            state.open_windows.settings = open_window;
         });
     }
 
@@ -694,9 +685,10 @@ impl InterfaceManager {
             let ui = ref_mut.as_ref().unwrap();
 
             let frame_rate = self.last_frame_rate;
+            let mut open_window = state.open_windows.debug;
 
             egui::Window::new("Debug")
-                .open(&mut self.open_windows.debug)
+                .open(&mut open_window)
                 .show(&ui.ctx(), |ui| {
                     ui.columns(2, |cols| {
                         cols[0].label("Simulation time since reference:");
@@ -870,16 +862,18 @@ impl InterfaceManager {
                         }
                     }
                 });
+
+            state.open_windows.debug = open_window;
         });
     }
 
-    fn draw_about_window(&mut self) {
+    fn draw_about_window(&mut self, state: &mut AppState) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
             egui::Window::new("About")
-                .open(&mut self.open_windows.about)
+                .open(&mut state.open_windows.about)
                 .scroll(false)
                 .resizable(false)
                 .fixed_size(egui::vec2(400.0, 400.0))
@@ -896,13 +890,13 @@ impl InterfaceManager {
         });
     }
 
-    fn draw_controls_window(&mut self) {
+    fn draw_controls_window(&mut self, state: &mut AppState) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
             egui::Window::new("Controls")
-                .open(&mut self.open_windows.controls)
+                .open(&mut state.open_windows.controls)
                 .resizable(false)
                 .show(&ui.ctx(), |ui| {
                     egui::Grid::new("controls").show(ui, |ui| {
@@ -960,7 +954,7 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            let mut open_window = self.open_windows.scene_browser;
+            let mut open_window = state.open_windows.scene_browser;
 
             egui::Window::new("Scene browser")
                 .open(&mut open_window)
@@ -1092,7 +1086,7 @@ impl InterfaceManager {
                     });
                 });
 
-            self.open_windows.scene_browser = open_window;
+            state.open_windows.scene_browser = open_window;
         });
     }
 
@@ -1101,8 +1095,10 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
+            let mut open_window = state.open_windows.scene_hierarchy;
+
             egui::Window::new("Scene hierarchy")
-                .open(&mut self.open_windows.scene_hierarchy)
+                .open(&mut open_window)
                 .scroll(false)
                 .resizable(true)
                 .default_size(egui::vec2(300.0, 400.0))
@@ -1127,6 +1123,8 @@ impl InterfaceManager {
                         });
                     });
                 });
+
+            state.open_windows.scene_hierarchy = open_window;
         });
     }
 }

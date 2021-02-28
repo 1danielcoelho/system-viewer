@@ -142,8 +142,7 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
 
             // Save state to local storage once in a while
             if s.real_time_s - s.time_of_last_save > 3.0 {
-                s.save();
-                s.time_of_last_save = s.real_time_s;
+                serialize_state(s);
             }
 
             ENGINE.with(|e| {
@@ -158,6 +157,19 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
         } else {
             log::warn!("Failed to borrow app state for engine update!");
         }
+    });
+}
+
+fn serialize_state(state: &mut AppState) {
+    state.time_of_last_save = state.real_time_s;
+    state.save();
+
+    UICTX.with(|ui| {
+        let ui = ui.borrow();
+        let ui_ref = ui.as_ref().unwrap();
+        let ctx = ui_ref.ctx();
+
+        gui_backend::save_memory(ctx);
     });
 }
 

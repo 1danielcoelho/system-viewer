@@ -2,7 +2,16 @@ use crate::managers::scene::Entity;
 use crate::utils::web::{local_storage_get, local_storage_set};
 use na::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+
+#[derive(Default, Serialize, Deserialize)]
+pub struct OpenWindows {
+    pub debug: bool,
+    pub scene_hierarchy: bool,
+    pub scene_browser: bool,
+    pub settings: bool,
+    pub controls: bool,
+    pub about: bool,
+}
 
 #[derive(Serialize, Deserialize)]
 pub enum ReferenceChange {
@@ -19,9 +28,8 @@ pub struct Camera {
     pub fov_v: f64,
     pub near: f64,
     pub far: f64,
-
-    #[serde(skip)]
     pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. reference_translation
+
     #[serde(skip)]
     pub reference_translation: Option<Vector3<f64>>,
 
@@ -191,6 +199,8 @@ pub struct AppState {
     pub hovered: Option<Entity>,
     pub selection: Option<Entity>,
     pub camera: Camera,
+
+    pub open_windows: OpenWindows,
 }
 impl AppState {
     pub fn new() -> Self {
@@ -233,6 +243,7 @@ impl AppState {
                 v_inv: Matrix4::identity(),
                 p_inv: Matrix4::identity(),
             },
+            open_windows: Default::default(),
         }
     }
 
