@@ -400,11 +400,13 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
                     s.input.egui_events.push(egui::Event::Text(key.to_owned()));
                 }
 
-                if matches!(
-                    event.key().as_str(),
-                    "Backspace"  // so we don't go back to previous page when deleting text
+                if modifiers.alt
+                    || matches!(
+                        event.key().as_str(),
+                        "Backspace"  // so we don't go back to previous page when deleting text
                     | "Tab" // so that e.g. tab doesn't move focus to url bar
-                ) {
+                    )
+                {
                     event.prevent_default();
                 }
             });
@@ -429,6 +431,10 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
 
                 let key = event.key();
                 handle_key_press(&key, &modifiers, s, false);
+
+                if modifiers.alt {
+                    event.prevent_default();
+                }
             });
         };
 

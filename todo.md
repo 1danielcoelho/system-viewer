@@ -527,6 +527,16 @@ response |= ui.add(label);
     > - Can't collapse the popup windows because any click closes them
     > - Have a whole lot of duplicated/unused code in gui_backend
     > - Hover labels show when right-click dragging
+> - Do something for movement speed, it's almost always unexpected
+    > - I also have FOV basically unused...
+> - Restore F to track something
+> - Hover labels shouldn't show when right click and dragging
+> - Hover label shouldn't show on top of selected label or other windows
+    > - Selected label is just another window, so the draw order depends on which was active last... not sure if this is actually a bug or not, as its very easy to work around and it may be what you want
+    > - The hover label prevents the scene browser from getting a hovered state, because it blocks raycasts
+> - Should be able to click through the hover label (it blocks all mouse clicks)
+
+# Expand on framerate limiter to allow frame stepping
 
 # Cleanup for MVP
 > - Improve visuals a bit
@@ -542,8 +552,6 @@ response |= ui.add(label);
     - Basic solar system simulation at J2000 with bodies in the right size
         - Okay-ish results on the simulation for now, we can improve later
         - Can't see the hover label when mousing over earth at 500x
-- Do something for movement speed, it's almost always unexpected
-    - I also have FOV basically unused...
 - Do something about near/far camera distance
 - Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
@@ -554,8 +562,6 @@ response |= ui.add(label);
 
 # Textures get reloaded when we reload/open new scenes
 
-# Restore F to track something
-
 # Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 
 # Known bugs
@@ -563,19 +569,12 @@ response |= ui.add(label);
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
 - Real weird "headlight" effect when I get close to any mesh?
 - What's the point of saving state if I dump it every time any scene is loaded anyway?
-- Hover labels shouldn't show when right click and dragging
 - Fix firefox dragging bug
-- Hover label shouldn't show on top of selected label or other windows
-    - Selected label is just another window, so the draw order depends on which was active last... not sure if this is actually a bug or not, as its very easy to work around and it may be what you want
-    - The hover label prevents the scene browser from getting a hovered state, because it blocks raycasts
-- Should be able to click through the hover label (it blocks all mouse clicks)
 - Position of labels when body is off screen is not correct, it flails everywhere
 - Need better prediction of label size to prevent it from ever leaving the canvas
 
 # Let user upload his own scene ron files
 - Allow download of sample ron schema
-
-# Expand on framerate limiter to allow frame stepping
 
 # Lerp when going to / point towards
 
