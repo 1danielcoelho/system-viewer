@@ -19,50 +19,6 @@ pub mod details_ui;
 
 const DEBUG: bool = true;
 
-#[macro_export]
-macro_rules! handle_output {
-    ($s:ident, $e:expr) => {{
-        let result = $e;
-        handle_output_func($s, result);
-    }};
-}
-
-pub fn handle_output_func(state: &mut AppState, output: egui::Response) {
-    if output.hovered() {
-        state.input.over_ui = true;
-
-        if state.input.m0 == ButtonState::Pressed {
-            state.input.m0 = ButtonState::Handled;
-        }
-    }
-
-    // if output.has_kb_focus {
-    //     if state.input.forward == ButtonState::Pressed {
-    //         state.input.forward = ButtonState::Handled;
-    //     }
-
-    //     if state.input.left == ButtonState::Pressed {
-    //         state.input.left = ButtonState::Handled;
-    //     }
-
-    //     if state.input.right == ButtonState::Pressed {
-    //         state.input.right = ButtonState::Handled;
-    //     }
-
-    //     if state.input.back == ButtonState::Pressed {
-    //         state.input.back = ButtonState::Handled;
-    //     }
-
-    //     if state.input.up == ButtonState::Pressed {
-    //         state.input.up = ButtonState::Handled;
-    //     }
-
-    //     if state.input.down == ButtonState::Pressed {
-    //         state.input.down = ButtonState::Handled;
-    //     }
-    // }
-}
-
 struct OpenWindows {
     debug: bool,
     scene_hierarchy: bool,
@@ -251,7 +207,7 @@ impl InterfaceManager {
             style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
             ui.ctx().set_style(style);
 
-            let response = egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
+            egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
                 let num_bodies = scene_man
                     .get_main_scene()
                     .unwrap()
@@ -364,8 +320,6 @@ impl InterfaceManager {
                             }
                             total_res |= res;
                         }
-
-                        handle_output!(state, total_res);
                     });
 
                     if ui
@@ -460,7 +414,6 @@ impl InterfaceManager {
                     });
                 });
             });
-            handle_output!(state, response.response);
 
             let mut style = ui.ctx().style().deref().clone();
             style.visuals.widgets.noninteractive.bg_fill = old_fill;
@@ -508,8 +461,6 @@ impl InterfaceManager {
             // If we have up locked to +Z, we need to calculate the real up vector
             let forward = (cam_target - cam_pos).normalize();
             let right = forward.cross(&state.camera.up).normalize();
-
-            let mut response: Option<egui::Response> = None;
 
             for selected_entity in &state.selection {
                 let name = scene.get_entity_name(*selected_entity);
@@ -579,7 +530,7 @@ impl InterfaceManager {
                 let mut entity_to_track: Option<ReferenceChange> = None;
                 let mut entity_to_go_to: Option<Entity> = None;
 
-                let label_response = egui::Window::new(name)
+                egui::Window::new(name)
                     .fixed_pos(egui::Pos2 {
                         x: canvas_x as f32,
                         y: canvas_y as f32 - 20.0, // TODO: Find actual size
@@ -613,11 +564,6 @@ impl InterfaceManager {
 
                 state.camera.next_reference_entity = entity_to_track;
                 state.camera.entity_going_to = entity_to_go_to;
-
-                match response {
-                    Some(ref mut response) => *response |= label_response,
-                    None => response = Some(label_response),
-                };
             }
 
             let hover_label_pos = egui::Pos2 {
@@ -646,10 +592,6 @@ impl InterfaceManager {
                         .unwrap();
                 }
             }
-
-            if let Some(response) = response {
-                handle_output!(state, response);
-            }
         });
     }
 
@@ -660,15 +602,15 @@ impl InterfaceManager {
 
             let frame_rate = self.last_frame_rate;
 
-            let response = egui::Window::new("Debug")
+            egui::Window::new("Debug")
                 .open(&mut self.open_windows.debug)
                 .show(&ui.ctx(), |ui| {
-                    let mut response = ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Simulation time since reference:");
                         cols[1].label(format!("{:.2} seconds", state.sim_time_s))
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Simulation date:");
                         cols[1].label(format!(
                             "{}",
@@ -678,17 +620,17 @@ impl InterfaceManager {
                         ))
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Real time since start:");
                         cols[1].label(format!("{:.2} s", state.real_time_s))
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Frames per second:");
                         cols[1].label(format!("{:.2}", frame_rate))
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Simulation scale:");
 
                         cols[1].add(egui::DragValue::f64(&mut state.simulation_speed).speed(0.01))
@@ -696,7 +638,7 @@ impl InterfaceManager {
 
                     ui.separator();
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Light intensity exponent:");
                         cols[1].add(
                             egui::DragValue::f32(&mut state.light_intensity)
@@ -707,7 +649,7 @@ impl InterfaceManager {
 
                     ui.separator();
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Vertical FOV [deg]:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.camera.fov_v)
@@ -716,68 +658,51 @@ impl InterfaceManager {
                         )
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Near [Mm]:");
                         cols[1].add(egui::DragValue::f64(&mut state.camera.near).speed(0.01))
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Far [Mm]:");
                         cols[1].add(egui::DragValue::f64(&mut state.camera.far))
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Camera pos [Mm]:");
-                        cols[1]
-                            .horizontal(|ui| {
-                                let mut r = ui.add(
-                                    egui::DragValue::f64(&mut state.camera.pos.x).prefix("x: "),
-                                );
-                                r |= ui.add(
-                                    egui::DragValue::f64(&mut state.camera.pos.y).prefix("y: "),
-                                );
-                                r |= ui.add(
-                                    egui::DragValue::f64(&mut state.camera.pos.z).prefix("z: "),
-                                );
-                                r
-                            })
-                            .response
+                        cols[1].horizontal(|ui| {
+                            ui.add(egui::DragValue::f64(&mut state.camera.pos.x).prefix("x: "));
+                            ui.add(egui::DragValue::f64(&mut state.camera.pos.y).prefix("y: "));
+                            ui.add(egui::DragValue::f64(&mut state.camera.pos.z).prefix("z: "));
+                        });
                     });
 
                     if let Some(scene) = scene_man.get_main_scene_mut() {
-                        response |= ui.columns(2, |cols| {
-                            let mut res = cols[0].label("Reference:");
+                        ui.columns(2, |cols| {
+                            cols[0].label("Reference:");
 
                             if let Some(reference) = state.camera.reference_entity {
-                                res |= cols[1]
-                                    .horizontal(|ui| {
-                                        let mut r = ui.label(format!(
-                                            "{:?}: {}",
-                                            reference,
-                                            scene.get_entity_name(reference).unwrap_or_default()
-                                        ));
+                                cols[1].horizontal(|ui| {
+                                    ui.label(format!(
+                                        "{:?}: {}",
+                                        reference,
+                                        scene.get_entity_name(reference).unwrap_or_default()
+                                    ));
 
-                                        let clear_resp = ui
-                                            .button("🗑")
-                                            .on_hover_text("Stop tracking this entity");
-                                        if clear_resp.clicked() {
-                                            state.camera.next_reference_entity =
-                                                Some(ReferenceChange::Clear);
-                                        }
-
-                                        r |= clear_resp;
-                                        r
-                                    })
-                                    .response;
+                                    let clear_resp =
+                                        ui.button("🗑").on_hover_text("Stop tracking this entity");
+                                    if clear_resp.clicked() {
+                                        state.camera.next_reference_entity =
+                                            Some(ReferenceChange::Clear);
+                                    }
+                                });
                             };
-
-                            res
                         });
                     };
 
                     ui.separator();
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Move speed [???]:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.move_speed)
@@ -786,7 +711,7 @@ impl InterfaceManager {
                         )
                     });
 
-                    response |= ui.columns(2, |cols| {
+                    ui.columns(2, |cols| {
                         cols[0].label("Rotation speed:");
                         cols[1].add(
                             egui::DragValue::f64(&mut state.rotate_speed)
@@ -799,24 +724,20 @@ impl InterfaceManager {
                         if let Some(scene) = scene_man.get_main_scene_mut() {
                             ui.separator();
 
-                            response |= ui.columns(2, |cols| {
+                            ui.columns(2, |cols| {
                                 cols[0].label("Selected entity:");
-                                cols[1]
-                                    .horizontal(|ui| {
-                                        ui.label(format!("{:?}", selection));
-                                        let but_res =
-                                            ui.button("🎥").on_hover_text("Track this entity");
-                                        if but_res.clicked() {
-                                            state.camera.next_reference_entity =
-                                                Some(ReferenceChange::TrackKeepLocation(selection));
-                                        }
-
-                                        but_res
-                                    })
-                                    .response
+                                cols[1].horizontal(|ui| {
+                                    ui.label(format!("{:?}", selection));
+                                    let but_res =
+                                        ui.button("🎥").on_hover_text("Track this entity");
+                                    if but_res.clicked() {
+                                        state.camera.next_reference_entity =
+                                            Some(ReferenceChange::TrackKeepLocation(selection));
+                                    }
+                                })
                             });
 
-                            response |= ui.columns(2, |cols| {
+                            ui.columns(2, |cols| {
                                 cols[0].label("Name:");
                                 cols[1].label(format!(
                                     "{}",
@@ -855,13 +776,7 @@ impl InterfaceManager {
                             }
                         }
                     }
-
-                    handle_output!(state, response);
                 });
-
-            if let Some(response) = response {
-                handle_output!(state, response);
-            }
         });
     }
 
@@ -872,7 +787,7 @@ impl InterfaceManager {
 
             let mut open_window = self.open_windows.about;
 
-            let response = egui::Window::new("About")
+            egui::Window::new("About")
                 .open(&mut open_window)
                 .scroll(false)
                 .resizable(false)
@@ -889,10 +804,6 @@ impl InterfaceManager {
                 });
 
             self.open_windows.about = open_window;
-
-            if let Some(response) = response {
-                handle_output!(state, response);
-            }
         });
     }
 
@@ -908,7 +819,7 @@ impl InterfaceManager {
 
             let mut open_window = self.open_windows.scene_browser;
 
-            let response = egui::Window::new("Scene browser")
+            egui::Window::new("Scene browser")
                 .open(&mut open_window)
                 .scroll(false)
                 .resizable(false)
@@ -1040,10 +951,6 @@ impl InterfaceManager {
                 });
 
             self.open_windows.scene_browser = open_window;
-
-            if let Some(response) = response {
-                handle_output!(state, response);
-            }
         });
     }
 
@@ -1054,7 +961,7 @@ impl InterfaceManager {
 
             let mut open_window = self.open_windows.scene_hierarchy;
 
-            let response = egui::Window::new("Scene hierarchy")
+            egui::Window::new("Scene hierarchy")
                 .open(&mut open_window)
                 .scroll(false)
                 .resizable(true)
@@ -1083,10 +990,6 @@ impl InterfaceManager {
                 });
 
             self.open_windows.scene_hierarchy = open_window;
-
-            if let Some(response) = response {
-                handle_output!(state, response);
-            }
         });
     }
 }
