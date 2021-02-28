@@ -99,15 +99,13 @@ impl InterfaceManager {
         };
     }
 
-    /**
-     * This runs before all systems, and starts collecting all the UI elements we'll draw, as
-     * well as draws the main UI
-     */
+    /// This runs before all systems, and starts collecting all the UI elements we'll draw, as
+    /// well as draws the main UI
     pub fn begin_frame(&mut self, state: &mut AppState) {
         self.pre_draw(state);
     }
 
-    /** This runs after all systems, and draws the collected UI elements to the framebuffer */
+    /// This runs after all systems, and draws the collected UI elements to the framebuffer
     pub fn end_frame(
         &mut self,
         state: &mut AppState,
@@ -118,8 +116,17 @@ impl InterfaceManager {
 
         self.draw();
 
+        let mut over_ui: bool = false;
+        UICTX.with(|ui| {
+            let ui = ui.borrow();
+            let ui_ref = ui.as_ref().unwrap();
+            let ctx = ui_ref.ctx();
+
+            over_ui = ctx.is_pointer_over_area();
+        });
+
         if let Some(scene) = scene_man.get_main_scene_mut() {
-            if !state.input.over_ui && state.input.m1 == ButtonState::Depressed {
+            if !over_ui {
                 handle_mouse_on_scene(state, scene);
             }
         }
@@ -158,6 +165,8 @@ impl InterfaceManager {
             self.last_frame_rate = new_frame_rate;
         }
 
+        let mut has_kb: bool = false;
+
         UICTX.with(|ui| {
             let mut ui = ui.borrow_mut();
             ui.replace(egui::Ui::new(
@@ -167,7 +176,38 @@ impl InterfaceManager {
                 rect,
                 rect,
             ));
+
+            let ui_ref = ui.as_ref().unwrap();
+            has_kb = ui_ref.ctx().wants_keyboard_input();
         });
+
+        // Consume keyboard input if egui has keyboard focus, to prevent
+        // the input manager from also handling these
+        if has_kb {
+            if state.input.forward == ButtonState::Pressed {
+                state.input.forward = ButtonState::Handled;
+            }
+
+            if state.input.left == ButtonState::Pressed {
+                state.input.left = ButtonState::Handled;
+            }
+
+            if state.input.right == ButtonState::Pressed {
+                state.input.right = ButtonState::Handled;
+            }
+
+            if state.input.back == ButtonState::Pressed {
+                state.input.back = ButtonState::Handled;
+            }
+
+            if state.input.up == ButtonState::Pressed {
+                state.input.up = ButtonState::Handled;
+            }
+
+            if state.input.down == ButtonState::Pressed {
+                state.input.down = ButtonState::Handled;
+            }
+        }
     }
 
     fn draw(&mut self) {
