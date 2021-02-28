@@ -72,7 +72,7 @@ impl SceneManager {
         };
 
         if !self.loaded_scenes.contains_key(identifier) {
-            self.load_scene(identifier, res_man);
+            self.load_scene(identifier, res_man, state);
         }
 
         // Don't start resetting/unloading stuff if we have nowhere else to go
@@ -142,12 +142,17 @@ impl SceneManager {
         }
     }
 
-    fn load_scene(&mut self, identifier: &str, res_man: &mut ResourceManager) -> &mut Scene {
+    fn load_scene(
+        &mut self,
+        identifier: &str,
+        res_man: &mut ResourceManager,
+        state: &mut AppState,
+    ) -> &mut Scene {
         match identifier {
-            "test" => self.load_test_scene(res_man),
+            "test" => self.load_test_scene(res_man, state),
             "teal" => self.load_teal_sphere_scene(res_man),
             "planetarium" => self.load_planetarium_scene(res_man),
-            _ => self.load_scene_from_desc(identifier, res_man),
+            _ => self.load_scene_from_desc(identifier, res_man, state),
         }
     }
 
@@ -319,19 +324,28 @@ impl SceneManager {
         return scene;
     }
 
-    fn load_test_scene(&mut self, res_man: &mut ResourceManager) -> &mut Scene {
+    fn load_test_scene(
+        &mut self,
+        res_man: &mut ResourceManager,
+        state: &mut AppState,
+    ) -> &mut Scene {
         let scene = self.new_scene("test").unwrap();
 
-        scene.skybox_mesh = res_man.get_or_create_mesh("quad");
-        scene.skybox_trans = Some(
-            Rotation3::<f64>::from_axis_angle(&Vector3::x_axis(), OBLIQUITY_OF_ECLIPTIC.to_rad().0)
+        if state.use_skyboxes {
+            scene.skybox_mesh = res_man.get_or_create_mesh("quad");
+            scene.skybox_trans = Some(
+                Rotation3::<f64>::from_axis_angle(
+                    &Vector3::x_axis(),
+                    OBLIQUITY_OF_ECLIPTIC.to_rad().0,
+                )
                 .to_homogeneous(),
-        );
-        scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
-        // scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
-        //     TextureUnit::BaseColor,
-        //     res_man.get_or_request_texture("starmap_16k", true),
-        // );
+            );
+            scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
+            scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
+                TextureUnit::BaseColor,
+                res_man.get_or_request_texture("starmap_16k", true),
+            );
+        }
 
         let sun_color: [f32; 3] = [1.0, 1.0, 0.8];
         let sun_mat = res_man.instantiate_material("gltf_metal_rough", "vert_sun_mat");
@@ -695,6 +709,7 @@ impl SceneManager {
         &mut self,
         identifier: &str,
         res_man: &mut ResourceManager,
+        state: &mut AppState,
     ) -> &mut Scene {
         let desc = self.descriptions.get(identifier).cloned().unwrap();
 
@@ -739,18 +754,40 @@ impl SceneManager {
         }
 
         // Grid
-        let grid = scene.new_entity(Some("grid"));
-        let trans_comp = scene.add_component::<TransformComponent>(grid);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(1000000.0, 1000000.0, 1000000.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(grid);
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
+        if state.show_grid {
+            let grid = scene.new_entity(Some("grid"));
+            let trans_comp = scene.add_component::<TransformComponent>(grid);
+            trans_comp.get_local_transform_mut().scale =
+                Vector3::new(1000000.0, 1000000.0, 1000000.0);
+            let mesh_comp = scene.add_component::<MeshComponent>(grid);
+            mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
+        }
 
         // Axes
-        let axes = scene.new_entity(Some("axes"));
-        let trans_comp = scene.add_component::<TransformComponent>(axes);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(10000.0, 10000.0, 10000.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(axes);
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
+        if state.show_axes {
+            let axes = scene.new_entity(Some("axes"));
+            let trans_comp = scene.add_component::<TransformComponent>(axes);
+            trans_comp.get_local_transform_mut().scale = Vector3::new(10000.0, 10000.0, 10000.0);
+            let mesh_comp = scene.add_component::<MeshComponent>(axes);
+            mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
+        }
+
+        // Skybox
+        if state.use_skyboxes {
+            scene.skybox_mesh = res_man.get_or_create_mesh("quad");
+            scene.skybox_trans = Some(
+                Rotation3::<f64>::from_axis_angle(
+                    &Vector3::x_axis(),
+                    OBLIQUITY_OF_ECLIPTIC.to_rad().0,
+                )
+                .to_homogeneous(),
+            );
+            scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
+            scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
+                TextureUnit::BaseColor,
+                res_man.get_or_request_texture("starmap_16k", true),
+            );
+        }
 
         return scene;
     }

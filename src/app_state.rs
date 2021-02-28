@@ -153,7 +153,7 @@ pub struct AppState {
     pub canvas_width: u32,
 
     #[serde(skip)]
-    pub start_s: f64,
+    pub start_date: f64,
 
     #[serde(skip)]
     pub last_frame_s: f64,
@@ -173,6 +173,11 @@ pub struct AppState {
     #[serde(skip)]
     pub time_of_last_save: f64,
 
+    pub use_skyboxes: bool,
+    pub show_grid: bool,
+    pub show_axes: bool,
+
+    pub frames_per_second_limit: f64,
     pub simulation_speed: f64,
     pub simulation_paused: bool,
     pub move_speed: f64,
@@ -193,17 +198,21 @@ impl AppState {
             pending_reset: false,
             canvas_height: 0,
             canvas_width: 0,
-            start_s: js_sys::Date::now(),
+            start_date: js_sys::Date::now() / 1000.0,
             last_frame_s: 0.0,
             sim_time_s: 0.,
             real_time_s: 0.,
             sim_delta_time_s: 0.,
             real_delta_time_s: 0.,
             time_of_last_save: 0.,
+            use_skyboxes: false,
+            show_grid: true,
+            show_axes: true,
             simulation_speed: 1.,
             simulation_paused: true,
             move_speed: 5.0,
             rotate_speed: 2.0,
+            frames_per_second_limit: 120.0,
             light_intensity: 0.66,
             input: Input::default(),
             hovered: None,
@@ -233,7 +242,7 @@ impl AppState {
         if let Some(serialized) = local_storage_get("app_state") {
             match ron::de::from_str::<AppState>(&serialized) {
                 Ok(mut state) => {
-                    state.start_s = js_sys::Date::now();
+                    state.start_date = js_sys::Date::now() / 1000.0;
                     return state;
                 }
                 Err(error) => {

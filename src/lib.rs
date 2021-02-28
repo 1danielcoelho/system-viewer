@@ -135,15 +135,10 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
         if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
             let s = ref_mut_s.as_mut().unwrap();
 
-            // Framerate limiter
-            // let limit_fps = 1.0;
-            // let now_s = (js_sys::Date::now() - s.start_s) / 1000.0;
-            // let real_delta_s = now_s - s.last_frame_s;
-            // if real_delta_s < 1.0 / limit_fps {
-            //     return;
-            // }
-
-            update_state(s, window, canvas);
+            let do_update = update_state(s, window, canvas);
+            if !do_update {
+                return;
+            }
 
             // Save state to local storage once in a while
             if s.real_time_s - s.time_of_last_save > 3.0 {
@@ -166,7 +161,7 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
     });
 }
 
-fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElement) {
+fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElement) -> bool {
     if state.pending_reset {
         *state = AppState::new();
         local_storage_remove("app_state");
@@ -193,19 +188,25 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
             canvas_height_on_screen
         );
     }
+    state.canvas_height = canvas_height_on_screen;
+    state.canvas_width = canvas_width_on_screen;
 
-    let now_s = (js_sys::Date::now() - state.start_s) / 1000.0;
+    let now_s = js_sys::Date::now() / 1000.0 - state.start_date;
     let real_delta_s = now_s - state.last_frame_s;
+
+    // Framerate limiter
+    if real_delta_s < 1.0 / state.frames_per_second_limit {
+        return false;
+    }
+
     let sim_delta_s =
         real_delta_s * state.simulation_speed * (!state.simulation_paused as i32 as f64);
-
     state.last_frame_s = now_s;
-    state.canvas_height = canvas_height_on_screen; 
-    state.canvas_width = canvas_width_on_screen;
     state.sim_time_s += sim_delta_s;
     state.real_time_s += real_delta_s;
     state.sim_delta_time_s = sim_delta_s;
     state.real_delta_time_s = real_delta_s;
+    return true;
 }
 
 /// Synchronous function that JS calls to inject text data into the engine because we can't await for a JS promise from within the winit engine loop

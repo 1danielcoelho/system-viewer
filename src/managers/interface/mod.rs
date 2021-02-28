@@ -16,7 +16,7 @@ use std::collections::VecDeque;
 
 pub mod details_ui;
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 struct OpenWindows {
     debug: bool,
@@ -492,6 +492,25 @@ impl InterfaceManager {
 
                         ui.label("Rotation sensitivity:");
                         ui.add(egui::Slider::f64(&mut state.rotate_speed, 0.0..=10.0).text(""));
+                        ui.end_row();
+
+                        ui.label("Framerate limit:");
+                        ui.add(
+                            egui::Slider::f64(&mut state.frames_per_second_limit, 0.5..=120.0)
+                                .text(""),
+                        );
+                        ui.end_row();
+
+                        ui.label("Use skyboxes:");
+                        ui.checkbox(&mut state.use_skyboxes, "");
+                        ui.end_row();
+
+                        ui.label("Show ecliptic grid:");
+                        ui.checkbox(&mut state.show_grid, "");
+                        ui.end_row();
+
+                        ui.label("Show coordinate axes:");
+                        ui.checkbox(&mut state.show_axes, "");
                         ui.end_row();
 
                         ui.label("Light intensity multiplier:");
@@ -1015,9 +1034,7 @@ impl InterfaceManager {
                                 ui.columns(2, |cols| {
                                     cols[0].label("Focus");
                                     cols[1].label(
-                                        desc.focus
-                                            .as_ref()
-                                            .unwrap_or(&String::from("No focus")),
+                                        desc.focus.as_ref().unwrap_or(&String::from("No focus")),
                                     );
                                 });
 
