@@ -55,7 +55,7 @@ fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
 
     if trans.is_none() {
         log::warn!(
-            "Found no transform component for tracked entity '{:?}'",
+            "Found no transform component for focused entity '{:?}'",
             ref_ent
         );
     }
@@ -73,12 +73,12 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let new_entity = &mut state.camera.next_reference_entity;
 
     // Don't do anything if asked to changed to the same entity
-    if let Some(ReferenceChange::TrackKeepLocation(entity)) = new_entity {
+    if let Some(ReferenceChange::FocusKeepLocation(entity)) = new_entity {
         if old_entity.is_some() && *entity == old_entity.unwrap() {
             *new_entity = None;
         }
     }
-    if let Some(ReferenceChange::TrackKeepCoords(entity)) = new_entity {
+    if let Some(ReferenceChange::FocusKeepCoords(entity)) = new_entity {
         if old_entity.is_some() && *entity == old_entity.unwrap() {
             *new_entity = None;
         }
@@ -89,7 +89,7 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
 
     let new_entity = new_entity.as_ref().unwrap();
     match new_entity {
-        ReferenceChange::TrackKeepLocation(new_entity) => {
+        ReferenceChange::FocusKeepLocation(new_entity) => {
             let old_to_world = match state.camera.reference_translation {
                 Some(old_trans) => Translation3::from(old_trans).to_homogeneous(),
                 None => Matrix4::identity(),
@@ -111,7 +111,7 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
             state.camera.target = Point3::new(0.0, 0.0, 0.0);
             state.camera.reference_entity = Some(*new_entity);
         }
-        ReferenceChange::TrackKeepCoords(new_entity) => {
+        ReferenceChange::FocusKeepCoords(new_entity) => {
             state.camera.reference_entity = Some(*new_entity);
         }
         ReferenceChange::Clear => {

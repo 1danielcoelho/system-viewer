@@ -166,7 +166,10 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
 
             egui_key = Some(egui::Key::Space);
         }
-        "Esc" | "Escape" => egui_key = Some(egui::Key::Escape),
+        "Esc" | "Escape" => {
+            s.input.esc = button_state;
+            egui_key = Some(egui::Key::Escape);
+        }
         "Help" | "Insert" => egui_key = Some(egui::Key::Insert),
         "Home" => egui_key = Some(egui::Key::Home),
         "PageDown" => egui_key = Some(egui::Key::PageDown),
@@ -199,6 +202,9 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
         }
         "f" | "F" => {
             s.input.f = button_state;
+        }
+        "g" | "G" => {
+            s.input.g = button_state;
         }
         _ => {}
     };

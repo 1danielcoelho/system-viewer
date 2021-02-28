@@ -541,6 +541,7 @@ response |= ui.add(label);
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
         - Okay-ish results on the simulation for now, we can improve later
+        - Can't see the hover label when mousing over earth at 500x
 - Do something for movement speed, it's almost always unexpected
     - I also have FOV basically unused...
 - Do something about near/far camera distance
@@ -551,11 +552,14 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
+# Textures get reloaded when we reload/open new scenes
+
 # Restore F to track something
 
 # Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 
 # Known bugs
+- Customize the hover text on drag values whenever he adds it to egui
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
 - Real weird "headlight" effect when I get close to any mesh?
 - What's the point of saving state if I dump it every time any scene is loaded anyway?

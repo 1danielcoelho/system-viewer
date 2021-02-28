@@ -4,7 +4,7 @@
     description: "Solar system barycenter, Sun, Jupiter and it's system barycenter, as well as 10 of its moons",
     time: "J2000",
     simulation_scale: 500,
-    tracking: "599",
+    focus: "599",
     bodies: {
         "major_bodies": {
             "5": DefaultVector,

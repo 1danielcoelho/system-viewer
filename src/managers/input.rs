@@ -1,4 +1,4 @@
-use crate::app_state::{AppState, ButtonState};
+use crate::app_state::{AppState, ButtonState, ReferenceChange};
 use na::*;
 
 pub struct InputManager {
@@ -41,6 +41,22 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
 
     let lock_pitch = true;
 
+    if let Some(selected) = state.selection {
+        if state.input.f == ButtonState::Pressed {
+            state.camera.next_reference_entity = Some(ReferenceChange::FocusKeepLocation(selected));
+        }
+    }
+
+    if let Some(selected) = state.selection {
+        if state.input.g == ButtonState::Pressed {
+            state.camera.entity_going_to = Some(selected);
+        }
+    }
+
+    if state.input.esc == ButtonState::Pressed {
+        state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+    }
+
     // Zoom in/out
     if state.input.modifiers.alt && state.camera.reference_translation.is_some() {
         if state.input.scroll_delta_y < 0 {
@@ -58,27 +74,32 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
         } else if state.input.scroll_delta_y > 0 {
             state.move_speed *= 0.9;
         }
+
+        state.move_speed = state.move_speed.clamp(0.0, 1000000.0);
     }
     state.input.scroll_delta_y = 0; // We have to "consume" this as it isn't cleared otherwise
 
     let mut incr: Vector3<f64> = Vector3::new(0.0, 0.0, 0.0);
     if state.input.forward == ButtonState::Pressed {
-        incr += cam_forward * state.real_delta_time_s * state.move_speed;
+        incr += cam_forward;
     }
     if state.input.back == ButtonState::Pressed {
-        incr -= cam_forward * state.real_delta_time_s * state.move_speed;
+        incr -= cam_forward;
     }
     if state.input.left == ButtonState::Pressed {
-        incr -= cam_right * state.real_delta_time_s * state.move_speed;
+        incr -= cam_right;
     }
     if state.input.right == ButtonState::Pressed {
-        incr += cam_right * state.real_delta_time_s * state.move_speed;
+        incr += cam_right;
     }
     if state.input.up == ButtonState::Pressed {
-        incr += cam_up * state.real_delta_time_s * state.move_speed;
+        incr += cam_up;
     }
     if state.input.down == ButtonState::Pressed {
-        incr -= cam_up * state.real_delta_time_s * state.move_speed;
+        incr -= cam_up;
+    }
+    if incr.magnitude_squared() > 0.0 {
+        incr = incr.normalize() * state.real_delta_time_s * state.move_speed;
     }
 
     // Orbit
@@ -118,7 +139,7 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
         let rot_z = Rotation3::from_axis_angle(&state.camera.up, x_angle);
         let rot_x = Rotation3::from_axis_angle(&Unit::new_unchecked(cam_right_tangent), y_angle);
 
-        // Always orbit about (0, 0, 0), which is where the tracked object is
+        // Always orbit about (0, 0, 0), which is where the focused object is
         let new_cam_to_center = rot_z.transform_vector(&rot_x.transform_vector(&cam_to_center));
         let cam_dist_from_center = state.camera.pos.coords.magnitude();
         state.camera.pos = Point3::from(-new_cam_to_center * cam_dist_from_center);

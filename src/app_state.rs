@@ -6,8 +6,8 @@ use std::collections::HashSet;
 
 #[derive(Serialize, Deserialize)]
 pub enum ReferenceChange {
-    TrackKeepLocation(Entity),
-    TrackKeepCoords(Entity),
+    FocusKeepLocation(Entity),
+    FocusKeepCoords(Entity),
     Clear,
 }
 
@@ -131,12 +131,14 @@ pub struct Input {
     pub down: ButtonState,
     pub spacebar: ButtonState,
     pub f: ButtonState,
+    pub g: ButtonState,
+    pub esc: ButtonState,
 
     #[serde(skip)]
     pub modifiers: egui::Modifiers, // We can use this for the rest of the app too
 
     #[serde(skip)]
-    pub egui_events: Vec<egui::Event>, 
+    pub egui_events: Vec<egui::Event>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -181,8 +183,8 @@ pub struct AppState {
     pub input: Input,
 
     #[serde(skip)]
-    pub hovered: HashSet<Entity>,
-    pub selection: HashSet<Entity>,
+    pub hovered: Option<Entity>,
+    pub selection: Option<Entity>,
     pub camera: Camera,
 }
 impl AppState {
@@ -204,8 +206,8 @@ impl AppState {
             rotate_speed: 2.0,
             light_intensity: 0.66,
             input: Input::default(),
-            hovered: HashSet::new(),
-            selection: HashSet::new(),
+            hovered: None,
+            selection: None,
             camera: Camera {
                 pos: Point3::new(10.0, 10.0, 10.0),
                 up: Unit::new_unchecked(Vector3::z()),

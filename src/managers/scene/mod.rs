@@ -110,20 +110,20 @@ impl SceneManager {
                     need_go_to = true;
                 }
 
-                if let Some(tracking) = &desc.tracking {
+                if let Some(focus) = &desc.focus {
                     // Ugh.. this shouldn't be too often though
                     for (entity, component) in main_scene.metadata.iter() {
                         if let Some(id) = component.get_metadata("body_id") {
-                            if id == tracking {
+                            if id == focus {
                                 state.camera.next_reference_entity =
-                                    Some(ReferenceChange::TrackKeepCoords(*entity));
+                                    Some(ReferenceChange::FocusKeepCoords(*entity));
 
                                 if need_go_to {
                                     state.camera.entity_going_to = Some(*entity);
                                 }
 
                                 log::info!(
-                                    "Setting initial tracked entity to '{:?}'",
+                                    "Setting initial focused entity to '{:?}'",
                                     main_scene.get_entity_name(*entity)
                                 );
                                 break;

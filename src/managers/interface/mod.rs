@@ -22,6 +22,8 @@ struct OpenWindows {
     debug: bool,
     scene_hierarchy: bool,
     scene_browser: bool,
+    settings: bool,
+    controls: bool,
     about: bool,
 }
 
@@ -45,6 +47,8 @@ impl InterfaceManager {
                 debug: false,
                 scene_hierarchy: false,
                 scene_browser: true,
+                settings: false,
+                controls: false,
                 about: false,
             },
             selected_scene_desc_name: String::from(""),
@@ -83,7 +87,7 @@ impl InterfaceManager {
         // Always reset the hovered entity even if we won't get to
         // hover new ones: This prevents the tooltip from sticking around if the UI
         // starts covering it (which can also include the label tooltip itself)
-        state.hovered.clear();
+        state.hovered = None;
         if let Some(scene) = scene_man.get_main_scene_mut() {
             if !egui_consuming_pointer {
                 handle_pointer_on_scene(state, scene);
@@ -245,50 +249,44 @@ impl InterfaceManager {
                         egui::Frame::dark_canvas(ui.style())
                             .fill(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200))
                             .show(ui, |ui| {
-                                let mut total_res = ui.button("Reset scene");
-                                if total_res.clicked() {}
-
-                                let res = ui.button("Scene browser");
-                                if res.clicked() {
-                                    self.open_windows.scene_browser =
-                                        !self.open_windows.scene_browser;
+                                if ui.button("Reset scene").clicked() {
+                                    scene_man.set_scene("empty", res_man, state);
+                                    scene_man.set_scene(
+                                        &self.selected_scene_desc_name,
+                                        res_man,
+                                        state,
+                                    );
                                 }
-                                total_res |= res;
+
+                                if ui.button("Close scene").clicked() {
+                                    scene_man.set_scene("empty", res_man, state);
+                                }
 
                                 ui.separator();
 
-                                let res = ui.button("About");
-                                if res.clicked() {
+                                if ui.button("Scene browser").clicked() {
+                                    self.open_windows.scene_browser =
+                                        !self.open_windows.scene_browser;
+                                }
+
+                                ui.separator();
+
+                                if ui.button("Settings").clicked() {
+                                    self.open_windows.settings = !self.open_windows.settings;
+                                }
+
+                                if ui.button("Controls").clicked() {
+                                    self.open_windows.controls = !self.open_windows.controls;
+                                }
+
+                                if ui.button("About").clicked() {
                                     self.open_windows.about = !self.open_windows.about;
                                 }
-                                total_res |= res;
 
                                 if DEBUG {
                                     ui.separator();
-
-                                    if ui.button("New").clicked() {
-                                        let new_scene_name = scene_man
-                                            .new_scene("New scene")
-                                            .unwrap()
-                                            .identifier
-                                            .clone();
-                                        scene_man.set_scene(&new_scene_name, res_man, state);
-                                    }
-
-                                    if ui.button("Open").clicked() {};
-
-                                    if ui.button("Save").clicked() {};
-
                                     ui.separator();
-
-                                    if ui.button("Close").clicked() {
-                                        let new_scene_name = scene_man
-                                            .new_scene("New scene")
-                                            .unwrap()
-                                            .identifier
-                                            .clone();
-                                        scene_man.set_scene(&new_scene_name, res_man, state);
-                                    }
+                                    ui.separator();
 
                                     if ui.button("Inject GLB...").clicked() {
                                         prompt_for_bytes_file("glb_inject", ".glb");
@@ -300,18 +298,11 @@ impl InterfaceManager {
                                         self.open_windows.debug = !self.open_windows.debug;
                                     }
 
-                                    if ui.button("Scene hierarchy").clicked() {
-                                        self.open_windows.scene_hierarchy =
-                                            !self.open_windows.scene_hierarchy;
-                                    }
-
-                                    ui.separator();
-
                                     if ui.button("Organize windows").clicked() {
                                         ui.ctx().memory().reset_areas();
                                     }
 
-                                    if ui.button("Close all").clicked() {
+                                    if ui.button("Close all windows").clicked() {
                                         self.open_windows.debug = false;
                                         self.open_windows.scene_hierarchy = false;
                                         self.open_windows.about = false;
@@ -345,24 +336,29 @@ impl InterfaceManager {
                                 .text_style(egui::TextStyle::Monospace),
                         )
                         .clicked()
-                    {
-                        log::info!("Clicked on clock!");
-                    }
+                    {}
+
+                    if ui
+                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
+                        .clicked()
+                    {}
 
                     ui.horizontal(|ui| {
                         ui.add(
                             egui::DragValue::f64(&mut state.simulation_speed)
                                 .speed(0.001)
-                                .suffix("x speed"),
+                                .suffix("x time scale"),
                         );
                     });
 
-                    if ui
-                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
-                        .clicked()
-                    {
-                        log::info!("Clicked on clock!");
-                    }
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::DragValue::f64(&mut state.move_speed)
+                                .speed(0.001)
+                                .clamp_range(0.0..=1000000.0)
+                                .suffix(" Mm/s velocity"),
+                        );
+                    });
 
                     if ui
                         .add(
@@ -409,7 +405,7 @@ impl InterfaceManager {
                             200,
                         );
 
-                        // Make tracking button red to indicate the reason we won't be orbiting if we have
+                        // Make focusing button red to indicate the reason we won't be orbiting if we have
                         // alt+click without the target
                         if ref_name.is_none()
                             && state.input.modifiers.alt
@@ -427,7 +423,7 @@ impl InterfaceManager {
                             ui.label("");
 
                             ui.add(
-                                egui::Label::new(ref_name.unwrap_or("Not tracking"))
+                                egui::Label::new(ref_name.unwrap_or("No focus"))
                                     .text_style(egui::TextStyle::Monospace)
                                     .text_color(style.visuals.widgets.inactive.fg_stroke.color),
                             );
@@ -444,7 +440,7 @@ impl InterfaceManager {
                                         .enabled(state.camera.reference_entity.is_some())
                                         .text_color(text_color),
                                 )
-                                .on_hover_text("Stop tracking this body")
+                                .on_hover_text("Stop focusing this body")
                                 .clicked()
                             {
                                 state.camera.next_reference_entity = Some(ReferenceChange::Clear);
@@ -471,7 +467,39 @@ impl InterfaceManager {
         }
 
         self.draw_about_window();
+        self.draw_controls_window();
+        self.draw_settings_window(state);
         self.draw_scene_browser(state, scene_man, res_man);
+    }
+
+    fn draw_settings_window(&mut self, state: &mut AppState) {
+        UICTX.with(|ui| {
+            let ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_ref().unwrap();
+
+            egui::Window::new("Settings")
+                .open(&mut self.open_windows.settings)
+                .resizable(false)
+                .show(&ui.ctx(), |ui| {
+                    egui::Grid::new("settings").show(ui, |ui| {
+                        ui.label("Vertical FOV:");
+                        ui.add(
+                            egui::Slider::f64(&mut state.camera.fov_v, 0.0..=120.0)
+                                .text("degrees")
+                                .integer(),
+                        );
+                        ui.end_row();
+
+                        ui.label("Rotation sensitivity:");
+                        ui.add(egui::Slider::f64(&mut state.rotate_speed, 0.0..=10.0).text(""));
+                        ui.end_row();
+
+                        ui.label("Light intensity multiplier:");
+                        ui.add(egui::Slider::f32(&mut state.light_intensity, 0.0..=5.0).text(""));
+                        ui.end_row();
+                    });
+                });
+        });
     }
 
     fn draw_pop_ups(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
@@ -563,7 +591,7 @@ impl InterfaceManager {
                     .max(margin + expected_height / 2)
                     .min((state.canvas_height - expected_height as u32) as i32);
 
-                let mut entity_to_track: Option<ReferenceChange> = None;
+                let mut entity_to_focus: Option<ReferenceChange> = None;
                 let mut entity_to_go_to: Option<Entity> = None;
 
                 egui::Window::new(name)
@@ -584,18 +612,18 @@ impl InterfaceManager {
                                     egui::Color32::from_rgba_unmultiplied(0, 160, 160, 200);
                                 ui.set_style(style.clone());
 
-                                let but_res = ui.button("❌").on_hover_text("Stop tracking");
+                                let but_res = ui.button("❌").on_hover_text("Stop focusing");
                                 if but_res.clicked() {
-                                    entity_to_track = Some(ReferenceChange::Clear);
+                                    entity_to_focus = Some(ReferenceChange::Clear);
                                 }
 
                                 style.visuals.widgets.inactive.bg_fill = old_bg_fill;
                                 ui.set_style(style);
                             } else {
-                                let but_res = ui.button("🎥").on_hover_text("Track");
+                                let but_res = ui.button("🎥").on_hover_text("Focus");
                                 if but_res.clicked() {
-                                    entity_to_track =
-                                        Some(ReferenceChange::TrackKeepLocation(*selected_entity));
+                                    entity_to_focus =
+                                        Some(ReferenceChange::FocusKeepLocation(*selected_entity));
                                 }
                             }
 
@@ -607,7 +635,7 @@ impl InterfaceManager {
                     })
                     .unwrap();
 
-                if let Some(ent) = entity_to_track {
+                if let Some(ent) = entity_to_focus {
                     state.camera.next_reference_entity = Some(ent);
                 }
 
@@ -616,34 +644,27 @@ impl InterfaceManager {
                 }
             }
 
-            // It's important to offset the tooltip here so that egui doesn't
-            // claim the pointer is over any UI. Also without this the cursor is on
-            // top of the text anyway
-            let hover_label_pos = egui::Pos2 {
-                x: state.input.mouse_x as f32 + 10.0,
-                y: state.input.mouse_y as f32 + 10.0,
-            };
-            for hovered_entity in &state.hovered {
-                if state.selection.contains(hovered_entity) {
-                    continue;
+            if let Some(hovered) = state.hovered {
+                if state.selection != state.hovered {
+                    if let Some(name) = scene.get_entity_name(hovered) {
+                        egui::Window::new(name)
+                            // It's important to offset the tooltip here so that egui doesn't
+                            // claim the pointer is over any UI. Also without this the cursor is on
+                            // top of the text anyway
+                            .fixed_pos(egui::Pos2 {
+                                x: state.input.mouse_x as f32 + 10.0,
+                                y: state.input.mouse_y as f32 + 10.0,
+                            })
+                            .resizable(false)
+                            .scroll(false)
+                            .collapsible(false)
+                            .title_bar(false)
+                            .show(&ui.ctx(), |ui| {
+                                ui.label(name);
+                            })
+                            .unwrap();
+                    }
                 }
-
-                let name = scene.get_entity_name(*hovered_entity);
-                if name.is_none() {
-                    continue;
-                }
-                let name = name.unwrap();
-
-                egui::Window::new(name)
-                    .fixed_pos(hover_label_pos)
-                    .resizable(false)
-                    .scroll(false)
-                    .collapsible(false)
-                    .title_bar(false)
-                    .show(&ui.ctx(), |ui| {
-                        ui.label(name);
-                    })
-                    .unwrap();
             }
         });
     }
@@ -743,7 +764,7 @@ impl InterfaceManager {
                                     ));
 
                                     let clear_resp =
-                                        ui.button("🗑").on_hover_text("Stop tracking this entity");
+                                        ui.button("🗑").on_hover_text("Stop focusing this entity");
                                     if clear_resp.clicked() {
                                         state.camera.next_reference_entity =
                                             Some(ReferenceChange::Clear);
@@ -782,10 +803,10 @@ impl InterfaceManager {
                                 cols[1].horizontal(|ui| {
                                     ui.label(format!("{:?}", selection));
                                     let but_res =
-                                        ui.button("🎥").on_hover_text("Track this entity");
+                                        ui.button("🎥").on_hover_text("Focus this entity");
                                     if but_res.clicked() {
                                         state.camera.next_reference_entity =
-                                            Some(ReferenceChange::TrackKeepLocation(selection));
+                                            Some(ReferenceChange::FocusKeepLocation(selection));
                                     }
                                 })
                             });
@@ -838,10 +859,8 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            let mut open_window = self.open_windows.about;
-
             egui::Window::new("About")
-                .open(&mut open_window)
+                .open(&mut self.open_windows.about)
                 .scroll(false)
                 .resizable(false)
                 .fixed_size(egui::vec2(400.0, 400.0))
@@ -855,8 +874,60 @@ impl InterfaceManager {
                         ui.hyperlink("https://github.com/1danielcoelho/system-viewer");
                     });
                 });
+        });
+    }
 
-            self.open_windows.about = open_window;
+    fn draw_controls_window(&mut self) {
+        UICTX.with(|ui| {
+            let ref_mut = ui.borrow_mut();
+            let ui = ref_mut.as_ref().unwrap();
+
+            egui::Window::new("Controls")
+                .open(&mut self.open_windows.controls)
+                .resizable(false)
+                .show(&ui.ctx(), |ui| {
+                    egui::Grid::new("controls").show(ui, |ui| {
+                        ui.label("Movement:");
+                        ui.label("WASD, Arrow keys");
+                        ui.end_row();
+
+                        ui.label("Select objects");
+                        ui.label("Left click");
+                        ui.end_row();
+
+                        ui.label("Rotate camera");
+                        ui.label("Right-click and drag");
+                        ui.end_row();
+
+                        ui.label("Speed up or down");
+                        ui.label("Mouse-wheel");
+                        ui.end_row();
+
+                        ui.label("Play/pause simulation");
+                        ui.label("Spacebar");
+                        ui.end_row();
+
+                        ui.label("Focus selected object");
+                        ui.label("F");
+                        ui.end_row();
+
+                        ui.label("Stop focusing object");
+                        ui.label("Esc");
+                        ui.end_row();
+
+                        ui.label("Go to selected object");
+                        ui.label("G");
+                        ui.end_row();
+
+                        ui.label("Orbit focused object");
+                        ui.label("Alt + Left-click drag");
+                        ui.end_row();
+
+                        ui.label("Zoom to focused object");
+                        ui.label("Alt + Mouse-wheel");
+                        ui.end_row();
+                    });
+                });
         });
     }
 
@@ -942,11 +1013,11 @@ impl InterfaceManager {
                                 });
 
                                 ui.columns(2, |cols| {
-                                    cols[0].label("Tracking");
+                                    cols[0].label("Focus");
                                     cols[1].label(
-                                        desc.tracking
+                                        desc.focus
                                             .as_ref()
-                                            .unwrap_or(&String::from("Not tracking")),
+                                            .unwrap_or(&String::from("No focus")),
                                     );
                                 });
 
@@ -989,13 +1060,14 @@ impl InterfaceManager {
                             });
 
                             cols[1].with_layout(egui::Layout::left_to_right(), |ui| {
-                                let close_resp = ui
+                                if ui
                                     .add(
                                         egui::Button::new("   Close   ")
                                             .enabled(selected_is_active),
                                     )
-                                    .on_hover_text("Close this scene");
-                                if close_resp.clicked() {
+                                    .on_hover_text("Close this scene")
+                                    .clicked()
+                                {
                                     scene_man.set_scene("empty", res_man, state);
                                 }
                             });
@@ -1012,10 +1084,8 @@ impl InterfaceManager {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            let mut open_window = self.open_windows.scene_hierarchy;
-
             egui::Window::new("Scene hierarchy")
-                .open(&mut open_window)
+                .open(&mut self.open_windows.scene_hierarchy)
                 .scroll(false)
                 .resizable(true)
                 .default_size(egui::vec2(300.0, 400.0))
@@ -1033,16 +1103,13 @@ impl InterfaceManager {
 
                                 if let Some(name) = &entity.name {
                                     if ui.button(name).clicked() {
-                                        state.selection.clear();
-                                        state.selection.insert(entity.current);
+                                        state.selection = Some(entity.current);
                                     }
                                 }
                             }
                         });
                     });
                 });
-
-            self.open_windows.scene_hierarchy = open_window;
         });
     }
 }
@@ -1072,15 +1139,9 @@ fn handle_pointer_on_scene(state: &mut AppState, scene: &mut Scene) {
     let doc = window.document().unwrap();
     if let None = doc.pointer_lock_element() {
         if state.input.m0 == ButtonState::Pressed {
-            state.selection.clear();
-
-            if entity.is_some() {
-                state.selection.insert(entity.unwrap());
-            }
+            state.selection = entity;
         } else {
-            if entity.is_some() {
-                state.hovered.insert(entity.unwrap());
-            }
+            state.hovered = entity;
         }
     }
 }

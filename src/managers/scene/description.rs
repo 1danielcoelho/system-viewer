@@ -25,7 +25,7 @@ pub struct SceneDescription {
     pub simulation_scale: f64,
     
     #[serde(default)]
-    pub tracking: Option<String>,
+    pub focus: Option<String>,
     
     #[serde(default)]
     pub camera_pos: Option<Point3<f64>>,
