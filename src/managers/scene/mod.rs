@@ -85,7 +85,8 @@ impl SceneManager {
         if let Some(main) = self.main.clone() {
             self.delete_scene(&main);
         }
-        *state = AppState::new();
+        state.selection = None;
+        state.hovered = None;
 
         // Set new scene
         if let Some(found_scene) = self.get_scene_mut(identifier) {
@@ -423,19 +424,23 @@ impl SceneManager {
         // }
 
         // Grid
-        let grid = scene.new_entity(Some("grid"));
-        let trans_comp = scene.add_component::<TransformComponent>(grid);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(grid);
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
+        if state.show_grid {
+            let grid = scene.new_entity(Some("grid"));
+            let trans_comp = scene.add_component::<TransformComponent>(grid);
+            trans_comp.get_local_transform_mut().scale = Vector3::new(10.0, 10.0, 10.0);
+            let mesh_comp = scene.add_component::<MeshComponent>(grid);
+            mesh_comp.set_mesh(res_man.get_or_create_mesh("grid"));
+        }
 
         // Axes
-        let axes = scene.new_entity(Some("axes"));
-        let trans_comp = scene.add_component::<TransformComponent>(axes);
-        trans_comp.get_local_transform_mut().trans = Vector3::new(0.001, 0.001, 0.001);
-        trans_comp.get_local_transform_mut().scale = Vector3::new(5.0, 5.0, 5.0);
-        let mesh_comp = scene.add_component::<MeshComponent>(axes);
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
+        if state.show_axes {
+            let axes = scene.new_entity(Some("axes"));
+            let trans_comp = scene.add_component::<TransformComponent>(axes);
+            trans_comp.get_local_transform_mut().trans = Vector3::new(0.001, 0.001, 0.001);
+            trans_comp.get_local_transform_mut().scale = Vector3::new(5.0, 5.0, 5.0);
+            let mesh_comp = scene.add_component::<MeshComponent>(axes);
+            mesh_comp.set_mesh(res_man.get_or_create_mesh("axes"));
+        }
 
         return scene;
     }

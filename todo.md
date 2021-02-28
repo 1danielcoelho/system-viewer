@@ -535,8 +535,12 @@ response |= ui.add(label);
     > - Selected label is just another window, so the draw order depends on which was active last... not sure if this is actually a bug or not, as its very easy to work around and it may be what you want
     > - The hover label prevents the scene browser from getting a hovered state, because it blocks raycasts
 > - Should be able to click through the hover label (it blocks all mouse clicks)
-
-# Expand on framerate limiter to allow frame stepping
+> - Window that shows all the controls (ultra extra nice to have: rebind them)
+> Window showing controls
+> Window showing settings (show starmap or not, etc.)
+> Starfield skybox
+> - Expand on framerate limiter to allow frame stepping
+    > - I'll do this only if I need to, for whatever reason. Don't really need this
 
 # Cleanup for MVP
 > - Improve visuals a bit
@@ -560,6 +564,8 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
+# It doesn't save the focused entity or the last opened scene
+
 # Textures get reloaded when we reload/open new scenes
 
 # Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
@@ -578,8 +584,6 @@ response |= ui.add(label);
 
 # Lerp when going to / point towards
 
-# Window that shows all the controls (ultra extra nice to have: rebind them)
-
 # Planet trails (or something). It's impossible to see anything from far away
 
 # I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
@@ -587,10 +591,6 @@ response |= ui.add(label);
 # Good UV-mapped GLTF materials for the planets and asteroids (use blender?)
 
 # Now that I have WebGL2 I can change to native handling of BGR instead of converting
-
-# Window showing controls
-
-# Window showing settings (show starmap or not, etc.)
 
 # N-body simulation
 - Integration sample scenes with known 3-body patterns to test stability
@@ -601,8 +601,6 @@ response |= ui.add(label);
 # Rotation axes: 
 - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
 - Check the PDF I downloaded (Astronomy folder)
-
-# Starfield skybox
 
 # Shadows
 

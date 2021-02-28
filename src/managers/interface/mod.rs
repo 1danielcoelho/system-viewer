@@ -907,7 +907,7 @@ impl InterfaceManager {
                 .show(&ui.ctx(), |ui| {
                     egui::Grid::new("controls").show(ui, |ui| {
                         ui.label("Movement:");
-                        ui.label("WASD, Arrow keys");
+                        ui.label("WASDQE, Arrow keys");
                         ui.end_row();
 
                         ui.label("Select objects");
