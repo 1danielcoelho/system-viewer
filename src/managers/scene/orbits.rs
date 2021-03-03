@@ -244,6 +244,14 @@ pub fn get_body_material(
                 )
                 .unwrap(),
         ),
+        "earth" => Some(
+            res_man
+                .instantiate_material(
+                    "gltf_metal_rough",
+                    &("earth_".to_owned() + &body.id.as_ref().unwrap()),
+                )
+                .unwrap(),
+        ),
         "atmo" => Some(
             res_man
                 .instantiate_material(
@@ -319,6 +327,15 @@ pub fn get_body_material(
 
             mat_mut.set_texture(
                 TextureUnit::Normal,
+                res_man.get_or_request_texture(path, false),
+            );
+        }
+
+        if let Some(path) = params.get("metal_rough_texture") {
+            log::info!("Parsed metal_rough_texture {:?} for body {:?}", path, body.id);
+
+            mat_mut.set_texture(
+                TextureUnit::MetallicRoughness,
                 res_man.get_or_request_texture(path, false),
             );
         }

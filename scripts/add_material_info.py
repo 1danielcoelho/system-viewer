@@ -5,7 +5,7 @@ from database_utils import save_database, load_database
 materials = {
     '199': 'rocky',
     '299': 'atmo',
-    '399': 'atmo',
+    '399': 'earth',
     '499': 'atmo',
     '599': 'gas',
     '699': 'gas',
@@ -34,8 +34,10 @@ material_parameters = {
     '399': {
         'base_color': 'A49FB3FF',
         'base_color_texture': '2k_earth_daymap.jpg',
-        'normal_texture': '2k_earth_normal_map.tif',
-        'metal_rough_texture': '2k_earth_metal_rough.tif',
+        'night_color_texture': '2k_earth_nightmap.jpg',
+        'normal_texture': '2k_earth_normal_map.png',
+        'metal_rough_texture': '2k_earth_metal_rough.png',
+        'clouds_texture': '2k_earth_clouds.jpg',
     },
     '499': {
         'base_color': '896545FF',

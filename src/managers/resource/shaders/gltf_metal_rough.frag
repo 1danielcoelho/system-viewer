@@ -127,5 +127,5 @@ void main()
     #endif
     color *= ao;
 
-    out_frag_color = vec4(linear_to_sRGB(color), base_color.a); 
+    out_frag_color = vec4(linear_to_sRGB(color), base_color.a);    
 }

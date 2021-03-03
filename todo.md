@@ -553,7 +553,8 @@ response |= ui.add(label);
 
 # Cleanup for MVP
 - Improve visuals a bit
-    - Fix normal and spec/roughness maps for Earth
+    > - Fix normal and spec/roughness maps for Earth
+    - Fix weird shoreline artifacts on earth metallicroughness
     - Correct-ish sun brightness
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
