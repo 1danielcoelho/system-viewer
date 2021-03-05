@@ -1,4 +1,3 @@
-use crate::managers::resource::collider::{AxisAlignedBoxCollider, MeshCollider};
 use crate::managers::resource::intermediate_mesh::{
     intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
 };
@@ -9,10 +8,11 @@ use crate::managers::resource::texture::Texture;
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::ResourceManager;
 use crate::utils::gl::GL;
+use crate::utils::transform::Transform;
 use crate::GLCTX;
 use gltf::image::Format;
 use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
-use na::{Point3, Vector2, Vector3, Vector4};
+use na::*;
 use std::{cell::RefCell, f32::INFINITY, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 
@@ -90,7 +90,7 @@ impl ResourceManager {
         log::info!("\tLoading gltf material '{}'", identifier);
 
         let mat = self
-            .instantiate_material_without_inserting("gltf_metal_rough", &identifier)
+            .instantiate_material("gltf_metal_rough", &identifier)
             .unwrap();
         let mut mat_mut = mat.borrow_mut();
 
@@ -199,7 +199,7 @@ impl ResourceManager {
      * find the exact material instance that we want via identifier alone, as it will have
      * a trailing suffix
      */
-    pub fn load_materials_from_gltf(
+    fn load_materials_from_gltf(
         &mut self,
         file_identifier: &str,
         materials: gltf::iter::Materials,
@@ -245,8 +245,8 @@ impl ResourceManager {
         file_identifier: &str,
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
-        mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
-    ) -> Result<Rc<RefCell<Mesh>>, String> {
+        parsed_mats: &Vec<Option<Rc<RefCell<Material>>>>,
+    ) -> Result<IntermediateMesh, String> {
         let identifier = mesh.get_identifier(file_identifier);
 
         log::info!(
@@ -434,7 +434,7 @@ impl ResourceManager {
             let mut mat_instance: Rc<RefCell<Material>> =
                 self.get_material("gltf_metal_rough").unwrap();
             if let Some(mat_index) = prim.material().index() {
-                if let Some(mat) = &mat_index_to_parsed[mat_index] {
+                if let Some(mat) = &parsed_mats[mat_index] {
                     mat_instance = mat.clone();
                 }
             }
@@ -482,84 +482,63 @@ impl ResourceManager {
             }
         }
 
-        // We'll need to keep some of the mesh data on the CPU for raycasting though
-        let mut intermediate = IntermediateMesh {
+        // let mesh_collider = Box::new(MeshCollider {
+        //     mesh: Rc::downgrade(&result),
+        //     additional_outer_collider: Some(Box::new(AxisAlignedBoxCollider { mins, maxes })),
+        // });
+
+        // {
+        //     let mut mut_result = result.borrow_mut();
+
+        //     mut_result.collider = Some(mesh_collider);
+
+        //     // Keep indices and positions on the mesh primitive so we can raycast against it
+        //     for (prim, inter_prim) in mut_result
+        //         .primitives
+        //         .iter_mut()
+        //         .zip(intermediate.primitives.drain(..))
+        //     {
+        //         prim.source_data = Some(IntermediatePrimitive {
+        //             name: inter_prim.name,
+        //             indices: inter_prim.indices,
+        //             positions: inter_prim.positions,
+        //             normals: Vec::new(),
+        //             tangents: Vec::new(),
+        //             colors: Vec::new(),
+        //             uv0: Vec::new(),
+        //             uv1: Vec::new(),
+        //             mode: inter_prim.mode,
+        //             mat: None,
+        //             collider: None,
+        //         });
+        //     }
+        // }
+
+        return Ok(IntermediateMesh {
             name: identifier,
             primitives: inter_prims,
-        };
-
-        let result = intermediate_to_mesh(&intermediate);
-
-        let mesh_collider = Box::new(MeshCollider {
-            mesh: Rc::downgrade(&result),
-            additional_outer_collider: Some(Box::new(AxisAlignedBoxCollider { mins, maxes })),
         });
-
-        {
-            let mut mut_result = result.borrow_mut();
-
-            mut_result.collider = Some(mesh_collider);
-
-            // Keep indices and positions on the mesh primitive so we can raycast against it
-            for (prim, inter_prim) in mut_result
-                .primitives
-                .iter_mut()
-                .zip(intermediate.primitives.drain(..))
-            {
-                prim.source_data = Some(IntermediatePrimitive {
-                    name: inter_prim.name,
-                    indices: inter_prim.indices,
-                    positions: inter_prim.positions,
-                    normals: Vec::new(),
-                    tangents: Vec::new(),
-                    colors: Vec::new(),
-                    uv0: Vec::new(),
-                    uv1: Vec::new(),
-                    mode: inter_prim.mode,
-                    mat: None,
-                    collider: None,
-                });
-            }
-        }
-
-        return Ok(result);
     }
 
-    pub fn load_meshes_from_gltf(
+    fn load_meshes_from_gltf(
         &mut self,
         file_identifier: &str,
         meshes: gltf::iter::Meshes,
         buffers: &Vec<gltf::buffer::Data>,
-        mat_index_to_parsed: &Vec<Option<Rc<RefCell<Material>>>>,
-    ) {
+        parsed_mats: &Vec<Option<Rc<RefCell<Material>>>>,
+    ) -> Vec<Option<IntermediateMesh>> {
         log::info!(
             "Loading {} meshes from gltf file '{}'",
             meshes.len(),
             file_identifier
         );
 
-        for mesh in meshes {
-            match self.load_mesh_from_gltf(file_identifier, &mesh, &buffers, mat_index_to_parsed) {
-                Ok(new_mesh) => {
-                    let name = new_mesh.borrow().name.clone();
-
-                    if let Some(existing_mesh) = self.meshes.get(&name) {
-                        existing_mesh.swap(&new_mesh);
-
-                        log::info!(
-                            "Mutating existing mesh resource '{}' with new data from '{}'",
-                            name,
-                            file_identifier
-                        );
-                    } else if let Some(_) = self.meshes.insert(name.clone(), new_mesh) {
-                        log::info!("Changing tracked mesh resource for name '{}'", name);
-                    }
-                }
-                Err(msg) => {
-                    log::error!("Failed to load gltf mesh: {}", msg);
-                }
-            }
-        }
+        return meshes
+            .map(|m| {
+                self.load_mesh_from_gltf(file_identifier, &m, &buffers, parsed_mats)
+                    .ok()
+            })
+            .collect::<Vec<Option<IntermediateMesh>>>();
     }
 
     fn load_texture_from_gltf(
@@ -625,7 +604,7 @@ impl ResourceManager {
         })));
     }
 
-    pub fn load_textures_from_gltf(
+    fn load_textures_from_gltf(
         &mut self,
         file_identifier: &str,
         textures: gltf::iter::Textures,
@@ -671,5 +650,131 @@ impl ResourceManager {
                 }
             }
         });
+    }
+
+    fn load_gltf_node(
+        node: &gltf::Node,
+        parent_trans: &Transform<f32>,
+        combined_mesh: &mut IntermediateMesh,
+        meshes: &Vec<Option<IntermediateMesh>>,
+    ) {
+        let mut trans = Transform::<f32>::identity();
+        let (pos, quat, scale) = node.transform().decomposed();
+        trans.trans.x = pos[0];
+        trans.trans.y = -pos[2];
+        trans.trans.z = pos[1];
+        trans.rot =
+            UnitQuaternion::new_normalize(Quaternion::new(quat[0], -quat[2], quat[1], quat[3]));
+        trans.scale = Vector3::new(scale[0], scale[1], scale[2]);
+        let global_trans = parent_trans.concat_clone(&trans);
+
+        let mat = trans.to_matrix4();
+        let inv_trans = mat.try_inverse().unwrap().transpose();
+
+        if let Some(template_mesh) = node
+            .mesh()
+            .and_then(|m| Some(m.index()))
+            .and_then(|i| meshes.get(i).unwrap().as_ref())
+        {
+            // Duplicate the template mesh
+            let mut instance = template_mesh.clone();
+
+            // Bake the transform into the mesh vertices
+            for primitive in &mut instance.primitives {
+                primitive
+                    .positions
+                    .iter_mut()
+                    .for_each(|p| *p = mat.transform_point(&Point3::from(*p)).coords);
+
+                primitive
+                    .normals
+                    .iter_mut()
+                    .for_each(|v| *v = inv_trans.transform_vector(v).normalize());
+
+                primitive
+                    .tangents
+                    .iter_mut()
+                    .for_each(|t| *t = inv_trans.transform_vector(t).normalize());
+            }
+
+            // Flatten the primitives into the combined_mesh
+            combined_mesh.primitives.append(&mut instance.primitives);
+        }
+
+        for child in node.children() {
+            ResourceManager::load_gltf_node(&child, &global_trans, combined_mesh, meshes);
+        }
+    }
+
+    /// We'll traverse the gltf scene, baking instances of `meshes` with the global transform
+    /// of each node. We'll combine all primitives in a flat list and generate a single mesh for the entire file
+    fn load_gltf_scenes(
+        &mut self,
+        file_identifier: &str,
+        scenes: gltf::iter::Scenes,
+        meshes: &Vec<Option<IntermediateMesh>>,
+    ) -> Option<Rc<RefCell<Mesh>>> {
+        log::info!(
+            "Loading {} scenes from gltf file '{}':",
+            scenes.len(),
+            file_identifier
+        );
+
+        let mut combined_mesh = IntermediateMesh {
+            name: file_identifier.to_string(),
+            primitives: Vec::new(),
+        };
+
+        let identity = Transform::<f32>::identity();
+        for gltf_scene in scenes {
+            for child_node in gltf_scene.nodes() {
+                ResourceManager::load_gltf_node(
+                    &child_node,
+                    &identity,
+                    &mut combined_mesh,
+                    &meshes,
+                );
+            }
+        }
+
+        return Some(intermediate_to_mesh(&combined_mesh));
+    }
+
+    /// Will parse and bake the entire gltf file into a single mesh with the same name as the file identifier.
+    /// WIll also load all materials and textures contained within the file.
+    pub fn load_gltf_data(
+        &mut self,
+        file_identifier: &str,
+        gltf_doc: &gltf::Document,
+        gltf_buffers: &Vec<gltf::buffer::Data>,
+        gltf_images: &Vec<gltf::image::Data>,
+    ) {
+        self.load_textures_from_gltf(file_identifier, gltf_doc.textures(), gltf_images);
+
+        let parsed_mats = self.load_materials_from_gltf(file_identifier, gltf_doc.materials());
+
+        let parsed_meshes = self.load_meshes_from_gltf(
+            file_identifier,
+            gltf_doc.meshes(),
+            gltf_buffers,
+            &parsed_mats,
+        );
+
+        if let Some(combined_mesh) =
+            self.load_gltf_scenes(file_identifier, gltf_doc.scenes(), &parsed_meshes)
+        {
+            if let Some(existing_mesh) = self.meshes.get(file_identifier) {
+                existing_mesh.swap(&combined_mesh);
+
+                log::info!(
+                    "Mutating existing mesh resource '{}' with new data",
+                    file_identifier
+                );
+            } else {
+                log::info!("Inserting new mesh resource '{}'", file_identifier);
+                self.meshes
+                    .insert(file_identifier.to_owned(), combined_mesh);
+            }
+        }
     }
 }

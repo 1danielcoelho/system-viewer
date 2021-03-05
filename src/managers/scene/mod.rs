@@ -17,7 +17,6 @@ use std::collections::HashMap;
 
 pub mod component_storage;
 pub mod description;
-pub mod gltf;
 pub mod orbits;
 mod scene;
 
@@ -96,7 +95,6 @@ impl SceneManager {
 
         // Set new scene
         if let Some(found_scene) = self.get_scene_mut(identifier) {
-            res_man.provision_scene_assets(found_scene);
             self.main = Some(identifier.to_string());
             let main_scene = self.get_main_scene().unwrap();
 
@@ -168,55 +166,6 @@ impl SceneManager {
             "planetarium" => self.load_planetarium_scene(res_man),
             _ => self.load_scene_from_desc(identifier, res_man, state),
         }
-    }
-
-    /// Injects the scene with `identifier` into the current scene, setting its 0th node to transform `target_transform`
-    pub fn inject_scene(
-        &mut self,
-        identifier: &str,
-        target_transform: Option<Transform<f64>>,
-        res_man: &mut ResourceManager,
-    ) -> Result<(), String> {
-        // TODO: Will have to copy this data twice to get past the borrow checker, and I'm not sure if it's smart enough to elide it... maybe just use a RefCell for scenes?
-        let mut injected_scene_copy = self
-            .get_scene(identifier)
-            .ok_or(format!(
-                "Failed to find scene to inject '{}'. Available scenes:\n{:#?}",
-                identifier,
-                self.loaded_scenes.keys()
-            ))?
-            .clone();
-
-        res_man.provision_scene_assets(&mut injected_scene_copy);
-
-        let current_scene = self
-            .get_main_scene_mut()
-            .ok_or("Can't inject if we don't have a main scene!")?;
-
-        log::info!(
-            "Injecting scene '{}' into current '{}' ({} entities)",
-            injected_scene_copy.identifier,
-            current_scene.identifier,
-            injected_scene_copy.get_num_entities()
-        );
-
-        // TODO: This is really not enforced at all, but is usually the case
-        let root_entity = injected_scene_copy.get_entity_from_index(0).unwrap();
-
-        // Update the position of the root scene node to the target transform
-        if let Some(target_transform) = target_transform {
-            let scene_root_trans = injected_scene_copy
-                .transform
-                .get_component_mut(root_entity)
-                .unwrap()
-                .get_local_transform_mut();
-            *scene_root_trans = target_transform;
-        }
-
-        // Inject entities into current_scene, and keep track of where they ended up
-        current_scene.move_from_other(injected_scene_copy);
-
-        return Ok(());
     }
 
     /// Completely unloads the scene with `identifier`. The next time `set_scene` is called with

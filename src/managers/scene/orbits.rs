@@ -8,6 +8,7 @@ use crate::components::{
 };
 use crate::managers::resource::body_description::{BodyDescription, BodyType};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
+use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::description::BodyMotionType;
 use crate::managers::scene::{Scene, SceneManager};
@@ -163,25 +164,27 @@ pub fn add_free_body(
     }
     let state_vector = state_vector.cloned().unwrap();
 
+    // Entity
     let body_ent = scene.new_entity(Some(&body.name));
     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
     trans_comp.get_local_transform_mut().trans = state_vector.pos.coords;
 
-    // Sphere mesh
+    // Mesh
     if let Some(radius) = body.radius {
         trans_comp.get_local_transform_mut().scale =
             Vector3::new(radius.into(), radius.into(), radius.into());
 
         let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
-        mesh_comp.set_mesh(res_man.get_or_create_mesh("lat_long_sphere"));
+        mesh_comp.set_mesh(get_body_mesh(body, res_man));
         mesh_comp.set_material_override(get_body_material(body, res_man), 0);
     }
 
+    // Physics
     let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
     phys_comp.mass = body.mass.unwrap() as f64;
     phys_comp.lin_mom = state_vector.vel.scale(body.mass.unwrap() as f64);
 
-    // Emit light if it's a star
+    // Light
     if body.body_type == BodyType::Star {
         let light_comp = scene.add_component::<LightComponent>(body_ent);
         light_comp.color = Vector3::new(1.0, 1.0, 1.0);
@@ -189,6 +192,7 @@ pub fn add_free_body(
         light_comp.light_type = LightType::Point;
     }
 
+    // Metadata
     let meta_comp = scene.add_component::<MetadataComponent>(body_ent);
     meta_comp.set_metadata(
         "body_id",
@@ -227,6 +231,16 @@ pub fn add_free_body(
     }
     if let Some(spec) = &body.spec_tholen {
         meta_comp.set_metadata("body_spec_tholen", &spec);
+    }
+}
+
+pub fn get_body_mesh(
+    body: &BodyDescription,
+    res_man: &mut ResourceManager,
+) -> Option<Rc<RefCell<Mesh>>> {
+    match &body.mesh {
+        Some(identifier) => res_man.get_or_create_mesh(&identifier),
+        None => res_man.get_or_create_mesh("lat_long_sphere"),
     }
 }
 
@@ -332,7 +346,11 @@ pub fn get_body_material(
         }
 
         if let Some(path) = params.get("metal_rough_texture") {
-            log::info!("Parsed metal_rough_texture {:?} for body {:?}", path, body.id);
+            log::info!(
+                "Parsed metal_rough_texture {:?} for body {:?}",
+                path,
+                body.id
+            );
 
             mat_mut.set_texture(
                 TextureUnit::MetallicRoughness,

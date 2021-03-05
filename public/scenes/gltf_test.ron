@@ -1,0 +1,15 @@
+#![enable(implicit_some)]
+(
+    name: "GLTF test",
+    description: "Test GLTF files",
+    time: "J2000",
+    simulation_scale: 500,
+    bodies: {
+        "major_bodies": {
+            "10": CustomVector(((2451549.0, 1000, 0, 0, 0, 0, 0))),
+        },  
+        "artificial": {
+            "duck": CustomVector(((2451549.0, 0, 0, 0, 0, 0, 0))),
+        }
+    },
+)

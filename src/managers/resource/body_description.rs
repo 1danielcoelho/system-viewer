@@ -118,6 +118,9 @@ pub struct BodyDescription {
     pub spec_tholen: Option<String>,     // Spectral class
     
     #[serde(default)]
+    pub mesh: Option<String>,
+    
+    #[serde(default)]
     pub material: Option<String>,
 
     #[serde(default)]

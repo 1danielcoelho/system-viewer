@@ -120,8 +120,7 @@ impl Engine {
         match content_type {
             "cubemap_face" => self.res_man.receive_cubemap_face_file_bytes(url, data),
             "texture" => self.res_man.receive_texture_file_bytes(url, data),
-            "glb_inject" => self.receive_gltf_bytes(url, data, true),
-            "glb_resource" => self.receive_gltf_bytes(url, data, false),
+            "gltf" => self.receive_gltf_bytes(url, data),
             _ => log::error!(
                 "Unexpected content_type for receive bytes: '{}'. url: '{}'",
                 content_type,
@@ -130,46 +129,16 @@ impl Engine {
         }
     }
 
-    fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8], inject: bool) {
+    fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
         log::info!(
             "Loading GLTF from file '{}' ({} bytes)",
             file_identifier,
             data.len()
         );
 
-        // TODO: Catch duplicate scenes
-
         if let Ok((gltf_doc, gltf_buffers, gltf_images)) = gltf::import_slice(data) {
-            self.res_man.load_textures_from_gltf(
-                file_identifier,
-                gltf_doc.textures(),
-                &gltf_images,
-            );
-
-            let mat_index_to_parsed = self
-                .res_man
-                .load_materials_from_gltf(file_identifier, gltf_doc.materials());
-
-            self.res_man.load_meshes_from_gltf(
-                file_identifier,
-                gltf_doc.meshes(),
-                &gltf_buffers,
-                &mat_index_to_parsed,
-            );
-
-            let loaded_scenes = self.scene_man.load_scenes_from_gltf(
-                file_identifier,
-                gltf_doc.scenes(),
-                &self.res_man,
-            );
-
-            if inject {
-                for scene in loaded_scenes {
-                    self.scene_man
-                        .inject_scene(&scene, None, &mut self.res_man)
-                        .unwrap();
-                }
-            }
+            self.res_man
+                .load_gltf_data(file_identifier, &gltf_doc, &gltf_buffers, &gltf_images);
         }
     }
 }

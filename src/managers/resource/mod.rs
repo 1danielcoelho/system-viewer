@@ -317,14 +317,14 @@ impl TempCubemap {
 
     pub fn get_target_from_index(face_index: usize) -> Option<u32> {
         match face_index {
-            TempCubemap::LEFT =>   Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Y),
-            TempCubemap::RIGHT =>  Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Y),
+            TempCubemap::LEFT => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Y),
+            TempCubemap::RIGHT => Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Y),
 
-            TempCubemap::TOP =>    Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Z),
+            TempCubemap::TOP => Some(GL::TEXTURE_CUBE_MAP_POSITIVE_Z),
             TempCubemap::BOTTOM => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_X),
 
-            TempCubemap::FRONT =>  Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Z),
-            TempCubemap::BACK =>   Some(GL::TEXTURE_CUBE_MAP_POSITIVE_X),
+            TempCubemap::FRONT => Some(GL::TEXTURE_CUBE_MAP_NEGATIVE_Z),
+            TempCubemap::BACK => Some(GL::TEXTURE_CUBE_MAP_POSITIVE_X),
             _ => None,
         }
     }
@@ -361,111 +361,6 @@ impl ResourceManager {
         return new_res_man;
     }
 
-    fn provision_texture(&mut self, tex: &Rc<RefCell<Texture>>) -> Option<Rc<RefCell<Texture>>> {
-        let tex_borrow = tex.borrow();
-        if let Some(existing_tex) = self.get_or_request_texture(&tex_borrow.name, false) {
-            log::info!("Reusing existing texture '{}'", existing_tex.borrow().name);
-            return Some(existing_tex);
-        }
-
-        // TODO: Fetch for this texture data
-        if tex_borrow.gl_handle.is_none() {
-            let scene_name = gltf::get_scene_name(&tex_borrow.name);
-            log::info!(
-                "Creating fetch request for texture '{}', from file '{}'",
-                tex_borrow.name,
-                scene_name
-            );
-
-            // TODO: Restore asset manifest to keep track of the path instead of just assuming it's at public
-            fetch_bytes(&("public/".to_owned() + scene_name), "glb_resouce");
-        }
-
-        log::info!("Keeping temporary texture '{}'", tex_borrow.name);
-        self.textures.insert(tex_borrow.name.clone(), tex.clone());
-        return None;
-    }
-
-    /** If we have a material with this name already, return that material. Otherwise start tracking this material and provision its textures */
-    fn provision_material(
-        &mut self,
-        mat: &mut Rc<RefCell<Material>>,
-    ) -> Option<Rc<RefCell<Material>>> {
-        let mut mat_mut = mat.borrow_mut();
-        if let Some(existing_mat) = self.get_or_create_material(&mat_mut.get_name()) {
-            log::info!("Reusing existing material '{}'", mat_mut.get_name());
-            return Some(existing_mat);
-        }
-
-        // We're creating a new material. Let's request all the textures that it needs
-        let mut requested_textures: HashMap<TextureUnit, Rc<RefCell<Texture>>> = HashMap::new();
-        for (unit, tex) in mat_mut.get_textures().iter() {
-            if let Some(new_tex) = self.provision_texture(&tex) {
-                requested_textures.insert(*unit, new_tex);
-            }
-        }
-        for (unit, tex) in requested_textures.iter() {
-            mat_mut.set_texture(*unit, Some(tex.clone()));
-        }
-
-        log::info!("Keeping material '{}'", mat_mut.get_name());
-        self.materials
-            .insert(mat_mut.get_name().to_owned(), mat.clone());
-        return None;
-    }
-
-    /** Try getting/creating a mesh with the same name. If we have nothing, start tracking this mesh and provision its materials */
-    fn provision_mesh(&mut self, mesh: &mut Rc<RefCell<Mesh>>) -> Option<Rc<RefCell<Mesh>>> {
-        let mesh_mut = mesh.borrow_mut();
-        if let Some(existing_mesh) = self.get_or_create_mesh(&mesh_mut.name) {
-            log::info!("Reusing existing mesh '{}'", mesh_mut.name);
-            return Some(existing_mesh);
-        }
-
-        if !mesh_mut.loaded {
-            let scene_name = gltf::get_scene_name(&mesh_mut.name);
-            log::info!(
-                "Creating fetch request for mesh '{}', from file '{}'",
-                mesh_mut.name,
-                scene_name
-            );
-
-            // TODO: Restore asset manifest to keep track of the path instead of just assuming it's at public
-            fetch_bytes(&("public/".to_owned() + scene_name), "glb_resource");
-        }
-
-        // Note: We don't have to care about provisioning the default materials: They will be loaded with
-        // the mesh, whether the mesh is already existing, or whether we'll load it from the fetch request.
-        // There is no way to specify different "default materials" for a mesh otherwise
-
-        log::info!("Keeping temporary mesh '{}'", mesh_mut.name);
-        self.meshes.insert(mesh_mut.name.clone(), mesh.clone());
-        return None;
-    }
-
-    /** Makes sure we have all the assets that `scene` requires, and that its reference to those assets are deduplicated */
-    pub fn provision_scene_assets(&mut self, scene: &mut Scene) {
-        log::info!("Provisioning assets for scene '{}'...", scene.identifier);
-        for mesh_comp in scene.mesh.iter_mut() {
-            if let Some(mut mesh) = mesh_comp.get_mesh() {
-                // Mesh
-                if let Some(other_mesh) = self.provision_mesh(&mut mesh) {
-                    mesh_comp.set_mesh(Some(other_mesh));
-                }
-
-                // Material overrides
-                let num_mats = mesh.borrow_mut().primitives.len();
-                for mat_index in 0..num_mats {
-                    if let Some(mut over) = mesh_comp.get_material_override(mat_index) {
-                        if let Some(other_mat) = self.provision_material(&mut over) {
-                            mesh_comp.set_material_override(Some(other_mat), mat_index);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     pub fn get_mesh(&self, identifier: &str) -> Option<Rc<RefCell<Mesh>>> {
         if let Some(mesh) = self.meshes.get(identifier) {
             return Some(mesh.clone());
@@ -498,7 +393,12 @@ impl ResourceManager {
                 default_mat,
             )),
             "ico_sphere" => Some(generate_ico_sphere(1.0, 2, false, default_mat)),
-            _ => None,
+            _ => {
+                let full_path: String = "public/gltf/".to_owned() + identifier;
+                fetch_bytes(&full_path, "gltf");
+
+                Some(generate_cube(default_mat))
+            }
         };
 
         match mesh {
@@ -529,8 +429,7 @@ impl ResourceManager {
         return None;
     }
 
-    /** This is used so that the GLTF import code path can instantiate GLTF materials and swap those with existing temp materials we may have */
-    fn instantiate_material_without_inserting(
+    pub fn instantiate_material(
         &mut self,
         master: &str,
         name: &str,
@@ -550,20 +449,6 @@ impl ResourceManager {
             instance.borrow().name,
             master_mat.unwrap().borrow().name
         );
-
-        return Some(instance);
-    }
-
-    pub fn instantiate_material(
-        &mut self,
-        master: &str,
-        name: &str,
-    ) -> Option<Rc<RefCell<Material>>> {
-        let instance = self.instantiate_material_without_inserting(master, name);
-        if instance.is_none() {
-            return None;
-        }
-        let instance = instance.unwrap();
 
         let new_name = &instance.borrow().name;
         assert!(!self.materials.contains_key(new_name));

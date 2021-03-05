@@ -555,6 +555,8 @@ response |= ui.add(label);
 - Improve visuals a bit
     > - Fix normal and spec/roughness maps for Earth
     - Fix weird shoreline artifacts on earth metallicroughness
+        - Fixup gltf importer to allow importing GLTF scenes as simple meshes and materials, instead of making entire scenes with them
+        - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
     - Correct-ish sun brightness
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size

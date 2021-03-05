@@ -11,12 +11,13 @@ use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::JsCast;
 use web_sys::{WebGl2RenderingContext, WebGlBuffer};
 
+#[derive(Clone)]
 pub struct IntermediateMesh {
     pub name: String,
     pub primitives: Vec<IntermediatePrimitive>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IntermediatePrimitive {
     pub name: String,
 
