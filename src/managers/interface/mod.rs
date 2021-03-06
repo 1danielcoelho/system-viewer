@@ -690,128 +690,123 @@ impl InterfaceManager {
             egui::Window::new("Debug")
                 .open(&mut open_window)
                 .show(&ui.ctx(), |ui| {
-                    ui.columns(2, |cols| {
-                        cols[0].label("Simulation time since reference:");
-                        cols[1].label(format!("{:.2} seconds", state.sim_time_s))
-                    });
+                    egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
+                        egui::Grid::new("controls").show(ui, |ui| {
+                            ui.label("Simulation time since reference:");
+                            ui.label(format!("{:.2} seconds", state.sim_time_s));
+                            ui.end_row();
 
-                    ui.columns(2, |cols| {
-                        cols[0].label("Simulation date:");
-                        cols[1].label(format!(
-                            "{}",
-                            julian_date_number_to_date(Jdn(
-                                state.sim_time_s / 86400.0 + J2000_JDN.0
-                            ))
-                        ))
-                    });
+                            ui.label("Simulation date:");
+                            ui.label(format!(
+                                "{}",
+                                julian_date_number_to_date(Jdn(
+                                    state.sim_time_s / 86400.0 + J2000_JDN.0
+                                ))
+                            ));
+                            ui.end_row();
 
-                    ui.columns(2, |cols| {
-                        cols[0].label("Real time since start:");
-                        cols[1].label(format!("{:.2} s", state.real_time_s))
-                    });
+                            ui.label("Real time since start:");
+                            ui.label(format!("{:.2} s", state.real_time_s));
+                            ui.end_row();
 
-                    ui.columns(2, |cols| {
-                        cols[0].label("Frames per second:");
-                        cols[1].label(format!("{:.2}", frame_rate))
-                    });
+                            ui.label("Frames per second:");
+                            ui.label(format!("{:.2}", frame_rate));
+                            ui.end_row();
 
-                    ui.columns(2, |cols| {
-                        cols[0].label("Simulation scale:");
+                            ui.label("Simulation scale:");
+                            ui.add(egui::DragValue::f64(&mut state.simulation_speed).speed(0.01));
+                            ui.end_row();
 
-                        cols[1].add(egui::DragValue::f64(&mut state.simulation_speed).speed(0.01))
-                    });
-
-                    ui.separator();
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Light intensity exponent:");
-                        cols[1].add(
-                            egui::DragValue::f32(&mut state.light_intensity)
-                                .clamp_range(-1000.0..=1000.0)
-                                .speed(0.01),
-                        )
-                    });
-
-                    ui.separator();
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Vertical FOV [deg]:");
-                        cols[1].add(
-                            egui::DragValue::f64(&mut state.camera.fov_v)
-                                .clamp_range(0.1..=120.0)
-                                .speed(0.5),
-                        )
-                    });
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Near [Mm]:");
-                        cols[1].add(egui::DragValue::f64(&mut state.camera.near).speed(0.01))
-                    });
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Far [Mm]:");
-                        cols[1].add(egui::DragValue::f64(&mut state.camera.far))
-                    });
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Camera pos [Mm]:");
-                        cols[1].horizontal(|ui| {
-                            ui.add(egui::DragValue::f64(&mut state.camera.pos.x).prefix("x: "));
-                            ui.add(egui::DragValue::f64(&mut state.camera.pos.y).prefix("y: "));
-                            ui.add(egui::DragValue::f64(&mut state.camera.pos.z).prefix("z: "));
-                        });
-                    });
-
-                    if let Some(scene) = scene_man.get_main_scene_mut() {
-                        ui.columns(2, |cols| {
-                            cols[0].label("Reference:");
-
-                            if let Some(reference) = state.camera.reference_entity {
-                                cols[1].horizontal(|ui| {
-                                    ui.label(format!(
-                                        "{:?}: {}",
-                                        reference,
-                                        scene.get_entity_name(reference).unwrap_or_default()
-                                    ));
-
-                                    let clear_resp =
-                                        ui.button("🗑").on_hover_text("Stop focusing this entity");
-                                    if clear_resp.clicked() {
-                                        state.camera.next_reference_entity =
-                                            Some(ReferenceChange::Clear);
-                                    }
-                                });
-                            };
-                        });
-                    };
-
-                    ui.separator();
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Move speed [???]:");
-                        cols[1].add(
-                            egui::DragValue::f64(&mut state.move_speed)
-                                .clamp_range(1.0..=1000.0)
-                                .speed(0.1),
-                        )
-                    });
-
-                    ui.columns(2, |cols| {
-                        cols[0].label("Rotation speed:");
-                        cols[1].add(
-                            egui::DragValue::f64(&mut state.rotate_speed)
-                                .clamp_range(1.0..=10.0)
-                                .speed(0.1),
-                        )
-                    });
-
-                    if let Some(selection) = state.selection.iter().next().cloned() {
-                        if let Some(scene) = scene_man.get_main_scene_mut() {
                             ui.separator();
+                            ui.separator();
+                            ui.end_row();
 
-                            ui.columns(2, |cols| {
-                                cols[0].label("Selected entity:");
-                                cols[1].horizontal(|ui| {
+                            ui.label("Light intensity exponent:");
+                            ui.add(
+                                egui::DragValue::f32(&mut state.light_intensity)
+                                    .clamp_range(-1000.0..=1000.0)
+                                    .speed(0.01),
+                            );
+                            ui.end_row();
+
+                            ui.separator();
+                            ui.separator();
+                            ui.end_row();
+
+                            ui.label("Vertical FOV [deg]:");
+                            ui.add(
+                                egui::DragValue::f64(&mut state.camera.fov_v)
+                                    .clamp_range(0.1..=120.0)
+                                    .speed(0.5),
+                            );
+                            ui.end_row();
+
+                            ui.label("Near [Mm]:");
+                            ui.add(egui::DragValue::f64(&mut state.camera.near).speed(0.01));
+                            ui.end_row();
+
+                            ui.label("Far [Mm]:");
+                            ui.add(egui::DragValue::f64(&mut state.camera.far));
+                            ui.end_row();
+
+                            ui.label("Camera pos [Mm]:");
+                            ui.horizontal(|ui| {
+                                ui.add(egui::DragValue::f64(&mut state.camera.pos.x).prefix("x: "));
+                                ui.add(egui::DragValue::f64(&mut state.camera.pos.y).prefix("y: "));
+                                ui.add(egui::DragValue::f64(&mut state.camera.pos.z).prefix("z: "));
+                            });
+                            ui.end_row();
+
+                            if let Some(scene) = scene_man.get_main_scene_mut() {
+                                ui.label("Reference:");
+
+                                if let Some(reference) = state.camera.reference_entity {
+                                    ui.horizontal(|ui| {
+                                        ui.label(format!(
+                                            "{:?}: {}",
+                                            reference,
+                                            scene.get_entity_name(reference).unwrap_or_default()
+                                        ));
+
+                                        let clear_resp = ui
+                                            .button("🗑")
+                                            .on_hover_text("Stop focusing this entity");
+                                        if clear_resp.clicked() {
+                                            state.camera.next_reference_entity =
+                                                Some(ReferenceChange::Clear);
+                                        }
+                                    });
+                                };
+                                ui.end_row();
+                            };
+
+                            ui.separator();
+                            ui.separator();
+                            ui.end_row();
+
+                            ui.label("Move speed [???]:");
+                            ui.add(
+                                egui::DragValue::f64(&mut state.move_speed)
+                                    .clamp_range(1.0..=1000.0)
+                                    .speed(0.1),
+                            );
+                            ui.end_row();
+
+                            ui.label("Rotation speed:");
+                            ui.add(
+                                egui::DragValue::f64(&mut state.rotate_speed)
+                                    .clamp_range(1.0..=10.0)
+                                    .speed(0.1),
+                            );
+                            ui.end_row();
+                        });
+
+                        ui.separator();
+
+                        if let Some(selection) = state.selection.iter().next().cloned() {
+                            if let Some(scene) = scene_man.get_main_scene_mut() {
+                                ui.label("Selected entity:");
+                                ui.horizontal(|ui| {
                                     ui.label(format!("{:?}", selection));
                                     let but_res =
                                         ui.button("🎥").on_hover_text("Focus this entity");
@@ -819,48 +814,57 @@ impl InterfaceManager {
                                         state.camera.next_reference_entity =
                                             Some(ReferenceChange::FocusKeepLocation(selection));
                                     }
-                                })
-                            });
+                                });
+                                ui.end_row();
 
-                            ui.columns(2, |cols| {
-                                cols[0].label("Name:");
-                                cols[1].label(format!(
+                                ui.label("Name:");
+                                ui.label(format!(
                                     "{}",
                                     scene.get_entity_name(selection).unwrap_or_default()
-                                ))
-                            });
+                                ));
+                                ui.end_row();
 
-                            // TODO: Make this more generic
-                            if let Some(comp) =
-                                scene.get_component_mut::<TransformComponent>(selection)
-                            {
-                                ui.collapsing("Transform component", |ui| comp.draw_details_ui(ui));
-                            }
+                                // TODO: Make this more generic
+                                if let Some(comp) =
+                                    scene.get_component_mut::<TransformComponent>(selection)
+                                {
+                                    ui.collapsing("Transform component", |ui| {
+                                        comp.draw_details_ui(ui)
+                                    });
+                                }
 
-                            if let Some(comp) = scene.get_component_mut::<MeshComponent>(selection)
-                            {
-                                ui.collapsing("Mesh component", |ui| comp.draw_details_ui(ui));
-                            }
+                                if let Some(comp) =
+                                    scene.get_component_mut::<MeshComponent>(selection)
+                                {
+                                    ui.collapsing("Mesh component", |ui| comp.draw_details_ui(ui));
+                                }
 
-                            if let Some(comp) =
-                                scene.get_component_mut::<OrbitalComponent>(selection)
-                            {
-                                ui.collapsing("Orbital component", |ui| comp.draw_details_ui(ui));
-                            }
+                                if let Some(comp) =
+                                    scene.get_component_mut::<OrbitalComponent>(selection)
+                                {
+                                    ui.collapsing("Orbital component", |ui| {
+                                        comp.draw_details_ui(ui)
+                                    });
+                                }
 
-                            if let Some(comp) =
-                                scene.get_component_mut::<PhysicsComponent>(selection)
-                            {
-                                ui.collapsing("Physics component", |ui| comp.draw_details_ui(ui));
-                            }
+                                if let Some(comp) =
+                                    scene.get_component_mut::<PhysicsComponent>(selection)
+                                {
+                                    ui.collapsing("Physics component", |ui| {
+                                        comp.draw_details_ui(ui)
+                                    });
+                                }
 
-                            if let Some(comp) =
-                                scene.get_component_mut::<MetadataComponent>(selection)
-                            {
-                                ui.collapsing("Metadata component", |ui| comp.draw_details_ui(ui));
+                                if let Some(comp) =
+                                    scene.get_component_mut::<MetadataComponent>(selection)
+                                {
+                                    ui.collapsing("Metadata component", |ui| {
+                                        comp.draw_details_ui(ui)
+                                    });
+                                }
                             }
                         }
-                    }
+                    });
                 });
 
             state.open_windows.debug = open_window;
