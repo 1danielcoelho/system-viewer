@@ -194,11 +194,9 @@ impl ResourceManager {
         return Ok(mat.clone());
     }
 
-    /**
-     * Also returns a vec of whatever we parsed for each material index, because we can't
-     * find the exact material instance that we want via identifier alone, as it will have
-     * a trailing suffix
-     */
+    /// Also returns a vec of whatever we parsed for each material index, because we can't
+    /// find the exact material instance that we want via identifier alone, as it will have
+    /// a trailing suffix
     fn load_materials_from_gltf(
         &mut self,
         file_identifier: &str,
@@ -215,24 +213,11 @@ impl ResourceManager {
 
         for (index, material) in materials.enumerate() {
             match self.load_material_from_gltf(file_identifier, &material) {
-                Ok(mut new_mat) => {
-                    let name = new_mat.borrow().name.clone();
-                    if let Some(existing_mat) = self.materials.get(&name) {
-                        existing_mat.swap(&new_mat); // Crap, they're the same!
-                        new_mat = existing_mat.clone();
-                        log::info!(
-                            "Mutating existing material resource '{}' with new data from '{}'",
-                            name,
-                            file_identifier
-                        );
-                    } else if let Some(_) = self.materials.insert(name.clone(), new_mat.clone()) {
-                        log::info!("Changing tracked material resource for name '{}'", name);
-                    }
-
-                    result[index] = Some(new_mat.clone());
+                Ok(new_mat) => {
+                    result[index] = Some(new_mat);
                 }
                 Err(msg) => {
-                    log::error!("Failed to load gltf texture: {}", msg);
+                    log::error!("Failed to load gltf material: {}", msg);
                 }
             }
         }
@@ -767,7 +752,7 @@ impl ResourceManager {
                 existing_mesh.swap(&combined_mesh);
 
                 log::info!(
-                    "Mutating existing mesh resource '{}' with new data",
+                    "Mutating existing mesh resource '{}' with new data ",
                     file_identifier
                 );
             } else {

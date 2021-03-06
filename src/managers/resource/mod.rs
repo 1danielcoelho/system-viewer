@@ -393,26 +393,23 @@ impl ResourceManager {
                 default_mat,
             )),
             "ico_sphere" => Some(generate_ico_sphere(1.0, 2, false, default_mat)),
-            _ => {
-                let full_path: String = "public/gltf/".to_owned() + identifier;
-                fetch_bytes(&full_path, "gltf");
-
-                Some(generate_cube(default_mat))
-            }
+            _ => None,
         };
 
-        match mesh {
-            Some(ref mesh) => {
-                log::info!("Generated mesh '{}'", identifier);
-                assert!(!self.meshes.contains_key(identifier));
+        if let Some(mesh) = mesh {
+            log::info!("Generated mesh '{}'", identifier);
+            assert!(!self.meshes.contains_key(identifier));
 
-                mesh.borrow_mut().name = identifier.to_owned();
-                self.meshes.insert(identifier.to_string(), mesh.clone());
-            }
-            None => log::warn!("Failed to find mesh with name '{}'", identifier),
+            mesh.borrow_mut().name = identifier.to_owned();
+            self.meshes.insert(identifier.to_string(), mesh.clone());
+            return Some(mesh);
         }
-
-        return mesh;
+        
+        let full_path: String = "public/gltf/".to_owned() + identifier;
+        fetch_bytes(&full_path, "gltf");
+        let temp_mesh = Some(generate_temp());
+        self.meshes.insert(full_path, temp_mesh.as_ref().unwrap().clone());
+        return temp_mesh;
     }
 
     pub fn get_material(&self, identifier: &str) -> Option<Rc<RefCell<Material>>> {

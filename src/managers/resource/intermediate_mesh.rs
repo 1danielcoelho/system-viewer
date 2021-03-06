@@ -146,7 +146,6 @@ pub fn generate_screen_space_quad(
 
     let result = Rc::new(RefCell::new(Mesh {
         name: String::from("quad"),
-        loaded: true,
         primitives,
         collider: None,
     }));
@@ -324,7 +323,6 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
 
     let result = Rc::new(RefCell::new(Mesh {
         name: inter.name.clone(),
-        loaded: true,
         primitives,
         collider,
     }));

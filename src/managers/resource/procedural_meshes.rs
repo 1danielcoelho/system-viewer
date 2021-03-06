@@ -442,6 +442,14 @@ pub fn generate_canvas_quad(default_material: Option<Rc<RefCell<Material>>>) -> 
     return generate_screen_space_quad(default_material);
 }
 
+pub fn generate_temp() -> Rc<RefCell<Mesh>> {
+    Rc::new(RefCell::new(Mesh {
+        name: String::from("temp"),
+        primitives: Vec::new(),
+        collider: None,
+    }))
+}
+
 pub fn generate_cube(default_material: Option<Rc<RefCell<Material>>>) -> Rc<RefCell<Mesh>> {
     intermediate_to_mesh(&IntermediateMesh {
         name: String::from("cube"),

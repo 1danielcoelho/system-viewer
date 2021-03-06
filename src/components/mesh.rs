@@ -8,7 +8,7 @@ use egui::Ui;
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct MeshComponent {
     enabled: bool,
 
@@ -30,13 +30,6 @@ impl MeshComponent {
 
     pub fn set_mesh(&mut self, mesh: Option<Rc<RefCell<Mesh>>>) {
         self.mesh = mesh;
-
-        if let Some(mesh) = &self.mesh {
-            self.material_overrides
-                .resize(mesh.borrow().primitives.len(), None);
-        } else {
-            self.material_overrides.resize(0, None);
-        }
     }
 
     pub fn get_material_override(&self, index: usize) -> Option<Rc<RefCell<Material>>> {
@@ -48,17 +41,23 @@ impl MeshComponent {
     }
 
     pub fn set_material_override(&mut self, material: Option<Rc<RefCell<Material>>>, index: usize) {
+        if self.material_overrides.len() <= index {
+            self.material_overrides.resize(index + 1, None);
+        }
         self.material_overrides[index] = material;
     }
 
     pub fn get_resolved_material(&self, index: usize) -> Option<Rc<RefCell<Material>>> {
-        if self.material_overrides.len() <= index {
-            return None;
-        } else if let Some(material_override) = self.get_material_override(index) {
+        if let Some(material_override) = self.get_material_override(index) {
             return Some(material_override);
-        } else if let Some(mesh) = &self.mesh {
-            return mesh.borrow().primitives[index].default_material.clone();
         }
+
+        if let Some(mesh) = self.mesh.as_ref().and_then(|m| Some(m.borrow())) {
+            if let Some(prim) = mesh.primitives.get(index) {
+                return prim.default_material.clone();
+            }
+        }
+
         return None;
     }
 }

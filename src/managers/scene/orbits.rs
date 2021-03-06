@@ -238,10 +238,17 @@ pub fn get_body_mesh(
     body: &BodyDescription,
     res_man: &mut ResourceManager,
 ) -> Option<Rc<RefCell<Mesh>>> {
-    match &body.mesh {
+    let mesh = match &body.mesh {
         Some(identifier) => res_man.get_or_create_mesh(&identifier),
         None => res_man.get_or_create_mesh("lat_long_sphere"),
-    }
+    };
+    
+    // log::info!(
+    //     "For body '{}', using mesh '{:#?}'",
+    //     body.id.as_ref().unwrap(),
+    //     mesh
+    // );
+    return mesh;
 }
 
 pub fn get_body_material(
@@ -289,7 +296,7 @@ pub fn get_body_material(
             // BodyType::Satellite => {}
             // BodyType::Asteroid => {}
             // BodyType::Comet => {}
-            // BodyType::Artificial => {}
+            BodyType::Artificial => None,
             // BodyType::Barycenter => {}
             // BodyType::Other => {}
             _ => Some(

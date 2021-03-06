@@ -2,7 +2,6 @@ use crate::managers::resource::collider::Collider;
 use crate::managers::resource::intermediate_mesh::IntermediatePrimitive;
 use crate::managers::resource::material::Material;
 use crate::utils::gl::GL;
-use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlVertexArrayObject;
@@ -16,19 +15,10 @@ pub enum PrimitiveAttribute {
     UV1 = 5,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Mesh {
     pub name: String,
-
-    // Set to true when we fill in our primitives. Always initially false when deserializing,
-    // so that somebody tries loading a mesh with or name
-    #[serde(skip)]
-    pub loaded: bool,
-
-    #[serde(skip)]
     pub primitives: Vec<Primitive>,
-
-    #[serde(skip)]
     pub collider: Option<Box<dyn Collider>>,
 }
 impl PartialEq for Mesh {
