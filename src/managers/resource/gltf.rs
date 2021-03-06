@@ -1,11 +1,10 @@
+use crate::managers::resource::collider::AxisAlignedBoxCollider;
 use crate::managers::resource::intermediate_mesh::{
     intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
 };
-use crate::managers::resource::material::UniformName;
-use crate::managers::resource::material::{Material, UniformValue};
+use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
-use crate::managers::resource::texture::Texture;
-use crate::managers::resource::texture::TextureUnit;
+use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::ResourceManager;
 use crate::utils::gl::GL;
 use crate::utils::transform::Transform;
@@ -452,21 +451,6 @@ impl ResourceManager {
             });
         }
 
-        // AABB collider as early out
-        let mut mins = Point3::new(INFINITY, INFINITY, INFINITY);
-        let mut maxes = Point3::new(-INFINITY, -INFINITY, -INFINITY);
-        for prim in &inter_prims {
-            for pos in &prim.positions {
-                mins.x = mins.x.min(pos.x);
-                mins.y = mins.y.min(pos.y);
-                mins.z = mins.z.min(pos.z);
-
-                maxes.x = maxes.x.max(pos.x);
-                maxes.y = maxes.y.max(pos.y);
-                maxes.z = maxes.z.max(pos.z);
-            }
-        }
-
         // let mesh_collider = Box::new(MeshCollider {
         //     mesh: Rc::downgrade(&result),
         //     additional_outer_collider: Some(Box::new(AxisAlignedBoxCollider { mins, maxes })),
@@ -710,6 +694,7 @@ impl ResourceManager {
             primitives: Vec::new(),
         };
 
+        // Combine all meshes into one
         let identity = Transform::<f32>::identity();
         for gltf_scene in scenes {
             for child_node in gltf_scene.nodes() {
@@ -722,7 +707,27 @@ impl ResourceManager {
             }
         }
 
-        return Some(intermediate_to_mesh(&combined_mesh));
+        // Create a single combined AABB. No point in doing this sooner because we
+        // have no idea what the transforms are going to be
+        // AABB collider as early out
+        let mut mins = Point3::new(INFINITY, INFINITY, INFINITY);
+        let mut maxes = Point3::new(-INFINITY, -INFINITY, -INFINITY);
+        for prim in &combined_mesh.primitives {
+            for pos in &prim.positions {
+                mins.x = mins.x.min(pos.x);
+                mins.y = mins.y.min(pos.y);
+                mins.z = mins.z.min(pos.z);
+
+                maxes.x = maxes.x.max(pos.x);
+                maxes.y = maxes.y.max(pos.y);
+                maxes.z = maxes.z.max(pos.z);
+            }
+        }
+
+        let mesh = intermediate_to_mesh(&combined_mesh);
+        mesh.borrow_mut().collider = Some(Box::new(AxisAlignedBoxCollider { mins, maxes }));
+
+        return Some(mesh);
     }
 
     /// Will parse and bake the entire gltf file into a single mesh with the same name as the file identifier.

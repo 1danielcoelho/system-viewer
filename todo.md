@@ -555,8 +555,8 @@ response |= ui.add(label);
 - Improve visuals a bit
     > - Fix normal and spec/roughness maps for Earth
     - Fix weird shoreline artifacts on earth metallicroughness
-        - Fixup gltf importer to allow importing GLTF scenes as simple meshes and materials, instead of making entire scenes with them
-        - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
+        > - Fixup gltf importer to allow importing GLTF scenes as simple meshes and materials, instead of making entire scenes with them
+        > - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
     - Correct-ish sun brightness
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
@@ -569,6 +569,8 @@ response |= ui.add(label);
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
+
+# Fix GLTF test scene crashing when resetting scene
 
 # Persistence
 > - Save which scene was last opened and try loading it when opening again
