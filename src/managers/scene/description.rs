@@ -1,5 +1,5 @@
 use crate::managers::resource::body_description::{OrbitalElements, StateVector};
-use na::{Point3, Unit, Vector3};
+use na::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -7,14 +7,18 @@ use std::collections::HashMap;
 pub enum BodyMotionType {
     DefaultVector,
     DefaultElements,
-    CustomVector(StateVector),
-    CustomElements(OrbitalElements),
+    CustomVector,
+    CustomElements,
 }
 
-#[derive(Clone, Debug)]
-pub enum ResolvedBodyMotionType {
-    Vector(StateVector),
-    Elements(OrbitalElements),
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BodyInstanceDescription {
+    pub motion_type: BodyMotionType,
+    pub state_vector: Option<StateVector>,
+    pub initial_rot: Option<Vector3<f64>>,
+    pub scale: Option<Vector3<f64>>,
+    pub orbital_elements: Option<OrbitalElements>,
+    pub angular_velocity: Option<Vector3<f64>>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -23,17 +27,17 @@ pub struct SceneDescription {
     pub description: String,
     pub time: String,
     pub simulation_scale: f64,
-    
+
     #[serde(default)]
     pub focus: Option<String>,
-    
+
     #[serde(default)]
     pub camera_pos: Option<Point3<f64>>,
-    
+
     #[serde(default)]
     pub camera_up: Option<Unit<Vector3<f64>>>,
 
     #[serde(default)]
     pub camera_target: Option<Point3<f64>>,
-    pub bodies: HashMap<String, HashMap<String, BodyMotionType>>,
+    pub bodies: HashMap<String, HashMap<String, BodyInstanceDescription>>,
 }

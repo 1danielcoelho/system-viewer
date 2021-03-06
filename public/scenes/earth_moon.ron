@@ -7,11 +7,20 @@
     focus: "399",
     bodies: {
         "major_bodies": {
-            "10": CustomVector(((2451549.0, 1000, 0, 0, 0, 0, 0))),
-            "399": CustomVector(((2451549.0, 0, 0, 0, 0, 0, 0))),
+            "10": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 1000, 0, 0, 0, 0, 0)),
+            ),
+            "399": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
+            )
         },  
         "other_satellites": {
-            "301": CustomVector(((2451549.0, 10, 0, 0, 0, 0, 0))),
+            "301": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 10, 0, 0, 0, 0, 0)),
+            )
         }
     },
 )

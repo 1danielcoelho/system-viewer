@@ -1,3 +1,4 @@
+#![enable(implicit_some)]
 (
     name: "Jovian system",
     description: "Solar system barycenter, Sun, Jupiter and it's system barycenter, as well as 10 of its moons",
@@ -21,27 +22,29 @@
     ],
     bodies: {                           // Bodies to include in scene
         "major_bodies": {
-            "5": DefaultVector,         // These are the 4 variants of the enum:
-            "599": DefaultElements, 
-            "10": CustomVector(((2451549.0, 0, 1, 2, 0, 1, 2))),
-            "499": CustomElements((
-                ref_id: "10",
-                epoch: (34234.0),
-                a: (23),
-                e: 0.3,
-                i: (423),
-                O: (32),
-                w: (34),
-                M: (34),
-                p: 44,
-            )),
+            "10": (
+                motion_type: DefaultVector,
+            )
         },
-        "jovian_satellites": {
-            "5": DefaultVector,
-            "6": DefaultVector,
-            "12454": DefaultVector,
-            "553": DefaultVector,
-            "5355": DefaultVector,
-        },
+        "artificial": {
+            "bottle": (
+                motion_type: DefaultElements,                   // Mandatory. Variants are DefaultVector, DefaultElements, CustomVector, CustomElements
+                state_vector: ((2451545, 0, 1, 2, 0, 1, 2)),    // Optional, JDN, [Mm, Mm, Mm], [Mm/s, Mm/s, Mm/s], note 2 parenthesis
+                initial_rot: [30, 60, 90],                      // Optional, Euler angles in degrees
+                scale: [1, 2, 3],                               // Optional, Scale for initial transform
+                orbital_elements: (                             // Optional, Orbital elemetns, see osc_element.ron
+                    ref_id: "10",
+                    epoch: (2451545),
+                    a: (108208.16817083326),
+                    e: 0.006755786250503024,
+                    i: (0.059246766123226074),
+                    O: (1.338290102532625),
+                    w: (0.9631768169637214),
+                    M: (0.8746677730786798),
+                    p: 224.6983300739057,
+                ),
+                angular_velocity: [1, 2, 3],                    // Optional, Axis of rotation, length is rad/s, right-hand rule
+            )
+        }
     },
 )

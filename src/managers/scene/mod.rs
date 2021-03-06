@@ -4,12 +4,10 @@ use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::resource::texture::TextureUnit;
-use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::description::SceneDescription;
-use crate::managers::scene::orbits::{add_free_body, resolve_motion_type};
+use crate::managers::scene::orbits::{add_free_body, fetch_default_motion_if_needed};
 use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
-use crate::utils::transform::Transform;
 use crate::utils::units::J2000_JDN;
 use na::*;
 pub use scene::*;
@@ -94,59 +92,55 @@ impl SceneManager {
         state.hovered = None;
 
         // Set new scene
-        if let Some(found_scene) = self.get_scene_mut(identifier) {
-            self.main = Some(identifier.to_string());
-            let main_scene = self.get_main_scene().unwrap();
+        self.main = Some(identifier.to_string());
+        let main_scene = self.get_main_scene().unwrap();
 
-            // Check if we have a description for that scene (they should have same name)
-            if let Some(desc) = self.descriptions.get(identifier) {
-                state.simulation_speed = desc.simulation_scale;
+        // Check if we have a description for that scene (they should have same name)
+        if let Some(desc) = self.descriptions.get(identifier) {
+            state.simulation_speed = desc.simulation_scale;
 
-                // Camera target (already wrt. reference)
-                // If the identifier is the same as last_scene we're loading from state, so keep our camera transform
-                let mut need_go_to: bool = false;
-                if state.last_scene_identifier.as_str() != identifier {
-                    if desc.camera_pos.is_some()
-                        && desc.camera_target.is_some()
-                        && desc.camera_up.is_some()
-                    {
-                        state.camera.pos = desc.camera_pos.unwrap();
-                        state.camera.up = desc.camera_up.unwrap();
-                        state.camera.target = desc.camera_target.unwrap();
-                    } else {
-                        need_go_to = true;
-                    }
+            // Camera target (already wrt. reference)
+            // If the identifier is the same as last_scene we're loading from state, so keep our camera transform
+            let mut need_go_to: bool = false;
+            if state.last_scene_identifier.as_str() != identifier {
+                if desc.camera_pos.is_some()
+                    && desc.camera_target.is_some()
+                    && desc.camera_up.is_some()
+                {
+                    state.camera.pos = desc.camera_pos.unwrap();
+                    state.camera.up = desc.camera_up.unwrap();
+                    state.camera.target = desc.camera_target.unwrap();
+                } else {
+                    need_go_to = true;
+                }
 
-                    if let Some(focus) = &desc.focus {
-                        // Ugh.. this shouldn't be too often though
-                        for (entity, component) in main_scene.metadata.iter() {
-                            if let Some(id) = component.get_metadata("body_id") {
-                                if id == focus {
-                                    state.camera.next_reference_entity =
-                                        Some(ReferenceChange::FocusKeepCoords(*entity));
+                if let Some(focus) = &desc.focus {
+                    // Ugh.. this shouldn't be too often though
+                    for (entity, component) in main_scene.metadata.iter() {
+                        if let Some(id) = component.get_metadata("body_id") {
+                            if id == focus {
+                                state.camera.next_reference_entity =
+                                    Some(ReferenceChange::FocusKeepCoords(*entity));
 
-                                    if need_go_to {
-                                        state.camera.entity_going_to = Some(*entity);
-                                    }
-
-                                    log::info!(
-                                        "Setting initial focused entity to '{:?}'",
-                                        main_scene.get_entity_name(*entity)
-                                    );
-                                    break;
+                                if need_go_to {
+                                    state.camera.entity_going_to = Some(*entity);
                                 }
+
+                                log::info!(
+                                    "Setting initial focused entity to '{:?}'",
+                                    main_scene.get_entity_name(*entity)
+                                );
+                                break;
                             }
                         }
                     }
                 }
-
-                // TODO: Proper handling of time (would involve rolling simulation/orbits forward/back
-                // to match target time, for now let's just all sit at J2000)
-                assert!(desc.time == String::from("J2000"));
-                state.sim_time_s = 0.0;
             }
-        } else {
-            log::warn!("Scene with identifier '{}' not found!", identifier);
+
+            // TODO: Proper handling of time (would involve rolling simulation/orbits forward/back
+            // to match target time, for now let's just all sit at J2000)
+            assert!(desc.time == String::from("J2000"));
+            state.sim_time_s = 0.0;
         }
 
         // Do this last because we'll check whether we should goto something or keep our state
@@ -681,13 +675,15 @@ impl SceneManager {
         let desc = self.descriptions.get(identifier).cloned().unwrap();
 
         // Make Rust happy
+        // TODO: Remove this cloning
         let name = desc.name.clone();
-        let bodies = desc.bodies.clone();
+        let mut body_instances = desc.bodies.clone();
         let time = J2000_JDN;
 
         let scene = self.new_scene(&name).unwrap();
 
-        for (db_name, body_ids) in bodies.iter() {
+        // Bodies
+        for (db_name, cat_to_body_instances) in body_instances.iter_mut() {
             let db = res_man.take_body_database(db_name);
             if db.is_err() {
                 log::warn!(
@@ -699,7 +695,7 @@ impl SceneManager {
             }
             let db = db.unwrap();
 
-            for (body_id, motion_type) in body_ids.iter() {
+            for (body_id, mut body_instance) in cat_to_body_instances.iter_mut() {
                 let body = db.get(body_id.as_str());
                 if body.is_none() {
                     log::warn!(
@@ -707,14 +703,12 @@ impl SceneManager {
                         body_id,
                         db_name,
                     );
+                    continue;
                 }
+                let body = body.unwrap();
 
-                // resolve what to pass to free_body (osc elements or state vectors)
-                if let Some(motion) = resolve_motion_type(body_id, motion_type, res_man, time) {
-                    add_free_body(scene, time, body.unwrap(), &motion, res_man);
-                } else {
-                    log::warn!("Failed to resolve motion for body '{}'", body_id);
-                }
+                fetch_default_motion_if_needed(body_id, &mut body_instance, res_man, time);
+                add_free_body(scene, time, &body, &body_instance, res_man);
             }
 
             res_man.set_body_database(db_name, db);

@@ -7,20 +7,47 @@
     focus: "599",
     bodies: {
         "major_bodies": {
-            "5": DefaultVector,
-            "599": DefaultVector,
-            "10": DefaultVector,
+            "5": (
+                motion_type: DefaultVector,
+            ),
+            "599": (
+                motion_type: DefaultVector,
+            ),
+            "10": (
+                motion_type: DefaultVector,
+            ),
         },  
         "jovian_satellites": {
-            "501": DefaultVector,
-            "502": DefaultVector,
-            "503": DefaultVector,
-            "504": DefaultVector,
-            "505": DefaultVector,
-            "506": DefaultVector,
-            "507": DefaultVector,
-            "508": DefaultVector,
-            "509": DefaultVector,
+            "501": (
+                motion_type: DefaultVector,
+            ),
+            "502": (
+                motion_type: DefaultVector,
+            ),
+            "503": (
+                motion_type: DefaultVector,
+            ),
+            "504": (
+                motion_type: DefaultVector,
+            ),
+            "505": (
+                motion_type: DefaultVector,
+            ),
+            "506": (
+                motion_type: DefaultVector,
+            ),
+            "507": (
+                motion_type: DefaultVector,
+            ),
+            "508": (
+                motion_type: DefaultVector,
+            ),
+            "509": (
+                motion_type: DefaultVector,
+            ),
+            "510": (
+                motion_type: DefaultVector,
+            ),
         }
     },
 )

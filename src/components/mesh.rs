@@ -5,7 +5,6 @@ use crate::managers::resource::mesh::Mesh;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use egui::Ui;
-use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, rc::Rc};
 
 #[derive(Debug, Clone)]

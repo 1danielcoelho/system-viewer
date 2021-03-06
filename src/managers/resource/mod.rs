@@ -1,12 +1,14 @@
-use self::{material::Material, mesh::Mesh, procedural_meshes::*, texture::Texture};
+use self::material::Material;
+use self::mesh::Mesh;
+use self::procedural_meshes::*;
+use self::texture::Texture;
 use crate::fetch_bytes;
 use crate::managers::resource::body_description::{BodyDescription, OrbitalElements, StateVector};
 use crate::managers::resource::material::UniformName;
-use crate::managers::resource::texture::TextureUnit;
 use crate::utils::gl::GL;
 use crate::utils::hashmap::InsertOrGet;
 use crate::utils::string::{get_unique_name, remove_numbered_suffix};
-use crate::{managers::scene::Scene, GLCTX};
+use crate::GLCTX;
 use image::{io::Reader, DynamicImage};
 use std::path::PathBuf;
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
@@ -404,11 +406,12 @@ impl ResourceManager {
             self.meshes.insert(identifier.to_string(), mesh.clone());
             return Some(mesh);
         }
-        
+
         let full_path: String = "public/gltf/".to_owned() + identifier;
         fetch_bytes(&full_path, "gltf");
         let temp_mesh = Some(generate_temp());
-        self.meshes.insert(full_path, temp_mesh.as_ref().unwrap().clone());
+        self.meshes
+            .insert(full_path, temp_mesh.as_ref().unwrap().clone());
         return temp_mesh;
     }
 

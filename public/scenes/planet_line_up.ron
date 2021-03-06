@@ -22,16 +22,46 @@
     ],
     bodies: {
         "major_bodies": {
-            "10":  CustomVector(((2451545.0, 0, 0, 0, 0, 0, 0))),
-            "199": CustomVector(((2451545.0, 700, 0, 0, 0, 0, 0))),
-            "299": CustomVector(((2451545.0, 710, 0, 0, 0, 0, 0))),
-            "399": CustomVector(((2451545.0, 725, 0, 0, 0, 0, 0))),
-            "499": CustomVector(((2451545.0, 740, 0, 0, 0, 0, 0))),
-            "599": CustomVector(((2451545.0, 815, 0, 0, 0, 0, 0))),
-            "699": CustomVector(((2451545.0, 940, 0, 0, 0, 0, 0))),
-            "799": CustomVector(((2451545.0, 1020, 0, 0, 0, 0, 0))),
-            "899": CustomVector(((2451545.0, 1070, 0, 0, 0, 0, 0))),
-            "999": CustomVector(((2451545.0, 1100, 0, 0, 0, 0, 0))),
+            "10": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 0, 0, 0, 0, 0, 0)),
+            ),
+            "199": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 700, 0, 0, 0, 0, 0)),
+            ),
+            "299": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 710, 0, 0, 0, 0, 0)),
+            ),
+            "399": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 725, 0, 0, 0, 0, 0)),
+            ),
+            "499": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 740, 0, 0, 0, 0, 0)),
+            ),
+            "599": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 815, 0, 0, 0, 0, 0)),
+            ),
+            "699": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 940, 0, 0, 0, 0, 0)),
+            ),
+            "799": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 1020, 0, 0, 0, 0, 0)),
+            ),
+            "899": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 1070, 0, 0, 0, 0, 0)),
+            ),
+            "999": (
+                motion_type: CustomVector,
+                state_vector: ((2451545.0, 1100, 0, 0, 0, 0, 0)),
+            ),
         },        
     },
 )

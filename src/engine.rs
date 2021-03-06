@@ -1,7 +1,3 @@
-use std::borrow::BorrowMut;
-
-use web_sys::console::info;
-
 use crate::app_state::AppState;
 use crate::fetch_text;
 use crate::managers::scene::SceneManager;
@@ -9,6 +5,7 @@ use crate::managers::{
     EventManager, InputManager, InterfaceManager, ResourceManager, SystemManager,
 };
 use crate::STATE;
+use std::borrow::BorrowMut;
 
 pub struct Engine {
     pub res_man: ResourceManager,

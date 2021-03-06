@@ -5,5 +5,26 @@
         "mass": 1,
         "radius": 1,
         "mesh": "Duck.glb"
+    },
+    "bottle": {
+        "name": "Bottle",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "WaterBottle.glb"
+    },
+    "helmet": {
+        "name": "Damaged helmet",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "DamagedHelmet.glb"
+    },
+    "boombox": {
+        "name": "BoomBox",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "BoomBox.glb"
     }
 }

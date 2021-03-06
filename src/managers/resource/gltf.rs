@@ -75,10 +75,6 @@ impl GltfResource for gltf::Scene<'_> {
     }
 }
 
-pub fn get_scene_name(resource_name: &str) -> &str {
-    return &resource_name.split("/").take(1).collect::<Vec<&str>>()[0];
-}
-
 impl ResourceManager {
     fn load_material_from_gltf(
         &mut self,

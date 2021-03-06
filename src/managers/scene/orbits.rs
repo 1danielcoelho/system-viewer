@@ -1,7 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
-use super::description::ResolvedBodyMotionType;
 use crate::components::light::LightType;
 use crate::components::{
     LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
@@ -10,12 +6,15 @@ use crate::managers::resource::body_description::{BodyDescription, BodyType};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
-use crate::managers::scene::description::BodyMotionType;
+use crate::managers::scene::description::{BodyInstanceDescription, BodyMotionType};
 use crate::managers::scene::{Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::string::decode_hex;
 use crate::utils::units::Jdn;
+use na::*;
 use nalgebra::Vector3;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 impl SceneManager {
     // pub fn load_bodies_into_scene(
@@ -125,9 +124,9 @@ impl SceneManager {
 
 pub fn add_free_body(
     scene: &mut Scene,
-    epoch: Jdn,
+    _epoch: Jdn,
     body: &BodyDescription,
-    motion: &ResolvedBodyMotionType,
+    body_instance: &BodyInstanceDescription,
     res_man: &mut ResourceManager,
 ) {
     if body.body_type == BodyType::Barycenter {
@@ -149,30 +148,35 @@ pub fn add_free_body(
         scene.identifier
     );
 
-    // TODO: Handle elements
-    let state_vector = match motion {
-        ResolvedBodyMotionType::Vector(vec) => Some(vec),
-        ResolvedBodyMotionType::Elements(_) => None,
+    match body_instance.motion_type {
+        BodyMotionType::DefaultElements | BodyMotionType::CustomElements => todo!(),
+        _ => {}
     };
-    if state_vector.is_none() {
-        log::warn!(
-            "Body '{}' doesn't have a state vector usable for epoch '{}'",
-            body.name,
-            epoch.0
-        );
-        return;
-    }
-    let state_vector = state_vector.cloned().unwrap();
+
+    let state_vector = body_instance.state_vector.as_ref().unwrap();
 
     // Entity
     let body_ent = scene.new_entity(Some(&body.name));
     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
-    trans_comp.get_local_transform_mut().trans = state_vector.pos.coords;
+    let trans = trans_comp.get_local_transform_mut();
+    trans.trans = state_vector.pos.coords;
+    if let Some(rot) = body_instance.initial_rot {
+        trans.rot = UnitQuaternion::from_euler_angles(
+            rot.x.to_radians(),
+            rot.y.to_radians(),
+            rot.z.to_radians(),
+        );
+    }
+    if let Some(scale) = body_instance.scale {
+        trans.scale = scale;
+    }
 
     // Mesh
     if let Some(radius) = body.radius {
-        trans_comp.get_local_transform_mut().scale =
-            Vector3::new(radius.into(), radius.into(), radius.into());
+        trans_comp
+            .get_local_transform_mut()
+            .scale
+            .scale_mut(radius as f64);
 
         let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
         mesh_comp.set_mesh(get_body_mesh(body, res_man));
@@ -183,6 +187,9 @@ pub fn add_free_body(
     let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
     phys_comp.mass = body.mass.unwrap() as f64;
     phys_comp.lin_mom = state_vector.vel.scale(body.mass.unwrap() as f64);
+    if let Some(ang_vel) = body_instance.angular_velocity {
+        phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
+    }
 
     // Light
     if body.body_type == BodyType::Star {
@@ -242,7 +249,7 @@ pub fn get_body_mesh(
         Some(identifier) => res_man.get_or_create_mesh(&identifier),
         None => res_man.get_or_create_mesh("lat_long_sphere"),
     };
-    
+
     // log::info!(
     //     "For body '{}', using mesh '{:#?}'",
     //     body.id.as_ref().unwrap(),
@@ -378,24 +385,22 @@ pub fn get_body_material(
     return mat;
 }
 
-/// Function that receives a `BodyMotionType` and produces a `ResolvedMotionType`, either using the custom values
-/// or fetching the closest reference state vector/osculating elements from the database
-pub fn resolve_motion_type(
+pub fn fetch_default_motion_if_needed(
     body_id: &str,
-    received_type: &BodyMotionType,
+    body_instance: &mut BodyInstanceDescription,
     res_man: &mut ResourceManager,
     default_time: Jdn,
-) -> Option<ResolvedBodyMotionType> {
-    match received_type {
+) {
+    match body_instance.motion_type {
         BodyMotionType::DefaultVector => {
             let vectors = res_man.get_state_vectors().get(body_id);
             if vectors.is_none() {
-                return None;
+                return;
             };
 
             let vectors = vectors.unwrap();
             if vectors.len() < 1 {
-                return None;
+                return;
             }
 
             // Search for vector closest to default_time
@@ -415,19 +420,17 @@ pub fn resolve_motion_type(
                 log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
             }
 
-            return Some(ResolvedBodyMotionType::Vector(
-                vectors[lowest_index].clone(),
-            ));
+            body_instance.state_vector = Some(vectors[lowest_index].clone());
         }
         BodyMotionType::DefaultElements => {
             let elements = res_man.get_osc_elements().get(body_id);
             if elements.is_none() {
-                return None;
+                return;
             };
 
             let elements = elements.unwrap();
             if elements.len() < 1 {
-                return None;
+                return;
             }
 
             // Search for elements closest to default_time
@@ -447,15 +450,8 @@ pub fn resolve_motion_type(
                 log::warn!("Using orbital elements '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", elements[lowest_index], lowest_delta, default_time.0, body_id);
             }
 
-            return Some(ResolvedBodyMotionType::Elements(
-                elements[lowest_index].clone(),
-            ));
+            body_instance.orbital_elements = Some(elements[lowest_index].clone());
         }
-        BodyMotionType::CustomVector(vec) => {
-            return Some(ResolvedBodyMotionType::Vector(vec.clone()))
-        }
-        BodyMotionType::CustomElements(els) => {
-            return Some(ResolvedBodyMotionType::Elements(els.clone()))
-        }
+        _ => {}
     };
 }

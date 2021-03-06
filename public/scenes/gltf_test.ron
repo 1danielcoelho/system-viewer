@@ -6,10 +6,36 @@
     simulation_scale: 500,
     bodies: {
         "major_bodies": {
-            "10": CustomVector(((2451549.0, 1000, 0, 0, 0, 0, 0))),
+            "10": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 1000, 0, 0, 0, 0, 0)),
+            )
         },  
         "artificial": {
-            "duck": CustomVector(((2451549.0, 0, 0, 0, 0, 0, 0))),
+            "boombox": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
+                scale: [100.0, 100.0, 100.0],
+                initial_rot: [180, 0, 120],
+            ),
+            "duck": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 3, 0, 0, 0, 0)),
+                scale: [0.01, 0.01, 0.01],
+                initial_rot: [0, 0, 120],
+            ),
+            "bottle": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -3, 0, 0, 0, 0)),
+                scale: [10.0, 10.0, 10.0],
+                initial_rot: [180, 0, 0],
+            ),
+            "helmet": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -6, 0, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 180],
+            ),
         }
     },
 )

@@ -1,3 +1,6 @@
+// Prevent some weirdness with std::f32::clamp when using use::na::*;
+#![allow(unstable_name_collisions)]
+
 #[macro_use(lazy_static)]
 extern crate lazy_static;
 extern crate nalgebra as na;
@@ -5,6 +8,11 @@ extern crate regex;
 extern crate ron;
 extern crate serde;
 extern crate wasm_bindgen;
+
+use crate::managers::resource::body_description::{OrbitalElements, StateVector};
+use crate::managers::scene::description::{BodyInstanceDescription, BodyMotionType};
+use crate::utils::units::{J2000_JDN, Deg, Rad, Au, Mm};
+use na::*;
 
 use crate::app_state::AppState;
 use crate::engine::Engine;
@@ -77,6 +85,31 @@ pub fn initialize() {
 #[wasm_bindgen]
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
+
+    let desc = BodyInstanceDescription {
+        motion_type: BodyMotionType::DefaultElements,
+        state_vector: Some(StateVector {
+            jdn_date: J2000_JDN,
+            pos: Point3::new(0.0, 1.0, 2.0),
+            vel: Vector3::new(0.0, 1.0, 2.0),
+        }),
+        initial_rot: Some(Vector3::zeros()),
+        scale: Some(Vector3::new(1.0, 2.0, 3.0)),
+        orbital_elements: Some(OrbitalElements {
+            ref_id: String::from("10"),
+            epoch: J2000_JDN,
+            semi_major_axis: Au(7.233269274790103E-01).to_Mm(),
+            eccentricity: 6.755786250503024E-03,
+            inclination: Deg(3.394589648659516E+00).to_rad(),
+            long_asc_node: Deg(7.667837463924961E+01).to_rad(),
+            arg_periapsis: Deg(5.518596653686583E+01).to_rad(),
+            mean_anomaly_0: Deg(5.011477187351476E+01).to_rad(),
+            sidereal_orbit_period_days: 2.246983300739057E+02,
+        }),
+        angular_velocity: Some(Vector3::new(1.0, 2.0, 3.0)),
+    };
+    let serialized = ron::ser::to_string_pretty(&desc, ron::ser::PrettyConfig::new()).unwrap();
+    log::info!("Serialized: {}", serialized);
 
     fetch_text(
         "public/scenes/_auto_load_manifest.txt",
