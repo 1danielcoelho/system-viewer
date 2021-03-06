@@ -224,7 +224,7 @@ impl AppState {
             move_speed: 5.0,
             rotate_speed: 2.0,
             frames_per_second_limit: 120.0,
-            light_intensity: 0.66,
+            light_intensity: 0.60,
             input: Input::default(),
             hovered: None,
             selection: None,

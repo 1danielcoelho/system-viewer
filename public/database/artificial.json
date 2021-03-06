@@ -26,5 +26,75 @@
         "mass": 1,
         "radius": 1,
         "mesh": "BoomBox.glb"
+    },
+    "milktruck": {
+        "name": "Cesium Milk Truck",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "CesiumMilkTruck.glb"
+    },
+    "metalrough": {
+        "name": "Metal Rough Spheres",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "MetalRoughSpheres.glb"
+    },
+    "metalroughnotextures": {
+        "name": "Metal Rough Spheres No Textures",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "MetalRoughSpheresNoTextures.glb"
+    },
+    "normaltangentmirror": {
+        "name": "Normal Tangent Mirror Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "NormalTangentMirrorTest.glb"
+    },
+    "normaltangenttest": {
+        "name": "Normal Tangent Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "NormalTangentTest.glb"
+    },
+    "orientationtest": {
+        "name": "Orientation Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "OrientationTest.glb"
+    },
+    "texturecoordinatetest": {
+        "name": "Texture Coordinate Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "TextureCoordinateTest.glb"
+    },
+    "texturesettingstest": {
+        "name": "Texture Settings Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "TextureSettingsTest.glb"
+    },
+    "vertexcolortest": {
+        "name": "Vertex Color Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "VertexColorTest.glb"
+    },
+    "simplemeshes": {
+        "name": "Simple Meshes",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "SimpleMeshes.glb"
     }
 }

@@ -425,16 +425,17 @@ impl DetailsUI for Material {
             ui.collapsing("Uniforms:", |ui| {
                 for (name, val) in &mut self.uniforms {
                     ui.columns(2, |cols| {
-                        cols[0].label(name.as_str());
-
                         match &mut val.value {
                             UniformValue::Float(ref mut f) => {
+                                cols[0].label(name.as_str());
                                 cols[1].add(egui::DragValue::f32(f).speed(0.1));
                             }
                             UniformValue::Int(ref mut i) => {
+                                cols[0].label(name.as_str());
                                 cols[1].add(egui::DragValue::i32(i));
                             }
                             UniformValue::Vec2(ref mut v2) => {
+                                cols[0].label(name.as_str());
                                 cols[1].horizontal(|ui| {
                                     ui.add(
                                         egui::DragValue::f32(&mut v2[0]).prefix("x: ").speed(0.1),
@@ -445,6 +446,7 @@ impl DetailsUI for Material {
                                 });
                             }
                             UniformValue::Vec3(ref mut v3) => {
+                                cols[0].label(name.as_str());
                                 cols[1].horizontal(|ui| {
                                     ui.add(
                                         egui::DragValue::f32(&mut v3[0]).prefix("x: ").speed(0.1),
@@ -458,6 +460,7 @@ impl DetailsUI for Material {
                                 });
                             }
                             UniformValue::Vec4(ref mut v4) => {
+                                cols[0].label(name.as_str());
                                 cols[1].horizontal(|ui| {
                                     ui.add(
                                         egui::DragValue::f32(&mut v4[0]).prefix("x: ").speed(0.1),

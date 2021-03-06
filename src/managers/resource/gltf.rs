@@ -719,6 +719,9 @@ impl ResourceManager {
                 maxes.z = maxes.z.max(pos.z);
             }
         }
+        maxes.x = mins.x.max(maxes.x + 0.00001);
+        maxes.y = mins.y.max(maxes.y + 0.00001);
+        maxes.z = mins.z.max(maxes.z + 0.00001);
 
         let mesh = intermediate_to_mesh(&combined_mesh);
         mesh.borrow_mut().collider = Some(Box::new(AxisAlignedBoxCollider { mins, maxes }));
