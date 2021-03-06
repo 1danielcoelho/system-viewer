@@ -96,5 +96,26 @@
         "mass": 1,
         "radius": 1,
         "mesh": "SimpleMeshes.glb"
+    },
+    "alphablendmodetest": {
+        "name": "Alpha Blend Mode Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "AlphaBlendModeTest.glb"
+    },
+    "multiuvtest": {
+        "name": "Multi UV Test",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "MultiUVTest.glb"
+    },
+    "2cylinderengine": {
+        "name": "2 Cylinder Engine",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "2CylinderEngine.glb"
     }
 }

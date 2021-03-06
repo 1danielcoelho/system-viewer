@@ -96,6 +96,24 @@
                 scale: [2.0, 2.0, 2.0],
                 initial_rot: [0, 0, -90],
             ),
+            "alphablendmodetest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -21, 15, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, -90],
+            ),
+            "multiuvtest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 20, 0, 0, 0)),
+                scale: [2.0, 2.0, 2.0],
+                initial_rot: [0, 0, 0],
+            ),
+            "2cylinderengine": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 35, 0, 0, 0)),
+                scale: [0.01, 0.01, 0.01],
+                initial_rot: [0, 0, 45],
+            ),
         }
     },
 )
