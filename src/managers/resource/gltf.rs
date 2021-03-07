@@ -672,15 +672,17 @@ impl ResourceManager {
                     .iter_mut()
                     .for_each(|p| *p = mat.transform_point(&Point3::from(*p)).coords);
 
+                // TODO: This should really use the inverse transpose, but it leads to incorrect results on some models like 2CylinderEngine
                 primitive
                     .normals
                     .iter_mut()
-                    .for_each(|v| *v = inv_trans.transform_vector(v).normalize());
+                    .for_each(|v| *v = mat.transform_vector(v).normalize());
 
+                // Note that tangents should not use the inverse transpose
                 primitive
                     .tangents
                     .iter_mut()
-                    .for_each(|t| *t = inv_trans.transform_vector(t).normalize());
+                    .for_each(|t| *t = mat.transform_vector(t).normalize());
             }
 
             // Flatten the primitives into the combined_mesh

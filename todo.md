@@ -562,6 +562,7 @@ response |= ui.add(label);
     - DamagedHelmet looks black?
         - UVs look messed up
     - MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
+    - Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
     - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
     - NormalTangentMirrorTest is messed up
     - Also some wrong stuff with blend mode and texture settings, but not sure if it's worth doing anything about those at this time
