@@ -34,8 +34,14 @@
                 motion_type: CustomVector,
                 state_vector: ((2451549.0, 0, -6, 0, 0, 0, 0)),
                 scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 180],
+                initial_rot: [-179, 77, -135],
             ),
+            // "twocubes": (
+            //     motion_type: CustomVector,
+            //     state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
+            //     scale: [1.0, 1.0, 1.0],
+            //     initial_rot: [0, 0, 0],
+            // ),
             "milktruck": (
                 motion_type: CustomVector,
                 state_vector: ((2451549.0, 0, 6, 0, 0, 0, 0)),
@@ -50,9 +56,9 @@
             ),
             "metalroughnotextures": (
                 motion_type: CustomVector,
-                state_vector: ((2451549.0, 0, 50, 0, 0, 0, 0)),
+                state_vector: ((2451549.0, 0, 50, -10, 0, 0, 0)),
                 scale: [3000.0, 3000.0, 3000.0],
-                initial_rot: [-44.3, 90, 0],
+                initial_rot: [0, 0, 45],
             ),
             "normaltangentmirror": (
                 motion_type: CustomVector,
@@ -90,12 +96,12 @@
                 scale: [1.0, 1.0, 1.0],
                 initial_rot: [0, 0, 0],
             ),
-            "simplemeshes": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, 6, 0, -7, 0, 0, 0)),
-                scale: [2.0, 2.0, 2.0],
-                initial_rot: [0, 0, -90],
-            ),
+            // "simplemeshes": (
+            //     motion_type: CustomVector,
+            //     state_vector: ((2451549.0, 6, 0, -7, 0, 0, 0)),
+            //     scale: [2.0, 2.0, 2.0],
+            //     initial_rot: [0, 0, -90],
+            // ),
             "alphablendmodetest": (
                 motion_type: CustomVector,
                 state_vector: ((2451549.0, 0, -21, 15, 0, 0, 0)),

@@ -117,5 +117,12 @@
         "mass": 1,
         "radius": 1,
         "mesh": "2CylinderEngine.glb"
+    },
+    "twocubes": {
+        "name": "Two cubes",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "two_cubes.glb"
     }
 }

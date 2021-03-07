@@ -558,11 +558,12 @@ response |= ui.add(label);
         > - Fixup gltf importer to allow importing GLTF scenes as simple meshes and materials, instead of making entire scenes with them
         > - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
         >- Actually it is completely right: It just so happen that you can't see the specular highlight at all for roughness = 0, because it's a perfect mirror, which is why the oceans looked black. I just edited the levels of the MR map, and it looks ok-ish now
+    >- OrientationTest and all multi-node scenes are messed up, because there's something wrong with the transform baking thing
     - DamagedHelmet looks black?
+        - UVs look messed up
     - MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
     - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
     - NormalTangentMirrorTest is messed up
-    - OrientationTest and all multi-node scenes are messed up, because there's something wrong with the transform baking thing
     - Also some wrong stuff with blend mode and texture settings, but not sure if it's worth doing anything about those at this time
     >- There is something wrong happening when roughness is exactly 0. It just flips to rough again.. this is likely the shoreline thing
     - Correct-ish sun brightness
@@ -579,6 +580,8 @@ response |= ui.add(label);
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
 # Fix GLTF test scene crashing when resetting scene
+
+# I should be able to orbit the selection even if not focused...
 
 # Persistence
 > - Save which scene was last opened and try loading it when opening again

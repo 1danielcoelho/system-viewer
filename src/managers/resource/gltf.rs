@@ -623,24 +623,45 @@ impl ResourceManager {
         combined_mesh: &mut IntermediateMesh,
         meshes: &Vec<Option<IntermediateMesh>>,
     ) {
-        let mut trans = Transform::<f32>::identity();
-        let (pos, quat, scale) = node.transform().decomposed();
-        trans.trans.x = pos[0];
-        trans.trans.y = -pos[2];
-        trans.trans.z = pos[1];
-        trans.rot =
-            UnitQuaternion::new_normalize(Quaternion::new(quat[0], -quat[2], quat[1], quat[3]));
-        trans.scale = Vector3::new(scale[0], scale[1], scale[2]);
-        let global_trans = parent_trans.concat_clone(&trans);
+        // TODO: I think it may be a problem that I'm still using my own concatenation functions to 
+        // concat the GLTF transform? Maybe I should let it concatenate itself and only convert the final one
 
-        let mat = trans.to_matrix4();
-        let inv_trans = mat.try_inverse().unwrap().transpose();
+        // Propagate parent transform down to all leaves
+        let (pos, quat, scale) = node.transform().decomposed();
+        let trans: Transform<f32> = Transform {
+            trans: Vector3::new(pos[0], pos[1], pos[2]),
+            rot: UnitQuaternion::new_normalize(Quaternion::new(quat[3], quat[0], quat[1], quat[2])),
+            scale: Vector3::new(scale[0], scale[1], scale[2]),
+        };
+        let global_trans = parent_trans.concat_clone(&trans);
 
         if let Some(template_mesh) = node
             .mesh()
             .and_then(|m| Some(m.index()))
             .and_then(|i| meshes.get(i).unwrap().as_ref())
         {
+            // Convert transform to our coordinate system only once, after fully concatenated
+            let trans_to_apply: Transform<f32> = Transform {
+                trans: Vector3::new(
+                    global_trans.trans.x,
+                    -global_trans.trans.z,
+                    global_trans.trans.y,
+                ),
+                rot: UnitQuaternion::new_normalize(Quaternion::new(
+                    global_trans.rot.w,
+                    global_trans.rot.i,
+                    -global_trans.rot.k,
+                    global_trans.rot.j,
+                )),
+                scale: Vector3::new(
+                    global_trans.scale[0],
+                    global_trans.scale[1],
+                    global_trans.scale[2],
+                ),
+            };
+            let mat = trans_to_apply.to_matrix4();
+            let inv_trans = mat.try_inverse().unwrap().transpose();
+
             // Duplicate the template mesh
             let mut instance = template_mesh.clone();
 

@@ -428,7 +428,7 @@ impl DetailsUI for Material {
                         match &mut val.value {
                             UniformValue::Float(ref mut f) => {
                                 cols[0].label(name.as_str());
-                                cols[1].add(egui::DragValue::f32(f).speed(0.1));
+                                cols[1].add(egui::DragValue::f32(f).speed(0.001));
                             }
                             UniformValue::Int(ref mut i) => {
                                 cols[0].label(name.as_str());
