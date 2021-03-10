@@ -562,7 +562,10 @@ response |= ui.add(label);
     - DamagedHelmet looks black?
         - UVs look messed up
     - MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
-    - Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
+    >- Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
+        >- I'm already doing the inverse transpose when sending the normals to the shaders for the gltf_metal_rough material
+        >- The inv trans compensation when concatenating is *required* if the nodes have non-uniform scaling, but for some reason it flips normals sometimes
+        >- Apparently you *have* to remove the translation before doing inv_trans, because transform_vector won't magically ignore the inv transpose of your translation when transforming a vector
     - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
     - NormalTangentMirrorTest is messed up
     - Also some wrong stuff with blend mode and texture settings, but not sure if it's worth doing anything about those at this time

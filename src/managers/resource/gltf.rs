@@ -221,7 +221,7 @@ impl ResourceManager {
     }
 
     fn load_mesh_from_gltf(
-        &self,
+        &mut self,
         file_identifier: &str,
         mesh: &gltf::Mesh,
         buffers: &Vec<gltf::buffer::Data>,
@@ -412,7 +412,7 @@ impl ResourceManager {
 
             // Material
             let mut mat_instance: Rc<RefCell<Material>> =
-                self.get_material("gltf_metal_rough").unwrap();
+                self.get_or_create_material("gltf_metal_rough").unwrap();
             if let Some(mat_index) = prim.material().index() {
                 if let Some(mat) = &parsed_mats[mat_index] {
                     mat_instance = mat.clone();
@@ -623,7 +623,7 @@ impl ResourceManager {
         combined_mesh: &mut IntermediateMesh,
         meshes: &Vec<Option<IntermediateMesh>>,
     ) {
-        // TODO: I think it may be a problem that I'm still using my own concatenation functions to 
+        // TODO: I think it may be a problem that I'm still using my own concatenation functions to
         // concat the GLTF transform? Maybe I should let it concatenate itself and only convert the final one
 
         // Propagate parent transform down to all leaves
@@ -655,12 +655,18 @@ impl ResourceManager {
                 )),
                 scale: Vector3::new(
                     global_trans.scale[0],
-                    global_trans.scale[1],
                     global_trans.scale[2],
+                    global_trans.scale[1],
                 ),
             };
+            
             let mat = trans_to_apply.to_matrix4();
-            let inv_trans = mat.try_inverse().unwrap().transpose();
+
+            let mut mat_no_trans = mat.clone();
+            mat_no_trans[(0, 3)] = 0.0;
+            mat_no_trans[(1, 3)] = 0.0;
+            mat_no_trans[(2, 3)] = 0.0;
+            let inv_trans = mat_no_trans.try_inverse().unwrap().transpose();
 
             // Duplicate the template mesh
             let mut instance = template_mesh.clone();
@@ -672,11 +678,10 @@ impl ResourceManager {
                     .iter_mut()
                     .for_each(|p| *p = mat.transform_point(&Point3::from(*p)).coords);
 
-                // TODO: This should really use the inverse transpose, but it leads to incorrect results on some models like 2CylinderEngine
                 primitive
                     .normals
                     .iter_mut()
-                    .for_each(|v| *v = mat.transform_vector(v).normalize());
+                    .for_each(|v| *v = inv_trans.transform_vector(v).normalize());
 
                 // Note that tangents should not use the inverse transpose
                 primitive

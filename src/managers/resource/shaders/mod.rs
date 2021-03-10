@@ -26,14 +26,15 @@ lazy_static! {
             "phong.frag",
             "uv0.frag",
             "uv1.frag",
-            "world_normals.frag",
-            "world_tangents.frag",
+            "normals.frag",
+            "tangents.frag",
 
             "brdf.glsl",
             "constants.glsl",
             "functions.glsl",
 
             "relay_all.vert",
+            "relay_locals.vert",
             "relay_color.vert",
             "screenspace.vert"
         ];

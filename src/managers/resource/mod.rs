@@ -487,10 +487,30 @@ impl ResourceManager {
                 "color.frag",
                 &[UniformName::WVPTrans],
             )),
+            "local_normals" => Some(Material::new(
+                identifier,
+                "relay_locals.vert",
+                "normals.frag",
+                &[
+                    UniformName::WVTrans,
+                    UniformName::WVInvTranspTrans,
+                    UniformName::WVPTrans,
+                ],
+            )),
             "world_normals" => Some(Material::new(
                 identifier,
                 "relay_all.vert",
-                "world_normals.frag",
+                "normals.frag",
+                &[
+                    UniformName::WVTrans,
+                    UniformName::WVInvTranspTrans,
+                    UniformName::WVPTrans,
+                ],
+            )),
+            "local_tangents" => Some(Material::new(
+                identifier,
+                "relay_locals.vert",
+                "tangents.frag",
                 &[
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
@@ -500,7 +520,7 @@ impl ResourceManager {
             "world_tangents" => Some(Material::new(
                 identifier,
                 "relay_all.vert",
-                "world_tangents.frag",
+                "tangents.frag",
                 &[
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,

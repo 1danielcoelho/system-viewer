@@ -25,9 +25,9 @@ uniform sampler2D us_normal;
 uniform sampler2D us_emissive;
 uniform sampler2D us_occlusion;
 
-in vec3 v_pos_c;
-in vec3 v_normal_c;
-in vec3 v_tangent_c;
+in vec3 v_pos;
+in vec3 v_normal;
+in vec3 v_tangent;
 in vec4 v_color;
 in vec2 v_uv0;
 in vec2 v_uv1;
@@ -48,19 +48,19 @@ vec4 get_base_color()
 vec3 get_normal()
 {
     #ifdef NORMAL_TEXTURE
-        vec3 bitangent = cross(v_normal_c, v_tangent_c);
+        vec3 bitangent = cross(v_normal, v_tangent);
 
         vec3 normal_tex = normalize(texture(us_normal, v_uv0).rgb * 2.0 - vec3(1.0));
 
-        return mat3(v_tangent_c, bitangent, v_normal_c) * normal_tex;
+        return mat3(v_tangent, bitangent, v_normal) * normal_tex;
     #else 
-        return v_normal_c;
+        return v_normal;
     #endif
 }
 
 void main() 
 {
-    vec3 v = normalize(u_camera_pos_c - v_pos_c);
+    vec3 v = normalize(u_camera_pos_c - v_pos);
     vec3 n = get_normal();
 
     vec4 base_color = get_base_color();
@@ -94,7 +94,7 @@ void main()
         float attenuation = 1.0;
 
         if (u_light_types[i] == POINT_LIGHT) {
-            pos_to_light = u_light_pos_or_dir_c[i] - v_pos_c;
+            pos_to_light = u_light_pos_or_dir_c[i] - v_pos;
             attenuation = 1.0 / dot(pos_to_light, pos_to_light);
         }
         

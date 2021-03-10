@@ -10,8 +10,8 @@ uniform vec3 u_light_pos_or_dir_c[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
 uniform float u_light_intensities[MAX_LIGHTS];
 
-in vec3 v_pos_c;
-in vec3 v_normal_c;
+in vec3 v_pos;
+in vec3 v_normal;
 in vec4 v_color;
 in vec2 v_uv0;
 in vec2 v_uv1;
@@ -20,18 +20,18 @@ out vec4 out_frag_color;
 
 vec3 calc_point_light(vec3 light_pos, vec3 light_color, float light_intensity)
 {
-    vec3 frag_to_light = light_pos - v_pos_c;
+    vec3 frag_to_light = light_pos - v_pos;
     float dist_squared = dot(frag_to_light, frag_to_light);
     float intensity = light_intensity / dist_squared;
 
-    intensity *= dot(normalize(frag_to_light), v_normal_c);
+    intensity *= dot(normalize(frag_to_light), v_normal);
     intensity = clamp(intensity, 0.0, 1.0);
     return light_color * intensity;
 }
 
 vec3 calc_dir_light(vec3 light_dir, vec3 light_color, float light_intensity)
 {
-    float intensity = dot(-normalize(light_dir), v_normal_c);
+    float intensity = dot(-normalize(light_dir), v_normal);
     intensity = clamp(intensity, 0.0, 1.0);
     return light_color * intensity;
 }

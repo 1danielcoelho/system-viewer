@@ -17,9 +17,9 @@ out vec2 v_uv0;
 out vec2 v_uv1;
 
 void main() {
-    v_pos = (u_wv_trans * vec4(a_position, 1.0)).xyz;
-    v_normal = normalize((u_wv_inv_transp_trans * vec4(a_normal, 0.0)).xyz);
-    v_tangent = normalize((u_wv_trans * vec4(a_tangent, 0.0)).xyz);
+    v_pos = a_position;
+    v_normal = a_normal;
+    v_tangent = a_tangent;
     v_color = a_color;
     v_uv0 = a_uv0;
     v_uv1 = a_uv1;

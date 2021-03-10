@@ -178,9 +178,23 @@ pub fn add_free_body(
             .scale
             .scale_mut(radius as f64);
 
+        let mesh = get_body_mesh(body, res_man);
+        let num_slots = mesh
+            .as_ref()
+            .and_then(|m| Some(m.borrow()))
+            .and_then(|m| Some(m.primitives.len()));
+
         let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
-        mesh_comp.set_mesh(get_body_mesh(body, res_man));
-        mesh_comp.set_material_override(get_body_material(body, res_man), 0);
+        mesh_comp.set_mesh(mesh);
+
+        if let Some(num_slots) = num_slots {
+            let mat_over = get_body_material(body, res_man);
+
+            for slot_index in 0..num_slots {
+                log::info!("Overriding slot {} with material '{:?}'", slot_index, mat_over);
+                mesh_comp.set_material_override(mat_over.clone(), slot_index);
+            }
+        }
     }
 
     // Physics

@@ -124,10 +124,15 @@ fn draw_one(
     // If we're at 15557283 and our target is at 15557284 we'd get tons of triangle jittering,
     // but if we do it in camera space then we're at 0 and our target is at 1, which is fine
     let w = tc.get_world_transform().to_matrix4();
-
     let wv = uniform_data.v * w;
-    let wv_inv_trans = wv.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
     let wvp = uniform_data.pv * w;
+
+    // TODO: This seems very expensive just to support non-uniform normal scaling...
+    let mut wv_no_trans = wv.clone();
+    wv_no_trans[(0, 3)] = 0.0;
+    wv_no_trans[(1, 3)] = 0.0;
+    wv_no_trans[(2, 3)] = 0.0;
+    let wv_inv_trans = wv_no_trans.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
 
     let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
         .as_slice()
