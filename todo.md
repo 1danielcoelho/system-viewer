@@ -562,6 +562,8 @@ response |= ui.add(label);
     - DamagedHelmet looks black?
         - UVs look messed up
         - Looking at the UV sets in blender it looks like it expects some type of UV repeat mode being set, and I just do whatever at the moment
+        - I think it doesn't have any tangents, and it was relying on that automatic tangent generation from the reference shader, that uses derivatives and so on
+        - I have to detect when a model has tangents or not, and then set a define. On the shader, based on that define I enable/disable the support for generating tangents/normals via dFdx
     - MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
     >- Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
         >- I'm already doing the inverse transpose when sending the normals to the shaders for the gltf_metal_rough material
@@ -585,6 +587,7 @@ response |= ui.add(label);
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
 # Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
+- https://stackoverflow.com/questions/56829454/unable-to-generate-mipmap-for-half-float-texture
 
 # Fix GLTF test scene crashing when resetting scene
 

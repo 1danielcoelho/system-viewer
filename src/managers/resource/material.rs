@@ -1,10 +1,11 @@
 use crate::components::light::LightType;
-use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::resource::mesh::PrimitiveAttribute;
+use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::{details_ui::DetailsUI, resource::shaders::*};
 use crate::utils::gl::GL;
 use egui::Ui;
 use na::Matrix4;
+use std::borrow::Borrow;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
@@ -113,9 +114,33 @@ pub struct Uniform {
     pub location: Option<WebGlUniformLocation>,
 }
 
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
+pub enum ShaderDefine {
+    HasNormals,
+    HasTangents,
+    HasBasecolorTexture,
+    HasMetallicroughnessTexture,
+    HasNormalTexture,
+    HasEmissiveTexture,
+    HasOcclusionTexture,
+}
+impl ShaderDefine {
+    pub fn as_str(&self) -> &str {
+        match *self {
+            ShaderDefine::HasNormals => "HAS_NORMALS",
+            ShaderDefine::HasTangents => "HAS_TANGENTS",
+            ShaderDefine::HasBasecolorTexture => "HAS_BASECOLOR_TEXTURE",
+            ShaderDefine::HasMetallicroughnessTexture => "HAS_METALLICROUGHNESS_TEXTURE",
+            ShaderDefine::HasNormalTexture => "HAS_NORMAL_TEXTURE",
+            ShaderDefine::HasEmissiveTexture => "HAS_EMISSIVE_TEXTURE",
+            ShaderDefine::HasOcclusionTexture => "HAS_OCCLUSION_TEXTURE",
+        }
+    }
+}
+
 fn link_program(
     gl: &WebGl2RenderingContext,
-    prefix_lines: &[String],
+    prefix_lines: &str,
     vert_source: &str,
     frag_source: &str,
 ) -> Result<WebGlProgram, String> {
@@ -164,10 +189,10 @@ fn link_program(
 fn compile_shader(
     gl: &WebGl2RenderingContext,
     shader_type: u32,
-    prefix_lines: &[String],
+    prefix_lines: &str,
     source: &str,
 ) -> Result<WebGlShader, String> {
-    let final_source = "#version 300 es\n".to_owned() + &prefix_lines.join("\n") + "\n" + source;
+    let final_source = "#version 300 es\n".to_owned() + prefix_lines + "\n" + source;
 
     let shader = gl
         .create_shader(shader_type)
@@ -205,7 +230,7 @@ pub struct Material {
 
     textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,
     uniforms: HashMap<UniformName, Uniform>,
-    defines: Vec<String>,
+    defines: Vec<ShaderDefine>,
 
     failed_to_compile: bool,
 }
@@ -249,7 +274,14 @@ impl Material {
             return;
         }
 
-        let program = link_program(gl, &self.defines, &self.vert, &self.frag);
+        let prefix_defines = self
+            .defines
+            .iter()
+            .map(|d| "#define ".to_owned() + d.as_str())
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        let program = link_program(gl, &prefix_defines, &self.vert, &self.frag);
         if program.is_err() {
             log::error!(
                 "Error compiling material '{}': '{}'",
@@ -277,13 +309,13 @@ impl Material {
         self.program = Some(program);
     }
 
-    pub fn set_define(&mut self, define: &'static str) {
-        self.defines.push(define.to_owned());
+    pub fn set_define(&mut self, define: ShaderDefine) {
+        self.defines.push(define);
         self.program = None;
         self.failed_to_compile = false;
     }
 
-    pub fn clear_define(&mut self, define: &'static str) {
+    pub fn clear_define(&mut self, define: ShaderDefine) {
         if let Some(pos) = self.defines.iter().position(|x| *x == define) {
             self.defines.remove(pos);
             self.program = None;

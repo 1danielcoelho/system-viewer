@@ -280,7 +280,7 @@ impl ResourceManager {
                     .collect();
             }
 
-            // Normals
+            // Tangents
             let mut tangents_vec: Vec<Vector3<f32>> = Vec::new();
             if let Some(tangents) = reader.read_tangents() {
                 tangents_vec = tangents
@@ -420,11 +420,12 @@ impl ResourceManager {
             }
 
             log::info!(
-                "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
+                "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Tan: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
                 prim_name,
                 indices_vec.len(),
                 positions_vec.len(),
                 normals_vec.len(),
+                tangents_vec.len(),
                 colors_vec.len(),
                 uv0_vec.len(),
                 uv1_vec.len(),

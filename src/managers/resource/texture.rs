@@ -1,4 +1,5 @@
 use web_sys::WebGlTexture;
+use crate::managers::resource::material::ShaderDefine;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum TextureUnit {
@@ -9,13 +10,13 @@ pub enum TextureUnit {
     Occlusion = 4,
 }
 impl TextureUnit {
-    pub fn get_define(&self) -> &'static str {
+    pub fn get_define(&self) -> ShaderDefine {
         match *self {
-            TextureUnit::BaseColor => "#define BASECOLOR_TEXTURE",
-            TextureUnit::MetallicRoughness => "#define METALLICROUGHNESS_TEXTURE",
-            TextureUnit::Normal => "#define NORMAL_TEXTURE",
-            TextureUnit::Emissive => "#define EMISSIVE_TEXTURE",
-            TextureUnit::Occlusion => "#define OCCLUSION_TEXTURE",
+            TextureUnit::BaseColor => ShaderDefine::HasBasecolorTexture,
+            TextureUnit::MetallicRoughness => ShaderDefine::HasMetallicroughnessTexture,
+            TextureUnit::Normal => ShaderDefine::HasNormalTexture,
+            TextureUnit::Emissive => ShaderDefine::HasEmissiveTexture,
+            TextureUnit::Occlusion => ShaderDefine::HasOcclusionTexture,
         }
     }
 }
