@@ -1,14 +1,10 @@
-use super::{
-    mesh::PrimitiveAttribute,
-    texture::{Texture, TextureUnit},
-};
-use crate::{
-    components::light::LightType, managers::details_ui::DetailsUI, managers::resource::shaders::*,
-    utils::gl::GL,
-};
+use crate::components::light::LightType;
+use crate::managers::resource::texture::{Texture, TextureUnit};
+use crate::managers::resource::mesh::PrimitiveAttribute;
+use crate::managers::{details_ui::DetailsUI, resource::shaders::*};
+use crate::utils::gl::GL;
 use egui::Ui;
 use na::Matrix4;
-use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
@@ -21,7 +17,7 @@ pub struct FrameUniformValues {
     pub light_intensities: Vec<f32>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum UniformName {
     WVTrans,
     WVInvTranspTrans,
@@ -96,7 +92,7 @@ impl UniformName {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum UniformValue {
     Float(f32),
     Int(i32),
@@ -111,11 +107,9 @@ pub enum UniformValue {
     Vec4Arr(Vec<f32>),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Uniform {
     pub value: UniformValue,
-
-    #[serde(skip)]
     pub location: Option<WebGlUniformLocation>,
 }
 
@@ -198,7 +192,7 @@ fn compile_shader(
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Material {
     pub(super) name: String,
 
@@ -207,7 +201,6 @@ pub struct Material {
     vert: String,
     frag: String,
 
-    #[serde(skip)]
     program: Option<WebGlProgram>,
 
     textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,

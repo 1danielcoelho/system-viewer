@@ -1,7 +1,6 @@
-use serde::{Deserialize, Serialize};
 use web_sys::WebGlTexture;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum TextureUnit {
     BaseColor = 0,
     MetallicRoughness = 1,
@@ -21,25 +20,14 @@ impl TextureUnit {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Texture {
     pub name: String,
-
-    #[serde(skip)]
     pub width: u32,
-
-    #[serde(skip)]
     pub height: u32,
-
-    #[serde(skip)]
     pub num_channels: u8,
-
-    #[serde(skip)]
     pub gl_format: u32,
-
-    #[serde(skip)]
     pub is_cubemap: bool,
-
-    #[serde(skip)]
     pub gl_handle: Option<WebGlTexture>,
 }
+

@@ -520,28 +520,63 @@ impl ResourceManager {
             Format::R8G8 => (GL::LUMINANCE_ALPHA, 2),
             Format::R8G8B8 => (GL::RGB, 3),
             Format::R8G8B8A8 => (GL::RGBA, 4),
-            Format::B8G8R8 => (GL::RGB, 3), // TODO: Switch to WebGL2
+            Format::B8G8R8 => (GL::RGB, 3),
             Format::B8G8R8A8 => (GL::RGBA, 4),
             other => return Err(format!("Unsupported gltf texture format '{:?}'", other)),
         };
-
-        log::info!(
-            "\tLoading texture '{}': Width: {}, Height: {}, Format: {}, Num channels: {}",
-            identifier,
-            width,
-            height,
-            gl_format,
-            num_channels
-        );
 
         let gl_handle = ctx.create_texture().unwrap();
         ctx.active_texture(GL::TEXTURE0);
         ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_handle));
 
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, GL::CLAMP_TO_EDGE as i32);
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, GL::CLAMP_TO_EDGE as i32);
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
+        let sampler = texture.sampler();
+        let mag_filter = match sampler.mag_filter() {
+            Some(gltf::texture::MagFilter::Nearest) => GL::NEAREST,
+            Some(gltf::texture::MagFilter::Linear) => GL::LINEAR,
+            None => GL::LINEAR,
+        };
+        // TODO: Enable mipmap texture filtering. Needs special handling because not all texture formats
+        // support automatic generation of mipmaps, so I'd need to check for a proper extension in some cases
+        let min_filter = match sampler.min_filter() {
+            Some(gltf::texture::MinFilter::Nearest) => GL::NEAREST,
+            Some(_) => GL::LINEAR,
+            // Some(gltf::texture::MinFilter::Linear) => GL::LINEAR,
+            // Some(gltf::texture::MinFilter::NearestMipmapNearest) => GL::NEAREST_MIPMAP_NEAREST,
+            // Some(gltf::texture::MinFilter::LinearMipmapNearest) => GL::LINEAR_MIPMAP_NEAREST,
+            // Some(gltf::texture::MinFilter::NearestMipmapLinear) => GL::NEAREST_MIPMAP_LINEAR,
+            // Some(gltf::texture::MinFilter::LinearMipmapLinear) => GL::LINEAR_MIPMAP_LINEAR,
+            None => GL::LINEAR,
+        };
+        let wrap_s = match sampler.wrap_s() {
+            gltf::texture::WrappingMode::ClampToEdge => GL::CLAMP_TO_EDGE,
+            gltf::texture::WrappingMode::MirroredRepeat => GL::MIRRORED_REPEAT,
+            gltf::texture::WrappingMode::Repeat => GL::REPEAT,
+        };
+        let wrap_t = match sampler.wrap_t() {
+            gltf::texture::WrappingMode::ClampToEdge => GL::CLAMP_TO_EDGE,
+            gltf::texture::WrappingMode::MirroredRepeat => GL::MIRRORED_REPEAT,
+            gltf::texture::WrappingMode::Repeat => GL::REPEAT,
+        };
+
+        log::info!(
+            "\tLoading texture '{}': Width: {}, Height: {}, Format: {}, Num channels: {}, wrap_s: {:?}, wrap_t: {:?}, mag_filter: {:?}, min_filter: {:?}",
+            identifier,
+            width,
+            height,
+            gl_format,
+            num_channels,
+            sampler.wrap_s(),
+            sampler.wrap_t(),
+            sampler.mag_filter(),
+            sampler.min_filter()
+        );
+
+        // ctx.generate_mipmap(GL::TEXTURE_2D);
+
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, mag_filter as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, min_filter as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, wrap_s as i32);
+        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, wrap_t as i32);
 
         ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
             GL::TEXTURE_2D,
@@ -659,7 +694,7 @@ impl ResourceManager {
                     global_trans.scale[1],
                 ),
             };
-            
+
             let mat = trans_to_apply.to_matrix4();
 
             let mut mat_no_trans = mat.clone();

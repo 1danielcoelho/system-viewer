@@ -59,6 +59,18 @@ impl MeshComponent {
 
         return None;
     }
+
+    /// Returns the total number of material slots that this component has, which includes
+    /// all the mesh's materials overriden or not by the component's materials
+    pub fn get_num_materials(&self) -> usize {
+        let mut num_mats = self.material_overrides.len();
+
+        if let Some(mesh) = self.mesh.as_ref().and_then(|m| Some(m.borrow())) {
+            num_mats = mesh.primitives.len().max(num_mats);
+        }
+
+        return num_mats;
+    }
 }
 
 impl Default for MeshComponent {
@@ -105,7 +117,7 @@ impl DetailsUI for MeshComponent {
             );
         });
 
-        for i in 0..self.material_overrides.len() {
+        for i in 0..self.get_num_materials() {
             if let Some(mat) = self.get_resolved_material(i) {
                 mat.borrow_mut().draw_details_ui(ui);
             }

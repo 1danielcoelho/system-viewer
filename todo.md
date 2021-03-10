@@ -561,6 +561,7 @@ response |= ui.add(label);
     >- OrientationTest and all multi-node scenes are messed up, because there's something wrong with the transform baking thing
     - DamagedHelmet looks black?
         - UVs look messed up
+        - Looking at the UV sets in blender it looks like it expects some type of UV repeat mode being set, and I just do whatever at the moment
     - MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
     >- Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
         >- I'm already doing the inverse transpose when sending the normals to the shaders for the gltf_metal_rough material
@@ -582,6 +583,8 @@ response |= ui.add(label);
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Cleanup github repo and properly handle licensing like on my blog
 - Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
+
+# Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
 
 # Fix GLTF test scene crashing when resetting scene
 
