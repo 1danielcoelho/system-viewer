@@ -559,17 +559,18 @@ response |= ui.add(label);
         > - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
         >- Actually it is completely right: It just so happen that you can't see the specular highlight at all for roughness = 0, because it's a perfect mirror, which is why the oceans looked black. I just edited the levels of the MR map, and it looks ok-ish now
     >- OrientationTest and all multi-node scenes are messed up, because there's something wrong with the transform baking thing
-    - DamagedHelmet looks black?
-        - UVs look messed up
-        - Looking at the UV sets in blender it looks like it expects some type of UV repeat mode being set, and I just do whatever at the moment
-        - I think it doesn't have any tangents, and it was relying on that automatic tangent generation from the reference shader, that uses derivatives and so on
-        - I have to detect when a model has tangents or not, and then set a define. On the shader, based on that define I enable/disable the support for generating tangents/normals via dFdx
-    - MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
+    >- DamagedHelmet looks black?
+        >- UVs look messed up
+        >- Looking at the UV sets in blender it looks like it expects some type of UV repeat mode being set, and I just do whatever at the moment
+        >- I think it doesn't have any tangents, and it was relying on that automatic tangent generation from the reference shader, that uses derivatives and so on
+        >- I have to detect when a model has tangents or not, and then set a define. On the shader, based on that define I enable/disable the support for generating tangents/normals via dFdx
+    >- MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
     >- Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
         >- I'm already doing the inverse transpose when sending the normals to the shaders for the gltf_metal_rough material
         >- The inv trans compensation when concatenating is *required* if the nodes have non-uniform scaling, but for some reason it flips normals sometimes
         >- Apparently you *have* to remove the translation before doing inv_trans, because transform_vector won't magically ignore the inv transpose of your translation when transforming a vector
-    - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
+    > - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
+        > - It's fine. It's not showing anything because I don't have an environment map
     - NormalTangentMirrorTest is messed up
     - Also some wrong stuff with blend mode and texture settings, but not sure if it's worth doing anything about those at this time
     >- There is something wrong happening when roughness is exactly 0. It just flips to rough again.. this is likely the shoreline thing

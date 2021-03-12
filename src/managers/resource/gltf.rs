@@ -2,7 +2,7 @@ use crate::managers::resource::collider::AxisAlignedBoxCollider;
 use crate::managers::resource::intermediate_mesh::{
     intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
 };
-use crate::managers::resource::material::{Material, UniformName, UniformValue};
+use crate::managers::resource::material::{Material, UniformName, UniformValue, ShaderDefine};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::ResourceManager;
@@ -411,11 +411,24 @@ impl ResourceManager {
             }
 
             // Material
-            let mut mat_instance: Rc<RefCell<Material>> =
-                self.get_or_create_material("gltf_metal_rough").unwrap();
+            let mut mat_instance: Rc<RefCell<Material>> = self
+                .instantiate_material("gltf_metal_rough", &identifier)
+                .unwrap();
             if let Some(mat_index) = prim.material().index() {
                 if let Some(mat) = &parsed_mats[mat_index] {
                     mat_instance = mat.clone();
+                }
+            }
+
+            // Set defines according to mesh properties, as we may need to approximate tangents in the shader
+            // if we don't have any
+            {
+                let mut mat_mut = mat_instance.borrow_mut();
+                if normals_vec.len() > 0 {
+                    mat_mut.set_define(ShaderDefine::HasNormals);
+                }
+                if tangents_vec.len() > 0 {
+                    mat_mut.set_define(ShaderDefine::HasTangents);
                 }
             }
 

@@ -38,7 +38,7 @@ vec4 get_base_color()
 {
     vec4 base_color = u_basecolor_factor;
 
-    #ifdef BASECOLOR_TEXTURE
+    #ifdef HAS_BASECOLOR_TEXTURE
         base_color *= sRGB_to_linear(texture(us_basecolor, v_uv0));
     #endif
 
@@ -47,14 +47,32 @@ vec4 get_base_color()
 
 vec3 get_normal()
 {
-    #ifdef NORMAL_TEXTURE
-        vec3 bitangent = cross(v_normal, v_tangent);
+    // Get geometric normal (unperturbed by normal map)
+    #ifdef HAS_NORMALS
+        vec3 geom_normal = v_normal;
+    #else
+        vec3 geom_normal = normalize(cross(dFdx(v_pos), dFdy(v_pos)));
+    #endif
 
+    // Get geometric tangent
+    #ifdef HAS_TANGENTS
+        vec3 tangent = v_tangent;
+    #else
+        vec3 uv_dx = dFdx(vec3(v_uv0, 0.0));
+        vec3 uv_dy = dFdy(vec3(v_uv0, 0.0));
+        vec3 tangent = (uv_dy.t * dFdx(v_pos) - uv_dx.t * dFdy(v_pos)) /
+        (uv_dx.s * uv_dy.t - uv_dy.s * uv_dx.t);
+
+        tangent = normalize(tangent - geom_normal * dot(geom_normal, tangent));
+    #endif
+
+    // Perturb normal by normal map
+    #ifdef HAS_NORMAL_TEXTURE
+        vec3 bitangent = cross(geom_normal, tangent);
         vec3 normal_tex = normalize(texture(us_normal, v_uv0).rgb * 2.0 - vec3(1.0));
-
-        return mat3(v_tangent, bitangent, v_normal) * normal_tex;
+        return mat3(tangent, bitangent, geom_normal) * normal_tex;
     #else 
-        return v_normal;
+        return geom_normal;
     #endif
 }
 
@@ -69,7 +87,7 @@ void main()
     float perceptual_roughness = u_roughness_factor;
     float metallic = u_metallic_factor;
 
-    #ifdef METALLICROUGHNESS_TEXTURE
+    #ifdef HAS_METALLICROUGHNESS_TEXTURE
         vec4 mr_sample = texture(us_metal_rough, v_uv0);
         perceptual_roughness *= mr_sample.g;
         metallic *= mr_sample.b;
@@ -115,14 +133,14 @@ void main()
     }
 
     vec3 emissive_color = u_emissive_factor;
-    #ifdef EMISSIVE_TEXTURE
+    #ifdef HAS_EMISSIVE_TEXTURE
         emissive_color = sRGB_to_linear(texture(us_emissive, v_uv0)).rgb;
     #endif 
 
     vec3 color = emissive_color + diffuse_color + specular_color;
 
     float ao = 1.0;
-    #ifdef OCCLUSION_TEXTURE
+    #ifdef HAS_OCCLUSION_TEXTURE
         ao = texture(us_occlusion, v_uv0).r;        
     #endif
     color *= ao;

@@ -5,7 +5,6 @@ use crate::managers::{details_ui::DetailsUI, resource::shaders::*};
 use crate::utils::gl::GL;
 use egui::Ui;
 use na::Matrix4;
-use std::borrow::Borrow;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
@@ -329,7 +328,7 @@ impl Material {
 
             log::info!(
                 "\t\t\tSet texture '{}' on unit '{:?}' of material '{}'. Defines: '{:?}'",
-                tex.borrow().name,
+                RefCell::borrow(&tex).name,
                 unit,
                 self.name,
                 self.defines
@@ -419,7 +418,7 @@ impl Material {
 
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
 
-            let tex_borrow = tex.borrow();
+            let tex_borrow = RefCell::borrow(&tex);
             let target = match tex_borrow.is_cubemap {
                 false => GL::TEXTURE_2D,
                 true => GL::TEXTURE_CUBE_MAP,
@@ -432,7 +431,7 @@ impl Material {
         for (unit, tex) in &self.textures {
             gl.active_texture(GL::TEXTURE0 + (*unit as u32));
 
-            let tex_borrow = tex.borrow();
+            let tex_borrow = RefCell::borrow(&tex);
             let target = match tex_borrow.is_cubemap {
                 false => GL::TEXTURE_2D,
                 true => GL::TEXTURE_CUBE_MAP,
@@ -517,7 +516,7 @@ impl DetailsUI for Material {
                 for (unit, tex) in &mut self.textures {
                     ui.columns(2, |cols| {
                         cols[0].label(format!("{:?}", unit));
-                        cols[1].label(&tex.borrow().name);
+                        cols[1].label(&RefCell::borrow(&tex).name);
                     });
                 }
             });

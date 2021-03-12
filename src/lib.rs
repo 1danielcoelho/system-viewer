@@ -9,11 +9,6 @@ extern crate ron;
 extern crate serde;
 extern crate wasm_bindgen;
 
-use crate::managers::resource::body_description::{OrbitalElements, StateVector};
-use crate::managers::scene::description::{BodyInstanceDescription, BodyMotionType};
-use crate::utils::units::{J2000_JDN, Deg, Rad, Au, Mm};
-use na::*;
-
 use crate::app_state::AppState;
 use crate::engine::Engine;
 use crate::utils::gl::setup_gl_context;
