@@ -1,6 +1,6 @@
 use super::Component;
 use crate::managers::details_ui::DetailsUI;
-use crate::managers::resource::material::Material;
+use crate::managers::resource::material::{Material, ShaderDefine};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
@@ -29,6 +29,17 @@ impl MeshComponent {
 
     pub fn set_mesh(&mut self, mesh: Option<Rc<RefCell<Mesh>>>) {
         self.mesh = mesh;
+
+        // Sets defines for the whole mesh on all our material overrides
+        if let Some(mesh) = self.mesh.as_ref() {
+            let mesh_borrow = mesh.borrow();
+            for (prim_index, mat) in &mut self.material_overrides.iter().enumerate() {
+                if let Some(mat) = mat {
+                    let mut mat_mut = RefCell::borrow_mut(mat);
+                    mat_mut.set_prim_defines(&mesh_borrow.primitives[prim_index]);
+                }
+            }
+        }
     }
 
     pub fn get_material_override(&self, index: usize) -> Option<Rc<RefCell<Material>>> {
@@ -44,6 +55,11 @@ impl MeshComponent {
             self.material_overrides.resize(index + 1, None);
         }
         self.material_overrides[index] = material;
+
+        if let Some(mesh) = self.mesh.as_ref() {
+            let mut mat_mut = RefCell::borrow_mut(self.material_overrides[index].as_ref().unwrap());
+            mat_mut.set_prim_defines(&mesh.borrow().primitives[index]);
+        }
     }
 
     pub fn get_resolved_material(&self, index: usize) -> Option<Rc<RefCell<Material>>> {

@@ -264,11 +264,6 @@ pub fn get_body_mesh(
         None => res_man.get_or_create_mesh("lat_long_sphere"),
     };
 
-    // log::info!(
-    //     "For body '{}', using mesh '{:#?}'",
-    //     body.id.as_ref().unwrap(),
-    //     mesh
-    // );
     return mesh;
 }
 

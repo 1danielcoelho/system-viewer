@@ -550,30 +550,37 @@ response |= ui.add(label);
     > - https://svs.gsfc.nasa.gov/4851
     > - Used https://360toolkit.co/ to convert to cubemap
     > - Find a decent skybox and align it roughly
+> - Fix normal and spec/roughness maps for Earth
+>- Fix weird shoreline artifacts on earth metallicroughness
+    > - Fixup gltf importer to allow importing GLTF scenes as simple meshes and materials, instead of making entire scenes with them
+    > - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
+    >- Actually it is completely right: It just so happen that you can't see the specular highlight at all for roughness = 0, because it's a perfect mirror, which is why the oceans looked black. I just edited the levels of the MR map, and it looks ok-ish now
+>- OrientationTest and all multi-node scenes are messed up, because there's something wrong with the transform baking thing
+>- DamagedHelmet looks black?
+    >- UVs look messed up
+    >- Looking at the UV sets in blender it looks like it expects some type of UV repeat mode being set, and I just do whatever at the moment
+    >- I think it doesn't have any tangents, and it was relying on that automatic tangent generation from the reference shader, that uses derivatives and so on
+    >- I have to detect when a model has tangents or not, and then set a define. On the shader, based on that define I enable/disable the support for generating tangents/normals via dFdx
+>- MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
+>- Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
+    >- I'm already doing the inverse transpose when sending the normals to the shaders for the gltf_metal_rough material
+    >- The inv trans compensation when concatenating is *required* if the nodes have non-uniform scaling, but for some reason it flips normals sometimes
+    >- Apparently you *have* to remove the translation before doing inv_trans, because transform_vector won't magically ignore the inv transpose of your translation when transforming a vector
+> - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
+    > - It's fine. It's not showing anything because I don't have an environment map
+>- NormalTangentMirrorTest is messed up
+    >- It's not: The readme just does a bad job of describing what it should look like. Comparing against the reference viewer it looks great
+> - Also some wrong stuff with blend mode and texture settings, but not sure if it's worth doing anything about those at this time
+>- There is something wrong happening when roughness is exactly 0. It just flips to rough again.. this is likely the shoreline thing
+>- Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
+>- Tangents don't look smoothed on the uv sphere
+    >- What about meshes that are delay-loaded?
 
 # Cleanup for MVP
+- What about meshes that are delay-loaded?
+    - Another problem is sort of preventing this from being a problem:
+        - When we encounter a mesh we need to delay-load, the temp mesh doesn't have any primitives, so we never create any material slots. This means that we're sitting on the default material. Whenever the gltf mesh does arrive, it will set its own materials which will be used instead
 - Improve visuals a bit
-    > - Fix normal and spec/roughness maps for Earth
-    >- Fix weird shoreline artifacts on earth metallicroughness
-        > - Fixup gltf importer to allow importing GLTF scenes as simple meshes and materials, instead of making entire scenes with them
-        > - Also can probably get rid of all the "scene injecting" stuff and provisioning stuff
-        >- Actually it is completely right: It just so happen that you can't see the specular highlight at all for roughness = 0, because it's a perfect mirror, which is why the oceans looked black. I just edited the levels of the MR map, and it looks ok-ish now
-    >- OrientationTest and all multi-node scenes are messed up, because there's something wrong with the transform baking thing
-    >- DamagedHelmet looks black?
-        >- UVs look messed up
-        >- Looking at the UV sets in blender it looks like it expects some type of UV repeat mode being set, and I just do whatever at the moment
-        >- I think it doesn't have any tangents, and it was relying on that automatic tangent generation from the reference shader, that uses derivatives and so on
-        >- I have to detect when a model has tangents or not, and then set a define. On the shader, based on that define I enable/disable the support for generating tangents/normals via dFdx
-    >- MetalRoughSpheresNoTextures are so small that upscaling the geometry later leads to precision issues
-    >- Apparently dropping the inverse transpose and just using the transform on the normals seems to fix some of the normal issues, but I don't know why
-        >- I'm already doing the inverse transpose when sending the normals to the shaders for the gltf_metal_rough material
-        >- The inv trans compensation when concatenating is *required* if the nodes have non-uniform scaling, but for some reason it flips normals sometimes
-        >- Apparently you *have* to remove the translation before doing inv_trans, because transform_vector won't magically ignore the inv transpose of your translation when transforming a vector
-    > - NormalTangentTest is messed up (likely the same as DamagedHelmet and shoreline issue)
-        > - It's fine. It's not showing anything because I don't have an environment map
-    - NormalTangentMirrorTest is messed up
-    - Also some wrong stuff with blend mode and texture settings, but not sure if it's worth doing anything about those at this time
-    >- There is something wrong happening when roughness is exactly 0. It just flips to rough again.. this is likely the shoreline thing
     - Correct-ish sun brightness
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
@@ -584,8 +591,8 @@ response |= ui.add(label);
 - Rings?
 - Compare that relative size
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
+- Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
-- Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 
 # Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
 - https://stackoverflow.com/questions/56829454/unable-to-generate-mipmap-for-half-float-texture

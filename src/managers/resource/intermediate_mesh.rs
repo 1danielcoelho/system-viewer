@@ -139,6 +139,11 @@ pub fn generate_screen_space_quad(
             index_count: indices.len() as i32,
             vao: vao.unwrap(),
             mode: GL::TRIANGLES,
+            has_normals: false,
+            has_tangents: false,
+            has_colors: false,
+            has_uv0: false,
+            has_uv1: false,
             default_material,
             source_data: None,
         });
@@ -196,6 +201,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
             );
 
             // Normals
+            let has_normals = prim.normals.len() > 0;
             let mut normal_buffer = ctx.create_buffer().unwrap();
             fill_float_attribute_buffer(
                 &ctx,
@@ -215,6 +221,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
             );
 
             // Tangents
+            let has_tangents = prim.tangents.len() > 0;
             let mut tangent_buffer = ctx.create_buffer().unwrap();
             fill_float_attribute_buffer(
                 &ctx,
@@ -234,6 +241,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
             );
 
             // Colors
+            let has_colors = prim.colors.len() > 0;
             let mut color_buffer = ctx.create_buffer().unwrap();
             fill_float_attribute_buffer(
                 &ctx,
@@ -253,6 +261,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
             );
 
             // UV0
+            let has_uv0 = prim.uv0.len() > 0;
             let mut uv0_buffer = ctx.create_buffer().unwrap();
             fill_float_attribute_buffer(
                 &ctx,
@@ -272,6 +281,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
             );
 
             // UV1
+            let has_uv1 = prim.uv1.len() > 0;
             let mut uv1_buffer = ctx.create_buffer().unwrap();
             fill_float_attribute_buffer(
                 &ctx,
@@ -297,6 +307,11 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
                 index_count: prim.indices.len() as i32,
                 vao: vao.unwrap(),
                 mode: prim.mode,
+                has_normals,
+                has_tangents,
+                has_colors,
+                has_uv0,
+                has_uv1,
                 default_material: prim.mat.clone(),
                 source_data: None,
             });

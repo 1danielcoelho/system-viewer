@@ -35,6 +35,12 @@ pub struct Primitive {
     pub mode: u32,
     pub vao: WebGlVertexArrayObject,
 
+    pub has_tangents: bool,
+    pub has_normals: bool,
+    pub has_colors: bool,
+    pub has_uv0: bool,
+    pub has_uv1: bool,
+
     // We keep these around sometimes in case this mesh is used as a collider
     pub source_data: Option<IntermediatePrimitive>,
 

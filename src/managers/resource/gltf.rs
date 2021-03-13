@@ -420,18 +420,6 @@ impl ResourceManager {
                 }
             }
 
-            // Set defines according to mesh properties, as we may need to approximate tangents in the shader
-            // if we don't have any
-            {
-                let mut mat_mut = mat_instance.borrow_mut();
-                if normals_vec.len() > 0 {
-                    mat_mut.set_define(ShaderDefine::HasNormals);
-                }
-                if tangents_vec.len() > 0 {
-                    mat_mut.set_define(ShaderDefine::HasTangents);
-                }
-            }
-
             log::info!(
                 "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Tan: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
                 prim_name,
@@ -802,6 +790,13 @@ impl ResourceManager {
 
         let mesh = intermediate_to_mesh(&combined_mesh);
         mesh.borrow_mut().collider = Some(Box::new(AxisAlignedBoxCollider { mins, maxes }));
+
+        // Set the defines onto the prim's default material (it should be an instance)
+        for prim in &mut mesh.borrow_mut().primitives {
+            if let Some(mat) = &prim.default_material {
+                mat.borrow_mut().set_prim_defines(prim);
+            }
+        }
 
         return Some(mesh);
     }

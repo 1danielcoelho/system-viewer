@@ -1,10 +1,11 @@
 use crate::components::light::LightType;
-use crate::managers::resource::mesh::PrimitiveAttribute;
+use crate::managers::resource::mesh::{Primitive, PrimitiveAttribute};
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::{details_ui::DetailsUI, resource::shaders::*};
 use crate::utils::gl::GL;
 use egui::Ui;
 use na::Matrix4;
+use std::collections::HashSet;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use web_sys::*;
 
@@ -113,10 +114,13 @@ pub struct Uniform {
     pub location: Option<WebGlUniformLocation>,
 }
 
-#[derive(Clone, Debug, Copy, PartialEq, Eq)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub enum ShaderDefine {
     HasNormals,
     HasTangents,
+    HasColors,
+    HasUV0,
+    HasUV1,
     HasBasecolorTexture,
     HasMetallicroughnessTexture,
     HasNormalTexture,
@@ -128,6 +132,9 @@ impl ShaderDefine {
         match *self {
             ShaderDefine::HasNormals => "HAS_NORMALS",
             ShaderDefine::HasTangents => "HAS_TANGENTS",
+            ShaderDefine::HasColors => "HAS_COLORS",
+            ShaderDefine::HasUV0 => "HAS_UV0",
+            ShaderDefine::HasUV1 => "HAS_UV1",
             ShaderDefine::HasBasecolorTexture => "HAS_BASECOLOR_TEXTURE",
             ShaderDefine::HasMetallicroughnessTexture => "HAS_METALLICROUGHNESS_TEXTURE",
             ShaderDefine::HasNormalTexture => "HAS_NORMAL_TEXTURE",
@@ -229,7 +236,7 @@ pub struct Material {
 
     textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,
     uniforms: HashMap<UniformName, Uniform>,
-    defines: Vec<ShaderDefine>,
+    defines: HashSet<ShaderDefine>,
 
     failed_to_compile: bool,
 }
@@ -259,7 +266,7 @@ impl Material {
             program: None,
             textures: HashMap::new(),
             uniforms,
-            defines: Vec::new(),
+            defines: HashSet::new(),
             failed_to_compile: false,
         }
     }
@@ -309,14 +316,14 @@ impl Material {
     }
 
     pub fn set_define(&mut self, define: ShaderDefine) {
-        self.defines.push(define);
-        self.program = None;
-        self.failed_to_compile = false;
+        if self.defines.insert(define) {
+            self.program = None;
+            self.failed_to_compile = false;
+        }
     }
 
     pub fn clear_define(&mut self, define: ShaderDefine) {
-        if let Some(pos) = self.defines.iter().position(|x| *x == define) {
-            self.defines.remove(pos);
+        if self.defines.remove(&define) {
             self.program = None;
             self.failed_to_compile = false;
         }
@@ -358,6 +365,40 @@ impl Material {
             }
             uniform.value = value;
         }
+    }
+
+    pub fn set_prim_defines(&mut self, prim: &Primitive) {
+        if prim.has_colors {
+            self.set_define(ShaderDefine::HasColors);
+        } else {
+            self.clear_define(ShaderDefine::HasColors);
+        }
+
+        if prim.has_normals {
+            self.set_define(ShaderDefine::HasNormals);
+        } else {
+            self.clear_define(ShaderDefine::HasNormals);
+        }
+
+        if prim.has_tangents {
+            self.set_define(ShaderDefine::HasTangents);
+        } else {
+            self.clear_define(ShaderDefine::HasTangents);
+        }
+
+        if prim.has_uv0 {
+            self.set_define(ShaderDefine::HasUV0);
+        } else {
+            self.clear_define(ShaderDefine::HasUV0);
+        }
+
+        if prim.has_uv1 {
+            self.set_define(ShaderDefine::HasUV1);
+        } else {
+            self.clear_define(ShaderDefine::HasUV1);
+        }
+
+        log::info!("Updated defines according to prim '{}'. Now: '{:?}'", prim.name, self.defines);
     }
 
     pub fn bind_for_drawing(&mut self, gl: &WebGl2RenderingContext) {
@@ -517,6 +558,15 @@ impl DetailsUI for Material {
                     ui.columns(2, |cols| {
                         cols[0].label(format!("{:?}", unit));
                         cols[1].label(&RefCell::borrow(&tex).name);
+                    });
+                }
+            });
+
+            ui.collapsing("Defines:", |ui| {
+                for def in &mut self.defines.iter() {
+                    ui.columns(2, |cols| {
+                        cols[0].label(format!("{:?}", def));
+                        cols[1].label(format!("{}", def.as_str()));
                     });
                 }
             });
