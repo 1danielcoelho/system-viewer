@@ -8,6 +8,7 @@ use crate::managers::scene::Scene;
 use crate::utils::gl::GL;
 use crate::GLCTX;
 use na::*;
+use std::cell::RefCell;
 use std::convert::TryInto;
 use web_sys::WebGl2RenderingContext;
 
@@ -27,6 +28,7 @@ impl RenderingSystem {
 
             let mut uniform_data = pre_draw(state, gl, scene);
             draw(gl, &mut uniform_data, scene);
+            draw_points(state, gl, &mut uniform_data, scene);
             draw_skybox(state, gl, &mut uniform_data, scene);
             post_draw(gl);
         });
@@ -137,7 +139,7 @@ fn draw_one(
         log::error!("Failed to invert trans '{:#?}'", wv_no_trans);
         return;
     }
-    
+
     let wv_inv_trans = wv_no_trans.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
 
     let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
@@ -204,6 +206,46 @@ fn draw_one(
                 mat.borrow().unbind_from_drawing(gl);
             }
         }
+    }
+}
+
+fn draw_points(
+    state: &AppState,
+    gl: &WebGl2RenderingContext,
+    _uniform_data: &mut FrameUniformValues,
+    scene: &mut Scene,
+) {
+    if scene.points_mesh.is_none() || scene.points_mat.is_none() {
+        return;
+    }
+
+    let mut pts = RefCell::borrow_mut(scene.points_mesh.as_ref().unwrap());
+    if let Some(prim) = &mut pts.dynamic_primitive {
+        prim.set_buffer_size(10000);
+
+        let buf = prim.get_buffer_mut();
+
+        for (index, val) in buf.iter_mut().enumerate() {
+            *val = rand::random::<f32>() * 2.0 - 1.0;
+        }
+
+        prim.upload_buffer_data(gl);
+
+        scene
+            .points_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .bind_for_drawing(gl);
+
+        prim.draw(gl);
+
+        scene
+            .points_mat
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .unbind_from_drawing(gl);
     }
 }
 

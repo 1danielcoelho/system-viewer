@@ -36,6 +36,7 @@ lazy_static! {
             "relay_all.vert",
             "relay_locals.vert",
             "relay_color.vert",
+            "relay_points.vert",
             "screenspace.vert"
         ];
 

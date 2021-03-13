@@ -717,7 +717,7 @@ impl SceneManager {
                         }
                         num = parsed.unwrap();
                     }
-                    
+
                     log::info!("About to add '{}' bodies from db '{}'", num, db_name);
                     for (index, (id, body)) in db.iter().enumerate() {
                         if index >= num {
@@ -784,6 +784,12 @@ impl SceneManager {
                 TextureUnit::BaseColor,
                 res_man.get_or_request_texture("starmap_16k", true),
             );
+        }
+
+        // Points
+        if state.show_points {
+            scene.points_mesh = res_man.get_or_create_mesh("points");
+            scene.points_mat = res_man.get_or_create_material("default_points");
         }
 
         return scene;

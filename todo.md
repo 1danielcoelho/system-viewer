@@ -600,6 +600,12 @@ response |= ui.add(label);
         - What if I do another render pass where I always draw a single pixel for each body?
         - Single "points" mesh that is drawn with vertex color for each 
             - I can have point sizes, and later on I can have a large size and id-painting picking to allow cheap "raycasting" for bodies that are too small
+            - Would have to transform and upload points on every frame (and they'd need to be in view-space due to floating point precision), so it's hard to say what is more efficient. Maybe I can start with just another draw call of each meshcomponent, but I replace it with a 1 point mesh and use a flat color material?
+            - This is probably faster than using instanced drawing because I'd only upload the 2D coordinates of each point, instead of a full 4x4 matrix
+            - Draw points after meshes (but before skybox) and always fail the depth test
+            - Can store the last_position_drawn on mesh components after they're drawn, and on the pass afterward add those to the buffer 
+            >- Actually the simplest would be to have N vertices at 0,0,0 in a buffer, and every frame upload a vec3 array of their positions as an uniform
+                >- This doesn't work as each index in an array counts towards the "uniform vectors" limit for frag and vertex shaders, which are 1024 and 4095 respectively on Chrome for me. It could actually be the max uniform components limit instead, but honestly that's not so great either
 - Do something about near/far camera distance
 - Rings?
 - Compare that relative size
@@ -709,6 +715,9 @@ response |= ui.add(label);
 
 # Docs link:
 - file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
+
+# WebGL stats:
+- https://webglreport.com/?v=2
 
 # Cool sources
 - https://github.com/bevyengine/bevy

@@ -395,6 +395,7 @@ impl ResourceManager {
                 default_mat,
             )),
             "ico_sphere" => Some(generate_ico_sphere(1.0, 2, false, default_mat)),
+            "points" => Some(generate_points()),
             _ => None,
         };
 
@@ -473,6 +474,12 @@ impl ResourceManager {
                 identifier,
                 "screenspace.vert",
                 "screenspace.frag",
+                &[],
+            )),
+            "default_points" => Some(Material::new(
+                identifier,
+                "relay_points.vert",
+                "white.frag",
                 &[],
             )),
             "skybox" => Some(Material::new(

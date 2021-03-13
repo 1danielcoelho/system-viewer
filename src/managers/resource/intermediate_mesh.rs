@@ -3,6 +3,7 @@ use super::{
     material::Material,
     mesh::{Mesh, Primitive, PrimitiveAttribute},
 };
+use crate::managers::resource::mesh::DynamicPrimitive;
 use crate::utils::gl::GL;
 use crate::GLCTX;
 use js_sys::WebAssembly;
@@ -75,6 +76,25 @@ pub fn fill_short_element_buffer(
         &buffer_array,
         GL::STATIC_DRAW,
     );
+}
+
+pub fn generate_dynamic_mesh() -> Rc<RefCell<Mesh>> {
+    let result = Rc::new(RefCell::new(Mesh {
+        name: String::from("points"),
+        primitives: Vec::new(),
+        dynamic_primitive: None,
+        collider: None,
+    }));
+
+    GLCTX.with(|ctx| {
+        let ref_mut = ctx.borrow_mut();
+        let ctx = ref_mut.as_ref().unwrap();
+
+        let mut result_mut = RefCell::borrow_mut(&result);
+        result_mut.dynamic_primitive = Some(DynamicPrimitive::new(ctx));
+    });
+
+    return result;
 }
 
 pub fn generate_screen_space_quad(

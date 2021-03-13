@@ -47,6 +47,8 @@ pub struct Scene {
     pub skybox_trans: Option<Matrix4<f64>>,
     pub skybox_mesh: Option<Rc<RefCell<Mesh>>>,
     pub skybox_mat: Option<Rc<RefCell<Material>>>,
+    pub points_mesh: Option<Rc<RefCell<Mesh>>>,
+    pub points_mat: Option<Rc<RefCell<Material>>>,
 
     // Until there is a proper way to split member borrows in Rust I think
     // hard-coding the component types in here is the simplest way of doing things, sadly
@@ -73,6 +75,8 @@ impl Scene {
             skybox_trans: None,
             skybox_mesh: None,
             skybox_mat: None,
+            points_mesh: None,
+            points_mat: None,
 
             physics: PackedStorage::new(),
             mesh: SparseStorage::new(entity_to_index.clone()),

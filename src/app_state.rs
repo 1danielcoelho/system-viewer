@@ -184,6 +184,7 @@ pub struct AppState {
     pub use_skyboxes: bool,
     pub show_grid: bool,
     pub show_axes: bool,
+    pub show_points: bool,
 
     pub frames_per_second_limit: f64,
     pub simulation_speed: f64,
@@ -219,6 +220,7 @@ impl AppState {
             use_skyboxes: false,
             show_grid: true,
             show_axes: true,
+            show_points: true,
             simulation_speed: 1.,
             simulation_paused: true,
             move_speed: 5.0,

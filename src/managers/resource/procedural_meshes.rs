@@ -1,13 +1,13 @@
-use crate::managers::resource::intermediate_mesh::generate_screen_space_quad;
-use crate::{
-    managers::resource::{
-        collider::{AxisAlignedBoxCollider, SphereCollider},
-        intermediate_mesh::{intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive},
-        material::Material,
-        mesh::Mesh,
-    },
-    utils::gl::GL,
+use crate::managers::resource::collider::{AxisAlignedBoxCollider, SphereCollider};
+use crate::managers::resource::intermediate_mesh::{
+    generate_dynamic_mesh, generate_screen_space_quad,
 };
+use crate::managers::resource::intermediate_mesh::{
+    intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
+};
+use crate::managers::resource::material::Material;
+use crate::managers::resource::mesh::Mesh;
+use crate::utils::gl::GL;
 use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
@@ -929,4 +929,8 @@ pub fn generate_axes(default_material: Option<Rc<RefCell<Material>>>) -> Rc<RefC
             collider: None,
         }],
     })
+}
+
+pub fn generate_points() -> Rc<RefCell<Mesh>> {
+    return generate_dynamic_mesh();
 }
