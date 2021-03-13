@@ -154,6 +154,13 @@ fn draw_one(
             if let Some(mat) = &resolved_mat {
                 let mut mat_mut = mat.borrow_mut();
 
+                // Make sure we're up to date in case this mesh has just been replaced with another that now
+                // has normals or something like that
+                // TODO: Find a better way of doing this: One check per draw call is not the best...
+                if mat_mut.get_compatible_prim_hash() != primitive.compatible_hash {
+                    mat_mut.set_prim_defines(primitive);
+                }
+
                 mat_mut.set_uniform_value(UniformName::WVTrans, UniformValue::Matrix(wv_arr));
                 mat_mut.set_uniform_value(
                     UniformName::WVInvTranspTrans,

@@ -134,7 +134,7 @@ pub fn generate_screen_space_quad(
 
         ctx.bind_vertex_array(None);
 
-        primitives.push(Primitive {
+        let mut primitive = Primitive {
             name: String::from("0"),
             index_count: indices.len() as i32,
             vao: vao.unwrap(),
@@ -144,15 +144,19 @@ pub fn generate_screen_space_quad(
             has_colors: false,
             has_uv0: false,
             has_uv1: false,
+            compatible_hash: 0,
             default_material,
             source_data: None,
-        });
+        };
+        primitive.update_hash();
+        primitives.push(primitive);
     });
 
     let result = Rc::new(RefCell::new(Mesh {
         name: String::from("quad"),
         primitives,
         collider: None,
+        ..Default::default()
     }));
 
     return result;
@@ -302,7 +306,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
 
             ctx.bind_vertex_array(None);
 
-            primitives.push(Primitive {
+            let mut primitive = Primitive {
                 name: String::from("0"),
                 index_count: prim.indices.len() as i32,
                 vao: vao.unwrap(),
@@ -312,9 +316,18 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
                 has_colors,
                 has_uv0,
                 has_uv1,
+                compatible_hash: 0,
                 default_material: prim.mat.clone(),
                 source_data: None,
-            });
+            };
+            primitive.update_hash();
+            log::info!(
+                "Set prim compatible hash of prim '{}' of mat '{}' as '{}'",
+                primitive.name,
+                inter.name,
+                primitive.compatible_hash
+            );
+            primitives.push(primitive);
         }
     });
 
@@ -340,6 +353,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
         name: inter.name.clone(),
         primitives,
         collider,
+        ..Default::default()
     }));
 
     return result;

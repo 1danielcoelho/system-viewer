@@ -225,13 +225,14 @@ fn compile_shader(
 
 #[derive(Clone, Debug)]
 pub struct Material {
-    pub name: String,
+    pub(super) name: String,
 
     // These and defines could technically be &'static str, but being owned simplifies serialization
     master: String,
     vert: String,
     frag: String,
 
+    compatible_prim_hash: u64,
     program: Option<WebGlProgram>,
 
     textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,
@@ -263,6 +264,7 @@ impl Material {
             master: master.to_owned(),
             vert: vert.to_owned(),
             frag: frag.to_owned(),
+            compatible_prim_hash: 0,
             program: None,
             textures: HashMap::new(),
             uniforms,
@@ -275,10 +277,20 @@ impl Material {
         return &self.name;
     }
 
+    pub fn get_compatible_prim_hash(&self) -> u64 {
+        return self.compatible_prim_hash;
+    }
+
     pub fn recompile_program(&mut self, gl: &WebGl2RenderingContext) {
         if self.failed_to_compile {
             return;
         }
+
+        log::info!(
+            "Recompiling material '{}' with compatible hash '{}'",
+            self.name,
+            self.compatible_prim_hash
+        );
 
         let prefix_defines = self
             .defines
@@ -398,7 +410,13 @@ impl Material {
             self.clear_define(ShaderDefine::HasUV1);
         }
 
-        log::info!("Updated defines according to prim '{}'. Now: '{:?}'", prim.name, self.defines);
+        self.compatible_prim_hash = prim.compatible_hash;
+
+        log::info!(
+            "Updated defines according to prim '{}'. Now: '{:?}'",
+            prim.name,
+            self.defines
+        );
     }
 
     pub fn bind_for_drawing(&mut self, gl: &WebGl2RenderingContext) {

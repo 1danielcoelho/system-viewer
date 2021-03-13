@@ -575,11 +575,17 @@ response |= ui.add(label);
 >- Pretty sure I'm not using the "provisioning" stuff I used to do, but I think it's used for the old GLTF loading path?
 >- Tangents don't look smoothed on the uv sphere
     >- What about meshes that are delay-loaded?
+>- What about meshes that are delay-loaded?
+    >- Implemented a lazy 'compatible prim hash' system to recompile materials during rendering, if necessary. Likely not the most efficient solution but its the safest and most straightforward for now while I'm still changing things about materials
+    >- Another problem is sort of preventing this from being a problem:
+        >- When we encounter a mesh we need to delay-load, the temp mesh doesn't have any primitives, so we never create any material slots. This means that we're using just the default material. Whenever the gltf mesh does arrive, it will set its own materials which will be used instead
+        >- Fixed by just using the materials assigned to the body in the database file as overrides. For now we only have one material per body, but later we could have more. Those are available immediately and would always become the material overrides
+    >- It would be neat if I could have events, so that once a mesh has finished loading all the interested meshcomponents can respond and override their materials/update defines
+        >- Still wouldn't fix it though because I'd have to get the body material after it has finished loading... 
+        >- Also, even if I had Mesh being observable, I'd have to modify the swap code as I wouldn't be able to swap it for the new one: I'd need to manually swap primitives and name
+        >- Overkill for this
 
 # Cleanup for MVP
-- What about meshes that are delay-loaded?
-    - Another problem is sort of preventing this from being a problem:
-        - When we encounter a mesh we need to delay-load, the temp mesh doesn't have any primitives, so we never create any material slots. This means that we're sitting on the default material. Whenever the gltf mesh does arrive, it will set its own materials which will be used instead
 - Improve visuals a bit
     - Correct-ish sun brightness
 - Good sample scenes    

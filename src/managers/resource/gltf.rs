@@ -2,7 +2,7 @@ use crate::managers::resource::collider::AxisAlignedBoxCollider;
 use crate::managers::resource::intermediate_mesh::{
     intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
 };
-use crate::managers::resource::material::{Material, UniformName, UniformValue, ShaderDefine};
+use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::ResourceManager;
@@ -788,13 +788,6 @@ impl ResourceManager {
 
         let mesh = intermediate_to_mesh(&combined_mesh);
         mesh.borrow_mut().collider = Some(Box::new(AxisAlignedBoxCollider { mins, maxes }));
-
-        // Set the defines onto the prim's default material (it should be an instance)
-        for prim in &mut mesh.borrow_mut().primitives {
-            if let Some(mat) = &prim.default_material {
-                mat.borrow_mut().set_prim_defines(prim);
-            }
-        }
 
         return Some(mesh);
     }

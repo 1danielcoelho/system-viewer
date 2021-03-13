@@ -447,6 +447,7 @@ pub fn generate_temp() -> Rc<RefCell<Mesh>> {
         name: String::from("temp"),
         primitives: Vec::new(),
         collider: None,
+        ..Default::default()
     }))
 }
 
