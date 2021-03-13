@@ -144,7 +144,6 @@ impl DynamicPrimitive {
         let arr = js_sys::Float32Array::new(&memory_buffer)
             .subarray(buffer_data_location, buffer_data_location + buffer_data_len);
 
-        ctx.bind_vertex_array(Some(&self.vao));
         ctx.bind_buffer(GL::ARRAY_BUFFER, Some(self.buffer.as_ref()));
 
         if self.buffer_data.len() != self.last_uploaded_buffer_size {
@@ -153,8 +152,5 @@ impl DynamicPrimitive {
         } else {
             ctx.buffer_sub_data_with_i32_and_array_buffer_view(GL::ARRAY_BUFFER, 0, &arr);
         }
-
-        ctx.bind_buffer(GL::ARRAY_BUFFER, None);
-        ctx.bind_vertex_array(None);
     }
 }

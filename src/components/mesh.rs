@@ -5,11 +5,16 @@ use crate::managers::resource::mesh::Mesh;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use egui::Ui;
+use nalgebra::Vector3;
 use std::{cell::RefCell, rc::Rc};
 
 #[derive(Debug, Clone)]
 pub struct MeshComponent {
     enabled: bool,
+
+    // Keep track of where we were last drawn so that we can easily drawn a point
+    // on this position later
+    pub last_ndc_position: Vector3<f32>,
 
     pub raycasting_visible: bool,
     pub visible: bool,
@@ -77,6 +82,7 @@ impl Default for MeshComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
+            last_ndc_position: Vector3::new(0.0, 0.0, 0.0),
             raycasting_visible: true,
             visible: true,
             mesh: None,

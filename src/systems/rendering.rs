@@ -1,6 +1,6 @@
 use crate::app_state::AppState;
 use crate::components::light::LightType;
-use crate::components::{MeshComponent, TransformComponent};
+use crate::components::{Component, MeshComponent, TransformComponent};
 use crate::glc;
 use crate::managers::resource::material::{FrameUniformValues, UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
@@ -106,7 +106,7 @@ fn pre_draw(
 }
 
 fn draw(gl: &WebGl2RenderingContext, uniform_data: &mut FrameUniformValues, scene: &mut Scene) {
-    for (t, m) in scene.transform.iter().zip(scene.mesh.iter()) {
+    for (t, m) in scene.transform.iter().zip(scene.mesh.iter_mut()) {
         draw_one(gl, uniform_data, t, m);
     }
 }
@@ -120,7 +120,7 @@ fn draw_one(
     gl: &WebGl2RenderingContext,
     uniform_data: &FrameUniformValues,
     tc: &TransformComponent,
-    mc: &MeshComponent,
+    mc: &mut MeshComponent,
 ) {
     // We never do calculations in world space to evade precision problems:
     // If we're at 15557283 and our target is at 15557284 we'd get tons of triangle jittering,
@@ -135,10 +135,15 @@ fn draw_one(
     wv_no_trans[(1, 3)] = 0.0;
     wv_no_trans[(2, 3)] = 0.0;
     if let None = wv_no_trans.try_inverse() {
-        // TODO
+        // TODO. Usually happens when radius/scale is zero by some mistake
         log::error!("Failed to invert trans '{:#?}'", wv_no_trans);
         return;
     }
+
+    // Store position to draw a point on top of this later
+    mc.last_ndc_position = na::convert::<Vector3<f64>, Vector3<f32>>(
+        wvp.transform_point(&Point3::new(0.0, 0.0, 0.0)).coords,
+    );
 
     let wv_inv_trans = wv_no_trans.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
 
@@ -221,12 +226,22 @@ fn draw_points(
 
     let mut pts = RefCell::borrow_mut(scene.points_mesh.as_ref().unwrap());
     if let Some(prim) = &mut pts.dynamic_primitive {
-        prim.set_buffer_size(10000);
+        let num_pts = scene.mesh.get_num_components();
+
+        prim.set_buffer_size(num_pts as usize * 3);
 
         let buf = prim.get_buffer_mut();
 
-        for (index, val) in buf.iter_mut().enumerate() {
-            *val = rand::random::<f32>() * 2.0 - 1.0;
+        for (index, mesh_comp) in scene.mesh.iter().enumerate() {
+            if mesh_comp.get_enabled() {
+                buf[index * 3 + 0] = mesh_comp.last_ndc_position.x;
+                buf[index * 3 + 1] = mesh_comp.last_ndc_position.y;
+                buf[index * 3 + 2] = mesh_comp.last_ndc_position.z;
+            } else {
+                buf[index * 3 + 0] = -10.0;
+                buf[index * 3 + 1] = -10.0;
+                buf[index * 3 + 2] = -10.0;
+            }
         }
 
         prim.upload_buffer_data(gl);
