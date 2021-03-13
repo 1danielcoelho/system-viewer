@@ -225,7 +225,7 @@ fn compile_shader(
 
 #[derive(Clone, Debug)]
 pub struct Material {
-    pub(super) name: String,
+    pub name: String,
 
     // These and defines could technically be &'static str, but being owned simplifies serialization
     master: String,

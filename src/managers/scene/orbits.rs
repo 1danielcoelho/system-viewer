@@ -191,7 +191,14 @@ pub fn add_free_body(
             let mat_over = get_body_material(body, res_man);
 
             for slot_index in 0..num_slots {
-                log::info!("Overriding slot {} with material '{:?}'", slot_index, mat_over);
+                log::info!(
+                    "Overriding slot {} with material '{:?}'",
+                    slot_index,
+                    mat_over
+                        .as_ref()
+                        .and_then(|m| Some(m.borrow().name.clone()))
+                        .unwrap_or(String::from("none"))
+                );
                 mesh_comp.set_material_override(mat_over.clone(), slot_index);
             }
         }

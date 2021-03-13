@@ -411,12 +411,10 @@ impl ResourceManager {
             }
 
             // Material
-            let mut mat_instance: Rc<RefCell<Material>> = self
-                .instantiate_material("gltf_metal_rough", &identifier)
-                .unwrap();
+            let mut mat_instance: Option<Rc<RefCell<Material>>> = None;
             if let Some(mat_index) = prim.material().index() {
                 if let Some(mat) = &parsed_mats[mat_index] {
-                    mat_instance = mat.clone();
+                    mat_instance = Some(mat.clone());
                 }
             }
 
@@ -431,7 +429,7 @@ impl ResourceManager {
                 uv0_vec.len(),
                 uv1_vec.len(),
                 prim.mode().as_gl_enum(),
-                mat_instance.borrow().name,
+                mat_instance.as_ref().and_then(|m| Some(m.borrow().name.clone())).unwrap_or(String::from("none")),
             );
 
             inter_prims.push(IntermediatePrimitive {
@@ -444,7 +442,7 @@ impl ResourceManager {
                 uv0: uv0_vec,
                 uv1: uv1_vec,
                 mode: prim.mode().as_gl_enum(),
-                mat: Some(mat_instance),
+                mat: mat_instance,
                 collider: None,
             });
         }
