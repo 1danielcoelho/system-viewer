@@ -11,7 +11,7 @@ use crate::utils::string::get_unique_name;
 use crate::utils::units::J2000_JDN;
 use na::*;
 pub use scene::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub mod component_storage;
 pub mod description;
@@ -683,7 +683,9 @@ impl SceneManager {
         let scene = self.new_scene(&name).unwrap();
 
         // Bodies
-        for (db_name, cat_to_body_instances) in body_instances.iter_mut() {
+        for (db_name, id_to_instance) in body_instances.iter_mut() {
+            let mut added_ids: HashSet<String> = HashSet::new();
+
             let db = res_man.take_body_database(db_name);
             if db.is_err() {
                 log::warn!(
@@ -695,7 +697,41 @@ impl SceneManager {
             }
             let db = db.unwrap();
 
-            for (body_id, mut body_instance) in cat_to_body_instances.iter_mut() {
+            for (body_id, mut body_instance) in id_to_instance.iter_mut() {
+                // Prevent adding duplicates
+                let body_str = body_id.to_owned();
+                if added_ids.contains(&body_str) {
+                    continue;
+                }
+                added_ids.insert(body_str);
+
+                // Check if it's a wildcard
+                if let Some(num_str) = body_id.strip_prefix("*") {
+                    let num;
+                    if num_str.is_empty() {
+                        num = db.len();
+                    } else {
+                        let parsed = num_str.parse::<usize>();
+                        if parsed.is_err() {
+                            continue;
+                        }
+                        num = parsed.unwrap();
+                    }
+                    
+                    log::info!("About to add '{}' bodies from db '{}'", num, db_name);
+                    for (index, (id, body)) in db.iter().enumerate() {
+                        if index >= num {
+                            break;
+                        }
+
+                        let mut this_instance = body_instance.clone();
+                        fetch_default_motion_if_needed(id, &mut this_instance, res_man, time);
+                        add_free_body(scene, time, &body, &this_instance, res_man);
+                    }
+                    continue;
+                }
+
+                // Skip if can't find the body
                 let body = db.get(body_id.as_str());
                 if body.is_none() {
                     log::warn!(

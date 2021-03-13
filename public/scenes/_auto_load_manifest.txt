@@ -2,3 +2,4 @@ earth_moon.ron
 jovian_system.ron
 planet_line_up.ron
 gltf_test.ron
+all_major_planets_and_moons.ron

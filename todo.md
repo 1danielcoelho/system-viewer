@@ -584,16 +584,16 @@ response |= ui.add(label);
         >- Still wouldn't fix it though because I'd have to get the body material after it has finished loading... 
         >- Also, even if I had Mesh being observable, I'd have to modify the swap code as I wouldn't be able to swap it for the new one: I'd need to manually swap primitives and name
         >- Overkill for this
+>- Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 
 # Cleanup for MVP
-- Improve visuals a bit
-    - Correct-ish sun brightness
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
         - Okay-ish results on the simulation for now, we can improve later
         - Can't see the hover label when mousing over earth at 500x
+- Improve visuals a bit
+    - Correct-ish sun brightness
 - Do something about near/far camera distance
-- Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
 - Rings?
 - Compare that relative size
 - I think I have to not use the localstorage or show a popup about storing data in the browser?

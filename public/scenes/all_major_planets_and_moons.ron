@@ -1,0 +1,29 @@
+#![enable(implicit_some)]
+(
+    name: "All major planets and moons",
+    description: "All planets and moons in the solar system",
+    time: "J2000",
+    simulation_scale: 500,
+    bodies: {
+        "major_bodies": {
+            "*": (
+                motion_type: DefaultVector,
+            ),
+        },  
+        "jovian_satellites": {
+            "*": (
+                motion_type: DefaultVector,
+            ),
+        },
+        "saturnian_satellites": {
+            "*": (
+                motion_type: DefaultVector,
+            ),
+        },
+        "other_satellites": {
+            "*": (
+                motion_type: DefaultVector,
+            ),
+        },
+    },
+)

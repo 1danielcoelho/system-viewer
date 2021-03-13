@@ -26,6 +26,16 @@
                 motion_type: DefaultVector,
             )
         },
+        "comets" {
+            "*": (                      // All bodies in the group
+                motion_type: DefaultVector
+            )
+        },
+        "jovian_satellites" {
+            "*50": (                    // 50 bodies of the group (largest?)
+                motion_type: DefaultVector
+            )
+        },
         "artificial": {
             "bottle": (
                 motion_type: DefaultElements,                   // Mandatory. Variants are DefaultVector, DefaultElements, CustomVector, CustomElements

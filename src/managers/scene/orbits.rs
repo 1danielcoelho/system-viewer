@@ -142,18 +142,26 @@ pub fn add_free_body(
         return;
     }
 
-    log::info!(
-        "Adding body '{}' to scene '{}'",
-        body.name,
-        scene.identifier
-    );
-
     match body_instance.motion_type {
         BodyMotionType::DefaultElements | BodyMotionType::CustomElements => todo!(),
         _ => {}
     };
 
-    let state_vector = body_instance.state_vector.as_ref().unwrap();
+    let state_vector = body_instance.state_vector.as_ref();
+    if let None = state_vector {
+        log::warn!(
+            "Skipping body '{}' for having no state vector",
+            body.id.as_ref().unwrap()
+        );
+        return;
+    }
+    let state_vector = state_vector.unwrap();
+
+    log::info!(
+        "Adding body '{}' to scene '{}'",
+        body.name,
+        scene.identifier
+    );
 
     // Entity
     let body_ent = scene.new_entity(Some(&body.name));
@@ -173,20 +181,22 @@ pub fn add_free_body(
 
     // Mesh
     if let Some(radius) = body.radius {
-        trans_comp
-            .get_local_transform_mut()
-            .scale
-            .scale_mut(radius as f64);
-
-        let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
-        mesh_comp.set_mesh(get_body_mesh(body, res_man));
-
-        if let Some(mat_over) = get_body_material(body, res_man) {
-            log::info!(
-                "Overriding slot 0 with material '{:?}'",
-                mat_over.borrow().get_name()
-            );
-            mesh_comp.set_material_override(Some(mat_over.clone()), 0);
+        if radius > 0.0 {
+            trans_comp
+                .get_local_transform_mut()
+                .scale
+                .scale_mut(radius as f64);
+    
+            let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
+            mesh_comp.set_mesh(get_body_mesh(body, res_man));
+    
+            if let Some(mat_over) = get_body_material(body, res_man) {
+                log::info!(
+                    "Overriding slot 0 with material '{:?}'",
+                    mat_over.borrow().get_name()
+                );
+                mesh_comp.set_material_override(Some(mat_over.clone()), 0);
+            }
         }
     }
 

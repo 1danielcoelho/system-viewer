@@ -132,6 +132,12 @@ fn draw_one(
     wv_no_trans[(0, 3)] = 0.0;
     wv_no_trans[(1, 3)] = 0.0;
     wv_no_trans[(2, 3)] = 0.0;
+    if let None = wv_no_trans.try_inverse() {
+        // TODO
+        log::error!("Failed to invert trans '{:#?}'", wv_no_trans);
+        return;
+    }
+    
     let wv_inv_trans = wv_no_trans.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
 
     let wv_arr: [f32; 16] = na::convert::<Matrix4<f64>, Matrix4<f32>>(wv)
