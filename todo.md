@@ -585,6 +585,9 @@ response |= ui.add(label);
         >- Also, even if I had Mesh being observable, I'd have to modify the swap code as I wouldn't be able to swap it for the new one: I'd need to manually swap primitives and name
         >- Overkill for this
 >- Syntax to express batch objects on scene files (e.g. all major bodies with default vectors)
+>- Some bodies don't show names on scene hierarchy?
+>- Rename scene hierarchy to scene browser
+>- I need some type of search on scene browser...
 
 # Cleanup for MVP
 - Good sample scenes    
@@ -593,6 +596,10 @@ response |= ui.add(label);
         - Can't see the hover label when mousing over earth at 500x
 - Improve visuals a bit
     - Correct-ish sun brightness
+    - Need to be able to see bodies from afar somehow... 
+        - What if I do another render pass where I always draw a single pixel for each body?
+        - Single "points" mesh that is drawn with vertex color for each 
+            - I can have point sizes, and later on I can have a large size and id-painting picking to allow cheap "raycasting" for bodies that are too small
 - Do something about near/far camera distance
 - Rings?
 - Compare that relative size

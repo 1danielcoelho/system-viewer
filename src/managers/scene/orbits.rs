@@ -163,8 +163,13 @@ pub fn add_free_body(
         scene.identifier
     );
 
+    let mut name = &body.name;
+    if name.is_empty() {
+        name = body.id.as_ref().unwrap();
+    }
+
     // Entity
-    let body_ent = scene.new_entity(Some(&body.name));
+    let body_ent = scene.new_entity(Some(&name));
     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
     let trans = trans_comp.get_local_transform_mut();
     trans.trans = state_vector.pos.coords;

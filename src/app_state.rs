@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Default, Serialize, Deserialize)]
 pub struct OpenWindows {
     pub debug: bool,
-    pub scene_hierarchy: bool,
+    pub body_list: bool,
     pub scene_browser: bool,
     pub settings: bool,
     pub controls: bool,

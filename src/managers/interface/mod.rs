@@ -21,7 +21,9 @@ const DEBUG: bool = true;
 pub struct InterfaceManager {
     backend: gui_backend::WebBackend,
     web_input: WebInput,
+
     selected_scene_desc_name: String,
+    body_list_filter: String,
 
     frame_times: VecDeque<f64>,
     time_of_last_update: f64,
@@ -34,6 +36,7 @@ impl InterfaceManager {
                 .expect("Failed to make a web backend for egui"),
             web_input: Default::default(),
             selected_scene_desc_name: String::from(""),
+            body_list_filter: String::from(""),
             frame_times: vec![16.66; 15].into_iter().collect(),
             time_of_last_update: -2.0,
             last_frame_rate: 60.0, // Optimism
@@ -291,7 +294,7 @@ impl InterfaceManager {
 
                                     if ui.button("Close all windows").clicked() {
                                         state.open_windows.debug = false;
-                                        state.open_windows.scene_hierarchy = false;
+                                        state.open_windows.body_list = false;
                                         state.open_windows.about = false;
                                         state.open_windows.scene_browser = false;
                                     }
@@ -354,7 +357,7 @@ impl InterfaceManager {
                         )
                         .clicked()
                     {
-                        state.open_windows.scene_hierarchy = !state.open_windows.scene_hierarchy;
+                        state.open_windows.body_list = !state.open_windows.body_list;
                     }
 
                     ui.horizontal(|ui| {
@@ -450,7 +453,7 @@ impl InterfaceManager {
         self.draw_debug_window(state, scene_man);
 
         if let Some(main_scene) = scene_man.get_main_scene() {
-            self.draw_scene_hierarchy_window(state, main_scene);
+            self.draw_body_list_window(state, main_scene);
         }
 
         self.draw_about_window(state);
@@ -1094,20 +1097,27 @@ impl InterfaceManager {
         });
     }
 
-    fn draw_scene_hierarchy_window(&mut self, state: &mut AppState, scene: &Scene) {
+    fn draw_body_list_window(&mut self, state: &mut AppState, scene: &Scene) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
             let ui = ref_mut.as_ref().unwrap();
 
-            let mut open_window = state.open_windows.scene_hierarchy;
+            let mut open_window = state.open_windows.body_list;
 
-            egui::Window::new("Scene hierarchy")
+            egui::Window::new("Body list")
                 .open(&mut open_window)
                 .scroll(false)
                 .resizable(true)
                 .default_size(egui::vec2(300.0, 400.0))
                 .show(&ui.ctx(), |ui| {
                     ui.set_min_height(300.0);
+
+                    ui.horizontal(|ui| {
+                        ui.label("Search: ");
+                        ui.text_edit_singleline(&mut self.body_list_filter);
+                    });
+
+                    let filter_lower = self.body_list_filter.to_lowercase();
 
                     egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
                         ui.set_min_height(ui.available_size().y);
@@ -1119,8 +1129,10 @@ impl InterfaceManager {
                                 }
 
                                 if let Some(name) = &entity.name {
-                                    if ui.button(name).clicked() {
-                                        state.selection = Some(entity.current);
+                                    if name.to_lowercase().contains(&filter_lower) {
+                                        if ui.button(name).clicked() {
+                                            state.selection = Some(entity.current);
+                                        }
                                     }
                                 }
                             }
@@ -1128,7 +1140,7 @@ impl InterfaceManager {
                     });
                 });
 
-            state.open_windows.scene_hierarchy = open_window;
+            state.open_windows.body_list = open_window;
         });
     }
 }
