@@ -191,10 +191,10 @@ pub fn add_free_body(
                 .get_local_transform_mut()
                 .scale
                 .scale_mut(radius as f64);
-    
+
             let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
             mesh_comp.set_mesh(get_body_mesh(body, res_man));
-    
+
             if let Some(mat_over) = get_body_material(body, res_man) {
                 log::info!(
                     "Overriding slot 0 with material '{:?}'",
@@ -230,6 +230,11 @@ pub fn add_free_body(
     meta_comp.set_metadata("body_type", &format!("{:?}", body.body_type));
     for (key, value) in body.meta.iter() {
         meta_comp.set_metadata(key, value);
+    }
+    if let Some(mat_params) = &body.material_params {
+        for (key, value) in mat_params.iter() {
+            meta_comp.set_metadata(key, value);
+        }
     }
     if let Some(mass) = body.mass {
         meta_comp.set_metadata("body_mass", &mass.to_string());

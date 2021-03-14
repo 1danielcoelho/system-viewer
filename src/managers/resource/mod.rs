@@ -479,7 +479,7 @@ impl ResourceManager {
             "default_points" => Some(Material::new(
                 identifier,
                 "relay_points.vert",
-                "white.frag",
+                "color.frag",
                 &[],
             )),
             "skybox" => Some(Material::new(

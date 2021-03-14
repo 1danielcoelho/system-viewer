@@ -19,7 +19,7 @@
         "mass": 1.9885e+30,
         "radius": 695.7,
         "material_params": {
-            "base_color": "FFFFFFFF",
+            "base_color": "FF9900FF",
             "emissive_texture": "2k_sun.jpg"
         }
     },

@@ -588,28 +588,32 @@ response |= ui.add(label);
 >- Some bodies don't show names on scene hierarchy?
 >- Rename scene hierarchy to scene browser
 >- I need some type of search on scene browser...
+>- Need to be able to see bodies from afar somehow... 
+  >- What if I do another render pass where I always draw a single pixel for each body?
+  >- Single "points" mesh that is drawn with vertex color for each 
+      >- Profile it a bit because I think I'm doing a lot of stuff I don't need to, like transforming a point when calculating last drawn position..
+      >- Support vertex colors based on body type            
+      >- Maybe I can reuse these last_drawn_position things for the labels? That way it would be cheap to just place labels on all bodies if I wanted to
+      >- I can have point sizes, and later on I can have a large size and id-painting picking to allow cheap "raycasting" for bodies that are too small
+      >- Would have to transform and upload points on every frame (and they'd need to be in view-space due to floating point precision), so it's hard to say what is more efficient. Maybe I can start with just another draw call of each meshcomponent, but I replace it with a 1 point mesh and use a flat color material?
+      >- This is probably faster than using instanced drawing because I'd only upload the 2D coordinates of each point, instead of a full 4x4 matrix
+      >- Draw points after meshes (but before skybox) and always fail the depth test
+      >- Can store the last_position_drawn on mesh components after they're drawn, and on the pass afterward add those to the buffer 
+      >- Actually the simplest would be to have N vertices at 0,0,0 in a buffer, and every frame upload a vec3 array of their positions as an uniform
+          >- This doesn't work as each index in an array counts towards the "uniform vectors" limit for frag and vertex shaders, which are 1024 and 4095 respectively on Chrome for me. It could actually be the max uniform components limit instead, but honestly that's not so great either
+> Sometimes it crashes due to an indexing error when filling in the color buffer?
+>- Some entities had metadata components but not mesh components
 
 # Cleanup for MVP
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
         - Okay-ish results on the simulation for now, we can improve later
         - Can't see the hover label when mousing over earth at 500x
+        - Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 - Improve visuals a bit
     - Correct-ish sun brightness
-    - Need to be able to see bodies from afar somehow... 
-        <!-- - What if I do another render pass where I always draw a single pixel for each body? -->
-        - Single "points" mesh that is drawn with vertex color for each 
-            - Profile it a bit because I think I'm doing a lot of stuff I don't need to, like transforming a point when calculating last drawn position..
-            - Support vertex colors based on body type            
-            <!-- - I can have point sizes, and later on I can have a large size and id-painting picking to allow cheap "raycasting" for bodies that are too small -->
-            <!-- - Would have to transform and upload points on every frame (and they'd need to be in view-space due to floating point precision), so it's hard to say what is more efficient. Maybe I can start with just another draw call of each meshcomponent, but I replace it with a 1 point mesh and use a flat color material? -->
-            <!-- - This is probably faster than using instanced drawing because I'd only upload the 2D coordinates of each point, instead of a full 4x4 matrix -->
-            <!-- - Draw points after meshes (but before skybox) and always fail the depth test -->
-            <!-- - Can store the last_position_drawn on mesh components after they're drawn, and on the pass afterward add those to the buffer  -->
-            >- Actually the simplest would be to have N vertices at 0,0,0 in a buffer, and every frame upload a vec3 array of their positions as an uniform
-                >- This doesn't work as each index in an array counts towards the "uniform vectors" limit for frag and vertex shaders, which are 1024 and 4095 respectively on Chrome for me. It could actually be the max uniform components limit instead, but honestly that's not so great either
-        
 - Do something about near/far camera distance
+    - Maybe dynamically change this when close to a small body?
 - Rings?
 - Compare that relative size
 - I think I have to not use the localstorage or show a popup about storing data in the browser?
@@ -628,7 +632,6 @@ response |= ui.add(label);
 - Textures get reloaded when we reload/open new scenes
 - Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
 
-# Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
 
 # Known bugs
 - Customize the hover text on drag values whenever he adds it to egui

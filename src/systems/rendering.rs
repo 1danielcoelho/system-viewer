@@ -6,6 +6,7 @@ use crate::managers::resource::material::{FrameUniformValues, UniformName, Unifo
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::utils::gl::GL;
+use crate::utils::string::decode_hex;
 use crate::GLCTX;
 use na::*;
 use std::cell::RefCell;
@@ -215,7 +216,7 @@ fn draw_one(
 }
 
 fn draw_points(
-    state: &AppState,
+    _state: &AppState,
     gl: &WebGl2RenderingContext,
     _uniform_data: &mut FrameUniformValues,
     scene: &mut Scene,
@@ -226,41 +227,82 @@ fn draw_points(
 
     let mut pts = RefCell::borrow_mut(scene.points_mesh.as_ref().unwrap());
     if let Some(prim) = &mut pts.dynamic_primitive {
-        let num_pts = scene.mesh.get_num_components();
+        let num_pts = scene.mesh.get_num_components() as usize;
 
-        prim.set_buffer_size(num_pts as usize * 3);
+        // Update color buffer only when entity number changes (expensive)
+        let old_num_pts = prim.get_color_buffer().len() / 4;
+        if old_num_pts != num_pts {
+            prim.set_buffer_size(num_pts);
 
-        let buf = prim.get_buffer_mut();
+            let buf = prim.get_color_buffer_mut();
+            for (ent, metadata) in scene.metadata.iter() {
+                // We need to get the index of the point, which will follow the mesh component
+                // So here we assume the mesh component storage is sparse
+                let ent_index = scene.get_entity_index(*ent).unwrap() as usize;
 
-        for (index, mesh_comp) in scene.mesh.iter().enumerate() {
-            if mesh_comp.get_enabled() {
-                buf[index * 3 + 0] = mesh_comp.last_ndc_position.x;
-                buf[index * 3 + 1] = mesh_comp.last_ndc_position.y;
-                buf[index * 3 + 2] = mesh_comp.last_ndc_position.z;
-            } else {
-                buf[index * 3 + 0] = -10.0;
-                buf[index * 3 + 1] = -10.0;
-                buf[index * 3 + 2] = -10.0;
+                // We may have entities that have metadata components and no mesh components,
+                // but we obviously don't care about those here
+                if ent_index > num_pts {
+                    continue;
+                }
+
+                let mut color: [f32; 4] = match metadata
+                    .get_metadata("body_type")
+                    .unwrap_or(&String::from(""))
+                    .as_str()
+                {
+                    "Satellite" => [0.8, 0.8, 0.8, 1.5],
+                    "Asteroid" => [1.0, 1.0, 1.0, 1.0],
+                    "Star" => [1.0, 0.5, 0.0, 2.5],
+                    "Planet" => [0.6, 0.8, 0.6, 2.0],
+                    "Comet" => [0.4, 0.6, 0.8, 1.0],
+                    "Artificial" => [1.0, 1.0, 1.0, 1.0],
+                    "Barycenter" => [0.5, 0.5, 0.5, 0.5],
+                    _ => [1.0, 1.0, 1.0, 1.0],
+                };
+
+                if let Some(base_color) = metadata.get_metadata("base_color") {
+                    let mut bytes: Vec<f32> = decode_hex(base_color)
+                        .unwrap()
+                        .iter()
+                        .map(|u| *u as f32 / 255.0)
+                        .collect();
+                    bytes.resize(4, 1.0);
+
+                    color[0] = bytes[0];
+                    color[1] = bytes[1];
+                    color[2] = bytes[2];
+                }
+
+                buf[ent_index * 4 + 0] = color[0];
+                buf[ent_index * 4 + 1] = color[1];
+                buf[ent_index * 4 + 2] = color[2];
+                buf[ent_index * 4 + 3] = color[3];
             }
         }
 
-        prim.upload_buffer_data(gl);
+        // Update pos buffer every frame
+        let buf = prim.get_pos_buffer_mut();
+        for (ent_index, mesh_comp) in scene.mesh.iter().enumerate() {
+            if mesh_comp.get_enabled() {
+                buf[ent_index * 3 + 0] = mesh_comp.last_ndc_position.x;
+                buf[ent_index * 3 + 1] = mesh_comp.last_ndc_position.y;
+                buf[ent_index * 3 + 2] = mesh_comp.last_ndc_position.z;
+            } else {
+                // Just put disabled components off screen
+                // TODO: Optimize this somehow
+                buf[ent_index * 3 + 0] = -10.0;
+                buf[ent_index * 3 + 1] = -10.0;
+                buf[ent_index * 3 + 2] = -10.0;
+            }
+        }
 
-        scene
-            .points_mat
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .bind_for_drawing(gl);
+        let mut scene_mat_mut = scene.points_mat.as_ref().unwrap().borrow_mut();
 
+        scene_mat_mut.bind_for_drawing(gl);
+        prim.upload_buffers(gl);
         prim.draw(gl);
-
-        scene
-            .points_mat
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .unbind_from_drawing(gl);
+        scene_mat_mut.unbind_from_drawing(gl);
     }
 }
 
