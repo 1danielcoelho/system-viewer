@@ -603,6 +603,16 @@ response |= ui.add(label);
           >- This doesn't work as each index in an array counts towards the "uniform vectors" limit for frag and vertex shaders, which are 1024 and 4095 respectively on Chrome for me. It could actually be the max uniform components limit instead, but honestly that's not so great either
 > Sometimes it crashes due to an indexing error when filling in the color buffer?
 >- Some entities had metadata components but not mesh components
+>- Persistence
+> - Save which scene was last opened and try loading it when opening again
+<!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
+>- GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
+    >- Had to change a feature to not use one of the inner dependencies of image-rs
+>- We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
+> How to do integration-based orbit prediction? Run the simulation N steps forward?
+>- I really don't need "orbit prediction" unless I want to make maneuvre nodes like in KSP... what I really need is orbit trails, which is trivial to make: Store N last positions in a fixed time interval between them
+>- There is no enforcing of a "root node", but inject_scene kind of expects it... I think I need some concept of a root node, or inject_scene needs to scan through all top-level entities and bake in the inject transform
+    >- Scene injecting thing is gone
 
 # Cleanup for MVP
 - Good sample scenes    
@@ -610,6 +620,7 @@ response |= ui.add(label);
         - Okay-ish results on the simulation for now, we can improve later
         - Can't see the hover label when mousing over earth at 500x
         - Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
+        - Watching it at higher speeds shows it move wrt camera when tracking, which should just not happen... I wonder if it's the physics thing?
 - Improve visuals a bit
     - Correct-ish sun brightness
 - Do something about near/far camera distance
@@ -620,20 +631,10 @@ response |= ui.add(label);
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
 
-# Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
-- https://stackoverflow.com/questions/56829454/unable-to-generate-mipmap-for-half-float-texture
-
-# Fix GLTF test scene crashing when resetting scene
-
-# I should be able to orbit the selection even if not focused...
-
-# Persistence
-> - Save which scene was last opened and try loading it when opening again
+# Known bugs
+- GLTF test scene crashes when resetting scene
 - Textures get reloaded when we reload/open new scenes
 - Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
-
-
-# Known bugs
 - Customize the hover text on drag values whenever he adds it to egui
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
 - Real weird "headlight" effect when I get close to any mesh?
@@ -641,13 +642,20 @@ response |= ui.add(label);
 - Fix firefox dragging bug
 - Position of labels when body is off screen is not correct, it flails everywhere
 - Need better prediction of label size to prevent it from ever leaving the canvas
+- Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
+    - Seems to only happen on firefox
+
+# Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
+- https://stackoverflow.com/questions/56829454/unable-to-generate-mipmap-for-half-float-texture
+
+# I should be able to orbit the selection even if not focused...
 
 # Let user upload his own scene ron files
 - Allow download of sample ron schema
 
 # Lerp when going to / point towards
 
-# Planet trails (or something). It's impossible to see anything from far away
+# Planet trails for physics bodies
 
 # I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
 
@@ -655,7 +663,7 @@ response |= ui.add(label);
 
 # Now that I have WebGL2 I can change to native handling of BGR instead of converting
 
-# Apparently there should be flags I could set to let opengl do the linear to srgb conversion on its own?
+# Apparently in WebGL2 there should be flags I could set to let opengl do the linear to srgb conversion on its own?
 
 # N-body simulation
 - Integration sample scenes with known 3-body patterns to test stability
@@ -679,19 +687,15 @@ response |= ui.add(label);
 - Only required when drawing the ellipses
 
 # I think it should be possible to use chrome to debug WASM
-
-# Crash when loading a new scene if we have Some reference, because the Entity object is Some but there may not be an entity with that ID anymore
+- Yes, but it doesn't have rust source maps yet, so good luck
 
 # The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
 - I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
 
-# How to do integration-based orbit prediction? Run the simulation N steps forward?
-- I really don't need "orbit prediction" unless I want to make maneuvre nodes like in KSP... what I really need is orbit trails, which is trivial to make: Store N last positions in a fixed time interval between them
-
-# There is no enforcing of a "root node", but inject_scene kind of expects it... I think I need some concept of a root node, or inject_scene needs to scan through all top-level entities and bake in the inject transform
 # https://software.intel.com/content/www/us/en/develop/blogs/otdoor-light-scattering-sample-update.html
-# I can tweak the egui visuals a bit. Check out the demo app menus on the left
+
 # What about that transform feedback thing? Maybe I can use that for line drawing or?
+
 # Better line drawing
 - How did my JS app do it? The lines there seemed fine...
 - For main barycenter orbits the "object" still has center at the sun but the size is massive, so that using the camera as the origin doesn't help the precision issues
@@ -699,33 +703,38 @@ response |= ui.add(label);
     - Geometry shaders? Not in WebGL2...
     - Will probably have to do a double-sided quad cross like old school foliage stuff
         - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
+
 # Put orbital mechanics stuff in another crate once it's big enough    
+
 # Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
 - It seems fine on Chrome so I think I'll jus tignore this for now
+
 # Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
 - Demo app has an x seconds per frame thing on the left which is just what I need
-# I think I'm doing some of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
-<!-- # Remove pub use sub::* when I don't mean to, usually pub mod does what I want and keeps the namespace on the import path, which is neater -->
+
+# I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
+
 # Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
+
 # Find a better way of handling component updates when sorting after reparenting
-# Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
-- Seems to only happen on firefox
-# GLTF importer crate can't handle jpg images as it tries spawning a thread to decode it
+
 # I think it should be possible to store the shaders in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
 - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
-# We always try using vertex color, even if it contains garbage in it.. need to be able to set some additional defines like HAS_VERTEXCOLOR, HAS_TANGENTS, etc.
+
 # Maybe use https://crates.io/crates/calloop for the event system instead
+
 # Maybe find a nicer way of having a generic component storage system
 - Expose a separate get_component and get_component_mut
+
 # Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff
 
-# Docs link:
+# Docs link
 - file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
 
-# WebGL stats:
+# WebGL stats
 - https://webglreport.com/?v=2
 
-# Cool sources
+# Cool sources and references
 - https://github.com/bevyengine/bevy
 - https://github.com/not-fl3/macroquad
 - https://github.com/hecrj/coffee
@@ -736,7 +745,7 @@ response |= ui.add(label);
 - https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/src/frame_buffer.rs
 - https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/resources/shaders/phong_forward.frag
 
-# Physics
+# Physics reference
 - https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics
 - https://gafferongames.com/post/physics_in_3d/
 - https://github.com/DanielChappuis/reactphysics3d
@@ -753,7 +762,7 @@ response |= ui.add(label);
 - https://github.com/RandyGaul/qu3e/blob/a9dc0f37f58ccf1c65d74503deeb2bdfe0713ee0/src/dynamics/q3Island.cpp#L38
   - Another sample of semi-implicit Euler
 
-# Orbital mechanics:
+# Orbital mechanics reference
 - Orbital mechanics equation cheat sheet even for non-elliptical orbits: http://www.bogan.ca/orbits/kepler/orbteqtn.html
 - https://ssd.jpl.nasa.gov/horizons.cgi
 - Great space SE threads:
