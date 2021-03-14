@@ -21,8 +21,8 @@ out vec4 out_frag_color;
 vec3 calc_point_light(vec3 light_pos, vec3 light_color, float light_intensity)
 {
     vec3 frag_to_light = light_pos - v_pos;
-    float dist_squared = dot(frag_to_light, frag_to_light);
-    float intensity = light_intensity / dist_squared;
+    float dist_m2 = 1E12 * dot(frag_to_light, frag_to_light);
+    float intensity = light_intensity / dist_m2;
 
     intensity *= dot(normalize(frag_to_light), v_normal);
     intensity = clamp(intensity, 0.0, 1.0);

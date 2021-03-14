@@ -109,11 +109,13 @@ void main()
     for(int i = 0; i < MAX_LIGHTS; ++i)
     {
         vec3 pos_to_light = -u_light_pos_or_dir_c[i];
+        
+        // Units of 1 / m^2
         float attenuation = 1.0;
 
         if (u_light_types[i] == POINT_LIGHT) {
             pos_to_light = u_light_pos_or_dir_c[i] - v_pos;
-            attenuation = 1.0 / dot(pos_to_light, pos_to_light);
+            attenuation = 1.0 / (1E12 * dot(pos_to_light, pos_to_light));
         }
         
         vec3 intensity = attenuation * u_light_intensities[i] * u_light_colors[i];

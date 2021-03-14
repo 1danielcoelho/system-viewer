@@ -17,7 +17,7 @@ pub struct LightComponent {
 
     pub light_type: LightType,
     pub color: Vector3<f32>,
-    pub intensity: f32,
+    pub intensity: f32, // Candela for point/spot lights; Lux for for directional lights
     pub direction: Option<Vector3<f32>>,
 }
 impl LightComponent {
