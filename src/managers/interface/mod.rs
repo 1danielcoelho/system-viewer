@@ -505,6 +505,10 @@ impl InterfaceManager {
                         ui.checkbox(&mut state.show_axes, "");
                         ui.end_row();
 
+                        ui.label("Show points:");
+                        ui.checkbox(&mut state.show_points, "");
+                        ui.end_row();
+
                         ui.label("Light intensity multiplier:");
                         ui.add(egui::Slider::f32(&mut state.light_intensity, 0.0..=5.0).text(""));
                         ui.end_row();
