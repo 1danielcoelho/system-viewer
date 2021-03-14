@@ -14,6 +14,11 @@ impl TransformUpdateSystem {
         handle_reference_changes(state, scene);
 
         handle_go_to(state, scene);
+
+        // The systems may have updated the reference body's position, so refresh our camera transforms
+        state
+            .camera
+            .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
     }
 }
 
@@ -130,11 +135,6 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     // If we changed reference, we need to cache the reference translation again
     // so that other calculations done this frame are correct
     update_reference_translation(state, scene);
-
-    state
-        .camera
-        .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
-
     state.camera.next_reference_entity = None;
 }
 

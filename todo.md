@@ -633,15 +633,17 @@ response |= ui.add(label);
         >- This is because I'm getting a random sample of asteroids/comets every time, so I get a random number of ones that don't have mass/radius and are skipped
     >- It was an OBOB on the previous fix
 >- Can't set whether I want points or not in the settings dialog
+<!-- - Basic solar system simulation at J2000 with bodies in the right size
+    - Can't see the hover label when mousing over earth at 500x
+    - Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
+    - Watching it at higher speeds shows it move wrt camera when tracking, which should just not happen... I wonder if it's the physics thing?
+    - It really seems like it's purely a camera reference thing. I think the reference is updated at start, after input is collected. We then update the body's position with physics.... on the next frame the camera will snap to the new location, etc. -->
+>- Good sample scenes    
+>- What's the point of saving state if I dump it every time any scene is loaded anyway?
 
 ================================================================================
 
 # TODO MVP
-- Good sample scenes    
-    - Basic solar system simulation at J2000 with bodies in the right size
-        - Can't see the hover label when mousing over earth at 500x
-        - Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
-        - Watching it at higher speeds shows it move wrt camera when tracking, which should just not happen... I wonder if it's the physics thing?
 - Improve visuals a bit
     - Correct-ish sun brightness
 - Do something about near/far camera distance
@@ -653,14 +655,17 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 
 # TODO Bug fixes
+- Can't see the text on 'Metal Rough Spheres No Textures' for some reason
+- If a scene is loaded and it doesn't specify a focus target, it should be cleared instead
 - Whenever we get a crash it just spams the console log with a million crashes because the global objects can't be borrowed again
+- Figure out why my blender GLTF scenes somehow prevent all other GLTF files from loading
 - GLTF test scene crashes when resetting scene
 - Textures get reloaded when we reload/open new scenes
 - Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
 - Customize the hover text on drag values whenever he adds it to egui
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
 - Real weird "headlight" effect when I get close to any mesh?
-- What's the point of saving state if I dump it every time any scene is loaded anyway?
+- Annoying spam of not finding the sampler for a gltf metal rough material even if we don't intend on specifying any texture
 - Fix firefox dragging bug
 - Position of labels when body is off screen is not correct, it flails everywhere
 - Need better prediction of label size to prevent it from ever leaving the canvas
@@ -677,8 +682,11 @@ response |= ui.add(label);
 - Let user upload his own scene ron files
     - Allow download of sample ron schema
 - GUI to "add a body" with some state vectors/orbital parameters
+- Use < and > keys to speed up and down
+- Allow specifying move speed and other state settings for scenes (like paused/not, whether grid is on, etc.)
 
 # TODO Visuals
+- Custom material for earth that uses the light/day and cloud textures
 - Planet trails for physics bodies
 - Better line drawing
     - How did my JS app do it? The lines there seemed fine...
@@ -690,7 +698,9 @@ response |= ui.add(label);
 - Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
 - https://stackoverflow.com/questions/56829454/unable-to-generate-mipmap-for-half-float-texture
 - Lerp when going to / point towards
+- Hide points if they're too close to the camera (or else we can see them if we go inside the planet or if it's a GLTF model with offset origin)
 - Shadows
+- Use those constellation textures/grid to show them as overlays
 - Logarithmic depth buffer
     - This would help when lowering the camera near distance and looking at far away orbits
     - Only required when drawing the ellipses
@@ -715,6 +725,7 @@ response |= ui.add(label);
     - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
     - Check the PDF I downloaded (Astronomy folder)
 - Put orbital mechanics stuff in another crate once it's big enough    
+- Make sure that skybox is aligned correctly with J2000 equatorial ecliptic reference system
 
 # TODO Engine
 - Salvage capability to display on-rails bodies and static orbits
@@ -727,6 +738,7 @@ response |= ui.add(label);
 - Maybe find a nicer way of having a generic component storage system
     - It should be easier now that I don't need the components to be serializable 
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff
+- Better logging system that allows me to switch logging level for categories at a time
 
 # TODO Content
 - Earth satellites scene

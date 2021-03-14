@@ -16,7 +16,7 @@ use std::collections::VecDeque;
 
 pub mod details_ui;
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 pub struct InterfaceManager {
     backend: gui_backend::WebBackend,

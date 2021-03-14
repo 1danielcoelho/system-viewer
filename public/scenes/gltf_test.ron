@@ -1,9 +1,9 @@
 #![enable(implicit_some)]
 (
     name: "GLTF test",
-    description: "Test GLTF files",
+    description: "Test scene with reference GLTF test files, for benchmarking and engine testing.",
     time: "J2000",
-    simulation_scale: 500,
+    simulation_scale: 0,
     bodies: {
         "major_bodies": {
             "10": (
@@ -12,102 +12,102 @@
             )
         },  
         "artificial": {
-            // "boombox": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
-            //     scale: [100.0, 100.0, 100.0],
-            //     initial_rot: [0, 0, 70],
-            // ),
-            // "duck": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 3, 0, 0, 0, 0)),
-            //     scale: [1, 1, 1],
-            //     initial_rot: [0, 0, -55],
-            // ),
-            // "bottle": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, -3, 0, 0, 0, 0)),
-            //     scale: [10.0, 10.0, 10.0],
-            //     initial_rot: [-17, -10, 35],
-            // ),
+            "boombox": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
+                scale: [100.0, 100.0, 100.0],
+                initial_rot: [0, 0, 70],
+            ),
+            "duck": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 3, 0, 0, 0, 0)),
+                scale: [1, 1, 1],
+                initial_rot: [0, 0, -55],
+            ),
+            "bottle": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -3, 0, 0, 0, 0)),
+                scale: [10.0, 10.0, 10.0],
+                initial_rot: [-17, -10, 35],
+            ),
             "helmet": (
                 motion_type: CustomVector,
                 state_vector: ((2451549.0, 0, -6, 0, 0, 0, 0)),
                 scale: [1.0, 1.0, 1.0],
                 initial_rot: [0, 0, 135],
             ),
-            // "milktruck": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 6, 0, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 0, 128],
-            // ),
-            // "metalrough": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 25, 0, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 0, 90],
-            // ),
-            // "metalroughnotextures": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 50, -10, 0, 0, 0)),
-            //     scale: [3000.0, 3000.0, 3000.0],
-            //     initial_rot: [0, 0, 45],
-            // ),
-            // "normaltangentmirror": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 0, 10, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 30, 30],
-            // ),
-            // "normaltangenttest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 0, 5, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 30, 30],
-            // ),
-            // "orientationtest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, -5, 5, 0, 0, 0)),
-            //     scale: [0.5, 0.5, 0.5],
-            //     initial_rot: [0, 0, 0],
-            // ),
-            // "texturecoordinatetest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, -5, 12, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 0, 90],
-            // ),
-            // "texturesettingstest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, -17, 10, 0, 0, 0)),
-            //     scale: [0.7, 0.7, 0.7],
-            //     initial_rot: [0, 0, 90],
-            // ),
-            // "vertexcolortest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 14, 0, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 0, 90],
-            // ),
-            // "alphablendmodetest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, -21, 15, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 0, 104],
-            // ),
-            // "multiuvtest": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 0, 20, 0, 0, 0)),
-            //     scale: [2.0, 2.0, 2.0],
-            //     initial_rot: [0, 0, 0],
-            // ),
-            // "2cylinderengine": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, 0, 0, 64, 0, 0, 0)),
-            //     scale: [0.1, 0.1, 0.1],
-            //     initial_rot: [0, -21, 72],
-            // ),
+            "milktruck": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 6, 0, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 128],
+            ),
+            "metalrough": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 25, 0, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 90],
+            ),
+            "metalroughnotextures": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 50, -10, 0, 0, 0)),
+                scale: [3000.0, 3000.0, 3000.0],
+                initial_rot: [0, 0, 45],
+            ),
+            "normaltangentmirror": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 10, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 30, 30],
+            ),
+            "normaltangenttest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 5, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 30, 30],
+            ),
+            "orientationtest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -5, 5, 0, 0, 0)),
+                scale: [0.5, 0.5, 0.5],
+                initial_rot: [0, 0, 0],
+            ),
+            "texturecoordinatetest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -5, 12, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 90],
+            ),
+            "texturesettingstest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -17, 10, 0, 0, 0)),
+                scale: [0.7, 0.7, 0.7],
+                initial_rot: [0, 0, 90],
+            ),
+            "vertexcolortest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 14, 0, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 90],
+            ),
+            "alphablendmodetest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, -21, 15, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 104],
+            ),
+            "multiuvtest": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 20, 0, 0, 0)),
+                scale: [2.0, 2.0, 2.0],
+                initial_rot: [0, 0, 0],
+            ),
+            "2cylinderengine": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 64, 0, 0, 0)),
+                scale: [0.1, 0.1, 0.1],
+                initial_rot: [0, -21, 72],
+            ),
 
 
 

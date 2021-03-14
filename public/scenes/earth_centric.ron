@@ -1,0 +1,23 @@
+#![enable(implicit_some)]
+(
+    name: "Earth",
+    description: "Earth, Moon and artificial satellites.",
+    time: "J2000",
+    simulation_scale: 500,
+    focus: "399",
+    bodies: {
+        "major_bodies": {
+            "10": (
+                motion_type: DefaultVector,
+            ),
+            "399": (
+                motion_type: DefaultVector,
+            )
+        },  
+        "other_satellites": {
+            "301": (
+                motion_type: DefaultVector,
+            )
+        }
+    },
+)

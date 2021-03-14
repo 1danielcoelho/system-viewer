@@ -1,10 +1,9 @@
 #![enable(implicit_some)]
 (
     name: "Planet line up",
-    description: "All planets lined up next to eachother",
+    description: "All planets and moons lined up next to eachother for size comparisons",
     time: "J2000",
     simulation_scale: 200,
-    focus: "599",
     camera_pos: [
         -112,
         1319,

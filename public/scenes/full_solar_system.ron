@@ -1,7 +1,7 @@
 #![enable(implicit_some)]
 (
-    name: "Asteroid stress test",
-    description: "All planets and moons in the solar system, plus a whole bunch of asteroids and comets",
+    name: "Solar system",
+    description: "All planets, dwarf planets and satellites in the solar system, plus a bunch of asteroids and comets.",
     time: "J2000",
     simulation_scale: 500,
     bodies: {

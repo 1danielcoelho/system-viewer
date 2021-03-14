@@ -95,8 +95,16 @@ impl Engine {
                     let identifier = s_ref.last_scene_identifier.clone();
 
                     if !identifier.is_empty() {
-                        self.scene_man
-                            .set_scene(&identifier, &mut self.res_man, s_ref);
+                        if self.scene_man.descriptions.contains_key(&identifier) {
+                            log::info!("Trying to load last scene '{}'", identifier);
+                            self.scene_man
+                                .set_scene(&identifier, &mut self.res_man, s_ref);
+                        } else {
+                            log::warn!(
+                                "Failed to find a description for last loaded scene '{}'",
+                                identifier
+                            );
+                        }
                     }
                 }
             });

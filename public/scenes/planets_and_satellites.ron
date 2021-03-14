@@ -1,7 +1,7 @@
 #![enable(implicit_some)]
 (
     name: "All major planets and moons",
-    description: "All planets and moons in the solar system",
+    description: "All planets and moons in the solar system. No asteroids, comets or artificial bodies.",
     time: "J2000",
     simulation_scale: 500,
     bodies: {

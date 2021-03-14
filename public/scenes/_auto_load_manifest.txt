@@ -1,6 +1,5 @@
-earth_moon.ron
-jovian_system.ron
-planet_line_up.ron
+earth_centric.ron
+full_solar_system.ron
 gltf_test.ron
-all_major_planets_and_moons.ron
-asteroid_stress_test.ron
+planet_line_up.ron
+planets_and_satellites.ron
