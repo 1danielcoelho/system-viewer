@@ -613,11 +613,27 @@ response |= ui.add(label);
 >- I really don't need "orbit prediction" unless I want to make maneuvre nodes like in KSP... what I really need is orbit trails, which is trivial to make: Store N last positions in a fixed time interval between them
 >- There is no enforcing of a "root node", but inject_scene kind of expects it... I think I need some concept of a root node, or inject_scene needs to scan through all top-level entities and bake in the inject transform
     >- Scene injecting thing is gone
+>- Okay-ish results on the simulation for now, we can improve later
+> Good UV-mapped GLTF materials for the planets and asteroids (use blender?)
+    >- I got some good CC4 textures from https://www.solarsystemscope.com/textures/, and will make custom shaders later
+> Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
+>- Demo app has an x seconds per frame thing on the left which is just what I need
+> Find a better way of handling component updates when sorting after reparenting
+>- Reparenting thing is gone
+>- The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
+>- I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
+    >- This changed too much now, I don't think the issue is relevant anymore
+> - What about that transform feedback thing? Maybe I can use that for line drawing or?
+    >- It doesn't look like that helps line drawing. It's mainly for reusing vertex shader output for multiple draws
+>- Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
+    >- It seems fine on Chrome so I think I'll just ignore this for now
+>- Expose a separate get_component and get_component_mut
 
-# Cleanup for MVP
+================================================================================
+
+# TODO MVP
 - Good sample scenes    
     - Basic solar system simulation at J2000 with bodies in the right size
-        - Okay-ish results on the simulation for now, we can improve later
         - Can't see the hover label when mousing over earth at 500x
         - Tracking phobos at planets_inner_moons and 500x shows it flickering... I think the camera transform update thing is not done at the right time
         - Watching it at higher speeds shows it move wrt camera when tracking, which should just not happen... I wonder if it's the physics thing?
@@ -631,7 +647,8 @@ response |= ui.add(label);
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
 
-# Known bugs
+# TODO Bug fixes
+- Whenever we get a crash it just spams the console log with a million crashes because the global objects can't be borrowed again
 - GLTF test scene crashes when resetting scene
 - Textures get reloaded when we reload/open new scenes
 - Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
@@ -645,96 +662,85 @@ response |= ui.add(label);
 - Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
     - Seems to only happen on firefox
 
-# Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
+================================================================================
+
+# TODO Cleanup
+- I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
+
+# TODO UX
+- I should be able to orbit the selection even if not focused...
+- Let user upload his own scene ron files
+    - Allow download of sample ron schema
+- GUI to "add a body" with some state vectors/orbital parameters
+
+# TODO Visuals
+- Planet trails for physics bodies
+- Better line drawing
+    - How did my JS app do it? The lines there seemed fine...
+    - For main barycenter orbits the "object" still has center at the sun but the size is massive, so that using the camera as the origin doesn't help the precision issues
+    - Line "tessellation" into triangles for thick lines
+        - Geometry shaders? Not in WebGL2...
+        - Will probably have to do a double-sided quad cross like old school foliage stuff
+            - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
+- Enable mipmap texture filtering: Not all formats support automatic generation of mips, so I need to check and enable certain extensions and fallback to linear if not available
 - https://stackoverflow.com/questions/56829454/unable-to-generate-mipmap-for-half-float-texture
+- Lerp when going to / point towards
+- Shadows
+- Logarithmic depth buffer
+    - This would help when lowering the camera near distance and looking at far away orbits
+    - Only required when drawing the ellipses
+- Procedural textures and shaders for bodies (craters, weird shapes, textures, etc.)
+- Bloom/post-processing
+    - Would look great with the points stuff too
+- Atmospheres
+    - https://software.intel.com/content/www/us/en/develop/blogs/otdoor-light-scattering-sample-update.html
 
-# I should be able to orbit the selection even if not focused...
+# TODO Optimizations
+- Now that I have WebGL2 I can change to native handling of BGR instead of converting
+- Apparently in WebGL2 there should be flags I could set to let opengl do the linear to srgb conversion on its own?
+- Clipping of distant / out-of-frustum bodies
 
-# Let user upload his own scene ron files
-- Allow download of sample ron schema
-
-# Lerp when going to / point towards
-
-# Planet trails for physics bodies
-
-# I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
-
-# Good UV-mapped GLTF materials for the planets and asteroids (use blender?)
-
-# Now that I have WebGL2 I can change to native handling of BGR instead of converting
-
-# Apparently in WebGL2 there should be flags I could set to let opengl do the linear to srgb conversion on its own?
-
-# N-body simulation
+# TODO Physics / simulation
+- I think my storing linear momentum I may be trashing my velocity precision, because all masses are like 10^24 and up
 - Integration sample scenes with known 3-body patterns to test stability
-- Solar system N-body simulation with n largest masses and compare results with those stack exchange answers
+- Setup reference scenes (3, 4, 5 masses, etc.) to compare results
 - Cut down on calculations by ignoring some low mass - low mass interactions via some threshold
     - Mass doesn't change, I could do this easy by just sorting the entities by mass and stopping the inner loop after it hits N large masses, or something like that
+- Rotation axes: 
+    - https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
+    - Check the PDF I downloaded (Astronomy folder)
+- Put orbital mechanics stuff in another crate once it's big enough    
 
-# Rotation axes: 
-- https://astronomy.stackexchange.com/questions/18176/how-to-get-the-axial-tilt-vectorx-y-z-relative-to-ecliptic
-- Check the PDF I downloaded (Astronomy folder)
+# TODO Engine
+- Salvage capability to display on-rails bodies and static orbits
+    - Big scene with as many asteroids as I can handle
+- Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
+- Change picking to use a separate render pass by drawing IDs
+    - Use a 1 pixel viewport to actually do the picking
+    - Draw the dots mesh once again with a bigger point radius to allow picking bodies from far away
+- Maybe use https://crates.io/crates/calloop for the event system instead
+- Maybe find a nicer way of having a generic component storage system
+    - It should be easier now that I don't need the components to be serializable 
+- Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff
 
-# Shadows
+# TODO Content
+- Earth satellites scene
+    - Earth fixed in the very center
+    - Moon
+    - Different commercial satellites, starlink constellations, etc.
 
-# Salvage capability to display on-rails bodies and static orbits
-- Big scene with as many asteroids as I can handle
+# TODO Devops
+- Fix VSCode using html comment instead of quotes for markdown
+- I think it should be possible to use chrome to debug WASM
+    - Yes, but it doesn't have rust source maps yet, so good luck
+- I think it should be possible to store the shaders in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
+    - WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
 
-# GUI to "add a body" with some state vectors/orbital parameters
+================================================================================
 
-# Logarithmic depth buffer
-- This would help when lowering the camera near distance and looking at far away orbits
-- Only required when drawing the ellipses
-
-# I think it should be possible to use chrome to debug WASM
-- Yes, but it doesn't have rust source maps yet, so good luck
-
-# The app will never know the full path of the GLB file when injecting, only if we keep track of the original URL ourselves (won't work for runtime uploads though...)
-- I have to revive the manifest thing and basically make sure all glb/texture assets have unique names, because if we hit a scene that was saved with assets that were uploaded at runtime all it will say is "albedo.png" and we won't know its folder
-
-# https://software.intel.com/content/www/us/en/develop/blogs/otdoor-light-scattering-sample-update.html
-
-# What about that transform feedback thing? Maybe I can use that for line drawing or?
-
-# Better line drawing
-- How did my JS app do it? The lines there seemed fine...
-- For main barycenter orbits the "object" still has center at the sun but the size is massive, so that using the camera as the origin doesn't help the precision issues
-- Line "tessellation" into triangles for thick lines
-    - Geometry shaders? Not in WebGL2...
-    - Will probably have to do a double-sided quad cross like old school foliage stuff
-        - Would look like crap up close.. maybe if I added an extra uniform to vertex shaders to have them shrink when you approach
-
-# Put orbital mechanics stuff in another crate once it's big enough    
-
-# Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
-- It seems fine on Chrome so I think I'll jus tignore this for now
-
-# Can probably fix the framerate thing by keeping a rolling sum of N frames and their times
-- Demo app has an x seconds per frame thing on the left which is just what I need
-
-# I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
-
-# Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
-
-# Find a better way of handling component updates when sorting after reparenting
-
-# I think it should be possible to store the shaders in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
-- WasmPackPlugin has a "watchDirectories" member that I can use to exclude the public folder
-
-# Maybe use https://crates.io/crates/calloop for the event system instead
-
-# Maybe find a nicer way of having a generic component storage system
-- Expose a separate get_component and get_component_mut
-
-# Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff
-
-# Docs link
-- file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
-
-# WebGL stats
-- https://webglreport.com/?v=2
-
-# Cool sources and references
+# Other references:
+- WebGL stats: https://webglreport.com/?v=2
+- Local docs: file:///E:/Rust/system_viewer/target/wasm32-unknown-unknown/doc/system_viewer/index.html
 - https://github.com/bevyengine/bevy
 - https://github.com/not-fl3/macroquad
 - https://github.com/hecrj/coffee
@@ -745,7 +751,7 @@ response |= ui.add(label);
 - https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/src/frame_buffer.rs
 - https://github.com/bridger-herman/wre/blob/6663afc6a5de05afe41d34f09422a7afcacb295c/resources/shaders/phong_forward.frag
 
-# Physics reference
+# Physics references
 - https://www.toptal.com/game/video-game-physics-part-i-an-introduction-to-rigid-body-dynamics
 - https://gafferongames.com/post/physics_in_3d/
 - https://github.com/DanielChappuis/reactphysics3d
@@ -762,7 +768,7 @@ response |= ui.add(label);
 - https://github.com/RandyGaul/qu3e/blob/a9dc0f37f58ccf1c65d74503deeb2bdfe0713ee0/src/dynamics/q3Island.cpp#L38
   - Another sample of semi-implicit Euler
 
-# Orbital mechanics reference
+# Orbital mechanics references
 - Orbital mechanics equation cheat sheet even for non-elliptical orbits: http://www.bogan.ca/orbits/kepler/orbteqtn.html
 - https://ssd.jpl.nasa.gov/horizons.cgi
 - Great space SE threads:
