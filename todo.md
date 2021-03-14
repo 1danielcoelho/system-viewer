@@ -640,6 +640,13 @@ response |= ui.add(label);
     - It really seems like it's purely a camera reference thing. I think the reference is updated at start, after input is collected. We then update the body's position with physics.... on the next frame the camera will snap to the new location, etc. -->
 >- Good sample scenes    
 >- What's the point of saving state if I dump it every time any scene is loaded anyway?
+<!-- - Compare that relative size
+    - Seems good! -->
+<!-- - I think I have to not use the localstorage or show a popup about storing data in the browser?
+    - Disable it by default and add an option to save state in the settings
+    - There's also this log level webpack thing? Where is that coming from?
+        - It's just from webpack-dev-server, try packaging once to see if it shows up there too
+        - Packaged: The loglevel thing doesn't show up, and all our data is persistent/cleared according to the setting like expected. Also, the entire app is like 4MB and all content, (including textures) is 100MB-ish now, which is not bad -->
 
 ================================================================================
 
@@ -649,8 +656,6 @@ response |= ui.add(label);
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
 - Rings?
-- Compare that relative size
-- I think I have to not use the localstorage or show a popup about storing data in the browser?
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
 

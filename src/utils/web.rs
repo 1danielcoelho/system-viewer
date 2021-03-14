@@ -455,10 +455,20 @@ pub fn local_storage_get(key: &str) -> Option<String> {
     local_storage().map(|storage| storage.get_item(key).ok())??
 }
 
+pub fn local_storage_enable() {
+    local_storage().map(|storage| storage.set_item("storage_ok", "true"));
+}
+
 pub fn local_storage_set(key: &str, value: &str) {
-    local_storage().map(|storage| storage.set_item(key, value));
+    if let Some(_) = local_storage_get("storage_ok") {
+        local_storage().map(|storage| storage.set_item(key, value));
+    }
 }
 
 pub fn local_storage_remove(key: &str) {
     local_storage().map(|storage| storage.remove_item(key));
+}
+
+pub fn local_storage_clear() {
+    local_storage().map(|storage| storage.clear());
 }

@@ -8,6 +8,7 @@ use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::ResourceManager;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
+use crate::utils::web::{local_storage_clear, local_storage_enable, local_storage_get};
 use crate::{prompt_for_bytes_file, UICTX};
 use gui_backend::WebInput;
 use lazy_static::__Deref;
@@ -28,6 +29,8 @@ pub struct InterfaceManager {
     frame_times: VecDeque<f64>,
     time_of_last_update: f64,
     last_frame_rate: f64,
+
+    local_storage_ok: bool,
 }
 impl InterfaceManager {
     pub fn new() -> Self {
@@ -39,8 +42,13 @@ impl InterfaceManager {
             body_list_filter: String::from(""),
             frame_times: vec![16.66; 15].into_iter().collect(),
             time_of_last_update: -2.0,
-            last_frame_rate: 60.0, // Optimism
+            last_frame_rate: 60.0,
+            local_storage_ok: local_storage_get("storage_ok").is_some(),
         };
+
+        if !new_man.local_storage_ok {
+            local_storage_clear();
+        }
 
         log::info!("Loading egui state...");
         gui_backend::load_memory(&new_man.backend.ctx);
@@ -511,6 +519,19 @@ impl InterfaceManager {
 
                         ui.label("Light intensity multiplier:");
                         ui.add(egui::Slider::f32(&mut state.light_intensity, 0.0..=5.0).text(""));
+                        ui.end_row();
+
+                        ui.label("Allow Local Storage:");
+                        if ui.checkbox(&mut self.local_storage_ok, "").on_hover_text("Allow usage of localStorage for storing session data like app state, window state and last loaded scene.").clicked() {
+
+                            if self.local_storage_ok {
+                                log::info!("Allowing usage of local storage");
+                                local_storage_enable();
+                            } else {
+                                log::info!("Stopping usage and clearing local storage");
+                                local_storage_clear();
+                            }
+                        }
                         ui.end_row();
                     });
                 });

@@ -130,7 +130,9 @@ pub fn local_storage_get(key: &str) -> Option<String> {
 }
 
 pub fn local_storage_set(key: &str, value: &str) {
-    local_storage().map(|storage| storage.set_item(key, value));
+    if let Some(_) = local_storage_get("storage_ok") {
+        local_storage().map(|storage| storage.set_item(key, value));
+    }
 }
 
 pub fn local_storage_remove(key: &str) {
@@ -168,19 +170,6 @@ pub fn save_memory(ctx: &egui::Context) {
 
 #[cfg(not(feature = "persistence"))]
 pub fn save_memory(_: &egui::Context) {}
-
-#[derive(Default)]
-pub struct LocalStorage {}
-
-impl epi::Storage for LocalStorage {
-    fn get_string(&self, key: &str) -> Option<String> {
-        local_storage_get(key)
-    }
-    fn set_string(&mut self, key: &str, value: String) {
-        local_storage_set(key, &value);
-    }
-    fn flush(&mut self) {}
-}
 
 // ----------------------------------------------------------------------------
 
