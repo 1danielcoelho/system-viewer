@@ -1,5 +1,6 @@
 earth_centric.ron
 full_solar_system.ron
 gltf_test.ron
+light_test.ron
 planet_line_up.ron
 planets_and_satellites.ron

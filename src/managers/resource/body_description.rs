@@ -112,6 +112,7 @@ pub struct BodyDescription {
     pub radius: Option<f32>,             // Mm
     pub albedo: Option<f32>,             // Abs
     pub magnitude: Option<f32>,          // Abs
+    pub brightness: Option<f32>,         // Candela intensity value for light sources
     pub rotation_period: Option<f32>,    // Days (86400s)
     pub rotation_axis: Option<[f64; 3]>, // J2000 ecliptic rectangular right-handed normalized
     pub spec_smassii: Option<String>,    // Spectral class

@@ -1,0 +1,23 @@
+#![enable(implicit_some)]
+(
+    name: "Light test",
+    description: "PBR test to ensure physical light intensities are producing the expected results",
+    time: "J2000",
+    simulation_scale: 0,
+    bodies: {
+        "artificial": {            
+            "candle": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 1, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 0],
+            ),
+            "plane": (
+                motion_type: CustomVector,
+                state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
+                scale: [1.0, 1.0, 1.0],
+                initial_rot: [0, 0, 0],
+            ),
+        }
+    },
+)

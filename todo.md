@@ -653,6 +653,12 @@ response |= ui.add(label);
 # TODO MVP
 - Improve visuals a bit
     - Correct-ish sun brightness
+    - Light test scene
+        >- Put light intensity on body schema
+        >- Add artificial candle body to test lights
+        - Plane is causing a material recompilation on every frame for default mat (still 60fps though!)
+        - There's no real way of allowing us to set an engine material via a body database (need to refactor it a bit)
+        - Get a gltf_metal_rough on that plane and see if we can see an intensity of 1 without tonemapping?
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
 - Rings?

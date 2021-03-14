@@ -21,7 +21,8 @@
         "material_params": {
             "base_color": "FF9900FF",
             "emissive_texture": "2k_sun.jpg"
-        }
+        },
+        "brightness": 3.024e+27
     },
     "199": {
         "name": "Mercury",

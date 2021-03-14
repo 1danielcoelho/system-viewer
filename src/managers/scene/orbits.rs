@@ -215,12 +215,11 @@ pub fn add_free_body(
     }
 
     // Light
-    if body.body_type == BodyType::Star {
+    if body.body_type == BodyType::Star && body.brightness.is_some() {
         let light_comp = scene.add_component::<LightComponent>(body_ent);
         light_comp.color = Vector3::new(1.0, 1.0, 1.0);
-        // Hard-coded sun intensity in candela:
-        // https://what-if.xkcd.com/151/
-        light_comp.intensity = 3.8E28 / (4.0 * PI);
+        light_comp.intensity = body.brightness.unwrap();
+        log::info!("Banana sun brightness {}", light_comp.intensity);
         light_comp.light_type = LightType::Point;
     }
 

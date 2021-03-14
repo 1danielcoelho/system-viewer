@@ -16,7 +16,7 @@ materials = {
 
 material_parameters = {
     '10': {
-        'base_color': 'FFFFFFFF',
+        'base_color': 'FF9900FF',
         'emissive_texture': '2k_sun.jpg'
     },
     '199': {
@@ -64,6 +64,29 @@ material_parameters = {
     },
 }
 
+# Hard-coded sun intensity in candela:
+# https://what-if.xkcd.com/151/
+light_intensities = {
+    '10': 3.024E27,
+}
+
+
+def add_light_info(database):
+    count = 0
+    for db_name, db in database.items():
+        if db_name in ['state_vectors', 'osc_elements']:
+            continue
+
+        for body_id, intensity in light_intensities.items():
+            try:
+                db[body_id]['brightness'] = intensity
+                print(f"added {intensity} as intensity to body {body_id}")
+                count += 1
+            except KeyError:
+                continue
+
+    return count
+
 
 def add_material_info(database):
     count = 0
@@ -104,6 +127,10 @@ def run(database):
     print("Adding material info to database bodies...")
     count = add_material_info(database)
     print(f"Added material info to {count} database bodies")
+
+    print("Adding light info to database bodies...")
+    count = add_light_info(database)
+    print(f"Added light info to {count} database bodies")
 
 
 if __name__ == "__main__":

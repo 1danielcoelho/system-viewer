@@ -6,6 +6,7 @@
         radius: 2,                      // Mm
         albedo: 2,                      // absolute value
         magnitude: 2,                   // absolute value
+        brightness: 2.3,                // Point light candela brightness value
         rotation_period: 2,             // days (86400s)        
         rotation_axis: [0.1, 0.8, 0.2], // J2000 ecliptic rectangular right-handed normalized
         spec_smassii: "Sk",             // string, spectral class
