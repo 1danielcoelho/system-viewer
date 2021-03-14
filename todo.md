@@ -628,6 +628,10 @@ response |= ui.add(label);
 >- Can probably fix the initial "Request for pointer lock was denied because the document is not focused." by... just focusing the document on right click
     >- It seems fine on Chrome so I think I'll just ignore this for now
 >- Expose a separate get_component and get_component_mut
+>- Still get the rendering crash when building point color buffer
+    >- Somehow the number of mesh and metadata components varies when I open a scene too, which shouldn't happen
+        >- This is because I'm getting a random sample of asteroids/comets every time, so I get a random number of ones that don't have mass/radius and are skipped
+    >- It was an OBOB on the previous fix
 
 ================================================================================
 
@@ -648,6 +652,7 @@ response |= ui.add(label);
 - Cleanup github repo and properly handle licensing like on my blog
 
 # TODO Bug fixes
+- Can't set whether I want points or not in the settings dialog
 - Whenever we get a crash it just spams the console log with a million crashes because the global objects can't be borrowed again
 - GLTF test scene crashes when resetting scene
 - Textures get reloaded when we reload/open new scenes

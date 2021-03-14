@@ -141,9 +141,13 @@ impl DynamicPrimitive {
         ctx.bind_vertex_array(None);
     }
 
-    pub fn set_buffer_size(&mut self, num_points: usize) {
+    pub fn set_num_elements(&mut self, num_points: usize) {
         self.pos_buffer_data.resize(num_points * 3, 0.0);
         self.color_buffer_data.resize(num_points * 4, 1.0);
+    }
+
+    pub fn get_num_elements(&self) -> usize {
+        return self.pos_buffer_data.len() / 3;
     }
 
     pub fn get_pos_buffer(&self) -> &[f32] {

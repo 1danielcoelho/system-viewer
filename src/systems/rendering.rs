@@ -227,12 +227,11 @@ fn draw_points(
 
     let mut pts = RefCell::borrow_mut(scene.points_mesh.as_ref().unwrap());
     if let Some(prim) = &mut pts.dynamic_primitive {
-        let num_pts = scene.mesh.get_num_components() as usize;
+        let num_bodies = scene.mesh.get_num_components() as usize;
 
         // Update color buffer only when entity number changes (expensive)
-        let old_num_pts = prim.get_color_buffer().len() / 4;
-        if old_num_pts != num_pts {
-            prim.set_buffer_size(num_pts);
+        if prim.get_num_elements() != num_bodies {
+            prim.set_num_elements(num_bodies);
 
             let buf = prim.get_color_buffer_mut();
             for (ent, metadata) in scene.metadata.iter() {
@@ -242,7 +241,7 @@ fn draw_points(
 
                 // We may have entities that have metadata components and no mesh components,
                 // but we obviously don't care about those here
-                if ent_index > num_pts {
+                if ent_index >= num_bodies {
                     continue;
                 }
 
