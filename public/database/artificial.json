@@ -4,7 +4,7 @@
         "type": "artificial",
         "mass": 1,
         "radius": 0.01,
-        "brightness": 1
+        "brightness": 1E20
     },
     "cube": {
         "name": "Cube",

@@ -659,6 +659,45 @@ response |= ui.add(label);
         >- Plane is causing a material recompilation on every frame for default mat (still 60fps though!)
         >- There's no real way of allowing us to set an engine material via a body database (need to refactor it a bit)
         - Get a gltf_metal_rough on that plane and see if we can see an intensity of 1 without tonemapping?
+        - Add a delta to prevent 0 distance to light source from leading to infinite illuminance
+        - What should be the units for light intensity that I send to the shaders? cd?
+            - https://google.github.io/filament/Filament.md.html#listing_fragmentexposure 
+            - Eq 57: E = (I / d2) * dot(n, l), and I is Luminous intensity, in cd        
+        - What is the unit of light intensity that is on the final framebuffer before tonemapping? (i.e. after lights were accumulated)
+            - Lout = f(v,l) * E, Lout being luminance in cd/m2, and f being the BSDF
+        - I'll neeed the section 4.7.2.2 to handle partially occluded sphere area lights: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v2.pdf
+            - Maybe approximate the sphere area light as a point light if it's far enough that horizon problems aren't relevant?
+        - Pre-exposure seems to help with precision issues
+            - https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v2.pdf
+        - How to do exposure?
+            - https://google.github.io/filament/Filament.md.html#listing_fragmentexposure
+            - I can just set some EV100 value of like 700, and put it on a slider in the settings        
+``` C
+// Computes the camera's EV100 from exposure settings
+// aperture in f-stops
+// shutterSpeed in seconds
+// sensitivity in ISO
+float exposureSettings(float aperture, float shutterSpeed, float sensitivity) {
+    return log2((aperture * aperture) / shutterSpeed * 100.0 / sensitivity);
+}
+
+// Computes the exposure normalization factor from
+// the camera's EV100
+float exposure(ev100) {
+    return 1.0 / (pow(2.0, ev100) * 1.2);
+}
+
+float ev100 = exposureSettings(aperture, shutterSpeed, sensitivity);
+float exposure = exposure(ev100);
+
+vec4 color = evaluateLighting();
+color.rgb *= exposure;
+```
+        - Have to handle units for emissive colors, as I'll likely want to add some type of bloom later
+        - Maybe I just have a units change as things go to the shaders? Because or else I'll have a to use a factor of 1E12 every time I'm calculating square falloff for point lights
+        - Tonemapping:
+            - Will probably have to the full thing all at once or else store the lighting buffer in a float texture
+        
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
 - Rings?

@@ -235,7 +235,7 @@ impl AppState {
                 up: Unit::new_unchecked(Vector3::z()),
                 target: Point3::new(0.0, 0.0, 0.0),
                 fov_v: 60.0,
-                near: 1.0,
+                near: 0.01,
                 far: 100000000.0,
                 reference_entity: None,
                 reference_translation: None,
