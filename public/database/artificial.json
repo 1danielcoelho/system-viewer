@@ -11,7 +11,8 @@
         "type": "artificial",
         "mass": 1,
         "radius": 1,
-        "mesh": "cube"
+        "mesh": "cube",
+        "material": "gltf_metal_rough"
     },
     "plane": {
         "name": "Plane",

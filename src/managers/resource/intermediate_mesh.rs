@@ -342,7 +342,7 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
             };
             primitive.update_hash();
             log::info!(
-                "Set prim compatible hash of prim '{}' of mat '{}' as '{}'",
+                "Set prim compatible hash of prim '{}' of mesh '{}' as '{}'",
                 primitive.name,
                 inter.name,
                 primitive.compatible_hash

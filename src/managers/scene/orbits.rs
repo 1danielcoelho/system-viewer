@@ -215,7 +215,7 @@ pub fn add_free_body(
     }
 
     // Light
-    if body.body_type == BodyType::Star && body.brightness.is_some() {
+    if body.body_type == BodyType::Star || body.brightness.is_some() {
         let light_comp = scene.add_component::<LightComponent>(body_ent);
         light_comp.color = Vector3::new(1.0, 1.0, 1.0);
         light_comp.intensity = body.brightness.unwrap();
@@ -288,8 +288,8 @@ pub fn get_body_material(
     body: &BodyDescription,
     res_man: &mut ResourceManager,
 ) -> Option<Rc<RefCell<Material>>> {
-    let mat = match body.material.clone().unwrap_or(String::from("")).as_str() {
-        // TODO: Actual different materials with different uniforms and so on
+    let mut mat = match body.material.clone().unwrap_or(String::from("")).as_str() {
+        // TODO: Actual different procedural materials with different uniforms and so on
         "rocky" => Some(
             res_man
                 .instantiate_material(
@@ -322,26 +322,15 @@ pub fn get_body_material(
                 )
                 .unwrap(),
         ),
-        _ => match body.body_type {
-            // TODO
-            // BodyType::Star => {}
-            // BodyType::Planet => {}
-            // BodyType::Satellite => {}
-            // BodyType::Asteroid => {}
-            // BodyType::Comet => {}
-            BodyType::Artificial => None,
-            // BodyType::Barycenter => {}
-            // BodyType::Other => {}
-            _ => Some(
-                res_man
-                    .instantiate_material(
-                        "gltf_metal_rough",
-                        &("gas_".to_owned() + &body.id.as_ref().unwrap()),
-                    )
-                    .unwrap(),
-            ),
-        },
+        _ => None,
     };
+
+    // Default to just fetching a material, as we may have "phong" in there or something like that
+    if mat.is_none() {
+        if let Some(mat_name) = &body.material {
+            mat = res_man.instantiate_material(&mat_name, &mat_name);
+        }
+    }
 
     if mat.is_some() && body.material_params.is_some() {
         let mut mat_mut = mat.as_ref().unwrap().borrow_mut();

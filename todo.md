@@ -656,8 +656,8 @@ response |= ui.add(label);
     - Light test scene
         >- Put light intensity on body schema
         >- Add artificial candle body to test lights
-        - Plane is causing a material recompilation on every frame for default mat (still 60fps though!)
-        - There's no real way of allowing us to set an engine material via a body database (need to refactor it a bit)
+        >- Plane is causing a material recompilation on every frame for default mat (still 60fps though!)
+        >- There's no real way of allowing us to set an engine material via a body database (need to refactor it a bit)
         - Get a gltf_metal_rough on that plane and see if we can see an intensity of 1 without tonemapping?
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
@@ -695,6 +695,7 @@ response |= ui.add(label);
 - GUI to "add a body" with some state vectors/orbital parameters
 - Use < and > keys to speed up and down
 - Allow specifying move speed and other state settings for scenes (like paused/not, whether grid is on, etc.)
+- Maybe pressing F/G without anything selected/focused would frame all of the objects in the scene
 
 # TODO Visuals
 - Custom material for earth that uses the light/day and cloud textures

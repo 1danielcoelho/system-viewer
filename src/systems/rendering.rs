@@ -182,25 +182,27 @@ fn draw_one(
                 );
                 mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
 
-                mat_mut.set_uniform_value(
-                    UniformName::LightTypes,
-                    UniformValue::IntArr(uniform_data.light_types.clone()),
-                );
+                if uniform_data.light_types.len() > 0 {
+                    mat_mut.set_uniform_value(
+                        UniformName::LightTypes,
+                        UniformValue::IntArr(uniform_data.light_types.clone()),
+                    );
 
-                mat_mut.set_uniform_value(
-                    UniformName::LightPosDir,
-                    UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
-                );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightPosDir,
+                        UniformValue::Vec3Arr(uniform_data.light_pos_or_dir_c.clone()),
+                    );
 
-                mat_mut.set_uniform_value(
-                    UniformName::LightColors,
-                    UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
-                );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightColors,
+                        UniformValue::Vec3Arr(uniform_data.light_colors.clone()),
+                    );
 
-                mat_mut.set_uniform_value(
-                    UniformName::LightIntensities,
-                    UniformValue::FloatArr(uniform_data.light_intensities.clone()),
-                );
+                    mat_mut.set_uniform_value(
+                        UniformName::LightIntensities,
+                        UniformValue::FloatArr(uniform_data.light_intensities.clone()),
+                    );
+                }
 
                 // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
                 mat_mut.bind_for_drawing(gl);

@@ -376,7 +376,8 @@ impl ResourceManager {
             return Some(mesh);
         }
 
-        let default_mat = self.get_or_create_material("default");
+        // TODO: Better handle material variants instead of just making a new instance every time
+        let default_mat = self.instantiate_material("default", "default");
         let default_mat_quad = self.get_or_create_material("default_screenspace");
 
         let mesh: Option<Rc<RefCell<Mesh>>> = match identifier {

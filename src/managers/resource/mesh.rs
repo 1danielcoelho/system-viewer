@@ -97,7 +97,6 @@ impl DynamicPrimitive {
         // Positions
         let pos_buffer = ctx.create_buffer().unwrap();
         ctx.bind_buffer(GL::ARRAY_BUFFER, Some(pos_buffer.as_ref()));
-        ctx.buffer_data_with_opt_array_buffer(GL::ARRAY_BUFFER, None, GL::DYNAMIC_DRAW);
         ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
         ctx.vertex_attrib_pointer_with_i32(
             PrimitiveAttribute::Position as u32,
@@ -111,7 +110,6 @@ impl DynamicPrimitive {
         // Colors
         let color_buffer = ctx.create_buffer().unwrap();
         ctx.bind_buffer(GL::ARRAY_BUFFER, Some(color_buffer.as_ref()));
-        ctx.buffer_data_with_opt_array_buffer(GL::ARRAY_BUFFER, None, GL::DYNAMIC_DRAW);
         ctx.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
         ctx.vertex_attrib_pointer_with_i32(
             PrimitiveAttribute::Color as u32,
