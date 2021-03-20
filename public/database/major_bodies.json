@@ -20,7 +20,8 @@
         "radius": 695.7,
         "material_params": {
             "base_color": "FF9900FF",
-            "emissive_texture": "2k_sun.jpg"
+            "emissive_texture": "2k_sun.jpg",
+            "emissive_factor": "[1.0, 1.0, 1.0]"
         },
         "brightness": 3.024e+27
     },

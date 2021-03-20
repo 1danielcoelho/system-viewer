@@ -189,7 +189,7 @@ fn draw_one(
                     UniformName::ExposureFactor,
                     UniformValue::Float(uniform_data.exposure_factor),
                 );
-                
+
                 if uniform_data.light_types.len() > 0 {
                     mat_mut.set_uniform_value(
                         UniformName::LightTypes,
@@ -318,7 +318,7 @@ fn draw_points(
 fn draw_skybox(
     state: &AppState,
     gl: &WebGl2RenderingContext,
-    _uniform_data: &mut FrameUniformValues,
+    uniform_data: &mut FrameUniformValues,
     scene: &mut Scene,
 ) {
     if scene.skybox_mesh.is_none() || scene.skybox_trans.is_none() {
@@ -351,6 +351,11 @@ fn draw_skybox(
             let mut mat_mut = mat.borrow_mut();
 
             mat_mut.set_uniform_value(UniformName::VPInvTrans, UniformValue::Matrix(vp_inv_arr));
+
+            mat_mut.set_uniform_value(
+                UniformName::ExposureFactor,
+                UniformValue::Float(uniform_data.exposure_factor),
+            );
 
             mat_mut.bind_for_drawing(gl);
         }

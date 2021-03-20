@@ -139,9 +139,11 @@ void main()
     }
 
     // Emissive luminance
-    vec3 emissive_color = u_emissive_factor;
+    // HACK: Need to expose an additional emissive exposure compensation factor, but for now this 100k factor
+    // gets us similar to what the GLTF reference viewer looks, for a reasonable exposure level
+    vec3 emissive_color = 100000.0 * u_emissive_factor;
     #ifdef HAS_EMISSIVE_TEXTURE
-        emissive_color = sRGB_to_linear(texture(us_emissive, v_uv0)).rgb;
+        emissive_color *= sRGB_to_linear(texture(us_emissive, v_uv0)).rgb;
     #endif 
     
     vec3 color = emissive_color + diffuse_luminance + specular_luminance;

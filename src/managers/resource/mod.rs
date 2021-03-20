@@ -487,7 +487,7 @@ impl ResourceManager {
                 identifier,
                 "screenspace.vert",
                 "skybox.frag",
-                &[UniformName::VPInvTrans],
+                &[UniformName::VPInvTrans, UniformName::ExposureFactor],
             )),
             "vertex_color" => Some(Material::new(
                 identifier,

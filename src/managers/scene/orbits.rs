@@ -331,6 +331,13 @@ pub fn get_body_material(
         }
     }
 
+    // If we still have nothing fetch a material for a specific body type. For now this just means
+    // using the gltf, but later on we will pick between these other materials like rocky, atmo, etc.
+    // Don't do it for artificial bodies though as they usually are gltf files with their own materials
+    if mat.is_none() && body.body_type != BodyType::Artificial {
+        mat = res_man.instantiate_material("gltf_metal_rough", "gltf_metal_rough");
+    }
+
     if mat.is_some() && body.material_params.is_some() {
         let mut mat_mut = mat.as_ref().unwrap().borrow_mut();
         let params = body.material_params.as_ref().unwrap();
@@ -392,6 +399,30 @@ pub fn get_body_material(
             mat_mut.set_texture(
                 TextureUnit::Emissive,
                 res_man.get_or_request_texture(path, false),
+            );
+        }
+
+        if let Some(float_vec_str) = params.get("emissive_factor") {
+            log::info!(
+                "Parsed emissive_factor {:?} for body {:?}",
+                float_vec_str,
+                body.id
+            );
+
+            let mut floats = float_vec_str
+                .strip_prefix("[")
+                .and_then(|s| s.strip_suffix("]"))
+                .unwrap()
+                .split(",")
+                .filter_map(|s| s.trim().parse::<f32>().ok())
+                .collect::<Vec<_>>();
+            floats.resize(3, 1.0);
+
+            log::error!("{:?}", floats);
+
+            mat_mut.set_uniform_value(
+                UniformName::EmissiveFactor,
+                UniformValue::Vec3([floats[0], floats[1], floats[2]]),
             );
         }
     };

@@ -693,12 +693,18 @@ float exposure = exposure(ev100);
 vec4 color = evaluateLighting();
 color.rgb *= exposure;
 ```
+>- Have exposure affect skybox
+>- Fix Sun and Moon having default material        
+>- Handle emissive material luminance correctly
+    >- I'll just use the emissive factor for now, there doesn't seem to be a consensus on how to handle this
+>- The GLTF test models are all gray now?
+    >- Maybe it's exposure blowing up, I need to update the scene
+    >- I was overriding their materials with blank gltf_metal_rough ones
 
 ================================================================================
 
 # TODO MVP
-- Have exposure affect skybox
-- Fix Sun and Moon having default material        
+- I think the points are not always passing the depth test against the skybox
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
 - Rings?
