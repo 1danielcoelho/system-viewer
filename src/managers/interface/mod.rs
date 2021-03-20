@@ -517,8 +517,8 @@ impl InterfaceManager {
                         ui.checkbox(&mut state.show_points, "");
                         ui.end_row();
 
-                        ui.label("Light intensity multiplier:");
-                        ui.add(egui::Slider::f32(&mut state.light_intensity, 0.0..=5.0).text(""));
+                        ui.label("EV100:");
+                        ui.add(egui::Slider::f32(&mut state.ev100, -20.0..=20.0).text(""));
                         ui.end_row();
 
                         ui.label("Allow Local Storage:");
@@ -750,10 +750,10 @@ impl InterfaceManager {
                             ui.separator();
                             ui.end_row();
 
-                            ui.label("Light intensity exponent:");
+                            ui.label("EV100:");
                             ui.add(
-                                egui::DragValue::f32(&mut state.light_intensity)
-                                    .clamp_range(-1000.0..=1000.0)
+                                egui::DragValue::f32(&mut state.ev100)
+                                    .clamp_range(-20.0..=20.0)
                                     .speed(0.01),
                             );
                             ui.end_row();

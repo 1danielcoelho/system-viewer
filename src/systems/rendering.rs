@@ -15,6 +15,10 @@ use web_sys::WebGl2RenderingContext;
 
 pub const NUM_LIGHTS: usize = 8;
 
+fn exposure_factor(ev100: f32) -> f32 {
+    return 1.0 / (2.0.powf(ev100) * 1.2);
+}
+
 #[derive(Default)]
 pub struct RenderingSystem {}
 impl RenderingSystem {
@@ -59,6 +63,7 @@ fn pre_draw(
         light_colors: Vec::new(),
         light_pos_or_dir_c: Vec::new(),
         light_intensities: Vec::new(),
+        exposure_factor: exposure_factor(state.ev100),
     };
 
     result.light_types.reserve(NUM_LIGHTS);
@@ -87,9 +92,7 @@ fn pre_draw(
         result.light_colors.push(light.color.y);
         result.light_colors.push(light.color.z);
 
-        result
-            .light_intensities
-            .push(light.intensity.powf(state.light_intensity));
+        result.light_intensities.push(light.intensity);
 
         result.light_pos_or_dir_c.push(pos.x as f32);
         result.light_pos_or_dir_c.push(pos.y as f32);
@@ -182,6 +185,11 @@ fn draw_one(
                 );
                 mat_mut.set_uniform_value(UniformName::WVPTrans, UniformValue::Matrix(wvp_arr));
 
+                mat_mut.set_uniform_value(
+                    UniformName::ExposureFactor,
+                    UniformValue::Float(uniform_data.exposure_factor),
+                );
+                
                 if uniform_data.light_types.len() > 0 {
                     mat_mut.set_uniform_value(
                         UniformName::LightTypes,

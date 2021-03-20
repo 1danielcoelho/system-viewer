@@ -601,6 +601,7 @@ impl ResourceManager {
                     UniformName::Emissive,
                     UniformName::EmissiveFactor,
                     UniformName::Occlusion,
+                    UniformName::ExposureFactor,
                 ],
             )),
             _ => None,

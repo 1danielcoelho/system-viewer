@@ -647,31 +647,31 @@ response |= ui.add(label);
     - There's also this log level webpack thing? Where is that coming from?
         - It's just from webpack-dev-server, try packaging once to see if it shows up there too
         - Packaged: The loglevel thing doesn't show up, and all our data is persistent/cleared according to the setting like expected. Also, the entire app is like 4MB and all content, (including textures) is 100MB-ish now, which is not bad -->
-
-================================================================================
-
-# TODO MVP
-- Improve visuals a bit
-    - Correct-ish sun brightness
-    - Light test scene
+>- Improve visuals a bit
+    >- Correct-ish sun brightness
+    >- Light test scene
         >- Put light intensity on body schema
         >- Add artificial candle body to test lights
         >- Plane is causing a material recompilation on every frame for default mat (still 60fps though!)
         >- There's no real way of allowing us to set an engine material via a body database (need to refactor it a bit)
-        - Get a gltf_metal_rough on that plane and see if we can see an intensity of 1 without tonemapping?
-        - Add a delta to prevent 0 distance to light source from leading to infinite illuminance
-        - What should be the units for light intensity that I send to the shaders? cd?
-            - https://google.github.io/filament/Filament.md.html#listing_fragmentexposure 
-            - Eq 57: E = (I / d2) * dot(n, l), and I is Luminous intensity, in cd        
-        - What is the unit of light intensity that is on the final framebuffer before tonemapping? (i.e. after lights were accumulated)
-            - Lout = f(v,l) * E, Lout being luminance in cd/m2, and f being the BSDF
-        - I'll neeed the section 4.7.2.2 to handle partially occluded sphere area lights: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v2.pdf
-            - Maybe approximate the sphere area light as a point light if it's far enough that horizon problems aren't relevant?
-        - Pre-exposure seems to help with precision issues
-            - https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v2.pdf
-        - How to do exposure?
-            - https://google.github.io/filament/Filament.md.html#listing_fragmentexposure
-            - I can just set some EV100 value of like 700, and put it on a slider in the settings        
+        >- Get a gltf_metal_rough on that plane and see if we can see an intensity of 1 without tonemapping?
+        >- Add a delta to prevent 0 distance to light source from leading to infinite illuminance
+        >- What should be the units for light intensity that I send to the shaders? cd?
+            >- https://google.github.io/filament/Filament.md.html#listing_fragmentexposure 
+            >- Eq 57: E = (I / d2) * dot(n, l), and I is Luminous intensity, in cd        
+        >- What is the unit of light intensity that is on the final framebuffer before tonemapping? (i.e. after lights were accumulated)
+            >- Lout = f(v,l) * E, Lout being luminance in cd/m2, and f being the BSDF
+        >- I'll neeed the section 4.7.2.2 to handle partially occluded sphere area lights: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v2.pdf
+            >- Maybe approximate the sphere area light as a point light if it's far enough that horizon problems aren't relevant?
+        >- Pre-exposure seems to help with precision issues
+            >- https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/course-notes-moving-frostbite-to-pbr-v2.pdf
+        >- How to do exposure?
+            >- https://google.github.io/filament/Filament.md.html#listing_fragmentexposure
+            >- I can just set some EV100 value of like 700, and put it on a slider in the settings        
+        >- Have to handle units for emissive colors, as I'll likely want to add some type of bloom later
+        >- Maybe I just have a units change as things go to the shaders? Because or else I'll have a to use a factor of 1E12 every time I'm calculating square falloff for point lights
+        >- Tonemapping:
+            >- Will probably have to the full thing all at once or else store the lighting buffer in a float texture
 ``` C
 // Computes the camera's EV100 from exposure settings
 // aperture in f-stops
@@ -693,11 +693,12 @@ float exposure = exposure(ev100);
 vec4 color = evaluateLighting();
 color.rgb *= exposure;
 ```
-        - Have to handle units for emissive colors, as I'll likely want to add some type of bloom later
-        - Maybe I just have a units change as things go to the shaders? Because or else I'll have a to use a factor of 1E12 every time I'm calculating square falloff for point lights
-        - Tonemapping:
-            - Will probably have to the full thing all at once or else store the lighting buffer in a float texture
-        
+
+================================================================================
+
+# TODO MVP
+- Have exposure affect skybox
+- Fix Sun and Moon having default material        
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
 - Rings?
@@ -739,6 +740,9 @@ color.rgb *= exposure;
 # TODO Visuals
 - Custom material for earth that uses the light/day and cloud textures
 - Planet trails for physics bodies
+- Automatic exposure adjustment
+- Actual IBL using the skybox
+    - Massive cost for basically no gain
 - Better line drawing
     - How did my JS app do it? The lines there seemed fine...
     - For main barycenter orbits the "object" still has center at the sun but the size is massive, so that using the camera as the origin doesn't help the precision issues

@@ -3,7 +3,6 @@ use crate::managers::resource::intermediate_mesh::IntermediatePrimitive;
 use crate::managers::resource::material::Material;
 use crate::utils::gl::GL;
 use js_sys::WebAssembly;
-use std::borrow::BorrowMut;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::{cell::RefCell, rc::Rc};

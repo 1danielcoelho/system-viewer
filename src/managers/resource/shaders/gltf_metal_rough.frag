@@ -7,6 +7,8 @@ precision highp float;
 #include <constants.glsl>
 #include <functions.glsl>
 
+uniform float u_exposure_factor;
+
 uniform int u_light_types[MAX_LIGHTS];
 uniform vec3 u_light_pos_or_dir_c[MAX_LIGHTS];
 uniform vec3 u_light_colors[MAX_LIGHTS];
@@ -104,8 +106,8 @@ void main()
     vec3 f90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
 
     // Lighting
-    vec3 diffuse_color = vec3(0);
-    vec3 specular_color = vec3(0);
+    vec3 diffuse_luminance = vec3(0);
+    vec3 specular_luminance = vec3(0);
     for(int i = 0; i < MAX_LIGHTS; ++i)
     {
         vec3 pos_to_light = -u_light_pos_or_dir_c[i];
@@ -115,37 +117,49 @@ void main()
 
         if (u_light_types[i] == POINT_LIGHT) {
             pos_to_light = u_light_pos_or_dir_c[i] - v_pos;
+            
+            // Dot here would be in units of Mm^2, hence the 1E12 to m^2
             attenuation = 1.0 / (1E12 * dot(pos_to_light, pos_to_light));
-        }
-        
-        vec3 intensity = attenuation * u_light_intensities[i] * u_light_colors[i];
+        }        
 
         vec3 l = normalize(pos_to_light);
         vec3 h = normalize(l + v);
         float n_dot_l = clamped_dot(n, l);
         float n_dot_v = clamped_dot(n, v);
-        float n_dot_h = clamped_dot(n, h);
-        float l_dot_h = clamped_dot(l, h);
-        float v_dot_h = clamped_dot(v, h);
 
         if (n_dot_l > 0.0 || n_dot_v > 0.0) {
-            diffuse_color += intensity * n_dot_l * BRDF_lambertian(f0, f90, albedo, v_dot_h);
-            specular_color += intensity * n_dot_l * BRDF_specularGGX(f0, f90, alpha_roughness, v_dot_h, n_dot_l, n_dot_v, n_dot_h);
+            vec3 illuminance = attenuation * u_light_intensities[i] * u_light_colors[i] * n_dot_l;
+            float n_dot_h = clamped_dot(n, h);
+            float l_dot_h = clamped_dot(l, h);
+            float v_dot_h = clamped_dot(v, h);
+
+            diffuse_luminance += illuminance * BRDF_lambertian(f0, f90, albedo, v_dot_h);
+            specular_luminance += illuminance * BRDF_specularGGX(f0, f90, alpha_roughness, v_dot_h, n_dot_l, n_dot_v, n_dot_h);
         }
     }
 
+    // Emissive luminance
     vec3 emissive_color = u_emissive_factor;
     #ifdef HAS_EMISSIVE_TEXTURE
         emissive_color = sRGB_to_linear(texture(us_emissive, v_uv0)).rgb;
     #endif 
+    
+    vec3 color = emissive_color + diffuse_luminance + specular_luminance;
 
-    vec3 color = emissive_color + diffuse_color + specular_color;
-
+    // Handle AO
     float ao = 1.0;
     #ifdef HAS_OCCLUSION_TEXTURE
         ao = texture(us_occlusion, v_uv0).r;        
     #endif
     color *= ao;
 
-    out_frag_color = vec4(linear_to_sRGB(color), base_color.a);    
+    // Exposure
+    color *= u_exposure_factor;
+
+    // Reinhard tonemapping
+    color = color / (color + vec3(1.0));    
+
+    // Convert to sRGB
+    color = linear_to_sRGB(color);
+    out_frag_color = vec4(color, base_color.a);    
 }

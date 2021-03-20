@@ -191,7 +191,7 @@ pub struct AppState {
     pub simulation_paused: bool,
     pub move_speed: f64,
     pub rotate_speed: f64,
-    pub light_intensity: f32,
+    pub ev100: f32,
 
     #[serde(skip)]
     pub input: Input,
@@ -226,7 +226,7 @@ impl AppState {
             move_speed: 5.0,
             rotate_speed: 2.0,
             frames_per_second_limit: 120.0,
-            light_intensity: 0.60,
+            ev100: 0.0,
             input: Input::default(),
             hovered: None,
             selection: None,

@@ -16,6 +16,7 @@ pub struct FrameUniformValues {
     pub light_pos_or_dir_c: Vec<f32>, // For point lights, position; For directional lights, direction; Always in camera space
     pub light_colors: Vec<f32>,
     pub light_intensities: Vec<f32>,
+    pub exposure_factor: f32,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -37,6 +38,7 @@ pub enum UniformName {
     Emissive,
     EmissiveFactor,
     Occlusion,
+    ExposureFactor,
 }
 impl UniformName {
     pub fn default_value(&self) -> UniformValue {
@@ -67,6 +69,7 @@ impl UniformName {
             UniformName::Emissive => UniformValue::Int(TextureUnit::Emissive as i32),
             UniformName::EmissiveFactor => UniformValue::Vec3([0.0, 0.0, 0.0]),
             UniformName::Occlusion => UniformValue::Int(TextureUnit::Occlusion as i32),
+            UniformName::ExposureFactor => UniformValue::Float(1.0),
         }
     }
 
@@ -89,6 +92,7 @@ impl UniformName {
             UniformName::Emissive => "us_emissive",
             UniformName::EmissiveFactor => "u_emissive_factor",
             UniformName::Occlusion => "us_occlusion",
+            UniformName::ExposureFactor => "u_exposure_factor",
         }
     }
 }

@@ -14,7 +14,6 @@ use crate::utils::units::Jdn;
 use na::*;
 use nalgebra::Vector3;
 use std::cell::RefCell;
-use std::f32::consts::PI;
 use std::rc::Rc;
 
 impl SceneManager {
