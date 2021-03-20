@@ -2,23 +2,6 @@ use web_sys::WebGl2RenderingContext;
 
 pub type GL = WebGl2RenderingContext;
 
-#[macro_export]
-macro_rules! glc {
-    ($ctx:expr, $any:expr) => {
-        #[cfg(debug_assertions)]
-        while $ctx.get_error() != 0 {} // Not sure why he did this
-        $any;
-        #[cfg(debug_assertions)]
-        while match $ctx.get_error() {
-            0 => false,
-            err => {
-                log::error!("[OpenGL Error] {}", err);
-                true
-            }
-        } {}
-    };
-}
-
 pub fn setup_gl_context(gl: &WebGl2RenderingContext) {
     gl.enable(GL::BLEND);
     gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);

@@ -1,7 +1,6 @@
 use crate::app_state::AppState;
 use crate::components::light::LightType;
 use crate::components::{Component, MeshComponent, TransformComponent};
-use crate::glc;
 use crate::managers::resource::material::{FrameUniformValues, UniformName, UniformValue};
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
@@ -46,15 +45,16 @@ fn pre_draw(
     scene: &mut Scene,
 ) -> FrameUniformValues {
     // Setup GL state
-    glc!(gl, gl.enable(GL::CULL_FACE));
-    glc!(gl, gl.disable(GL::SCISSOR_TEST));
-    glc!(gl, gl.enable(GL::DEPTH_TEST));
-    glc!(
-        gl,
-        gl.viewport(0, 0, state.canvas_width as i32, state.canvas_height as i32,)
-    );
-    glc!(gl, gl.clear_color(0.1, 0.1, 0.2, 1.0));
-    glc!(gl, gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT));
+    gl.enable(GL::CULL_FACE);
+    gl.disable(GL::SCISSOR_TEST);
+
+    gl.enable(GL::DEPTH_TEST);
+    gl.depth_func(GL::LESS);
+
+    gl.viewport(0, 0, state.canvas_width as i32, state.canvas_height as i32);
+
+    gl.clear_color(0.1, 0.1, 0.2, 1.0);
+    gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
     let mut result = FrameUniformValues {
         v: state.camera.v,
@@ -117,7 +117,7 @@ fn draw(gl: &WebGl2RenderingContext, uniform_data: &mut FrameUniformValues, scen
 
 fn post_draw(gl: &WebGl2RenderingContext) {
     // Egui needs this disabled for now
-    glc!(gl, gl.disable(GL::DEPTH_TEST));
+    gl.disable(GL::DEPTH_TEST);
 }
 
 fn draw_one(
