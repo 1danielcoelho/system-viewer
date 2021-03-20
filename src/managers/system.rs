@@ -1,8 +1,8 @@
-use crate::{
-    app_state::AppState,
-    managers::scene::Scene,
-    systems::{OrbitalSystem, PhysicsSystem, RenderingSystem, TransformUpdateSystem},
-};
+use crate::app_state::AppState;
+use crate::managers::scene::Scene;
+use crate::managers::ResourceManager;
+use crate::systems::{OrbitalSystem, PhysicsSystem, RenderingSystem, TransformUpdateSystem};
+use crate::GLCTX;
 
 pub struct SystemManager {
     render: RenderingSystem,
@@ -11,9 +11,9 @@ pub struct SystemManager {
     trans: TransformUpdateSystem,
 }
 impl SystemManager {
-    pub fn new() -> Self {
+    pub fn new(res_man: &mut ResourceManager) -> Self {
         return Self {
-            render: RenderingSystem::new(),
+            render: RenderingSystem::new(res_man),
             orbital: OrbitalSystem {},
             physics: PhysicsSystem {},
             trans: TransformUpdateSystem {},
@@ -26,5 +26,14 @@ impl SystemManager {
         self.physics.run(state, &mut scene);
         self.trans.run(state, &mut scene);
         self.render.run(state, &mut scene);
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        GLCTX.with(|ctx| {
+            let ref_mut = ctx.borrow_mut();
+            let ctx = ref_mut.as_ref().unwrap();
+
+            self.render.update_main_framebuffer(width, height, ctx);
+        });
     }
 }

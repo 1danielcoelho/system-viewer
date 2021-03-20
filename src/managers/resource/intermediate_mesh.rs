@@ -115,6 +115,13 @@ pub fn generate_screen_space_quad(
         1, 2, 3, //
     ];
 
+    let uvs: [f32; 4 * 2] = [
+        0.0, 1.0, //
+        0.0, 0.0, //
+        1.0, 1.0, //
+        1.0, 0.0, //
+    ];
+
     GLCTX.with(|ctx| {
         let ref_mut = ctx.borrow_mut();
         let ctx = ref_mut.as_ref().unwrap();
@@ -152,6 +159,25 @@ pub fn generate_screen_space_quad(
             0,
         );
 
+        // UV0
+        let mut uv0_buffer = ctx.create_buffer().unwrap();
+        fill_float_attribute_buffer(
+            &ctx,
+            uvs.as_ptr() as u32 / 4,
+            uvs.len() as u32 * 2,
+            &mut uv0_buffer,
+        );
+        ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
+        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&uv0_buffer));
+        ctx.vertex_attrib_pointer_with_i32(
+            PrimitiveAttribute::UV0 as u32,
+            2,
+            GL::FLOAT,
+            false,
+            0,
+            0,
+        );
+
         ctx.bind_vertex_array(None);
 
         let mut primitive = Primitive {
@@ -162,7 +188,7 @@ pub fn generate_screen_space_quad(
             has_normals: false,
             has_tangents: false,
             has_colors: false,
-            has_uv0: false,
+            has_uv0: true,
             has_uv1: false,
             compatible_hash: 0,
             default_material,

@@ -703,8 +703,21 @@ color.rgb *= exposure;
 
 ================================================================================
 
+# Framebuffer refactor
+- Create a framebuffer that uses an f32 renderbuffer for the depth attachment (alongside with a regular color buffer)
+    - Maybe an actual Framebuffer object
+    - Put the color texture in there as a Texture
+- Draw to it using logarithmic depth buffer by using the C function on the vertex shader and writing the depth on the fragment shader too
+- References:
+    - http://math.hws.edu/graphicsbook/c7/s4.html#:~:text=In%20WebGL%2C%20a%20framebuffer%20is,by%20the%20call%20to%20canvas.
+    - https://learnopengl.com/Advanced-OpenGL/Framebuffers
+    - https://webglfundamentals.org/webgl/lessons/webgl-render-to-texture.html
+    - https://webglfundamentals.org/webgl/lessons/webgl-framebuffers.html
+
 # TODO MVP
 - I think the points are not always passing the depth test against the skybox
+    - This is actually a camera near/far precision problem
+    - I think I'll have to adjust near/far dynamically, but I always want them to be there though
 - Do something about near/far camera distance
     - Maybe dynamically change this when close to a small body?
 - Rings?
@@ -762,7 +775,12 @@ color.rgb *= exposure;
 - Hide points if they're too close to the camera (or else we can see them if we go inside the planet or if it's a GLTF model with offset origin)
 - Shadows
 - Use those constellation textures/grid to show them as overlays
+- I can probably use 32bit depth buffer
 - Logarithmic depth buffer
+    - https://outerra.blogspot.com/2009/08/logarithmic-z-buffer.html
+    - https://outerra.blogspot.com/2012/11/maximizing-depth-buffer-range-and.html
+    - https://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
+    - https://mynameismjp.wordpress.com/2010/03/22/attack-of-the-depth-buffer/
     - This would help when lowering the camera near distance and looking at far away orbits
     - Only required when drawing the ellipses
 - Procedural textures and shaders for bodies (craters, weird shapes, textures, etc.)

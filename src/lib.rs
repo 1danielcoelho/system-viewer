@@ -11,11 +11,11 @@ extern crate wasm_bindgen;
 
 use crate::app_state::AppState;
 use crate::engine::Engine;
-use crate::utils::gl::setup_gl_context;
 use crate::utils::web::{
     force_full_canvas, get_canvas, get_gl_context, local_storage_remove, setup_event_handlers,
 };
 use egui::Ui;
+use std::borrow::BorrowMut;
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
@@ -65,9 +65,6 @@ pub fn initialize() {
     GLCTX.with(|gl| {
         let mut gl = gl.borrow_mut();
         gl.replace(get_gl_context(&canvas));
-        let gl = gl.as_mut().unwrap();
-
-        setup_gl_context(&gl);
     });
 
     log::info!("Initializing engine...");
@@ -124,8 +121,8 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
         if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
             let s = ref_mut_s.as_mut().unwrap();
 
-            let do_update = update_state(s, window, canvas);
-            if !do_update {
+            let state_result = update_state(s, window, canvas);
+            if state_result == UpdateStateResult::NoDraw {
                 return;
             }
 
@@ -137,6 +134,11 @@ fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
             ENGINE.with(|e| {
                 if let Ok(mut ref_mut_e) = e.try_borrow_mut() {
                     let e = ref_mut_e.as_mut().unwrap();
+
+                    // Update our main framebuffer
+                    if let UpdateStateResult::ResizeDraw(width, height) = state_result {
+                        e.resize(width, height);
+                    };
 
                     e.update(s);
                 } else {
@@ -162,7 +164,18 @@ fn serialize_state(state: &mut AppState) {
     });
 }
 
-fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElement) -> bool {
+#[derive(PartialEq)]
+enum UpdateStateResult {
+    NoDraw,
+    Draw,
+    ResizeDraw(u32, u32),
+}
+
+fn update_state(
+    state: &mut AppState,
+    window: &Window,
+    canvas: &HtmlCanvasElement,
+) -> UpdateStateResult {
     if state.pending_reset {
         *state = AppState::new();
         local_storage_remove("app_state");
@@ -172,6 +185,7 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
     let canvas_height_on_screen = canvas.client_height() as u32;
 
     // Check if we need to resize
+    let mut resized = false;
     if window.inner_size().width != canvas_width_on_screen
         || window.inner_size().height != canvas_height_on_screen
     {
@@ -188,6 +202,8 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
             canvas_width_on_screen,
             canvas_height_on_screen
         );
+
+        resized = true;
     }
     state.canvas_height = canvas_height_on_screen;
     state.canvas_width = canvas_width_on_screen;
@@ -197,7 +213,7 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
 
     // Framerate limiter
     if real_delta_s < 1.0 / state.frames_per_second_limit {
-        return false;
+        return UpdateStateResult::NoDraw;
     }
 
     let sim_delta_s =
@@ -207,7 +223,12 @@ fn update_state(state: &mut AppState, window: &Window, canvas: &HtmlCanvasElemen
     state.real_time_s += real_delta_s;
     state.sim_delta_time_s = sim_delta_s;
     state.real_delta_time_s = real_delta_s;
-    return true;
+
+    if resized {
+        return UpdateStateResult::ResizeDraw(state.canvas_width, state.canvas_height);
+    } else {
+        return UpdateStateResult::Draw;
+    }
 }
 
 /// Synchronous function that JS calls to inject text data into the engine because we can't await for a JS promise from within the winit engine loop

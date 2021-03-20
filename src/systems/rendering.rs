@@ -1,16 +1,22 @@
 use crate::app_state::AppState;
 use crate::components::light::LightType;
 use crate::components::{Component, MeshComponent, TransformComponent};
-use crate::managers::resource::material::{FrameUniformValues, UniformName, UniformValue};
+use crate::managers::resource::material::{
+    FrameUniformValues, Material, UniformName, UniformValue,
+};
+use crate::managers::resource::mesh::Mesh;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
+use crate::managers::ResourceManager;
 use crate::utils::gl::GL;
 use crate::utils::string::decode_hex;
-use crate::GLCTX;
+use crate::{GLCTX, STATE};
 use na::*;
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::convert::TryInto;
-use web_sys::WebGl2RenderingContext;
+use std::rc::Rc;
+use web_sys::{WebGl2RenderingContext, WebGlFramebuffer, WebGlTexture};
 
 pub const NUM_LIGHTS: usize = 8;
 
@@ -18,11 +24,111 @@ fn exposure_factor(ev100: f32) -> f32 {
     return 1.0 / (2.0.powf(ev100) * 1.2);
 }
 
-#[derive(Default)]
-pub struct RenderingSystem {}
+pub struct RenderingSystem {
+    framebuffer: Option<WebGlFramebuffer>,
+    framebuffer_color: Option<WebGlTexture>,
+
+    screenspace_quad: Option<Rc<RefCell<Mesh>>>,
+    blit_framebuffer_mat: Option<Rc<RefCell<Material>>>,
+}
 impl RenderingSystem {
-    pub fn new() -> Self {
-        return Self::default();
+    pub fn new(res_man: &mut ResourceManager) -> Self {
+        // Fetch canvas width and height
+        let mut canvas_width: u32 = 0;
+        let mut canvas_height: u32 = 0;
+        STATE.with(|s| {
+            if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
+                let s = ref_mut_s.as_mut().unwrap();
+                canvas_width = s.canvas_width;
+                canvas_height = s.canvas_height;
+            }
+        });
+
+        // Fetch resources we'll need for our render passes
+        let screenspace_quad = res_man.get_or_create_mesh("quad");
+        let blit_framebuffer_mat =
+            res_man.instantiate_material("default_screenspace", "default_screenspace");
+
+        // Initialize main framebuffer
+        let mut new_sys = Self {
+            framebuffer: None,
+            framebuffer_color: None,
+            screenspace_quad,
+            blit_framebuffer_mat,
+        };
+        GLCTX.with(|gl| {
+            let ref_mut = gl.borrow_mut();
+            let gl = ref_mut.as_ref().unwrap();
+
+            new_sys.update_main_framebuffer(canvas_width, canvas_height, gl);
+        });
+
+        return new_sys;
+    }
+
+    pub fn update_main_framebuffer(
+        &mut self,
+        width: u32,
+        height: u32,
+        gl: &WebGl2RenderingContext,
+    ) {
+        let framebuffer = gl.create_framebuffer();
+        gl.bind_framebuffer(GL::FRAMEBUFFER, framebuffer.as_ref());
+
+        // Color texture
+        let color_tex = gl.create_texture();
+        gl.bind_texture(GL::TEXTURE_2D, color_tex.as_ref());
+        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::LINEAR as i32);
+        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::LINEAR as i32);
+        gl.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_array_buffer_view(
+            GL::TEXTURE_2D,
+            0,
+            GL::RGBA as i32,
+            width as i32,
+            height as i32,
+            0,
+            GL::RGBA as u32,
+            GL::UNSIGNED_BYTE,
+            None,
+        )
+        .unwrap();
+        gl.framebuffer_texture_2d(
+            GL::FRAMEBUFFER,
+            GL::COLOR_ATTACHMENT0,
+            GL::TEXTURE_2D,
+            color_tex.as_ref(),
+            0,
+        );
+
+        // Depth renderbuffer
+        let depth_buf = gl.create_renderbuffer();
+        gl.bind_renderbuffer(GL::RENDERBUFFER, depth_buf.as_ref());
+        gl.renderbuffer_storage(
+            GL::RENDERBUFFER,
+            GL::DEPTH32F_STENCIL8,
+            width as i32,
+            height as i32,
+        );
+        gl.framebuffer_renderbuffer(
+            GL::FRAMEBUFFER,
+            GL::DEPTH_ATTACHMENT,
+            GL::RENDERBUFFER,
+            depth_buf.as_ref(),
+        );
+
+        if gl.check_framebuffer_status(GL::FRAMEBUFFER) != GL::FRAMEBUFFER_COMPLETE {
+            log::error!(
+                "Failed to update main framebuffer with width {}, height {}",
+                width,
+                height
+            );
+        }
+
+        gl.bind_renderbuffer(GL::RENDERBUFFER, None);
+        gl.bind_framebuffer(GL::FRAMEBUFFER, None);
+
+        self.framebuffer = framebuffer;
+        self.framebuffer_color = color_tex;
     }
 
     pub fn run(&mut self, state: &AppState, scene: &mut Scene) {
@@ -30,21 +136,28 @@ impl RenderingSystem {
             let ref_mut = gl.borrow_mut();
             let gl = ref_mut.as_ref().unwrap();
 
-            let mut uniform_data = pre_draw(state, gl, scene);
+            let mut uniform_data = pre_draw(state, self.framebuffer.as_ref(), gl, scene);
             draw(gl, &mut uniform_data, scene);
             draw_points(state, gl, &mut uniform_data, scene);
             draw_skybox(state, gl, &mut uniform_data, scene);
-            post_draw(gl);
+            post_draw(
+                gl,
+                self.blit_framebuffer_mat.as_ref(),
+                self.framebuffer_color.as_ref(),
+                self.screenspace_quad.as_ref(),
+            );
         });
     }
 }
 
 fn pre_draw(
     state: &AppState,
+    framebuffer: Option<&WebGlFramebuffer>,
     gl: &WebGl2RenderingContext,
     scene: &mut Scene,
 ) -> FrameUniformValues {
-    // Setup GL state
+    gl.bind_framebuffer(GL::FRAMEBUFFER, framebuffer);
+
     gl.enable(GL::CULL_FACE);
     gl.disable(GL::SCISSOR_TEST);
 
@@ -115,7 +228,29 @@ fn draw(gl: &WebGl2RenderingContext, uniform_data: &mut FrameUniformValues, scen
     }
 }
 
-fn post_draw(gl: &WebGl2RenderingContext) {
+fn post_draw(
+    gl: &WebGl2RenderingContext,
+    mat: Option<&Rc<RefCell<Material>>>,
+    tex: Option<&WebGlTexture>,
+    quad: Option<&Rc<RefCell<Mesh>>>,
+) {
+    gl.bind_framebuffer(GL::FRAMEBUFFER, None);
+
+    gl.clear_color(0.1, 0.1, 0.2, 1.0);
+    gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+
+    // Blit the main framebuffer to the default (canvas) framebuffer
+    // We could actually blit here but we'll need this type of stuff for post-processing anyway
+    if mat.is_some() && tex.is_some() && quad.is_some() {
+        let mat = mat.unwrap();
+        let tex = tex.unwrap();
+        let quad = quad.unwrap();
+
+        for prim in &RefCell::borrow(quad).primitives {
+            prim.draw(gl);
+        }
+    }
+
     // Egui needs this disabled for now
     gl.disable(GL::DEPTH_TEST);
 }

@@ -475,7 +475,7 @@ impl ResourceManager {
                 identifier,
                 "screenspace.vert",
                 "screenspace.frag",
-                &[],
+                &[UniformName::BaseColor],
             )),
             "default_points" => Some(Material::new(
                 identifier,

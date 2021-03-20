@@ -17,10 +17,13 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new() -> Self {
+        let mut res_man = ResourceManager::new();
+        let sys_man = SystemManager::new(&mut res_man);
+
         let new_engine = Self {
             scene_man: SceneManager::new(),
-            res_man: ResourceManager::new(),
-            sys_man: SystemManager::new(),
+            res_man,
+            sys_man,
             event_man: EventManager::new(),
             input_man: InputManager::new(),
             int_man: InterfaceManager::new(),
@@ -44,6 +47,10 @@ impl Engine {
         // Draw the UI elements
         self.int_man
             .end_frame(state, &mut self.scene_man, &mut self.res_man);
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.sys_man.resize(width, height);
     }
 
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
