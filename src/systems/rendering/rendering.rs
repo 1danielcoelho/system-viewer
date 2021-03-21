@@ -184,6 +184,7 @@ fn post_draw(
     gl.viewport(0, 0, width as i32, height as i32);
     gl.clear_color(0.1, 0.1, 0.2, 1.0);
     gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+    gl.disable(GL::DEPTH_TEST);
 
     // Blit the main framebuffer to the default (canvas) framebuffer
     // We could actually blit here but I like having this actual draw call as it's helpful for debugging

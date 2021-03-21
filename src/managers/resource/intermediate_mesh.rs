@@ -116,10 +116,10 @@ pub fn generate_screen_space_quad(
     ];
 
     let uvs: [f32; 4 * 2] = [
-        0.0, 1.0, //
         0.0, 0.0, //
-        1.0, 1.0, //
+        0.0, 1.0, //
         1.0, 0.0, //
+        1.0, 1.0, //
     ];
 
     GLCTX.with(|ctx| {

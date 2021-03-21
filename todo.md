@@ -706,6 +706,7 @@ color.rgb *= exposure;
 # Framebuffer refactor
 >- Create a framebuffer that uses an f32 renderbuffer for the depth attachment (alongside with a regular color buffer)
 - Draw to it using logarithmic depth buffer by using the C function on the vertex shader and writing the depth on the fragment shader too
+- I think the canvas framebuffer had antialiasing on, so now I have to figure out how to enable it on the main framebuffer too
 - References:
     - http://math.hws.edu/graphicsbook/c7/s4.html#:~:text=In%20WebGL%2C%20a%20framebuffer%20is,by%20the%20call%20to%20canvas.
     - https://learnopengl.com/Advanced-OpenGL/Framebuffers
