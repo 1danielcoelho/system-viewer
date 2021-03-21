@@ -418,8 +418,6 @@ pub fn get_body_material(
                 .collect::<Vec<_>>();
             floats.resize(3, 1.0);
 
-            log::error!("{:?}", floats);
-
             mat_mut.set_uniform_value(
                 UniformName::EmissiveFactor,
                 UniformValue::Vec3([floats[0], floats[1], floats[2]]),

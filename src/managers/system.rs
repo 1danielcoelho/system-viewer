@@ -33,7 +33,7 @@ impl SystemManager {
             let ref_mut = ctx.borrow_mut();
             let ctx = ref_mut.as_ref().unwrap();
 
-            self.render.update_main_framebuffer(width, height, ctx);
+            self.render.resize(width, height, ctx);
         });
     }
 }
