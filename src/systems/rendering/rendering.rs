@@ -123,6 +123,7 @@ fn pre_draw(
         light_pos_or_dir_c: Vec::new(),
         light_intensities: Vec::new(),
         exposure_factor: exposure_factor(state.ev100),
+        f_coef: (2.0 / (state.camera.far + 1.0).log2()) as f32,
     };
 
     result.light_types.reserve(NUM_LIGHTS);
@@ -231,9 +232,8 @@ fn draw_one(
     }
 
     // Store position to draw a point on top of this later
-    mc.last_ndc_position = na::convert::<Vector3<f64>, Vector3<f32>>(
-        wvp.transform_point(&Point3::new(0.0, 0.0, 0.0)).coords,
-    );
+    mc.last_ndc_position =
+        na::convert::<Vector4<f64>, Vector4<f32>>(wvp * Vector4::new(0.0, 0.0, 0.0, 1.0));
 
     let wv_inv_trans = wv_no_trans.try_inverse().unwrap().transpose(); // Note: This is correct, it's not meant to be v * w.inv().trans()
 
@@ -276,6 +276,11 @@ fn draw_one(
                     UniformValue::Float(uniform_data.exposure_factor),
                 );
 
+                mat_mut.set_uniform_value(
+                    UniformName::Fcoef,
+                    UniformValue::Float(uniform_data.f_coef),
+                );
+
                 if uniform_data.light_types.len() > 0 {
                     mat_mut.set_uniform_value(
                         UniformName::LightTypes,
@@ -314,14 +319,12 @@ fn draw_one(
 fn draw_points(
     _state: &AppState,
     gl: &WebGl2RenderingContext,
-    _uniform_data: &mut FrameUniformValues,
+    uniform_data: &mut FrameUniformValues,
     scene: &mut Scene,
 ) {
     if scene.points_mesh.is_none() || scene.points_mat.is_none() {
         return;
     }
-
-    gl.disable(GL::DEPTH_TEST);
 
     let mut pts = RefCell::borrow_mut(scene.points_mesh.as_ref().unwrap());
     if let Some(prim) = &mut pts.dynamic_primitive {
@@ -382,19 +385,24 @@ fn draw_points(
         let buf = prim.get_pos_buffer_mut();
         for (ent_index, mesh_comp) in scene.mesh.iter().enumerate() {
             if mesh_comp.get_enabled() {
-                buf[ent_index * 3 + 0] = mesh_comp.last_ndc_position.x;
-                buf[ent_index * 3 + 1] = mesh_comp.last_ndc_position.y;
-                buf[ent_index * 3 + 2] = mesh_comp.last_ndc_position.z;
+                buf[ent_index * 4 + 0] = mesh_comp.last_ndc_position.x;
+                buf[ent_index * 4 + 1] = mesh_comp.last_ndc_position.y;
+                buf[ent_index * 4 + 2] = mesh_comp.last_ndc_position.z;
+                buf[ent_index * 4 + 3] = mesh_comp.last_ndc_position.w;
             } else {
                 // Just put disabled components off screen
                 // TODO: Optimize this somehow
-                buf[ent_index * 3 + 0] = -10.0;
-                buf[ent_index * 3 + 1] = -10.0;
-                buf[ent_index * 3 + 2] = -10.0;
+                buf[ent_index * 4 + 0] = -10.0;
+                buf[ent_index * 4 + 1] = -10.0;
+                buf[ent_index * 4 + 2] = -10.0;
+                buf[ent_index * 4 + 3] = 1.0;
             }
         }
 
         let mut scene_mat_mut = scene.points_mat.as_ref().unwrap().borrow_mut();
+
+        scene_mat_mut
+            .set_uniform_value(UniformName::Fcoef, UniformValue::Float(uniform_data.f_coef));
 
         scene_mat_mut.bind_for_drawing(gl);
         prim.upload_buffers(gl);

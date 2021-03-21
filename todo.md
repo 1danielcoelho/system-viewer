@@ -700,26 +700,26 @@ color.rgb *= exposure;
 >- The GLTF test models are all gray now?
     >- Maybe it's exposure blowing up, I need to update the scene
     >- I was overriding their materials with blank gltf_metal_rough ones
+>- Framebuffer refactor
+>- Create a framebuffer that uses an f32 renderbuffer for the depth attachment (alongside with a regular color buffer)
+>- Draw to it using logarithmic depth buffer by using the C function on the vertex shader and writing the depth on the fragment shader too
+    >- WARNING: I don't currently need to write fragment depth from the pixel shader, but whenever I do I'll need to handle the logarithmic depth buffer values carefully: https://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
+>- References:
+    >- http://math.hws.edu/graphicsbook/c7/s4.html#:~:text=In%20WebGL%2C%20a%20framebuffer%20is,by%20the%20call%20to%20canvas.
+    >- https://learnopengl.com/Advanced-OpenGL/Framebuffers
+    >- https://webglfundamentals.org/webgl/lessons/webgl-render-to-texture.html
+    >- https://webglfundamentals.org/webgl/lessons/webgl-framebuffers.html
+    >- http://www.songho.ca/opengl/gl_fbo.html
+>- I think the points are not always passing the depth test against the skybox
+    >- This is actually a camera near/far precision problem
+    >- I think I'll have to adjust near/far dynamically, but I always want them to be there though
+>- Do something about near/far camera distance
+    >- Maybe dynamically change this when close to a small body?
+    >- With log depth buffer I can leave near at 0.0001 and it's fine
 
 ================================================================================
 
-# Framebuffer refactor
->- Create a framebuffer that uses an f32 renderbuffer for the depth attachment (alongside with a regular color buffer)
-- Draw to it using logarithmic depth buffer by using the C function on the vertex shader and writing the depth on the fragment shader too
-- I think the canvas framebuffer had antialiasing on, so now I have to figure out how to enable it on the main framebuffer too
-- References:
-    - http://math.hws.edu/graphicsbook/c7/s4.html#:~:text=In%20WebGL%2C%20a%20framebuffer%20is,by%20the%20call%20to%20canvas.
-    - https://learnopengl.com/Advanced-OpenGL/Framebuffers
-    - https://webglfundamentals.org/webgl/lessons/webgl-render-to-texture.html
-    - https://webglfundamentals.org/webgl/lessons/webgl-framebuffers.html
-    - http://www.songho.ca/opengl/gl_fbo.html
-
 # TODO MVP
-- I think the points are not always passing the depth test against the skybox
-    - This is actually a camera near/far precision problem
-    - I think I'll have to adjust near/far dynamically, but I always want them to be there though
-- Do something about near/far camera distance
-    - Maybe dynamically change this when close to a small body?
 - Rings?
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
@@ -746,6 +746,7 @@ color.rgb *= exposure;
 
 # TODO Cleanup
 - I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
+- Remove bulk of code from mod.rs files and put them in e.g. interface/interface.rs instead, as it's easier to Ctrl+P to
 
 # TODO UX
 - I should be able to orbit the selection even if not focused...
@@ -757,6 +758,7 @@ color.rgb *= exposure;
 - Maybe pressing F/G without anything selected/focused would frame all of the objects in the scene
 
 # TODO Visuals
+- Antialiasing: The default canvas framebuffer has antialiasing by default. Now that I setup my own framebuffer I'll need to enable it manually
 - Custom material for earth that uses the light/day and cloud textures
 - Planet trails for physics bodies
 - Automatic exposure adjustment

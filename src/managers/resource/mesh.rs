@@ -99,7 +99,7 @@ impl DynamicPrimitive {
         ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
         ctx.vertex_attrib_pointer_with_i32(
             PrimitiveAttribute::Position as u32,
-            3,
+            4,
             GL::FLOAT,
             false,
             0,
@@ -139,7 +139,7 @@ impl DynamicPrimitive {
     }
 
     pub fn set_num_elements(&mut self, num_points: usize) {
-        self.pos_buffer_data.resize(num_points * 3, 0.0);
+        self.pos_buffer_data.resize(num_points * 4, 0.0);
         self.color_buffer_data.resize(num_points * 4, 1.0);
     }
 
@@ -193,7 +193,7 @@ impl DynamicPrimitive {
             ctx.bind_buffer(GL::ARRAY_BUFFER, Some(self.color_buffer.as_ref()));
             ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_arr, GL::DYNAMIC_DRAW);
 
-            self.last_uploaded_point_count = self.pos_buffer_data.len() / 3;
+            self.last_uploaded_point_count = self.pos_buffer_data.len() / 4;
         } else {
             ctx.buffer_sub_data_with_i32_and_array_buffer_view(GL::ARRAY_BUFFER, 0, &pos_arr);
         }

@@ -79,7 +79,7 @@ impl Framebuffer {
             );
         }
 
-        log::error!(
+        log::info!(
             "Created main framebuffer with width {}, height {}",
             width,
             height
@@ -144,7 +144,7 @@ impl Framebuffer {
         );
         gl.bind_renderbuffer(GL::RENDERBUFFER, None);
 
-        log::error!(
+        log::info!(
             "Resized framebuffer attachments with width {}, height {}",
             self.width,
             self.height

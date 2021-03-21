@@ -17,6 +17,7 @@ pub struct FrameUniformValues {
     pub light_colors: Vec<f32>,
     pub light_intensities: Vec<f32>,
     pub exposure_factor: f32,
+    pub f_coef: f32, // Logarithmic depth buffer constant
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -39,6 +40,7 @@ pub enum UniformName {
     EmissiveFactor,
     Occlusion,
     ExposureFactor,
+    Fcoef, // Constant used for logarithmic depth buffer
 }
 impl UniformName {
     pub fn default_value(&self) -> UniformValue {
@@ -70,6 +72,7 @@ impl UniformName {
             UniformName::EmissiveFactor => UniformValue::Vec3([0.0, 0.0, 0.0]),
             UniformName::Occlusion => UniformValue::Int(TextureUnit::Occlusion as i32),
             UniformName::ExposureFactor => UniformValue::Float(1.0),
+            UniformName::Fcoef => UniformValue::Float(1.0),
         }
     }
 
@@ -93,6 +96,7 @@ impl UniformName {
             UniformName::EmissiveFactor => "u_emissive_factor",
             UniformName::Occlusion => "us_occlusion",
             UniformName::ExposureFactor => "u_exposure_factor",
+            UniformName::Fcoef => "u_f_coef",
         }
     }
 }

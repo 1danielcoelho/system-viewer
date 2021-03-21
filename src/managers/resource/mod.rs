@@ -469,7 +469,7 @@ impl ResourceManager {
                 identifier,
                 "relay_color.vert",
                 "white.frag",
-                &[UniformName::WVPTrans],
+                &[UniformName::WVPTrans, UniformName::Fcoef],
             )),
             "default_screenspace" => Some(Material::new(
                 identifier,
@@ -481,7 +481,7 @@ impl ResourceManager {
                 identifier,
                 "relay_points.vert",
                 "color.frag",
-                &[],
+                &[UniformName::Fcoef],
             )),
             "skybox" => Some(Material::new(
                 identifier,
@@ -493,7 +493,7 @@ impl ResourceManager {
                 identifier,
                 "relay_color.vert",
                 "color.frag",
-                &[UniformName::WVPTrans],
+                &[UniformName::WVPTrans, UniformName::Fcoef],
             )),
             "local_normals" => Some(Material::new(
                 identifier,
@@ -503,6 +503,7 @@ impl ResourceManager {
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
+                    UniformName::Fcoef,
                 ],
             )),
             "world_normals" => Some(Material::new(
@@ -513,6 +514,7 @@ impl ResourceManager {
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
+                    UniformName::Fcoef,
                 ],
             )),
             "local_tangents" => Some(Material::new(
@@ -523,6 +525,7 @@ impl ResourceManager {
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
+                    UniformName::Fcoef,
                 ],
             )),
             "world_tangents" => Some(Material::new(
@@ -533,6 +536,7 @@ impl ResourceManager {
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
+                    UniformName::Fcoef,
                 ],
             )),
             "uv0" => Some(Material::new(
@@ -543,6 +547,7 @@ impl ResourceManager {
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
+                    UniformName::Fcoef,
                 ],
             )),
             "uv1" => Some(Material::new(
@@ -553,6 +558,7 @@ impl ResourceManager {
                     UniformName::WVTrans,
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
+                    UniformName::Fcoef,
                 ],
             )),
             "basecolor" => Some(Material::new(
@@ -564,6 +570,7 @@ impl ResourceManager {
                     UniformName::WVInvTranspTrans,
                     UniformName::WVPTrans,
                     UniformName::BaseColor,
+                    UniformName::Fcoef,
                 ],
             )),
             "phong" => Some(Material::new(
@@ -578,6 +585,7 @@ impl ResourceManager {
                     UniformName::LightPosDir,
                     UniformName::LightColors,
                     UniformName::LightIntensities,
+                    UniformName::Fcoef,
                 ],
             )),
             "gltf_metal_rough" => Some(Material::new(
@@ -602,6 +610,7 @@ impl ResourceManager {
                     UniformName::EmissiveFactor,
                     UniformName::Occlusion,
                     UniformName::ExposureFactor,
+                    UniformName::Fcoef,
                 ],
             )),
             _ => None,
