@@ -344,7 +344,7 @@ impl InterfaceManager {
                     ui.horizontal(|ui| {
                         ui.add(
                             egui::DragValue::f64(&mut state.simulation_speed)
-                                .speed(0.001)
+                                .speed(1.0)
                                 .suffix("x time scale"),
                         );
                     });
@@ -497,7 +497,7 @@ impl InterfaceManager {
                         ui.label("Framerate limit:");
                         ui.add(
                             egui::Slider::f64(&mut state.frames_per_second_limit, 0.5..=120.0)
-                                .text(""),
+                                .text("fps"),
                         );
                         ui.end_row();
 
@@ -777,6 +777,10 @@ impl InterfaceManager {
                             ui.label("Far [Mm]:");
                             ui.add(egui::DragValue::f64(&mut state.camera.far));
                             ui.end_row();
+
+                            // Guarantee valid values even if we manually typed garbage in
+                            state.camera.near = state.camera.near.max(0.0001);
+                            state.camera.far = state.camera.far.max(state.camera.near + 0.0001);
 
                             ui.label("Camera pos [Mm]:");
                             ui.horizontal(|ui| {

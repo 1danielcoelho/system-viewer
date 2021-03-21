@@ -321,6 +321,8 @@ fn draw_points(
         return;
     }
 
+    gl.disable(GL::DEPTH_TEST);
+
     let mut pts = RefCell::borrow_mut(scene.points_mesh.as_ref().unwrap());
     if let Some(prim) = &mut pts.dynamic_primitive {
         let num_bodies = scene.mesh.get_num_components() as usize;
