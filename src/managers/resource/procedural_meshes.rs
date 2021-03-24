@@ -11,6 +11,244 @@ use crate::utils::gl::GL;
 use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
+pub fn generate_disk(
+    mut num_shells: u32,
+    mut num_segments: u32,
+    mut inner_radius: f32,
+    mut outer_radius: f32,
+    smooth_normals: bool,
+    mut shared_vertices: bool,
+    default_material: Option<Rc<RefCell<Material>>>,
+) -> Rc<RefCell<Mesh>> {
+    if !smooth_normals {
+        shared_vertices = false;
+    }
+
+    num_shells = num_shells.max(1);
+    num_segments = num_segments.max(3);
+    inner_radius = inner_radius.max(0.0);
+    outer_radius = inner_radius.max(outer_radius);
+
+    let num_verts: u32;
+    let num_inds: u32;
+    if shared_vertices {
+        if inner_radius == 0.0 {
+            let num_outer_verts = (num_shells - 1).max(0) * num_segments;
+            let num_inner_verts = num_segments * 2;
+
+            let num_outer_inds = num_segments * (num_shells - 1).max(0) * 6;
+            let num_inner_inds = num_segments * 3;
+
+            num_verts = num_inner_verts + num_outer_verts;
+            num_inds = num_outer_inds + num_inner_inds;
+        } else {
+            num_verts = num_segments * (num_shells + 1);
+            num_inds = num_segments * num_shells * 6;
+        }
+    } else {
+        if inner_radius == 0.0 {
+            let num_outer_inds = num_segments * (num_shells - 1).max(0) * 6;
+            let num_inner_inds = num_segments * 3;
+
+            num_inds = num_outer_inds + num_inner_inds;
+            num_verts = num_inds;
+        } else {
+            num_inds = num_segments * num_shells * 6;
+            num_verts = num_inds;
+        }
+    };
+
+    log::info!(
+        "Generating disk: Inner radius: {}, Outer radius: {}, Num segments: {}, Num shells: {}, Vertices: {}, Indices: {}, Smooth: {}, Shared verts: {}",
+        inner_radius,
+        outer_radius,
+        num_segments,
+        num_shells,
+        num_verts,
+        num_inds,
+        smooth_normals,
+        shared_vertices
+    );
+
+    let long_step = 2.0 * PI / (num_segments as f32);
+    let radius_step = (outer_radius - inner_radius) / num_shells as f32;
+
+    // Generate unique vertices (extra row for poles and the latitude seam)
+    let num_unique_verts = (num_segments * (num_shells + 1)) as usize;
+    let mut temp_positions: Vec<Vector3<f32>> = Vec::new();
+    let mut temp_uv0: Vec<Vector2<f32>> = Vec::new();
+    temp_positions.reserve(num_unique_verts);
+    temp_uv0.reserve(num_unique_verts);
+    for shell_index in 0..=num_shells {
+        let radius = (shell_index as f32) * radius_step;
+
+        for seg_index in 0..=num_segments {
+            let long_angle = (seg_index as f32) * long_step;
+
+            let x = radius * long_angle.cos();
+            let y = radius * long_angle.sin();
+
+            temp_positions.push(Vector3::new(x, y, 0.0));
+            temp_uv0.push(Vector2::new(
+                (seg_index as f32) / (num_segments as f32),
+                (shell_index as f32) / (num_shells as f32),
+            ));
+        }
+    };
+
+    // Generate final vertex data
+    let mut indices: Vec<u16> = Vec::new();
+    let mut positions: Vec<Vector3<f32>> = Vec::new();
+    let mut uv0: Vec<Vector2<f32>> = Vec::new();
+    indices.reserve(num_inds as usize);
+    if shared_vertices {
+        for i in 0..num_shells {
+            let mut k1 = i * (num_segments + 1);
+            let mut k2 = k1 + (num_segments + 1);
+
+            for _ in 0..num_segments {
+                if i != 0 {
+                    indices.push(k1 as u16);
+                    indices.push(k2 as u16);
+                    indices.push((k1 + 1) as u16);
+                }
+
+                if i != (num_shells - 1) {
+                    indices.push((k1 + 1) as u16);
+                    indices.push(k2 as u16);
+                    indices.push((k2 + 1) as u16);
+                }
+
+                k1 += 1;
+                k2 += 1;
+            }
+        }
+        std::mem::swap(&mut temp_positions, &mut positions);
+        std::mem::swap(&mut temp_uv0, &mut uv0);
+    } else {
+        positions.reserve(num_verts);
+        uv0.reserve(num_verts);
+
+        let mut index = 0;
+        for i in 0..num_lat_segs {
+            let mut k1 = i * (num_long_segs + 1);
+            let mut k2 = k1 + (num_long_segs + 1);
+
+            for _ in 0..num_long_segs {
+                let p_k1 = &temp_positions[k1 as usize];
+                let p_k2 = &temp_positions[k2 as usize];
+                let p_k1p1 = &temp_positions[(k1 + 1) as usize];
+                let p_k2p1 = &temp_positions[(k2 + 1) as usize];
+
+                let uv_k1 = &temp_uv0[k1 as usize];
+                let uv_k2 = &temp_uv0[k2 as usize];
+                let uv_k1p1 = &temp_uv0[(k1 + 1) as usize];
+                let uv_k2p1 = &temp_uv0[(k2 + 1) as usize];
+
+                if i != 0 {
+                    positions.push(*p_k1);
+                    positions.push(*p_k2);
+                    positions.push(*p_k1p1);
+
+                    uv0.push(*uv_k1);
+                    uv0.push(*uv_k2);
+                    uv0.push(*uv_k1p1);
+
+                    indices.push(index + 0);
+                    indices.push(index + 1);
+                    indices.push(index + 2);
+                    index += 3;
+                }
+
+                if i != (num_lat_segs - 1) {
+                    positions.push(*p_k1p1);
+                    positions.push(*p_k2);
+                    positions.push(*p_k2p1);
+
+                    uv0.push(*uv_k1p1);
+                    uv0.push(*uv_k2);
+                    uv0.push(*uv_k2p1);
+
+                    indices.push(index + 0);
+                    indices.push(index + 1);
+                    indices.push(index + 2);
+                    index += 3;
+                }
+
+                k1 += 1;
+                k2 += 1;
+            }
+        }
+    }
+
+    // Do normals in a separate pass as they don't need lat/long index
+    let mut normals: Vec<Vector3<f32>> = Vec::new();
+    let mut tangents: Vec<Vector3<f32>> = Vec::new();
+    normals.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
+    tangents.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
+    for triangle_index in 0..(indices.len() / 3) {
+        let i0 = indices[triangle_index * 3 + 0] as usize;
+        let i1 = indices[triangle_index * 3 + 1] as usize;
+        let i2 = indices[triangle_index * 3 + 2] as usize;
+
+        let p0 = &positions[i0];
+        let p1 = &positions[i1];
+        let p2 = &positions[i2];
+
+        if smooth_normals {
+            normals[i0] = p0.normalize();
+            normals[i1] = p1.normalize();
+            normals[i2] = p2.normalize();
+            tangents[i0] = normals[i0].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i1] = normals[i1].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+            tangents[i2] = normals[i2].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+        } else {
+            let normal = (p1 - p0).cross(&(p2 - p0)).normalize();
+            let tangent = normal.cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+            normals[i0] = normal;
+            normals[i1] = normal;
+            normals[i2] = normal;
+            tangents[i0] = tangent;
+            tangents[i1] = tangent;
+            tangents[i2] = tangent;
+        }
+    }
+
+    log::info!(
+        "\tUV sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, tangent: {}/{}, uv: {}/{}",
+        positions.len(),
+        positions.capacity(),
+        indices.len(),
+        indices.capacity(),
+        normals.len(),
+        normals.capacity(),
+        tangents.len(),
+        tangents.capacity(),
+        uv0.len(),
+        uv0.capacity(),
+    );
+
+    return intermediate_to_mesh(&IntermediateMesh {
+        name: String::from("lat_long_sphere"),
+        primitives: vec![IntermediatePrimitive {
+            name: String::from("0"),
+            indices,
+            positions,
+            normals,
+            tangents,
+            colors: vec![],
+            uv0,
+            uv1: vec![],
+            mat: default_material,
+            mode: GL::TRIANGLES,
+            collider: Some(Box::new(SphereCollider {
+                center: Point3::new(0.0, 0.0, 0.0),
+                radius2: radius * radius,
+            })),
+        }],
+    });
+}
+
 // Praise songho: http://www.songho.ca/opengl/gl_sphere.html
 pub fn generate_lat_long_sphere(
     mut num_lat_segs: u32,
