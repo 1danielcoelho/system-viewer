@@ -719,15 +719,16 @@ color.rgb *= exposure;
 > - Fix bugs with disk generation
     > - Weird segment when we disable shared vertices for inner_radius != 0.0
     > - Inner_radius == 0.0 looks weird both for shared vertices and not
+> - Setup double-sided rendering of meshes as a toggle
 
 ================================================================================
 
 # TODO MVP
 - Rings?
-    - Setup double-sided rendering of meshes as a toggle
-    - Try out ring texture mapping
     - Figure out how to setup spawned bodies to have rings
         - Child entities probably? What about inheriting rotation?
+        - Fix disaster that is my scene schema
+    - Try out ring texture mapping
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
     - MAYBE investigate async loading of assets before doing this because the skybox is way too slow

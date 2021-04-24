@@ -246,6 +246,7 @@ pub struct Material {
     textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,
     uniforms: HashMap<UniformName, Uniform>,
     defines: HashSet<ShaderDefine>,
+    pub double_sided: bool,
 
     failed_to_compile: bool,
 }
@@ -277,6 +278,7 @@ impl Material {
             textures: HashMap::new(),
             uniforms,
             defines: HashSet::new(),
+            double_sided: false,
             failed_to_compile: false,
         }
     }
@@ -491,6 +493,12 @@ impl Material {
                 true => GL::TEXTURE_CUBE_MAP,
             };
             gl.bind_texture(target, tex_borrow.gl_handle.as_ref());
+        }
+
+        if self.double_sided {
+            gl.disable(GL::CULL_FACE); 
+        } else {
+            gl.enable(GL::CULL_FACE); 
         }
     }
 
