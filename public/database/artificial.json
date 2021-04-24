@@ -22,6 +22,14 @@
         "mesh": "plane",
         "material": "gltf_metal_rough"
     },
+    "disk": {
+        "name": "Disk",
+        "type": "artificial",
+        "mass": 1,
+        "radius": 1,
+        "mesh": "disk",
+        "material": "world_normals"
+    },
     "2cylinderengine": {
         "name": "2 Cylinder Engine",
         "type": "artificial",

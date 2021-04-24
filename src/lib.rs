@@ -15,7 +15,6 @@ use crate::utils::web::{
     force_full_canvas, get_canvas, get_gl_context, local_storage_remove, setup_event_handlers,
 };
 use egui::Ui;
-use std::borrow::BorrowMut;
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};

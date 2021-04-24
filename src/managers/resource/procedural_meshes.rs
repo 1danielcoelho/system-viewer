@@ -2,9 +2,7 @@ use crate::managers::resource::collider::{AxisAlignedBoxCollider, SphereCollider
 use crate::managers::resource::intermediate_mesh::{
     generate_dynamic_mesh, generate_screen_space_quad,
 };
-use crate::managers::resource::intermediate_mesh::{
-    intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
-};
+use crate::managers::resource::intermediate_mesh::{intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive};
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
 use crate::utils::gl::GL;
@@ -16,14 +14,9 @@ pub fn generate_disk(
     mut num_segments: u32,
     mut inner_radius: f32,
     mut outer_radius: f32,
-    smooth_normals: bool,
-    mut shared_vertices: bool,
+    shared_vertices: bool,
     default_material: Option<Rc<RefCell<Material>>>,
 ) -> Rc<RefCell<Mesh>> {
-    if !smooth_normals {
-        shared_vertices = false;
-    }
-
     num_shells = num_shells.max(1);
     num_segments = num_segments.max(3);
     inner_radius = inner_radius.max(0.0);
@@ -31,42 +24,37 @@ pub fn generate_disk(
 
     let num_verts: u32;
     let num_inds: u32;
-    if shared_vertices {
-        if inner_radius == 0.0 {
-            let num_outer_verts = (num_shells - 1).max(0) * num_segments;
-            let num_inner_verts = num_segments * 2;
+    let shared_indices: u32; // Also the number of unique verts and unique indices
+    if inner_radius == 0.0 {
+        shared_indices = (num_segments * (num_shells - 1) * 6) + (num_segments * 3);
 
-            let num_outer_inds = num_segments * (num_shells - 1).max(0) * 6;
-            let num_inner_inds = num_segments * 3;
-
-            num_verts = num_inner_verts + num_outer_verts;
-            num_inds = num_outer_inds + num_inner_inds;
-        } else {
+        if shared_vertices {
             num_verts = num_segments * (num_shells + 1);
-            num_inds = num_segments * num_shells * 6;
+            num_inds = shared_indices;
+        } else {
+            num_verts = shared_indices;
+            num_inds = shared_indices;
         }
     } else {
-        if inner_radius == 0.0 {
-            let num_outer_inds = num_segments * (num_shells - 1).max(0) * 6;
-            let num_inner_inds = num_segments * 3;
+        shared_indices = num_segments * num_shells * 6;
 
-            num_inds = num_outer_inds + num_inner_inds;
-            num_verts = num_inds;
+        if shared_vertices {
+            num_verts = num_segments * (num_shells + 1);
+            num_inds = shared_indices;
         } else {
-            num_inds = num_segments * num_shells * 6;
-            num_verts = num_inds;
+            num_verts = shared_indices;
+            num_inds = shared_indices;
         }
-    };
+    }
 
     log::info!(
-        "Generating disk: Inner radius: {}, Outer radius: {}, Num segments: {}, Num shells: {}, Vertices: {}, Indices: {}, Smooth: {}, Shared verts: {}",
+        "Generating disk: Inner radius: {}, Outer radius: {}, Num segments: {}, Num shells: {}, Vertices: {}, Indices: {}, Shared verts: {}",
         inner_radius,
         outer_radius,
         num_segments,
         num_shells,
         num_verts,
         num_inds,
-        smooth_normals,
         shared_vertices
     );
 
@@ -74,13 +62,16 @@ pub fn generate_disk(
     let radius_step = (outer_radius - inner_radius) / num_shells as f32;
 
     // Generate unique vertices (extra row for poles and the latitude seam)
-    let num_unique_verts = (num_segments * (num_shells + 1)) as usize;
     let mut temp_positions: Vec<Vector3<f32>> = Vec::new();
     let mut temp_uv0: Vec<Vector2<f32>> = Vec::new();
-    temp_positions.reserve(num_unique_verts);
-    temp_uv0.reserve(num_unique_verts);
+    let mut normals: Vec<Vector3<f32>> = Vec::new();
+    let mut tangents: Vec<Vector3<f32>> = Vec::new();
+    temp_positions.reserve(shared_indices as usize);
+    temp_uv0.reserve(shared_indices as usize);
+    normals.resize(shared_indices as usize, Vector3::new(0.0, 0.0, 1.0));
+    tangents.reserve(shared_indices as usize);
     for shell_index in 0..=num_shells {
-        let radius = (shell_index as f32) * radius_step;
+        let radius = inner_radius + (shell_index as f32) * radius_step;
 
         for seg_index in 0..=num_segments {
             let long_angle = (seg_index as f32) * long_step;
@@ -93,124 +84,153 @@ pub fn generate_disk(
                 (seg_index as f32) / (num_segments as f32),
                 (shell_index as f32) / (num_shells as f32),
             ));
+            tangents.push(Vector3::new(long_angle.cos(), -long_angle.sin(), 0.0));
         }
-    };
+    }
 
     // Generate final vertex data
     let mut indices: Vec<u16> = Vec::new();
     let mut positions: Vec<Vector3<f32>> = Vec::new();
     let mut uv0: Vec<Vector2<f32>> = Vec::new();
     indices.reserve(num_inds as usize);
-    if shared_vertices {
-        for i in 0..num_shells {
-            let mut k1 = i * (num_segments + 1);
-            let mut k2 = k1 + (num_segments + 1);
+    if inner_radius != 0.0 {
+        if shared_vertices {
+            for i in 0..num_shells {
+                let mut k1 = i * (num_segments + 1);
+                let mut k2 = k1 + (num_segments + 1);
 
-            for _ in 0..num_segments {
-                if i != 0 {
+                for _ in 0..num_segments {
                     indices.push(k1 as u16);
                     indices.push(k2 as u16);
                     indices.push((k1 + 1) as u16);
-                }
 
-                if i != (num_shells - 1) {
                     indices.push((k1 + 1) as u16);
                     indices.push(k2 as u16);
                     indices.push((k2 + 1) as u16);
+
+                    k1 += 1;
+                    k2 += 1;
                 }
-
-                k1 += 1;
-                k2 += 1;
             }
-        }
-        std::mem::swap(&mut temp_positions, &mut positions);
-        std::mem::swap(&mut temp_uv0, &mut uv0);
-    } else {
-        positions.reserve(num_verts);
-        uv0.reserve(num_verts);
+            std::mem::swap(&mut temp_positions, &mut positions);
+            std::mem::swap(&mut temp_uv0, &mut uv0);
+        } else {
+            positions.reserve(num_verts as usize);
+            uv0.reserve(num_verts as usize);
 
-        let mut index = 0;
-        for i in 0..num_lat_segs {
-            let mut k1 = i * (num_long_segs + 1);
-            let mut k2 = k1 + (num_long_segs + 1);
+            let mut index = 0;
+            for i in 0..num_shells {
+                let mut k1 = i * (num_segments + 1);
+                let mut k2 = k1 + (num_segments + 1);
 
-            for _ in 0..num_long_segs {
-                let p_k1 = &temp_positions[k1 as usize];
-                let p_k2 = &temp_positions[k2 as usize];
-                let p_k1p1 = &temp_positions[(k1 + 1) as usize];
-                let p_k2p1 = &temp_positions[(k2 + 1) as usize];
+                for _ in 0..num_segments {
+                    let p_k1 = &temp_positions[k1 as usize];
+                    let p_k2 = &temp_positions[k2 as usize];
+                    let p_k1p1 = &temp_positions[(k1 + 1) as usize];
+                    let p_k2p1 = &temp_positions[(k2 + 1) as usize];
 
-                let uv_k1 = &temp_uv0[k1 as usize];
-                let uv_k2 = &temp_uv0[k2 as usize];
-                let uv_k1p1 = &temp_uv0[(k1 + 1) as usize];
-                let uv_k2p1 = &temp_uv0[(k2 + 1) as usize];
+                    let uv_k1 = &temp_uv0[k1 as usize];
+                    let uv_k2 = &temp_uv0[k2 as usize];
+                    let uv_k1p1 = &temp_uv0[(k1 + 1) as usize];
+                    let uv_k2p1 = &temp_uv0[(k2 + 1) as usize];
 
-                if i != 0 {
                     positions.push(*p_k1);
                     positions.push(*p_k2);
                     positions.push(*p_k1p1);
-
                     uv0.push(*uv_k1);
                     uv0.push(*uv_k2);
                     uv0.push(*uv_k1p1);
-
                     indices.push(index + 0);
                     indices.push(index + 1);
                     indices.push(index + 2);
-                    index += 3;
-                }
 
-                if i != (num_lat_segs - 1) {
                     positions.push(*p_k1p1);
                     positions.push(*p_k2);
                     positions.push(*p_k2p1);
-
                     uv0.push(*uv_k1p1);
                     uv0.push(*uv_k2);
                     uv0.push(*uv_k2p1);
+                    indices.push(index + 4);
+                    indices.push(index + 5);
+                    indices.push(index + 6);
 
-                    indices.push(index + 0);
-                    indices.push(index + 1);
-                    indices.push(index + 2);
-                    index += 3;
+                    k1 += 1;
+                    k2 += 1;
+                    index += 6;
                 }
-
-                k1 += 1;
-                k2 += 1;
             }
         }
-    }
+    } else {
+        if shared_vertices {
+            for i in 0..num_shells {
+                let mut k1 = i * (num_segments + 1);
+                let mut k2 = k1 + (num_segments + 1);
 
-    // Do normals in a separate pass as they don't need lat/long index
-    let mut normals: Vec<Vector3<f32>> = Vec::new();
-    let mut tangents: Vec<Vector3<f32>> = Vec::new();
-    normals.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
-    tangents.resize(num_verts, Vector3::new(0.0, 0.0, 1.0));
-    for triangle_index in 0..(indices.len() / 3) {
-        let i0 = indices[triangle_index * 3 + 0] as usize;
-        let i1 = indices[triangle_index * 3 + 1] as usize;
-        let i2 = indices[triangle_index * 3 + 2] as usize;
+                for _ in 0..num_segments {
+                    if i != 0 {
+                        indices.push(k1 as u16);
+                        indices.push(k2 as u16);
+                        indices.push((k2 + 1) as u16);
+                    }
 
-        let p0 = &positions[i0];
-        let p1 = &positions[i1];
-        let p2 = &positions[i2];
+                    indices.push(k1 as u16);
+                    indices.push((k2 + 1) as u16);
+                    indices.push((k1 + 1) as u16);
 
-        if smooth_normals {
-            normals[i0] = p0.normalize();
-            normals[i1] = p1.normalize();
-            normals[i2] = p2.normalize();
-            tangents[i0] = normals[i0].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
-            tangents[i1] = normals[i1].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
-            tangents[i2] = normals[i2].cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
+                    k1 += 1;
+                    k2 += 1;
+                }
+            }
+            std::mem::swap(&mut temp_positions, &mut positions);
+            std::mem::swap(&mut temp_uv0, &mut uv0);
         } else {
-            let normal = (p1 - p0).cross(&(p2 - p0)).normalize();
-            let tangent = normal.cross(&Vector3::new(0.0, 0.0, 1.0)).normalize();
-            normals[i0] = normal;
-            normals[i1] = normal;
-            normals[i2] = normal;
-            tangents[i0] = tangent;
-            tangents[i1] = tangent;
-            tangents[i2] = tangent;
+            positions.reserve(num_verts as usize);
+            uv0.reserve(num_verts as usize);
+
+            let mut index = 0;
+            for i in 0..num_shells {
+                let mut k1 = i * (num_segments + 1);
+                let mut k2 = k1 + (num_segments + 1);
+
+                for _ in 0..num_segments {
+                    let p_k1 = &temp_positions[k1 as usize];
+                    let p_k2 = &temp_positions[k2 as usize];
+                    let p_k1p1 = &temp_positions[(k1 + 1) as usize];
+                    let p_k2p1 = &temp_positions[(k2 + 1) as usize];
+
+                    let uv_k1 = &temp_uv0[k1 as usize];
+                    let uv_k2 = &temp_uv0[k2 as usize];
+                    let uv_k1p1 = &temp_uv0[(k1 + 1) as usize];
+                    let uv_k2p1 = &temp_uv0[(k2 + 1) as usize];
+
+                    if i != 0 {
+                        positions.push(*p_k1);
+                        positions.push(*p_k2);
+                        positions.push(*p_k2p1);
+                        uv0.push(*uv_k1);
+                        uv0.push(*uv_k2);
+                        uv0.push(*uv_k2p1);
+                        indices.push(index + 0);
+                        indices.push(index + 1);
+                        indices.push(index + 2);
+                        index += 3;
+                    }
+
+                    positions.push(*p_k1);
+                    positions.push(*p_k2p1);
+                    positions.push(*p_k1p1);
+                    uv0.push(*uv_k1);
+                    uv0.push(*uv_k2p1);
+                    uv0.push(*uv_k1p1);
+                    indices.push(index + 4);
+                    indices.push(index + 5);
+                    indices.push(index + 6);
+                    index += 3;
+
+                    k1 += 1;
+                    k2 += 1;
+                }
+            }
         }
     }
 
@@ -241,9 +261,9 @@ pub fn generate_disk(
             uv1: vec![],
             mat: default_material,
             mode: GL::TRIANGLES,
-            collider: Some(Box::new(SphereCollider {
-                center: Point3::new(0.0, 0.0, 0.0),
-                radius2: radius * radius,
+            collider: Some(Box::new(AxisAlignedBoxCollider {
+                mins: Point3::new(-outer_radius, -outer_radius, -0.001),
+                maxes: Point3::new(outer_radius, outer_radius, 0.001),
             })),
         }],
     });

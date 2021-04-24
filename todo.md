@@ -721,6 +721,9 @@ color.rgb *= exposure;
 
 # TODO MVP
 - Rings?
+    - Fix bugs with disk generation
+        - Weird segment when we disable shared vertices for inner_radius != 0.0
+        - Inner_radius == 0.0 looks weird both for shared vertices and not
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
 
@@ -816,6 +819,7 @@ color.rgb *= exposure;
     - Use a 1 pixel viewport to actually do the picking
     - Draw the dots mesh once again with a bigger point radius to allow picking bodies from far away
 - Maybe use https://crates.io/crates/calloop for the event system instead
+    - https://github.com/richardanaya/executor
 - Maybe find a nicer way of having a generic component storage system
     - It should be easier now that I don't need the components to be serializable 
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff

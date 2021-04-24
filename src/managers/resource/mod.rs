@@ -387,6 +387,7 @@ impl ResourceManager {
             "grid" => Some(generate_grid(11, default_mat)),
             "axes" => Some(generate_axes(self.get_or_create_material("vertex_color"))),
             "circle" => Some(generate_circle(100, default_mat)),
+            "disk" => Some(generate_disk(3, 6, 0.5, 1.0, false, default_mat)),
             "lat_long_sphere" => Some(generate_lat_long_sphere(
                 32,
                 32,
