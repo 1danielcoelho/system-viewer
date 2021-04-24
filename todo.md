@@ -716,16 +716,21 @@ color.rgb *= exposure;
 >- Do something about near/far camera distance
     >- Maybe dynamically change this when close to a small body?
     >- With log depth buffer I can leave near at 0.0001 and it's fine
+> - Fix bugs with disk generation
+    > - Weird segment when we disable shared vertices for inner_radius != 0.0
+    > - Inner_radius == 0.0 looks weird both for shared vertices and not
 
 ================================================================================
 
 # TODO MVP
 - Rings?
-    - Fix bugs with disk generation
-        - Weird segment when we disable shared vertices for inner_radius != 0.0
-        - Inner_radius == 0.0 looks weird both for shared vertices and not
+    - Setup double-sided rendering of meshes as a toggle
+    - Try out ring texture mapping
+    - Figure out how to setup spawned bodies to have rings
+        - Child entities probably? What about inheriting rotation?
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
+    - MAYBE investigate async loading of assets before doing this because the skybox is way too slow
 
 # TODO Bug fixes
 - Can't see the text on 'Metal Rough Spheres No Textures' for some reason

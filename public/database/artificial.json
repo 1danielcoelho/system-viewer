@@ -28,7 +28,7 @@
         "mass": 1,
         "radius": 1,
         "mesh": "disk",
-        "material": "world_normals"
+        "material": "uv0"
     },
     "2cylinderengine": {
         "name": "2 Cylinder Engine",

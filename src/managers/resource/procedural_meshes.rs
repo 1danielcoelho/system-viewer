@@ -2,7 +2,9 @@ use crate::managers::resource::collider::{AxisAlignedBoxCollider, SphereCollider
 use crate::managers::resource::intermediate_mesh::{
     generate_dynamic_mesh, generate_screen_space_quad,
 };
-use crate::managers::resource::intermediate_mesh::{intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive};
+use crate::managers::resource::intermediate_mesh::{
+    intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
+};
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
 use crate::utils::gl::GL;
@@ -150,9 +152,9 @@ pub fn generate_disk(
                     uv0.push(*uv_k1p1);
                     uv0.push(*uv_k2);
                     uv0.push(*uv_k2p1);
+                    indices.push(index + 3);
                     indices.push(index + 4);
                     indices.push(index + 5);
-                    indices.push(index + 6);
 
                     k1 += 1;
                     k2 += 1;
@@ -167,15 +169,15 @@ pub fn generate_disk(
                 let mut k2 = k1 + (num_segments + 1);
 
                 for _ in 0..num_segments {
+                    indices.push(k1 as u16);
+                    indices.push(k2 as u16);
+                    indices.push((k2 + 1) as u16);
+
                     if i != 0 {
                         indices.push(k1 as u16);
-                        indices.push(k2 as u16);
                         indices.push((k2 + 1) as u16);
+                        indices.push((k1 + 1) as u16);
                     }
-
-                    indices.push(k1 as u16);
-                    indices.push((k2 + 1) as u16);
-                    indices.push((k1 + 1) as u16);
 
                     k1 += 1;
                     k2 += 1;
@@ -203,29 +205,29 @@ pub fn generate_disk(
                     let uv_k1p1 = &temp_uv0[(k1 + 1) as usize];
                     let uv_k2p1 = &temp_uv0[(k2 + 1) as usize];
 
+                    positions.push(*p_k1);
+                    positions.push(*p_k2);
+                    positions.push(*p_k2p1);
+                    uv0.push(*uv_k1);
+                    uv0.push(*uv_k2);
+                    uv0.push(*uv_k2p1);
+                    indices.push(index + 0);
+                    indices.push(index + 1);
+                    indices.push(index + 2);
+                    index += 3;
+
                     if i != 0 {
                         positions.push(*p_k1);
-                        positions.push(*p_k2);
                         positions.push(*p_k2p1);
+                        positions.push(*p_k1p1);
                         uv0.push(*uv_k1);
-                        uv0.push(*uv_k2);
                         uv0.push(*uv_k2p1);
+                        uv0.push(*uv_k1p1);
                         indices.push(index + 0);
                         indices.push(index + 1);
                         indices.push(index + 2);
                         index += 3;
                     }
-
-                    positions.push(*p_k1);
-                    positions.push(*p_k2p1);
-                    positions.push(*p_k1p1);
-                    uv0.push(*uv_k1);
-                    uv0.push(*uv_k2p1);
-                    uv0.push(*uv_k1p1);
-                    indices.push(index + 4);
-                    indices.push(index + 5);
-                    indices.push(index + 6);
-                    index += 3;
 
                     k1 += 1;
                     k2 += 1;
