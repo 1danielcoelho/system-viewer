@@ -6,8 +6,8 @@ use crate::managers::resource::body_description::{BodyDescription, BodyType};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
-use crate::managers::scene::description::{BodyInstanceDescription, BodyMotionType};
-use crate::managers::scene::{Scene, SceneManager};
+use crate::managers::scene::description::BodyInstanceDescription;
+use crate::managers::scene::Scene;
 use crate::managers::ResourceManager;
 use crate::utils::string::decode_hex;
 use crate::utils::units::Jdn;
@@ -15,112 +15,6 @@ use na::*;
 use nalgebra::Vector3;
 use std::cell::RefCell;
 use std::rc::Rc;
-
-impl SceneManager {
-    // pub fn load_bodies_into_scene(
-    //     &mut self,
-    //     bodies: &Vec<BodyDescription>,
-    //     res_man: &mut ResourceManager,
-    // ) {
-    //     log::info!("Loading {} bodies...", bodies.len());
-
-    // The idea here is that bodies are only ever parented to barycenters
-    // Barycenters will themselves translate, but never rotate or scale, so nested orbits look ok-for-now-I-guess
-
-    // let mut id_to_entity: HashMap<u32, Entity> = HashMap::new();
-    // for body in bodies {
-    //     let parent = {
-    //         if body.reference_id == body.id {
-    //             None
-    //         } else {
-    //             // We expect these bodies to be in order, so we should already have
-    //             // parsed our parent
-    //             Some(id_to_entity[&body.reference_id])
-    //         }
-    //     };
-
-    //     let body_ent = self.add_body_entities(body, parent, res_man);
-    //     if let Some(_) = id_to_entity.insert(body.id, body_ent) {
-    //         log::warn!("Body collision when parsing csv for body: '{:#?}'", body);
-    //     }
-    // }
-
-    // log::info!("Loaded {} bodies into the scene", id_to_entity.len());
-    // }
-
-    // Adds these entities to the scene
-    // 1) Barycenter/Body entity (+geometry) around the parent barycenter (if available), parented to it (or free body);
-    // 2) Orbit entity (+geometry) around the parent barycenter, parented to it (optional),
-    //
-    // Returns the barycenter/body entity so that we can parent other stuff to it.
-    // fn add_body_entities(
-    //     &mut self,
-    //     body: &BodyDescription,
-    //     parent_bary: Option<Entity>,
-    //     res_man: &mut ResourceManager,
-    // ) -> Entity {
-    //     let scene = self.get_main_scene_mut().unwrap();
-
-    //     let body_ent = scene.new_entity(Some(&body.name));
-    //     if let Some(parent) = parent_bary {
-    //         scene.set_entity_parent(parent, body_ent);
-    //     }
-
-    //     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
-
-    // // Sphere mesh
-    // if body.mean_radius.0 > 0.0 {
-    //     let radius = body.mean_radius.0;
-
-    //     trans_comp.get_local_transform_mut().scale = Vector3::new(radius, radius, radius);
-
-    //     let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
-    //     mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
-    //     mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-    // }
-
-    // if body.body_type == BodyType::Star {
-    //     let light_comp = scene.add_component::<LightComponent>(body_ent);
-    //     light_comp.color = Vector3::new(1.0, 1.0, 1.0);
-    //     light_comp.intensity = 5E10;
-    //     light_comp.light_type = LightType::Point;
-    // }
-
-    // // Orbit
-    // if body.orbital_elements.semi_major_axis.0 > 0.0 {
-    //     let trans = elements_to_circle_transform(&body.orbital_elements);
-
-    //     let orbit_comp = scene.add_component::<OrbitalComponent>(body_ent);
-    //     orbit_comp.desc = body.clone(); // TODO: I could probably move this in
-    //     orbit_comp.circle_to_final_ellipse = trans.clone();
-
-    //     // Bake eccentric anomalies into the body
-    //     if body.orbital_elements.sidereal_orbit_period_days > 0.0 {
-    //         const NUM_ANGLES: u32 = 360;
-
-    //         // Add eccentric anomaly interpolation values
-    //         orbit_comp.baked_eccentric_anomaly_times =
-    //             bake_eccentric_anomaly_times(&body.orbital_elements, NUM_ANGLES);
-    //     }
-
-    //     // Orbit mesh entity
-    //     {
-    //         let orbit = scene.new_entity(Some(&(body.name.clone() + "'s orbit")));
-    //         if let Some(parent) = parent_bary {
-    //             scene.set_entity_parent(parent, orbit);
-    //         }
-
-    //         let trans_comp = scene.add_component::<TransformComponent>(orbit);
-    //         *trans_comp.get_local_transform_mut() = trans;
-
-    //         let mesh_comp = scene.add_component::<MeshComponent>(orbit);
-    //         mesh_comp.set_mesh(res_man.get_or_create_mesh("circle"));
-    //     }
-    // }
-
-    //     return body_ent;
-    // }
-}
 
 pub fn add_free_body(
     scene: &mut Scene,
@@ -142,20 +36,13 @@ pub fn add_free_body(
         return;
     }
 
-    match body_instance.motion_type {
-        BodyMotionType::DefaultElements | BodyMotionType::CustomElements => todo!(),
-        _ => {}
-    };
-
-    let state_vector = body_instance.state_vector.as_ref();
-    if let None = state_vector {
+    if body_instance.pos.is_none() || body_instance.linvel.is_none() {
         log::warn!(
             "Skipping body '{}' for having no state vector",
             body.id.as_ref().unwrap()
         );
         return;
     }
-    let state_vector = state_vector.unwrap();
 
     log::info!(
         "Adding body '{}' to scene '{}'",
@@ -172,8 +59,8 @@ pub fn add_free_body(
     let body_ent = scene.new_entity(Some(&name));
     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
     let trans = trans_comp.get_local_transform_mut();
-    trans.trans = state_vector.pos.coords;
-    if let Some(rot) = body_instance.initial_rot {
+    trans.trans = body_instance.pos.unwrap();
+    if let Some(rot) = body_instance.rot {
         trans.rot = UnitQuaternion::from_euler_angles(
             rot.x.to_radians(),
             rot.y.to_radians(),
@@ -208,8 +95,11 @@ pub fn add_free_body(
     // Physics
     let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
     phys_comp.mass = body.mass.unwrap() as f64;
-    phys_comp.lin_mom = state_vector.vel.scale(body.mass.unwrap() as f64);
-    if let Some(ang_vel) = body_instance.angular_velocity {
+    phys_comp.lin_mom = body_instance
+        .linvel
+        .unwrap()
+        .scale(body.mass.unwrap() as f64);
+    if let Some(ang_vel) = body_instance.angvel {
         phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
     }
 
@@ -434,67 +324,40 @@ pub fn fetch_default_motion_if_needed(
     res_man: &mut ResourceManager,
     default_time: Jdn,
 ) {
-    match body_instance.motion_type {
-        BodyMotionType::DefaultVector => {
-            let vectors = res_man.get_state_vectors().get(body_id);
-            if vectors.is_none() {
-                return;
-            };
-
-            let vectors = vectors.unwrap();
-            if vectors.len() < 1 {
-                return;
-            }
-
-            // Search for vector closest to default_time
-            // Have to do min_by_key manually because Rust
-            // Technically we could early out here when delta starts increasing but what the hell, this is one-off code
-            let mut lowest_index: usize = 0;
-            let mut lowest_delta: f64 = std::f64::INFINITY;
-            for (index, vec) in vectors.iter().enumerate() {
-                let delta = (vec.jdn_date.0 - default_time.0).abs();
-                if delta < lowest_delta {
-                    lowest_index = index;
-                    lowest_delta = delta;
-                }
-            }
-
-            if lowest_delta > 0.1 {
-                log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
-            }
-
-            body_instance.state_vector = Some(vectors[lowest_index].clone());
-        }
-        BodyMotionType::DefaultElements => {
-            let elements = res_man.get_osc_elements().get(body_id);
-            if elements.is_none() {
-                return;
-            };
-
-            let elements = elements.unwrap();
-            if elements.len() < 1 {
-                return;
-            }
-
-            // Search for elements closest to default_time
-            // Have to do min_by_key manually because Rust
-            // Technically we could early out here when delta starts increasing but what the hell, this is one-off code
-            let mut lowest_index: usize = 0;
-            let mut lowest_delta: f64 = std::f64::INFINITY;
-            for (index, el) in elements.iter().enumerate() {
-                let delta = (el.epoch.0 - default_time.0).abs();
-                if delta < lowest_delta {
-                    lowest_index = index;
-                    lowest_delta = delta;
-                }
-            }
-
-            if lowest_delta > 0.1 {
-                log::warn!("Using orbital elements '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", elements[lowest_index], lowest_delta, default_time.0, body_id);
-            }
-
-            body_instance.orbital_elements = Some(elements[lowest_index].clone());
-        }
-        _ => {}
+    let vectors = res_man.get_state_vectors().get(body_id);
+    if vectors.is_none() {
+        return;
     };
+
+    let vectors = vectors.unwrap();
+    if vectors.len() < 1 {
+        return;
+    }
+
+    // Search for vector closest to default_time
+    // Have to do min_by_key manually because Rust
+    // Technically we could early out here when delta starts increasing but what the hell, this is one-off code
+    let mut lowest_index: usize = 0;
+    let mut lowest_delta: f64 = std::f64::INFINITY;
+    for (index, vec) in vectors.iter().enumerate() {
+        let delta = (vec.jdn_date.0 - default_time.0).abs();
+        if delta < lowest_delta {
+            lowest_index = index;
+            lowest_delta = delta;
+        }
+    }
+
+    if lowest_delta > 0.1 {
+        log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
+    }
+
+    let vector = vectors[lowest_index];
+    
+    if let None = body_instance.pos {
+        body_instance.pos = Some(vector.pos.coords);
+    }
+
+    if let None = body_instance.linvel {
+        body_instance.linvel = Some(vector.vel);
+    }
 }

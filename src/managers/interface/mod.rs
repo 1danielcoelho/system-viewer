@@ -1069,14 +1069,9 @@ impl InterfaceManager {
                                     );
                                 });
 
-                                let mut num_bodies = 0;
-                                for (_, bodies) in desc.bodies.iter() {
-                                    num_bodies += bodies.len();
-                                }
-
                                 ui.columns(2, |cols| {
                                     cols[0].label("Bodies:");
-                                    cols[1].label(format!("{}", num_bodies));
+                                    cols[1].label(format!("{}", desc.bodies.len()));
                                 });
                             }
                         });

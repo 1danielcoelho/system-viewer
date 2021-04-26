@@ -55,6 +55,22 @@
                 ),
                 angular_velocity: [1, 2, 3],                    // Optional, Axis of rotation, length is rad/s, right-hand rule
             )
-        }
+        },
+
+        // New plan:
+        (
+            source: "major_bodies/*50",     // Optional. Wildcard: 50 random bodies of the group (can use just '*' to get all of them)
+        ),
+        (
+            name: "Earth",                  // Optional. Name override (will fallback to database entry after imported)
+            source: "major_bodies/399",     // Optional. Database entry to use as source
+            pos: [10, 20, 30],              // Optional. Position in Mm
+            rot: [30, 60, 90],              // Optional. Euler angles in degrees
+            scale: [1, 2, 3],               // Optional. Scale for initial transform
+            linvel: [10, 20, 30],           // Optional. Linear velocity in Mm/s
+            angvel: [10, 20, 30],           // Optional. Axis of rotation, length is rad/s, right-hand rule
+            mass: 23,                       // Optional. Mass override in Kg (will fallback to database entry)
+            parent: "Sun",                  // Optional. Name of parent entity
+        )
     },
 )
