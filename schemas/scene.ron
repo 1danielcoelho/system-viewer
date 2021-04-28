@@ -69,7 +69,7 @@
             scale: [1, 2, 3],               // Optional. Scale for initial transform
             linvel: [10, 20, 30],           // Optional. Linear velocity in Mm/s
             angvel: [10, 20, 30],           // Optional. Axis of rotation, length is rad/s, right-hand rule
-            mass: 23,                       // Optional. Mass override in Kg (will fallback to database entry)
+            mass: 23,                       // Optional. Mass override in Kg
             parent: "Sun",                  // Optional. Name of parent entity
         )
     },

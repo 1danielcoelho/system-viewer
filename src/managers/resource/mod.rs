@@ -340,7 +340,7 @@ pub struct ResourceManager {
     meshes: HashMap<String, Rc<RefCell<Mesh>>>,
     textures: HashMap<String, Rc<RefCell<Texture>>>,
     materials: HashMap<String, Rc<RefCell<Material>>>,
-    bodies: HashMap<String, HashMap<String, BodyDescription>>,
+    bodies: HashMap<String, BodyDescription>,
     state_vectors: HashMap<String, Vec<StateVector>>,
     osc_elements: HashMap<String, Vec<OrbitalElements>>,
 
@@ -801,7 +801,13 @@ impl ResourceManager {
                     .to_owned();
 
                 let num_parsed = parsed_data.len();
-                self.bodies.insert(database_name, parsed_data);
+
+                // Maps the parsed ids like "399" into "major_bodies/399"
+                self.bodies.extend(
+                    parsed_data
+                        .into_iter()
+                        .map(|e| (database_name + "/" + &e.0, e.1)),
+                );
 
                 log::info!("Parsed {} bodies from database '{}'", num_parsed, url);
             }
@@ -845,22 +851,6 @@ impl ResourceManager {
         }
     }
 
-    pub fn take_body_database(
-        &mut self,
-        db_name: &str,
-    ) -> Result<HashMap<String, BodyDescription>, String> {
-        let db = self.bodies.remove(db_name).ok_or(String::from(format!(
-            "Resource manager has no database with name '{}'",
-            db_name
-        )))?;
-
-        return Ok(db);
-    }
-
-    pub fn set_body_database(&mut self, db_name: &str, db: HashMap<String, BodyDescription>) {
-        self.bodies.insert(db_name.to_owned(), db);
-    }
-
     pub fn get_state_vectors(&mut self) -> &HashMap<String, Vec<StateVector>> {
         return &self.state_vectors;
     }
@@ -869,17 +859,28 @@ impl ResourceManager {
         return &self.osc_elements;
     }
 
-    pub fn get_body(&self, db_name: &str, body_id: &str) -> Result<&BodyDescription, String> {
-        let db = self.bodies.get(db_name).ok_or(String::from(format!(
-            "Resource manager has no database with name '{}'",
-            db_name
-        )))?;
+    pub fn get_body(&self, body_id: &str) -> Result<&BodyDescription, String> {
+        return Ok(self.bodies.get(body_id).ok_or(String::from(format!(
+            "Resource manager has no body entry '{}'",
+            body_id
+        )))?);
+    }
 
-        let body = db.get(body_id).ok_or(String::from(format!(
-            "Resource manager's database '{}' has no body with id '{}'",
-            db_name, body_id
-        )))?;
+    pub fn get_n_bodies(&self, prefix: &str, limit: Option<usize>) -> Vec<&BodyDescription> {
+        let limit_num = limit.unwrap_or(std::usize::MAX);
 
-        return Ok(body);
+        let mut result: Vec<&BodyDescription> = Vec::new();
+        for (id, body) in self.bodies {
+            if !id.starts_with(prefix) {
+                continue;
+            }
+
+            result.push(&body);
+            if result.len() >= limit_num {
+                break;
+            }
+        }
+
+        return result;
     }
 }
