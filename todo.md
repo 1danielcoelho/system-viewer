@@ -726,7 +726,8 @@ color.rgb *= exposure;
 # TODO MVP
 - Rings?
     - Figure out how to setup spawned bodies to have rings
-        - Child entities probably? What about inheriting rotation?
+        - Actually allow children to have parents (doesn't really do anything but disable physics yet)
+        - Child entities probably? What about inheriting rotation?        
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.
             - Rings with its own scale, tilt, rotation, etc.

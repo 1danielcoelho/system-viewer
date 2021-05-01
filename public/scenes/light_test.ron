@@ -4,20 +4,16 @@
     description: "PBR test to ensure physical light intensities are producing the expected results",
     time: "J2000",
     simulation_scale: 0,
-    bodies: {
-        "artificial": {            
-            "candle": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, 0, 0, 1, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 0],
-            ),
-            "disk": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 0],
-            ),
-        }
-    },
+    bodies: [
+        (
+            name: "Candle",
+            source: "artificial/candle",
+            pos: [0, 0, 1],
+        ),
+        (
+            name: "Disk",
+            source: "artificial/disk",
+            pos: [0, 0, 0],
+        )
+    ],
 )

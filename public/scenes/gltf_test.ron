@@ -4,126 +4,118 @@
     description: "Test scene with reference GLTF test files, for benchmarking and engine testing.",
     time: "J2000",
     simulation_scale: 0,
-    bodies: {
-        "major_bodies": {
-            "10": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, 0, 0, 0, 0, 0, 0)),
-            )
-        },  
-        "artificial": {
-            "boombox": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 0, 0, 0, 0, 0)),
-                scale: [100.0, 100.0, 100.0],
-                initial_rot: [0, 0, 70],
-            ),
-            "duck": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 3, 0, 0, 0, 0)),
-                scale: [1, 1, 1],
-                initial_rot: [0, 0, -55],
-            ),
-            "bottle": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, -3, 0, 0, 0, 0)),
-                scale: [10.0, 10.0, 10.0],
-                initial_rot: [-17, -10, 35],
-            ),
-            "helmet": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, -6, 0, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 135],
-            ),
-            "milktruck": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 6, 0, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 128],
-            ),
-            "metalrough": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 25, 0, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 90],
-            ),
-            "metalroughnotextures": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 50, -10, 0, 0, 0)),
-                scale: [3000.0, 3000.0, 3000.0],
-                initial_rot: [0, 0, 45],
-            ),
-            "normaltangentmirror": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 0, 10, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 30, 30],
-            ),
-            "normaltangenttest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 0, 5, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 30, 30],
-            ),
-            "orientationtest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, -5, 5, 0, 0, 0)),
-                scale: [0.5, 0.5, 0.5],
-                initial_rot: [0, 0, 0],
-            ),
-            "texturecoordinatetest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, -5, 12, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 90],
-            ),
-            "texturesettingstest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, -17, 10, 0, 0, 0)),
-                scale: [0.7, 0.7, 0.7],
-                initial_rot: [0, 0, 90],
-            ),
-            "vertexcolortest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 14, 0, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 90],
-            ),
-            "alphablendmodetest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, -21, 15, 0, 0, 0)),
-                scale: [1.0, 1.0, 1.0],
-                initial_rot: [0, 0, 104],
-            ),
-            "multiuvtest": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 0, 20, 0, 0, 0)),
-                scale: [2.0, 2.0, 2.0],
-                initial_rot: [0, 0, 0],
-            ),
-            "2cylinderengine": (
-                motion_type: CustomVector,
-                state_vector: ((2451549.0, -144279, 0, 64, 0, 0, 0)),
-                scale: [0.1, 0.1, 0.1],
-                initial_rot: [0, -21, 72],
-            ),
-
-
-
-
-            // "simplemeshes": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, -144279, 0, -7, 0, 0, 0)),
-            //     scale: [2.0, 2.0, 2.0],
-            //     initial_rot: [0, 0, -90],
-            // ),
-            // "twocubes": (
-            //     motion_type: CustomVector,
-            //     state_vector: ((2451549.0, -144279, 0, 0, 0, 0, 0)),
-            //     scale: [1.0, 1.0, 1.0],
-            //     initial_rot: [0, 0, 0],
-            // ),
-        }
-    },
+    bodies: [
+        (
+            name: "Sun",
+            source: "major_bodies/10",
+            pos: [0, 0, 0],
+        ),
+        (
+            source: "artificial/boombox",
+            pos: [-144279, 0, 0],
+            scale: [100.0, 100.0, 100.0],
+            rot: [0, 0, 70],
+        ),
+        (
+            source: "artificial/duck",
+            pos: [-144279, 3, 0],
+            rot: [0, 0, -55],
+        ),
+        (
+            source: "artificial/bottle",
+            pos: [-144279, -3, 0],
+            scale: [10.0, 10.0, 10.0],
+            rot: [-17, -10, 35],
+        ),
+        (
+            source: "artificial/helmet",
+            pos: [-144279, -6, 0],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 135],
+        ),
+        (
+            source: "artificial/milktruck",
+            pos: [-144279, 6, 0],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 128],
+        ),
+        (
+            source: "artificial/metalrough",
+            pos: [-144279, 25, 0],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 90],
+        ),
+        (
+            source: "artificial/metalroughnotextures",
+            pos: [-144279, 50, -10],
+            scale: [3000.0, 3000.0, 3000.0],
+            rot: [0, 0, 45],
+        ),
+        (
+            source: "artificial/normaltangentmirror",
+            pos: [-144279, 0, 10],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 30, 30],
+        ),
+        (
+            source: "artificial/normaltangenttest",
+            pos: [-144279, 0, 5],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 30, 30],
+        ),
+        (
+            source: "artificial/orientationtest",
+            pos: [-144279, -5, 5],
+            scale: [0.5, 0.5, 0.5],
+            rot: [0, 0, 0],
+        ),
+        (
+            source: "artificial/texturecoordinatetest",
+            pos: [-144279, -5, 12],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 90],
+        ),
+        (
+            source: "artificial/texturesettingstest",
+            pos: [-144279, -17, 10],
+            scale: [0.7, 0.7, 0.7],
+            rot: [0, 0, 90],
+        ),
+        (
+            source: "artificial/vertexcolortest",
+            pos: [-144279, 14, 0],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 90],
+        ),
+        (
+            source: "artificial/alphablendmodetest",
+            pos: [-144279, -21, 15],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 104],
+        ),
+        (
+            source: "artificial/multiuvtest",
+            pos: [-144279, 0, 20],
+            scale: [2.0, 2.0, 2.0],
+            rot: [0, 0, 0],
+        ),
+        (
+            source: "artificial/2cylinderengine",
+            pos: [-144279, 0, 64],
+            scale: [0.1, 0.1, 0.1],
+            rot: [0, -21, 72],
+        ),
+        (
+            source: "artificial/simplemeshes",
+            pos: [-144279, 0, -7],
+            scale: [2.0, 2.0, 2.0],
+            rot: [0, 0, -90],
+        ),
+        (
+            source: "artificial/twocubes",
+            pos: [-144279, 0, 0],
+            scale: [1.0, 1.0, 1.0],
+            rot: [0, 0, 0],
+        )
+    ]
 )

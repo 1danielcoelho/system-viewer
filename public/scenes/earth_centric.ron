@@ -5,19 +5,18 @@
     time: "J2000",
     simulation_scale: 500,
     focus: "399",
-    bodies: {
-        "major_bodies": {
-            "10": (
-                motion_type: DefaultVector,
-            ),
-            "399": (
-                motion_type: DefaultVector,
-            )
-        },  
-        "other_satellites": {
-            "301": (
-                motion_type: DefaultVector,
-            )
-        }
-    },
+    bodies: [
+        (
+            name: "Sun",
+            source: "major_bodies/10",
+        ),
+        (
+            name: "Earth",
+            source: "major_bodies/399",
+        ),
+        (
+            name: "Moon",
+            source: "other_satellites/301",
+        ),
+    ]
 )

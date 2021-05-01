@@ -167,8 +167,13 @@ pub fn add_body_instance_entities(
     // Physics
     if body_instance.parent.is_none() {
         let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
+
         phys_comp.mass = body.and_then(|b| b.mass).unwrap_or(1E21) as f64;
-        phys_comp.lin_mom = body_instance.linvel.unwrap().scale(phys_comp.mass);
+
+        if let Some(linvel) = body_instance.linvel {
+            phys_comp.lin_mom = linvel.scale(phys_comp.mass);
+        }
+
         if let Some(ang_vel) = body_instance.angvel {
             phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
         }

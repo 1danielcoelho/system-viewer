@@ -2,62 +2,16 @@
 (
     name: "Jovian system",
     description: "Solar system barycenter, Sun, Jupiter and it's system barycenter, as well as 10 of its moons",
-    time: "J2000",                      // String, can be just J2000 or a JDN date
-    simulation_scale: 500,              // Times, as in "500x speed"
-    focus: "599"    ,                   // Id of body to focus when opening the scene
-    camera_pos: [                       // Position in Mm of camera, wrt. `tracking`'s transform at `time`
-        0,                              // Optional. If either this, up or target aren't present, it will do a goto to `tracking`
-        1,
-        2,
-    ],
-    camera_up: [                        // Normalized. Likely just [0, 0, 1] for locked pitch
-        0,                              // Optional. If either this, up or target aren't present, it will do a goto to `tracking`
-        0,
-        1,
-    ],
-    camera_target: [                    // Camera target position in Mm, wrt. `tracking`'s transform at `time`
-        0,                              // Optional. If either this, up or target aren't present, it will do a goto to `tracking`
-        0,
-        0,
-    ],
-    bodies: {                           // Bodies to include in scene
-        "major_bodies": {
-            "10": (
-                motion_type: DefaultVector,
-            )
-        },
-        "comets" {
-            "*": (                      // All bodies in the group
-                motion_type: DefaultVector
-            )
-        },
-        "jovian_satellites" {
-            "*50": (                    // 50 bodies of the group (largest?)
-                motion_type: DefaultVector
-            )
-        },
-        "artificial": {
-            "bottle": (
-                motion_type: DefaultElements,                   // Mandatory. Variants are DefaultVector, DefaultElements, CustomVector, CustomElements
-                state_vector: ((2451545, 0, 1, 2, 0, 1, 2)),    // Optional, JDN, [Mm, Mm, Mm], [Mm/s, Mm/s, Mm/s], note 2 parenthesis
-                initial_rot: [30, 60, 90],                      // Optional, Euler angles in degrees
-                scale: [1, 2, 3],                               // Optional, Scale for initial transform
-                orbital_elements: (                             // Optional, Orbital elemetns, see osc_element.ron
-                    ref_id: "10",
-                    epoch: (2451545),
-                    a: (108208.16817083326),
-                    e: 0.006755786250503024,
-                    i: (0.059246766123226074),
-                    O: (1.338290102532625),
-                    w: (0.9631768169637214),
-                    M: (0.8746677730786798),
-                    p: 224.6983300739057,
-                ),
-                angular_velocity: [1, 2, 3],                    // Optional, Axis of rotation, length is rad/s, right-hand rule
-            )
-        },
+    time: "J2000",                          // String, can be just J2000 or a JDN date
+    simulation_scale: 500,                  // Times, as in "500x speed"
+    focus: "599",                           // Id of body to focus when opening the scene
+                                            
+                                            // Optional camera params. If either this, up or target aren't present, it will do a goto to `tracking`
+    camera_pos: [0, 1, 2],                  // Position in Mm of camera, wrt. `tracking`'s transform at `time`
+    camera_target: [0, 0, 0],               // Camera target position in Mm, wrt. `tracking`'s transform at `time`
+    camera_up: [0, 0, 1],                   // Normalized. Likely just [0, 0, 1] for locked pitch
 
-        // New plan:
+    bodies: [                               // Bodies to include in scene
         (
             source: "major_bodies/*50",     // Optional. Wildcard: 50 random bodies of the group (can use just '*' to get all of them)
         ),
@@ -83,5 +37,5 @@
                 "diffuse_color": "c9c9c9"   // sRGB hex diffuse color
             },          
         )
-    },
+    ],
 )

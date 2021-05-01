@@ -4,36 +4,24 @@
     description: "All planets, dwarf planets and satellites in the solar system, plus a bunch of asteroids and comets.",
     time: "J2000",
     simulation_scale: 500,
-    bodies: {
-        "major_bodies": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },  
-        "jovian_satellites": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },
-        "saturnian_satellites": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },
-        "other_satellites": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },
-        "asteroids": {
-            "*100": (
-                motion_type: DefaultVector,
-            ),
-        },
-        "comets": {
-            "*100": (
-                motion_type: DefaultVector,
-            ),
-        },
-    },
+    bodies: [
+        (
+            source: "major_bodies/*",
+        ),
+        (
+            source: "jovian_satellites/*",
+        ),
+        (
+            source: "saturnian_satellites/*",
+        ),
+        (
+            source: "other_satellites/*",
+        ),
+        (
+            source: "asteroids/*100",
+        ),
+        (
+            source: "comets/*100",
+        ),
+    ]
 )

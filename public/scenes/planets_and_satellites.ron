@@ -4,26 +4,18 @@
     description: "All planets and moons in the solar system. No asteroids, comets or artificial bodies.",
     time: "J2000",
     simulation_scale: 500,
-    bodies: {
-        "major_bodies": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },  
-        "jovian_satellites": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },
-        "saturnian_satellites": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },
-        "other_satellites": {
-            "*": (
-                motion_type: DefaultVector,
-            ),
-        },
-    },
+    bodies: [
+        (
+            source: "major_bodies/*",
+        ),
+        (
+            source: "jovian_satellites/*",
+        ),
+        (
+            source: "saturnian_satellites/*",
+        ),
+        (
+            source: "other_satellites/*",
+        ),
+    ]
 )

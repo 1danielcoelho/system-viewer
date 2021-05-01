@@ -4,63 +4,49 @@
     description: "All planets and moons lined up next to eachother for size comparisons",
     time: "J2000",
     simulation_scale: 200,
-    camera_pos: [
-        -112,
-        1319,
-        116,
-    ],
-    camera_up: [
-        0,
-        0,
-        1,
-    ],
-    camera_target: [
-        0,
-        0,
-        0,
-    ],
-    bodies: {
-        "major_bodies": {
-            "10": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 0, 0, 0, 0, 0, 0)),
-            ),
-            "199": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 700, 0, 0, 0, 0, 0)),
-            ),
-            "299": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 710, 0, 0, 0, 0, 0)),
-            ),
-            "399": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 725, 0, 0, 0, 0, 0)),
-            ),
-            "499": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 740, 0, 0, 0, 0, 0)),
-            ),
-            "599": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 815, 0, 0, 0, 0, 0)),
-            ),
-            "699": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 940, 0, 0, 0, 0, 0)),
-            ),
-            "799": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 1020, 0, 0, 0, 0, 0)),
-            ),
-            "899": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 1070, 0, 0, 0, 0, 0)),
-            ),
-            "999": (
-                motion_type: CustomVector,
-                state_vector: ((2451545.0, 1100, 0, 0, 0, 0, 0)),
-            ),
-        },        
-    },
+    camera_pos: [-112, 1319, 116],
+    camera_up: [0, 0, 1],
+    camera_target: [0, 0, 0],
+    bodies: [
+        (
+            source: "major_bodies/10",
+            pos: [0, 0, 0],
+        ),
+        (
+            source: "major_bodies/199",
+            pos: [700, 0, 0],
+        ),
+        (
+            source: "major_bodies/299",
+            pos: [710, 0, 0],
+        ),
+        (
+            source: "major_bodies/399",
+            pos: [725, 0, 0],
+        ),
+        (
+            source: "major_bodies/499",
+            pos: [740, 0, 0],
+        ),
+        (
+            source: "major_bodies/599",
+            pos: [815, 0, 0],
+        ),
+        (
+            source: "major_bodies/699",
+            pos: [940, 0, 0],
+        ),
+        (
+            source: "major_bodies/799",
+            pos: [1020, 0, 0],
+        ),
+        (
+            source: "major_bodies/899",
+            pos: [1070, 0, 0],
+        ),
+        (
+            source: "major_bodies/999",
+            pos: [1100, 0, 0],
+        ),
+    ]
 )
