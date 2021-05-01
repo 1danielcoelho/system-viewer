@@ -2,14 +2,12 @@ use crate::components::light::LightType;
 use crate::components::{
     LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
 };
-use crate::managers::resource::body_description::{
-    BodyDescription, BodyInstanceDescription, BodyType,
-};
+use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, BodyType};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::Scene;
-use crate::managers::ResourceManager;
+use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::string::decode_hex;
 use crate::utils::units::Jdn;
 use na::*;
@@ -343,10 +341,10 @@ pub fn get_body_material(
 pub fn fetch_default_motion_if_needed(
     body_id: &str,
     body_instance: &mut BodyInstanceDescription,
-    res_man: &mut ResourceManager,
+    orbit_man: &OrbitManager,
     default_time: Jdn,
 ) {
-    let vectors = res_man.get_state_vectors().get(body_id);
+    let vectors = orbit_man.get_state_vectors().get(body_id);
     if vectors.is_none() {
         return;
     };

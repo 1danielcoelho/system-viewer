@@ -1,4 +1,4 @@
-use crate::managers::resource::body_description::OrbitalElements;
+use crate::managers::orbit::OrbitalElements;
 use crate::utils::transform::Transform;
 use crate::utils::units::{Au, Deg, Jdn, Rad, J2000_JDN};
 use na::{Point3, UnitQuaternion, Vector3};

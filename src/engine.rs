@@ -2,7 +2,7 @@ use crate::app_state::AppState;
 use crate::fetch_text;
 use crate::managers::scene::SceneManager;
 use crate::managers::{
-    EventManager, InputManager, InterfaceManager, ResourceManager, SystemManager,
+    EventManager, InputManager, InterfaceManager, OrbitManager, ResourceManager, SystemManager,
 };
 use crate::STATE;
 use std::borrow::BorrowMut;
@@ -14,6 +14,7 @@ pub struct Engine {
     pub input_man: InputManager,
     pub int_man: InterfaceManager,
     pub scene_man: SceneManager,
+    pub orbit_man: OrbitManager,
 }
 impl Engine {
     pub fn new() -> Self {
@@ -27,6 +28,7 @@ impl Engine {
             event_man: EventManager::new(),
             input_man: InputManager::new(),
             int_man: InterfaceManager::new(),
+            orbit_man: OrbitManager::new(),
         };
 
         return new_engine;
@@ -45,8 +47,12 @@ impl Engine {
         }
 
         // Draw the UI elements
-        self.int_man
-            .end_frame(state, &mut self.scene_man, &mut self.res_man);
+        self.int_man.end_frame(
+            state,
+            &mut self.scene_man,
+            &mut self.res_man,
+            &self.orbit_man,
+        );
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -104,8 +110,12 @@ impl Engine {
                     if !identifier.is_empty() {
                         if self.scene_man.descriptions.contains_key(&identifier) {
                             log::info!("Trying to load last scene '{}'", identifier);
-                            self.scene_man
-                                .set_scene(&identifier, &mut self.res_man, s_ref);
+                            self.scene_man.set_scene(
+                                &identifier,
+                                &mut self.res_man,
+                                &self.orbit_man,
+                                s_ref,
+                            );
                         } else {
                             log::warn!(
                                 "Failed to find a description for last loaded scene '{}'",
@@ -125,7 +135,7 @@ impl Engine {
             text.len()
         );
 
-        self.res_man.load_database_file(url, content_type, text);
+        self.orbit_man.load_database_file(url, content_type, text);
     }
 
     pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {

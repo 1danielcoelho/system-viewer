@@ -1,6 +1,7 @@
-use crate::managers::resource::body_description::BodyInstanceDescription;
 use na::*;
 use serde::{Deserialize, Serialize};
+
+use crate::managers::orbit::BodyInstanceDescription;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SceneDescription {

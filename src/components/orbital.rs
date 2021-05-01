@@ -1,6 +1,6 @@
 use crate::components::Component;
 use crate::managers::details_ui::DetailsUI;
-use crate::managers::resource::body_description::OrbitalElements;
+use crate::managers::orbit::OrbitalElements;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::utils::transform::Transform;

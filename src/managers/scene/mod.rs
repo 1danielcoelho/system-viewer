@@ -2,11 +2,12 @@ use super::ResourceManager;
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
-use crate::managers::resource::body_description::{BodyDescription, BodyInstanceDescription};
+use crate::managers::orbit::{BodyDescription, BodyInstanceDescription};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::description::SceneDescription;
 use crate::managers::scene::orbits::{add_body_instance_entities, fetch_default_motion_if_needed};
+use crate::managers::OrbitManager;
 use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
 use crate::utils::units::J2000_JDN;
@@ -67,6 +68,7 @@ impl SceneManager {
         &mut self,
         identifier: &str,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
         state: &mut AppState,
     ) {
         if let Some(main) = &self.main {
@@ -76,7 +78,7 @@ impl SceneManager {
         };
 
         if !self.loaded_scenes.contains_key(identifier) {
-            self.load_scene(identifier, res_man, state);
+            self.load_scene(identifier, res_man, orbit_man, state);
         }
 
         // Don't start resetting/unloading stuff if we have nowhere else to go
@@ -153,13 +155,14 @@ impl SceneManager {
         &mut self,
         identifier: &str,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
         state: &mut AppState,
     ) -> &mut Scene {
         match identifier {
             "test" => self.load_test_scene(res_man, state),
             "teal" => self.load_teal_sphere_scene(res_man),
             "planetarium" => self.load_planetarium_scene(res_man),
-            _ => self.load_scene_from_desc(identifier, res_man, state),
+            _ => self.load_scene_from_desc(identifier, res_man, orbit_man, state),
         }
     }
 
@@ -671,6 +674,7 @@ impl SceneManager {
         &mut self,
         identifier: &str,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
         state: &mut AppState,
     ) -> &mut Scene {
         let desc = self.descriptions.get(identifier).cloned().unwrap();
@@ -711,7 +715,7 @@ impl SceneManager {
                         db_name,
                         limit
                     );
-                    let bodies = res_man.get_n_bodies(db_name, limit);
+                    let bodies = orbit_man.get_n_bodies(db_name, limit);
 
                     for body in bodies {
                         add_body_instance_entities(
@@ -724,9 +728,9 @@ impl SceneManager {
                     }
                 // Just a single body with a source
                 } else {
-                    body_desc = res_man.get_body(db_name, body_id).ok().cloned();
+                    body_desc = orbit_man.get_body(db_name, body_id).ok().cloned();
 
-                    fetch_default_motion_if_needed(body_id, &mut instance_desc, res_man, time);
+                    fetch_default_motion_if_needed(body_id, &mut instance_desc, orbit_man, time);
                 }
             }
 

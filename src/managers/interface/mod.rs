@@ -5,7 +5,7 @@ use crate::components::{
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Entity, Scene, SceneManager};
-use crate::managers::ResourceManager;
+use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::{local_storage_clear, local_storage_enable, local_storage_get};
@@ -68,8 +68,9 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
     ) {
-        self.draw_main_ui(state, scene_man, res_man);
+        self.draw_main_ui(state, scene_man, res_man, orbit_man);
 
         self.draw();
 
@@ -199,10 +200,11 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
     ) {
-        self.draw_main_toolbar(state, scene_man, res_man);
+        self.draw_main_toolbar(state, scene_man, res_man, orbit_man);
 
-        self.draw_open_windows(state, scene_man, res_man);
+        self.draw_open_windows(state, scene_man, res_man, orbit_man);
 
         self.draw_pop_ups(state, scene_man);
     }
@@ -212,6 +214,7 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
     ) {
         UICTX.with(|ui| {
             let mut ref_mut = ui.borrow_mut();
@@ -248,16 +251,17 @@ impl InterfaceManager {
                             .fill(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200))
                             .show(ui, |ui| {
                                 if ui.button("Reset scene").clicked() {
-                                    scene_man.set_scene("empty", res_man, state);
+                                    scene_man.set_scene("empty", res_man, orbit_man, state);
                                     scene_man.set_scene(
                                         &self.selected_scene_desc_name,
                                         res_man,
+                                        orbit_man,
                                         state,
                                     );
                                 }
 
                                 if ui.button("Close scene").clicked() {
-                                    scene_man.set_scene("empty", res_man, state);
+                                    scene_man.set_scene("empty", res_man, orbit_man, state);
                                 }
 
                                 ui.separator();
@@ -457,6 +461,7 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
     ) {
         self.draw_debug_window(state, scene_man);
 
@@ -467,7 +472,7 @@ impl InterfaceManager {
         self.draw_about_window(state);
         self.draw_controls_window(state);
         self.draw_settings_window(state);
-        self.draw_scene_browser(state, scene_man, res_man);
+        self.draw_scene_browser(state, scene_man, res_man, orbit_man);
     }
 
     fn draw_settings_window(&mut self, state: &mut AppState) {
@@ -986,6 +991,7 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
     ) {
         UICTX.with(|ui| {
             let ref_mut = ui.borrow_mut();
@@ -1084,10 +1090,11 @@ impl InterfaceManager {
                                 if selected_is_active {
                                     if ui.button("   Reset   ").clicked() {
                                         // HACK
-                                        scene_man.set_scene("empty", res_man, state);
+                                        scene_man.set_scene("empty", res_man, orbit_man, state);
                                         scene_man.set_scene(
                                             &self.selected_scene_desc_name,
                                             res_man,
+                                            orbit_man,
                                             state,
                                         );
                                     }
@@ -1096,6 +1103,7 @@ impl InterfaceManager {
                                         scene_man.set_scene(
                                             &self.selected_scene_desc_name,
                                             res_man,
+                                            orbit_man,
                                             state,
                                         );
                                     }
@@ -1111,7 +1119,7 @@ impl InterfaceManager {
                                     .on_hover_text("Close this scene")
                                     .clicked()
                                 {
-                                    scene_man.set_scene("empty", res_man, state);
+                                    scene_man.set_scene("empty", res_man, orbit_man, state);
                                 }
                             });
                         });
