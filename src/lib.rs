@@ -71,26 +71,26 @@ pub fn initialize() {
         let mut e = e.borrow_mut();
         e.replace(Engine::new());
     });
+
+    fetch_required_text("public/database/artificial.json", "body_database");
+    fetch_required_text("public/database/asteroids.json", "body_database");
+    fetch_required_text("public/database/comets.json", "body_database");
+    fetch_required_text("public/database/jovian_satellites.json", "body_database");
+    fetch_required_text("public/database/major_bodies.json", "body_database");
+    fetch_required_text("public/database/other_satellites.json", "body_database");
+    fetch_required_text("public/database/saturnian_satellites.json", "body_database");
+    fetch_required_text("public/database/state_vectors.json", "vectors_database");
+    fetch_required_text("public/database/osc_elements.json", "elements_database");
+
+    fetch_required_text(
+        "public/scenes/_auto_load_manifest.txt",
+        "auto_load_manifest",
+    );
 }
 
 #[wasm_bindgen]
 pub async fn start_loop() {
     log::info!("Beginning engine loop...");
-
-    fetch_text(
-        "public/scenes/_auto_load_manifest.txt",
-        "auto_load_manifest",
-    );
-
-    fetch_text("public/database/artificial.json", "body_database");
-    fetch_text("public/database/asteroids.json", "body_database");
-    fetch_text("public/database/comets.json", "body_database");
-    fetch_text("public/database/jovian_satellites.json", "body_database");
-    fetch_text("public/database/major_bodies.json", "body_database");
-    fetch_text("public/database/other_satellites.json", "body_database");
-    fetch_text("public/database/saturnian_satellites.json", "body_database");
-    fetch_text("public/database/state_vectors.json", "vectors_database");
-    fetch_text("public/database/osc_elements.json", "elements_database");
 
     let event_loop = EventLoop::new();
 
@@ -264,6 +264,28 @@ pub fn receive_bytes(url: &str, content_type: &str, data: &mut [u8]) {
 
         e.receive_bytes(url, content_type, data);
     });
+}
+
+pub fn fetch_required_text(url: &str, content_type: &str) {
+    ENGINE.with(|e| {
+        let mut ref_mut = e.borrow_mut();
+        let e = ref_mut.as_mut().unwrap();
+
+        e.push_pending_resource(url, content_type);
+    });
+
+    fetch_text(url, content_type);
+}
+
+pub fn fetch_required_bytes(url: &str, content_type: &str) {
+    ENGINE.with(|e| {
+        let mut ref_mut = e.borrow_mut();
+        let e = ref_mut.as_mut().unwrap();
+
+        e.push_pending_resource(url, content_type);
+    });
+
+    fetch_bytes(url, content_type);
 }
 
 #[wasm_bindgen(module = "/io.js")]

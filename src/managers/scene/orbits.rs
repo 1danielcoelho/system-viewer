@@ -2,7 +2,7 @@ use crate::components::light::LightType;
 use crate::components::{
     LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
 };
-use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, BodyType};
+use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, BodyType, StateVector};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
@@ -21,6 +21,7 @@ pub fn add_body_instance_entities(
     _epoch: Jdn,
     body: Option<&BodyDescription>,
     body_instance: &BodyInstanceDescription,
+    default_state_vector: Option<StateVector>,
     res_man: &mut ResourceManager,
 ) {
     // Get overridable properties
@@ -29,6 +30,8 @@ pub fn add_body_instance_entities(
     let mut brightness = None;
     let mut mesh_params = None;
     let mut material_params = None;
+    let mut pos = default_state_vector.as_ref().and_then(|v| Some(v.pos));
+    let mut linvel = default_state_vector.as_ref().and_then(|v| Some(v.vel));
     if let Some(body) = body {
         name = Some(&body.name);
         mass = body.mass;
@@ -53,6 +56,12 @@ pub fn add_body_instance_entities(
     if let Some(instance_params) = body_instance.material_params.as_ref() {
         material_params = Some(instance_params);
     }
+    if let Some(instance_pos) = body_instance.pos.as_ref() {
+        pos = Some(*instance_pos);
+    }
+    if let Some(instance_vel) = body_instance.linvel.as_ref() {
+        linvel = Some(*instance_vel);
+    }
 
     log::info!(
         "Adding body '{}' to scene '{}'",
@@ -64,7 +73,7 @@ pub fn add_body_instance_entities(
     let body_ent = scene.new_entity(name.and_then(|s| Some(s.as_str())));
     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
     let trans = trans_comp.get_local_transform_mut();
-    trans.trans = body_instance.pos.unwrap_or_default();
+    trans.trans = pos.unwrap_or(Point3::new(0.0, 0.0, 0.0)).coords;
 
     // Light
     if (body.is_some() && body.unwrap().body_type == BodyType::Star) || brightness.is_some() {
@@ -170,7 +179,7 @@ pub fn add_body_instance_entities(
 
         phys_comp.mass = body.and_then(|b| b.mass).unwrap_or(1E21) as f64;
 
-        if let Some(linvel) = body_instance.linvel {
+        if let Some(linvel) = linvel {
             phys_comp.lin_mom = linvel.scale(phys_comp.mass);
         }
 
@@ -345,18 +354,17 @@ pub fn get_body_material(
 
 pub fn fetch_default_motion_if_needed(
     body_id: &str,
-    body_instance: &mut BodyInstanceDescription,
     orbit_man: &OrbitManager,
     default_time: Jdn,
-) {
+) -> Option<StateVector> {
     let vectors = orbit_man.get_state_vectors().get(body_id);
     if vectors.is_none() {
-        return;
+        return None;
     };
 
     let vectors = vectors.unwrap();
     if vectors.len() < 1 {
-        return;
+        return None;
     }
 
     // Search for vector closest to default_time
@@ -376,13 +384,5 @@ pub fn fetch_default_motion_if_needed(
         log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
     }
 
-    let vector = &vectors[lowest_index];
-
-    if let None = body_instance.pos {
-        body_instance.pos = Some(vector.pos.coords);
-    }
-
-    if let None = body_instance.linvel {
-        body_instance.linvel = Some(vector.vel);
-    }
+    return Some(vectors[lowest_index].clone());
 }

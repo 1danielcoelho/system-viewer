@@ -2,7 +2,7 @@ use super::ResourceManager;
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
-use crate::managers::orbit::{BodyDescription, BodyInstanceDescription};
+use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, StateVector};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::description::SceneDescription;
@@ -11,6 +11,7 @@ use crate::managers::OrbitManager;
 use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
 use crate::utils::units::J2000_JDN;
+use crate::STATE;
 use na::*;
 pub use scene::*;
 use std::collections::HashMap;
@@ -163,6 +164,27 @@ impl SceneManager {
             "teal" => self.load_teal_sphere_scene(res_man),
             "planetarium" => self.load_planetarium_scene(res_man),
             _ => self.load_scene_from_desc(identifier, res_man, orbit_man, state),
+        }
+    }
+
+    pub fn load_last_scene(
+        &mut self,
+        res_man: &mut ResourceManager,
+        orbit_man: &OrbitManager,
+        state: &mut AppState,
+    ) {
+        let identifier = state.last_scene_identifier.clone();
+
+        if !identifier.is_empty() {
+            if self.descriptions.contains_key(&identifier) {
+                log::info!("Trying to load last scene '{}'", identifier);
+                self.set_scene(&identifier, res_man, orbit_man, state);
+            } else {
+                log::warn!(
+                    "Failed to find a description for last loaded scene '{}'",
+                    identifier
+                );
+            }
         }
     }
 
@@ -688,8 +710,9 @@ impl SceneManager {
         let scene = self.new_scene(&name).unwrap();
 
         // Bodies
-        for mut instance_desc in instance_descs.iter_mut() {
+        for instance_desc in instance_descs.iter_mut() {
             let mut body_desc: Option<BodyDescription> = None;
+            let mut default_state_vector: Option<StateVector> = None;
 
             if let Some(source) = instance_desc.source.clone() {
                 let slash_pos = source.rfind("/").unwrap();
@@ -698,45 +721,61 @@ impl SceneManager {
 
                 // Wildcard
                 if let Some(num_str) = body_id.strip_prefix("*") {
-                    let limit: Option<usize>;
+                    let mut limit: Option<usize> = None;
 
-                    let parsed = num_str.parse::<usize>();
-                    if parsed.is_err() {
-                        log::warn!(
-                            "Failed to parse the wildcard number in instance desc source '{}'",
-                            source
-                        );
-                        continue;
+                    if num_str.len() > 0 {
+                        let parsed = num_str.parse::<usize>();
+                        if parsed.is_err() {
+                            log::warn!(
+                                "Failed to parse the wildcard number in instance desc source '{}'",
+                                source
+                            );
+                            continue;
+                        }
+                        limit = Some(parsed.unwrap());
                     }
-                    limit = Some(parsed.unwrap());
 
-                    log::info!(
-                        "About to add wildcard bodies from db '{}' (limit {:?})",
-                        db_name,
-                        limit
-                    );
                     let bodies = orbit_man.get_n_bodies(db_name, limit);
 
+                    log::info!(
+                        "Found {} wildcard bodies from db '{}'",
+                        bodies.len(),
+                        db_name
+                    );
+
                     for body in bodies {
+                        let default_state_vector = fetch_default_motion_if_needed(
+                            body.id.as_ref().unwrap(),
+                            orbit_man,
+                            time,
+                        );
+
                         add_body_instance_entities(
                             scene,
                             time,
                             Some(body),
                             &instance_desc,
+                            default_state_vector,
                             res_man,
                         );
                     }
                 // Just a single body with a source
                 } else {
                     body_desc = orbit_man.get_body(db_name, body_id).ok().cloned();
-
-                    fetch_default_motion_if_needed(body_id, &mut instance_desc, orbit_man, time);
+                    default_state_vector = fetch_default_motion_if_needed(body_id, orbit_man, time);
                 }
             }
 
             // Create body entity and components (even if we have no actual body we may need it
             // in order to parent other things to)
-            add_body_instance_entities(scene, time, body_desc.as_ref(), &instance_desc, res_man);
+            add_body_instance_entities(
+                scene,
+                time,
+                body_desc.as_ref(),
+                &instance_desc,
+                default_state_vector,
+                res_man,
+            );
         }
 
         // Grid

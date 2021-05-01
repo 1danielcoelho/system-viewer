@@ -720,19 +720,26 @@ color.rgb *= exposure;
     > - Weird segment when we disable shared vertices for inner_radius != 0.0
     > - Inner_radius == 0.0 looks weird both for shared vertices and not
 > - Setup double-sided rendering of meshes as a toggle
+> - Fix disaster that is my scene schema
+>     - Flatten nested hashmap by appending key names
+>     - No. I'll very frequently want to "fetch all major bodies", and without separate maps this will be very awkward
+> - Failing to parse wildcard number when there isn't one
 
 ================================================================================
 
 # TODO MVP
 - Rings?
     - Figure out how to setup spawned bodies to have rings
+        - Something is really messed up with scenes that load with wildcards, all meshes end up at NaN
+            - Camera also ends up at NaN somehow
+        - Have to figure out what to do with Body List
+        - Open Earth scene -> Reload page -> All parent entities are at NaN
+            - State vectors db finishes parsing after we try loading the scene
+            - Why do we get NaNs if we don't set a valid state vector? pos 0 should work...
         - Actually allow children to have parents (doesn't really do anything but disable physics yet)
-        - Child entities probably? What about inheriting rotation?        
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.
             - Rings with its own scale, tilt, rotation, etc.
-        - Fix disaster that is my scene schema
-            - Flatten nested hashmap by appending key names
         - Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
     - Try out ring texture mapping
 - Get rid of everything osculating elements *motion type*

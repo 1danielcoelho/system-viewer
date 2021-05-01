@@ -1,11 +1,12 @@
 use crate::app_state::AppState;
-use crate::fetch_text;
 use crate::managers::scene::SceneManager;
 use crate::managers::{
     EventManager, InputManager, InterfaceManager, OrbitManager, ResourceManager, SystemManager,
 };
 use crate::STATE;
+use crate::{fetch_required_text, fetch_text};
 use std::borrow::BorrowMut;
+use std::collections::HashMap;
 
 pub struct Engine {
     pub res_man: ResourceManager,
@@ -15,6 +16,11 @@ pub struct Engine {
     pub int_man: InterfaceManager,
     pub scene_man: SceneManager,
     pub orbit_man: OrbitManager,
+
+    // Maps from url to its expected content type of the pending resource.
+    // We will only update once we receive something from all of these URLs.
+    // TEMP hack until I get proper Async/Sync loading
+    pub pending_resources: HashMap<String, String>,
 }
 impl Engine {
     pub fn new() -> Self {
@@ -29,12 +35,21 @@ impl Engine {
             input_man: InputManager::new(),
             int_man: InterfaceManager::new(),
             orbit_man: OrbitManager::new(),
+            pending_resources: HashMap::new(),
         };
 
         return new_engine;
     }
 
     pub fn update(&mut self, state: &mut AppState) {
+        if self.has_pending_resources() {
+            log::info!(
+                "Not updating due to {} pending resources",
+                self.pending_resources.len()
+            );
+            return;
+        }
+
         // Startup the UI frame, collecting UI elements
         self.int_man.begin_frame(state);
 
@@ -59,7 +74,43 @@ impl Engine {
         self.sys_man.resize(width, height);
     }
 
+    pub fn has_pending_resources(&self) -> bool {
+        return !self.pending_resources.is_empty();
+    }
+
+    pub fn push_pending_resource(&mut self, url: &str, content_type: &str) {
+        let old = self
+            .pending_resources
+            .insert(url.to_owned(), content_type.to_owned());
+
+        log::info!("Engine will wait for '{}' from url '{}'", content_type, url);
+
+        assert!(old.is_none());
+    }
+
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
+        let expected_type = self.pending_resources.get(url).cloned();
+        if let Some(expected_type) = expected_type {
+            if expected_type == content_type {
+                self.pending_resources.remove(url);
+                log::info!(
+                    "Not waiting for '{}' anymore. Num pending resources: {}",
+                    url,
+                    self.pending_resources.len()
+                );
+            } else {
+                log::error!(
+                    "Received text of unexpected type '{}' from url '{}'! Expected '{}'",
+                    content_type,
+                    url,
+                    expected_type
+                );
+                return;
+            }
+        }
+
+        self.try_loading_last_scene();
+
         match content_type {
             "auto_load_manifest" => self.receive_auto_load_manifest_text(url, text),
             "scene" => self.receive_scene_text(url, text),
@@ -67,7 +118,7 @@ impl Engine {
                 self.receive_database_text(url, content_type, text)
             }
             _ => log::error!(
-                "Unexpected content_type for receive_text: '{}'. url: '{}'",
+                "Can't handle text content_type '{}' from url: '{}'",
                 content_type,
                 url
             ),
@@ -89,7 +140,10 @@ impl Engine {
         );
 
         for file in files.iter() {
-            fetch_text(&("public/scenes/".to_owned() + file), "scene");
+            let scene_url = "public/scenes/".to_owned() + file;
+
+            fetch_text(&scene_url, "scene");
+            self.push_pending_resource(&scene_url, "scene");
         }
     }
 
@@ -99,30 +153,17 @@ impl Engine {
         self.scene_man.num_scenes_expected -= 1;
         self.scene_man.receive_serialized_scene(text);
 
-        if self.scene_man.num_scenes_expected == 0 {
+        self.try_loading_last_scene();
+    }
+
+    fn try_loading_last_scene(&mut self) {
+        if self.scene_man.num_scenes_expected == 0 && !self.has_pending_resources() {
             STATE.with(|s| {
                 if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
                     let s = ref_mut_s.as_mut().unwrap();
-                    let s_ref = s.borrow_mut();
 
-                    let identifier = s_ref.last_scene_identifier.clone();
-
-                    if !identifier.is_empty() {
-                        if self.scene_man.descriptions.contains_key(&identifier) {
-                            log::info!("Trying to load last scene '{}'", identifier);
-                            self.scene_man.set_scene(
-                                &identifier,
-                                &mut self.res_man,
-                                &self.orbit_man,
-                                s_ref,
-                            );
-                        } else {
-                            log::warn!(
-                                "Failed to find a description for last loaded scene '{}'",
-                                identifier
-                            );
-                        }
-                    }
+                    self.scene_man
+                        .load_last_scene(&mut self.res_man, &self.orbit_man, s);
                 }
             });
         }
@@ -139,12 +180,27 @@ impl Engine {
     }
 
     pub fn receive_bytes(&mut self, url: &str, content_type: &str, data: &mut [u8]) {
+        let expected_type = self.pending_resources.get(url).cloned();
+        if let Some(expected_type) = expected_type {
+            if expected_type == content_type {
+                self.pending_resources.remove(url);
+            } else {
+                log::error!(
+                    "Received bytes of unexpected type '{}' from url '{}'! Expected '{}'",
+                    content_type,
+                    url,
+                    expected_type
+                );
+                return;
+            }
+        }
+
         match content_type {
             "cubemap_face" => self.res_man.receive_cubemap_face_file_bytes(url, data),
             "texture" => self.res_man.receive_texture_file_bytes(url, data),
             "gltf" => self.receive_gltf_bytes(url, data),
             _ => log::error!(
-                "Unexpected content_type for receive bytes: '{}'. url: '{}'",
+                "Can't handle bytes content_type '{}' from url: '{}'",
                 content_type,
                 url
             ),

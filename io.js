@@ -10,7 +10,7 @@ export function fetch_text(url, content_type) {
       window.wasm_module.receive_text(
         // Strip path information when returning, as wasm always assumes we can't know
         // the file path (due to how the file path is stripped when loading files via prompt)
-        url.replace(/^.*[\\\/]/, ""),
+        url, //url.replace(/^.*[\\\/]/, ""),
         content_type,
         text
       );
@@ -32,7 +32,7 @@ export function fetch_bytes(url, content_type) {
       window.wasm_module.receive_bytes(
         // Strip path information when returning, as wasm always assumes we can't know
         // the file path (due to how the file path is stripped when loading files via prompt)
-        url,//.replace(/^.*[\\\/]/, ""),
+        url, //.replace(/^.*[\\\/]/, ""),
         content_type,
         new Uint8Array(buffer)
       );

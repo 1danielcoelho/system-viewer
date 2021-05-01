@@ -60,7 +60,7 @@ pub struct BodyInstanceDescription {
     pub parent: Option<String>,
 
     // Transform
-    pub pos: Option<Vector3<f64>>,
+    pub pos: Option<Point3<f64>>,
     pub rot: Option<Vector3<f64>>,
     pub scale: Option<Vector3<f64>>,
 

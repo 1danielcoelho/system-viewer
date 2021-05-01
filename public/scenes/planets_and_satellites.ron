@@ -6,16 +6,16 @@
     simulation_scale: 500,
     bodies: [
         (
-            source: "major_bodies/*",
+            source: "major_bodies/*2",
         ),
-        (
-            source: "jovian_satellites/*",
-        ),
-        (
-            source: "saturnian_satellites/*",
-        ),
-        (
-            source: "other_satellites/*",
-        ),
+        // (
+        //     source: "jovian_satellites/*",
+        // ),
+        // (
+        //     source: "saturnian_satellites/*",
+        // ),
+        // (
+        //     source: "other_satellites/*",
+        // ),
     ]
 )

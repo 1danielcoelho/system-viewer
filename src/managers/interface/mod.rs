@@ -50,6 +50,22 @@ impl InterfaceManager {
             local_storage_clear();
         }
 
+        let rect = egui::Rect {
+            min: egui::pos2(0.0, 0.0),
+            max: egui::pos2(0.0, 0.0),
+        };
+
+        UICTX.with(|ui| {
+            let mut ui = ui.borrow_mut();
+            ui.replace(egui::Ui::new(
+                new_man.backend.ctx.clone(),
+                egui::LayerId::background(),
+                egui::Id::new("interface"),
+                rect,
+                rect,
+            ));
+        });
+
         log::info!("Loading egui state...");
         gui_backend::load_memory(&new_man.backend.ctx);
 
