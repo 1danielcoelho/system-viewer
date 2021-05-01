@@ -2,16 +2,17 @@ use super::ResourceManager;
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
 use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
+use crate::managers::resource::body_description::{BodyDescription, BodyInstanceDescription};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::resource::texture::TextureUnit;
-use crate::managers::scene::description::{BodyInstanceDescription, SceneDescription};
-use crate::managers::scene::orbits::{add_free_body, fetch_default_motion_if_needed};
+use crate::managers::scene::description::SceneDescription;
+use crate::managers::scene::orbits::{add_body_instance_entities, fetch_default_motion_if_needed};
 use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
 use crate::utils::units::J2000_JDN;
 use na::*;
 pub use scene::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub mod component_storage;
 pub mod description;
@@ -683,68 +684,55 @@ impl SceneManager {
         let scene = self.new_scene(&name).unwrap();
 
         // Bodies
-        for instance_desc in instance_descs.iter_mut() {
-            if let Some(source) = instance_desc.source {
+        for mut instance_desc in instance_descs.iter_mut() {
+            let mut body_desc: Option<BodyDescription> = None;
+
+            if let Some(source) = instance_desc.source.clone() {
                 let slash_pos = source.rfind("/").unwrap();
-                let db_name = &source[..slash_pos];
-                let body_id = &source[slash_pos+1..];
-                
+                let db_name = &source[..slash_pos]; // e.g. "major_bodies"
+                let body_id = &source[slash_pos + 1..]; // e.g. "399"
+
                 // Wildcard
                 if let Some(num_str) = body_id.strip_prefix("*") {
                     let limit: Option<usize>;
-                    
+
                     let parsed = num_str.parse::<usize>();
                     if parsed.is_err() {
-                        log::warn!("Failed to parse the wildcard number in instance desc source '{}'", source);
+                        log::warn!(
+                            "Failed to parse the wildcard number in instance desc source '{}'",
+                            source
+                        );
                         continue;
                     }
                     limit = Some(parsed.unwrap());
 
-                    log::info!("About to add wildcard bodies from db '{}' (limit {:?})", db_name, limit);
+                    log::info!(
+                        "About to add wildcard bodies from db '{}' (limit {:?})",
+                        db_name,
+                        limit
+                    );
                     let bodies = res_man.get_n_bodies(db_name, limit);
-                }
-            }
 
-            // Check if it's a wildcard
-            if let Some(num_str) = body_id.strip_prefix("*") {
-                let num;
-                if num_str.is_empty() {
-                    num = db.len();
+                    for body in bodies {
+                        add_body_instance_entities(
+                            scene,
+                            time,
+                            Some(body),
+                            &instance_desc,
+                            res_man,
+                        );
+                    }
+                // Just a single body with a source
                 } else {
-                    let parsed = num_str.parse::<usize>();
-                    if parsed.is_err() {
-                        continue;
-                    }
-                    num = parsed.unwrap();
-                }
+                    body_desc = res_man.get_body(db_name, body_id).ok().cloned();
 
-                log::info!("About to add '{}' bodies from db '{}'", num, db_name);
-                for (index, (id, body)) in db.iter().enumerate() {
-                    if index >= num {
-                        break;
-                    }
-
-                    let mut this_instance = body_instance.clone();
-                    fetch_default_motion_if_needed(id, &mut this_instance, res_man, time);
-                    add_free_body(scene, time, &body, &this_instance, res_man);
+                    fetch_default_motion_if_needed(body_id, &mut instance_desc, res_man, time);
                 }
-                continue;
             }
 
-            // Skip if can't find the body
-            let body = db.get(body_id.as_str());
-            if body.is_none() {
-                log::warn!(
-                    "Failed to find body '{}' in database '{}'",
-                    body_id,
-                    db_name,
-                );
-                continue;
-            }
-            let body = body.unwrap();
-
-            fetch_default_motion_if_needed(body_id, &mut body_instance, res_man, time);
-            add_free_body(scene, time, &body, &body_instance, res_man);
+            // Create body entity and components (even if we have no actual body we may need it
+            // in order to parent other things to)
+            add_body_instance_entities(scene, time, body_desc.as_ref(), &instance_desc, res_man);
         }
 
         // Grid

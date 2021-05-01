@@ -64,13 +64,24 @@
         (
             name: "Earth",                  // Optional. Name override (will fallback to database entry after imported)
             source: "major_bodies/399",     // Optional. Database entry to use as source
+            parent: "Sun",                  // Optional. Name of parent entity
             pos: [10, 20, 30],              // Optional. Position in Mm
             rot: [30, 60, 90],              // Optional. Euler angles in degrees
             scale: [1, 2, 3],               // Optional. Scale for initial transform
             linvel: [10, 20, 30],           // Optional. Linear velocity in Mm/s
             angvel: [10, 20, 30],           // Optional. Axis of rotation, length is rad/s, right-hand rule
+            
+            // BodyDescription overrides
             mass: 23,                       // Optional. Mass override in Kg
-            parent: "Sun",                  // Optional. Name of parent entity
+            brightness: 23,                 // Optional. Brightness override in Candela
+            mesh: "cube",                   // Optional. Mesh name override
+            mesh_params: {                  // Optional. Mesh params (TODO)
+                "num_sides": "6"
+            },            
+            material: "gltf_metal_rough",   // Optional. Material override
+            material_params: {              // Optional string to string map of uniforms for the target material shader
+                "diffuse_color": "c9c9c9"   // sRGB hex diffuse color
+            },          
         )
     },
 )

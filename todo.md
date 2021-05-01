@@ -732,6 +732,7 @@ color.rgb *= exposure;
             - Rings with its own scale, tilt, rotation, etc.
         - Fix disaster that is my scene schema
             - Flatten nested hashmap by appending key names
+        - Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
     - Try out ring texture mapping
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward

@@ -2,11 +2,12 @@ use crate::components::light::LightType;
 use crate::components::{
     LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
 };
-use crate::managers::resource::body_description::{BodyDescription, BodyType};
+use crate::managers::resource::body_description::{
+    BodyDescription, BodyInstanceDescription, BodyType,
+};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
-use crate::managers::scene::description::BodyInstanceDescription;
 use crate::managers::scene::Scene;
 use crate::managers::ResourceManager;
 use crate::utils::string::decode_hex;
@@ -14,52 +15,127 @@ use crate::utils::units::Jdn;
 use na::*;
 use nalgebra::Vector3;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
-pub fn add_free_body(
+pub fn add_body_instance_entities(
     scene: &mut Scene,
     _epoch: Jdn,
-    body: &BodyDescription,
+    body: Option<&BodyDescription>,
     body_instance: &BodyInstanceDescription,
     res_man: &mut ResourceManager,
 ) {
-    if body.body_type == BodyType::Barycenter {
-        return;
+    // Get overridable properties
+    let mut name = None;
+    let mut mass = None;
+    let mut brightness = None;
+    let mut mesh_params = None;
+    let mut material_params = None;
+    if let Some(body) = body {
+        name = Some(&body.name);
+        mass = body.mass;
+        brightness = body.brightness;
+        mesh_params = body.mesh_params.as_ref();
+        material_params = body.material_params.as_ref();
     }
 
-    if body.mass.is_none() {
-        log::warn!(
-            "Skipping body {} ('{}') for having no mass",
-            body.id.as_ref().unwrap(),
-            body.name
-        );
-        return;
+    // Override them if we have any
+    if let Some(instance_name) = body_instance.name.as_ref() {
+        name = Some(instance_name);
     }
-
-    if body_instance.pos.is_none() || body_instance.linvel.is_none() {
-        log::warn!(
-            "Skipping body '{}' for having no state vector",
-            body.id.as_ref().unwrap()
-        );
-        return;
+    if let Some(instance_mass) = body_instance.mass {
+        mass = Some(instance_mass);
+    }
+    if let Some(instance_brightness) = body_instance.brightness {
+        brightness = Some(instance_brightness);
+    }
+    if let Some(instance_params) = body_instance.mesh_params.as_ref() {
+        mesh_params = Some(instance_params);
+    }
+    if let Some(instance_params) = body_instance.material_params.as_ref() {
+        material_params = Some(instance_params);
     }
 
     log::info!(
         "Adding body '{}' to scene '{}'",
-        body.name,
+        name.unwrap_or(&String::new()),
         scene.identifier
     );
 
-    let mut name = &body.name;
-    if name.is_empty() {
-        name = body.id.as_ref().unwrap();
-    }
-
-    // Entity
-    let body_ent = scene.new_entity(Some(&name));
+    // Main entity
+    let body_ent = scene.new_entity(name.and_then(|s| Some(s.as_str())));
     let trans_comp = scene.add_component::<TransformComponent>(body_ent);
     let trans = trans_comp.get_local_transform_mut();
-    trans.trans = body_instance.pos.unwrap();
+    trans.trans = body_instance.pos.unwrap_or_default();
+
+    // Light
+    if (body.is_some() && body.unwrap().body_type == BodyType::Star) || brightness.is_some() {
+        let light_comp = scene.add_component::<LightComponent>(body_ent);
+        light_comp.color = Vector3::new(1.0, 1.0, 1.0);
+        light_comp.intensity = brightness.unwrap();
+        light_comp.light_type = LightType::Point;
+    }
+
+    // Metadata
+    let meta_comp = scene.add_component::<MetadataComponent>(body_ent);
+    if let Some(body) = body {
+        meta_comp.set_metadata(
+            "body_id",
+            &body.id.as_ref().unwrap_or(&String::from("None")),
+        );
+        meta_comp.set_metadata("body_type", &format!("{:?}", body.body_type));
+        for (key, value) in body.meta.iter() {
+            meta_comp.set_metadata(key, value);
+        }
+        if let Some(radius) = body.radius {
+            meta_comp.set_metadata("body_radius", &radius.to_string());
+        }
+        if let Some(albedo) = body.albedo {
+            meta_comp.set_metadata("body_albedo", &albedo.to_string());
+        }
+        if let Some(magnitude) = body.magnitude {
+            meta_comp.set_metadata("body_magnitude", &magnitude.to_string());
+        }
+        if let Some(rotation_period) = body.rotation_period {
+            meta_comp.set_metadata("body_rotation_period", &rotation_period.to_string());
+        }
+        if let Some(rotation_axis) = body.rotation_axis {
+            meta_comp.set_metadata(
+                "body_rotation_period",
+                &format!(
+                    "[{}, {}, {}]",
+                    rotation_axis[0], rotation_axis[1], rotation_axis[2]
+                ),
+            );
+        }
+        if let Some(spec) = &body.spec_smassii {
+            meta_comp.set_metadata("body_spec_smassii", &spec);
+        }
+        if let Some(spec) = &body.spec_tholen {
+            meta_comp.set_metadata("body_spec_tholen", &spec);
+        }
+    }
+    if let Some(params) = &material_params {
+        for (key, value) in params.iter() {
+            meta_comp.set_metadata(key, value);
+        }
+    }
+    if let Some(params) = &mesh_params {
+        for (key, value) in params.iter() {
+            meta_comp.set_metadata(key, value);
+        }
+    }
+    if let Some(mass) = mass {
+        meta_comp.set_metadata("body_mass", &mass.to_string());
+    }
+
+    // Child mesh holder entity
+    // Separate entity so that our main entity can have children, and yet a separate child mesh
+    // that rotates independently of it
+    let sphere_ent = scene.new_entity(None);
+    scene.set_entity_parent(body_ent, sphere_ent);
+    let sphere_trans_comp = scene.add_component::<TransformComponent>(sphere_ent);
+    let trans = sphere_trans_comp.get_local_transform_mut();
     if let Some(rot) = body_instance.rot {
         trans.rot = UnitQuaternion::from_euler_angles(
             rot.x.to_radians(),
@@ -70,167 +146,109 @@ pub fn add_free_body(
     if let Some(scale) = body_instance.scale {
         trans.scale = scale;
     }
-
-    // Mesh
-    if let Some(radius) = body.radius {
+    if let Some(radius) = body.and_then(|b| b.radius) {
         if radius > 0.0 {
-            trans_comp
+            sphere_trans_comp
                 .get_local_transform_mut()
                 .scale
                 .scale_mut(radius as f64);
-
-            let mesh_comp = scene.add_component::<MeshComponent>(body_ent);
-            mesh_comp.set_mesh(get_body_mesh(body, res_man));
-
-            if let Some(mat_over) = get_body_material(body, res_man) {
-                log::info!(
-                    "Overriding slot 0 with material '{:?}'",
-                    mat_over.borrow().get_name()
-                );
-                mesh_comp.set_material_override(Some(mat_over.clone()), 0);
-            }
         }
+    }
+
+    // Child mesh
+    let mesh_comp = scene.add_component::<MeshComponent>(sphere_ent);
+    mesh_comp.set_mesh(get_body_mesh(body, body_instance, res_man));
+    if let Some(mat_over) = get_body_material(body, body_instance, res_man) {
+        log::info!(
+            "Overriding slot 0 with material '{:?}'",
+            mat_over.borrow().get_name()
+        );
+        mesh_comp.set_material_override(Some(mat_over.clone()), 0);
     }
 
     // Physics
-    let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
-    phys_comp.mass = body.mass.unwrap() as f64;
-    phys_comp.lin_mom = body_instance
-        .linvel
-        .unwrap()
-        .scale(body.mass.unwrap() as f64);
-    if let Some(ang_vel) = body_instance.angvel {
-        phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
-    }
-
-    // Light
-    if body.body_type == BodyType::Star || body.brightness.is_some() {
-        let light_comp = scene.add_component::<LightComponent>(body_ent);
-        light_comp.color = Vector3::new(1.0, 1.0, 1.0);
-        light_comp.intensity = body.brightness.unwrap();
-        log::info!("Banana sun brightness {}", light_comp.intensity);
-        light_comp.light_type = LightType::Point;
-    }
-
-    // Metadata
-    let meta_comp = scene.add_component::<MetadataComponent>(body_ent);
-    meta_comp.set_metadata(
-        "body_id",
-        &body.id.as_ref().unwrap_or(&String::from("None")),
-    );
-    meta_comp.set_metadata("body_type", &format!("{:?}", body.body_type));
-    for (key, value) in body.meta.iter() {
-        meta_comp.set_metadata(key, value);
-    }
-    if let Some(mat_params) = &body.material_params {
-        for (key, value) in mat_params.iter() {
-            meta_comp.set_metadata(key, value);
+    if body_instance.parent.is_none() {
+        let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
+        phys_comp.mass = body.and_then(|b| b.mass).unwrap_or(1E21) as f64;
+        phys_comp.lin_mom = body_instance.linvel.unwrap().scale(phys_comp.mass);
+        if let Some(ang_vel) = body_instance.angvel {
+            phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
         }
-    }
-    if let Some(mass) = body.mass {
-        meta_comp.set_metadata("body_mass", &mass.to_string());
-    }
-    if let Some(radius) = body.radius {
-        meta_comp.set_metadata("body_radius", &radius.to_string());
-    }
-    if let Some(albedo) = body.albedo {
-        meta_comp.set_metadata("body_albedo", &albedo.to_string());
-    }
-    if let Some(magnitude) = body.magnitude {
-        meta_comp.set_metadata("body_magnitude", &magnitude.to_string());
-    }
-    if let Some(rotation_period) = body.rotation_period {
-        meta_comp.set_metadata("body_rotation_period", &rotation_period.to_string());
-    }
-    if let Some(rotation_axis) = body.rotation_axis {
-        meta_comp.set_metadata(
-            "body_rotation_period",
-            &format!(
-                "[{}, {}, {}]",
-                rotation_axis[0], rotation_axis[1], rotation_axis[2]
-            ),
-        );
-    }
-    if let Some(spec) = &body.spec_smassii {
-        meta_comp.set_metadata("body_spec_smassii", &spec);
-    }
-    if let Some(spec) = &body.spec_tholen {
-        meta_comp.set_metadata("body_spec_tholen", &spec);
     }
 }
 
 pub fn get_body_mesh(
-    body: &BodyDescription,
+    body: Option<&BodyDescription>,
+    body_instance: &BodyInstanceDescription,
     res_man: &mut ResourceManager,
 ) -> Option<Rc<RefCell<Mesh>>> {
-    let mesh = match &body.mesh {
-        Some(identifier) => res_man.get_or_create_mesh(&identifier),
-        None => res_man.get_or_create_mesh("lat_long_sphere"),
-    };
+    let mut mesh = body_instance
+        .mesh
+        .as_ref()
+        .or(body.and_then(|b| b.mesh.as_ref()))
+        .cloned();
 
-    return mesh;
-}
-
-/// TODO: Support multiple materials per body. Then this would return a Vec, and they would
-/// all become the material overrides
-pub fn get_body_material(
-    body: &BodyDescription,
-    res_man: &mut ResourceManager,
-) -> Option<Rc<RefCell<Material>>> {
-    let mut mat = match body.material.clone().unwrap_or(String::from("")).as_str() {
-        // TODO: Actual different procedural materials with different uniforms and so on
-        "rocky" => Some(
-            res_man
-                .instantiate_material(
-                    "gltf_metal_rough",
-                    &("rocky_".to_owned() + &body.id.as_ref().unwrap()),
-                )
-                .unwrap(),
-        ),
-        "earth" => Some(
-            res_man
-                .instantiate_material(
-                    "gltf_metal_rough",
-                    &("earth_".to_owned() + &body.id.as_ref().unwrap()),
-                )
-                .unwrap(),
-        ),
-        "atmo" => Some(
-            res_man
-                .instantiate_material(
-                    "gltf_metal_rough",
-                    &("atmo_".to_owned() + &body.id.as_ref().unwrap()),
-                )
-                .unwrap(),
-        ),
-        "gas" => Some(
-            res_man
-                .instantiate_material(
-                    "gltf_metal_rough",
-                    &("gas_".to_owned() + &body.id.as_ref().unwrap()),
-                )
-                .unwrap(),
-        ),
-        _ => None,
-    };
-
-    // Default to just fetching a material, as we may have "phong" in there or something like that
-    if mat.is_none() {
-        if let Some(mat_name) = &body.material {
-            mat = res_man.instantiate_material(&mat_name, &mat_name);
+    // Fetch mesh according to body type if we have nothing else yet
+    if mesh.is_none() && body.is_some() {
+        mesh = match body.unwrap().body_type {
+            BodyType::Star => Some(String::from("lat_long_sphere")),
+            BodyType::Planet => Some(String::from("lat_long_sphere")),
+            BodyType::Satellite => Some(String::from("lat_long_sphere")),
+            BodyType::Asteroid => Some(String::from("lat_long_sphere")),
+            BodyType::Comet => Some(String::from("lat_long_sphere")),
+            BodyType::Artificial => None,
+            BodyType::Barycenter => None,
+            BodyType::Other => None,
         }
     }
 
-    // If we still have nothing fetch a material for a specific body type. For now this just means
-    // using the gltf, but later on we will pick between these other materials like rocky, atmo, etc.
-    // Don't do it for artificial bodies though as they usually are gltf files with their own materials
-    if mat.is_none() && body.body_type != BodyType::Artificial {
-        mat = res_man.instantiate_material("gltf_metal_rough", "gltf_metal_rough");
+    return mesh.and_then(|m| res_man.get_or_create_mesh(m.as_ref()));
+}
+
+pub fn get_body_material(
+    body: Option<&BodyDescription>,
+    body_instance: &BodyInstanceDescription,
+    res_man: &mut ResourceManager,
+) -> Option<Rc<RefCell<Material>>> {
+    let mut mat_name = body_instance
+        .material
+        .as_ref()
+        .or(body.and_then(|b| b.material.as_ref()))
+        .cloned();
+
+    // If we have no specific mesh or mesh override we will use a generic mesh for this body (i.e. a planet mesh),
+    // so fetch a generic material for it too.
+    // Only doing this in these circumstances also allows us to use an artificial gltf body or whatever (like a test
+    // scene), and still have its own material show through
+    if body.and_then(|b| b.mesh.as_ref()).is_none() && body_instance.mesh.is_none() {
+        mat_name = Some(String::from("gltf_metal_rough"));
     }
 
-    if mat.is_some() && body.material_params.is_some() {
-        let mut mat_mut = mat.as_ref().unwrap().borrow_mut();
-        let params = body.material_params.as_ref().unwrap();
+    if mat_name.is_none() {
+        return None;
+    }
+    let mat_name = mat_name.unwrap();
+
+    let mat = res_man.instantiate_material(&mat_name, &mat_name).unwrap();
+
+    let mut params: HashMap<String, String> = HashMap::new();
+    if let Some(body_params) = body.and_then(|b| b.material_params.as_ref()) {
+        params.extend(body_params.iter().map(|(k, v)| (k.clone(), v.clone())));
+    }
+    if let Some(over_params) = body_instance.material_params.as_ref() {
+        params.extend(over_params.iter().map(|(k, v)| (k.clone(), v.clone())));
+    }
+
+    let body_name = body_instance
+        .name
+        .as_ref()
+        .cloned()
+        .or(body.and_then(|b| Some(b.name.clone())))
+        .unwrap_or(String::new());
+
+    // Set material parameters
+    {
+        let mut mat_mut = mat.borrow_mut();
 
         if let Some(color) = params.get("base_color") {
             let mut bytes: Vec<f32> = decode_hex(color)
@@ -240,7 +258,7 @@ pub fn get_body_material(
                 .collect();
             bytes.resize(4, 1.0);
 
-            log::info!("Parsed base_color {:?} for body {:?}", bytes, body.id);
+            log::info!("Parsed base_color {:?} for body {:?}", bytes, body_name);
 
             mat_mut.set_uniform_value(
                 UniformName::BaseColorFactor,
@@ -252,7 +270,7 @@ pub fn get_body_material(
             log::info!(
                 "Parsed base_color_texture {:?} for body {:?}",
                 path,
-                body.id
+                body_name
             );
 
             mat_mut.set_texture(
@@ -262,7 +280,7 @@ pub fn get_body_material(
         }
 
         if let Some(path) = params.get("normal_texture") {
-            log::info!("Parsed normal_texture {:?} for body {:?}", path, body.id);
+            log::info!("Parsed normal_texture {:?} for body {:?}", path, body_name);
 
             mat_mut.set_texture(
                 TextureUnit::Normal,
@@ -274,7 +292,7 @@ pub fn get_body_material(
             log::info!(
                 "Parsed metal_rough_texture {:?} for body {:?}",
                 path,
-                body.id
+                body_name
             );
 
             mat_mut.set_texture(
@@ -284,7 +302,11 @@ pub fn get_body_material(
         }
 
         if let Some(path) = params.get("emissive_texture") {
-            log::info!("Parsed emissive_texture {:?} for body {:?}", path, body.id);
+            log::info!(
+                "Parsed emissive_texture {:?} for body {:?}",
+                path,
+                body_name
+            );
 
             mat_mut.set_texture(
                 TextureUnit::Emissive,
@@ -296,7 +318,7 @@ pub fn get_body_material(
             log::info!(
                 "Parsed emissive_factor {:?} for body {:?}",
                 float_vec_str,
-                body.id
+                body_name
             );
 
             let mut floats = float_vec_str
@@ -313,9 +335,9 @@ pub fn get_body_material(
                 UniformValue::Vec3([floats[0], floats[1], floats[2]]),
             );
         }
-    };
+    }
 
-    return mat;
+    return Some(mat);
 }
 
 pub fn fetch_default_motion_if_needed(
@@ -351,8 +373,8 @@ pub fn fetch_default_motion_if_needed(
         log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
     }
 
-    let vector = vectors[lowest_index];
-    
+    let vector = &vectors[lowest_index];
+
     if let None = body_instance.pos {
         body_instance.pos = Some(vector.pos.coords);
     }

@@ -1,52 +1,7 @@
 use crate::utils::units::{Jdn, Mm, Rad};
-use na::{Point3, Vector3};
+use na::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum BodyType {
-    Star,
-    Planet,
-    Satellite,
-    Asteroid,
-    Comet,
-    Artificial,
-    Barycenter,
-    Other,
-}
-impl Default for BodyType {
-    fn default() -> Self {
-        BodyType::Other
-    }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct OrbitalElements {
-    pub ref_id: String,
-    pub epoch: Jdn,
-
-    #[serde(rename = "a")]
-    pub semi_major_axis: Mm,
-
-    #[serde(rename = "e")]
-    pub eccentricity: f64,
-
-    #[serde(rename = "i")]
-    pub inclination: Rad,
-
-    #[serde(rename = "O")]
-    pub long_asc_node: Rad,
-
-    #[serde(rename = "w")]
-    pub arg_periapsis: Rad,
-
-    #[serde(rename = "M")]
-    pub mean_anomaly_0: Rad,
-
-    #[serde(rename = "p")]
-    pub sidereal_orbit_period_days: f64,
-}
 
 #[derive(Debug, Clone)]
 pub struct StateVector {
@@ -54,6 +9,7 @@ pub struct StateVector {
     pub pos: Point3<f64>,  // Mm
     pub vel: Vector3<f64>, // Mm/s
 }
+
 impl<'a> From<&'a SerializedStateVector> for StateVector {
     fn from(other: &'a SerializedStateVector) -> Self {
         Self {
@@ -98,6 +54,51 @@ impl<'a> From<&'a StateVector> for SerializedStateVector {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct OrbitalElements {
+    pub ref_id: String,
+    pub epoch: Jdn,
+
+    #[serde(rename = "a")]
+    pub semi_major_axis: Mm,
+
+    #[serde(rename = "e")]
+    pub eccentricity: f64,
+
+    #[serde(rename = "i")]
+    pub inclination: Rad,
+
+    #[serde(rename = "O")]
+    pub long_asc_node: Rad,
+
+    #[serde(rename = "w")]
+    pub arg_periapsis: Rad,
+
+    #[serde(rename = "M")]
+    pub mean_anomaly_0: Rad,
+
+    #[serde(rename = "p")]
+    pub sidereal_orbit_period_days: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum BodyType {
+    Star,
+    Planet,
+    Satellite,
+    Asteroid,
+    Comet,
+    Artificial,
+    Barycenter,
+    Other,
+}
+impl Default for BodyType {
+    fn default() -> Self {
+        BodyType::Other
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BodyDescription {
     pub id: Option<String>,
     pub name: String,
@@ -117,13 +118,39 @@ pub struct BodyDescription {
     pub rotation_axis: Option<[f64; 3]>, // J2000 ecliptic rectangular right-handed normalized
     pub spec_smassii: Option<String>,    // Spectral class
     pub spec_tholen: Option<String>,     // Spectral class
-    
-    #[serde(default)]
-    pub mesh: Option<String>,
-    
-    #[serde(default)]
-    pub material: Option<String>,
 
     #[serde(default)]
+    pub mesh: Option<String>,
+    #[serde(default)]
+    pub mesh_params: Option<HashMap<String, String>>,
+
+    #[serde(default)]
+    pub material: Option<String>,
+    #[serde(default)]
+    pub material_params: Option<HashMap<String, String>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BodyInstanceDescription {
+    // IDs
+    pub name: Option<String>,
+    pub source: Option<String>,
+    pub parent: Option<String>,
+
+    // Transform
+    pub pos: Option<Vector3<f64>>,
+    pub rot: Option<Vector3<f64>>,
+    pub scale: Option<Vector3<f64>>,
+
+    // Physics
+    pub linvel: Option<Vector3<f64>>,
+    pub angvel: Option<Vector3<f64>>,
+
+    // BodyDescription overrides
+    pub mass: Option<f32>,
+    pub brightness: Option<f32>,
+    pub mesh: Option<String>,
+    pub mesh_params: Option<HashMap<String, String>>,
+    pub material: Option<String>,
     pub material_params: Option<HashMap<String, String>>,
 }
