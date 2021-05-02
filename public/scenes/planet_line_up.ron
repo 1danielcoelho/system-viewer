@@ -3,7 +3,7 @@
     name: "Planet line up",
     description: "All planets and moons lined up next to eachother for size comparisons",
     time: "J2000",
-    simulation_scale: 200,
+    simulation_scale: 0,
     camera_pos: [-112, 1319, 116],
     camera_up: [0, 0, 1],
     camera_target: [0, 0, 0],

@@ -737,13 +737,14 @@ color.rgb *= exposure;
 > - Have to figure out what to do with Body List
 > - Hoppocamp's mesh
 >     - Bodies without mass or radius get assigned some default mesh
+>- Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
+    > - Don't need to mess with this for now: I can defer selection in another way, and I can use radius fo goto
 
 ================================================================================
 
 # TODO MVP
 - Rings?
     - Figure out how to setup spawned bodies to have rings
-        - Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
         - Actually allow children to have parents (doesn't really do anything but disable physics yet)
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.

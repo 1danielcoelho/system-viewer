@@ -1,6 +1,6 @@
 use crate::app_state::AppState;
 use crate::app_state::ReferenceChange;
-use crate::components::TransformComponent;
+use crate::components::{MetadataComponent, TransformComponent};
 use crate::managers::scene::Scene;
 use na::*;
 
@@ -151,8 +151,16 @@ fn handle_go_to(state: &mut AppState, scene: &mut Scene) {
         .get_component::<TransformComponent>(target_entity)
         .unwrap()
         .get_world_transform();
+    let mut offset = transform.scale.mean() * 2.0;
 
-    let offset = transform.scale.mean() * 2.0;
+    if let Some(meta) = scene.get_component::<MetadataComponent>(target_entity) {
+        if let Some(val) = meta
+            .get_metadata("body_radius")
+            .and_then(|s| s.parse::<f64>().ok())
+        {
+            offset *= val;
+        }
+    }
 
     let mut target_pos = transform.trans;
     let mut camera_pos = target_pos + Vector3::new(offset, offset, offset);

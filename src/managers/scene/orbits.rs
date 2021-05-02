@@ -27,6 +27,7 @@ pub fn add_body_instance_entities(
     // Get overridable properties
     let mut name = None;
     let mut mass = None;
+    let mut radius = None;
     let mut brightness = None;
     let mut mesh_params = None;
     let mut material_params = None;
@@ -53,6 +54,7 @@ pub fn add_body_instance_entities(
 
         name = Some(&body.name);
         mass = body.mass;
+        radius = body.radius;
         brightness = body.brightness;
         mesh_params = body.mesh_params.as_ref();
         material_params = body.material_params.as_ref();
@@ -64,6 +66,9 @@ pub fn add_body_instance_entities(
     }
     if let Some(instance_mass) = body_instance.mass {
         mass = Some(instance_mass);
+    }
+    if let Some(instance_radius) = body_instance.radius {
+        radius = Some(instance_radius);
     }
     if let Some(instance_brightness) = body_instance.brightness {
         brightness = Some(instance_brightness);
@@ -112,9 +117,6 @@ pub fn add_body_instance_entities(
         for (key, value) in body.meta.iter() {
             meta_comp.set_metadata(key, value);
         }
-        if let Some(radius) = body.radius {
-            meta_comp.set_metadata("body_radius", &radius.to_string());
-        }
         if let Some(albedo) = body.albedo {
             meta_comp.set_metadata("body_albedo", &albedo.to_string());
         }
@@ -153,6 +155,12 @@ pub fn add_body_instance_entities(
     if let Some(mass) = mass {
         meta_comp.set_metadata("body_mass", &mass.to_string());
     }
+    if let Some(radius) = radius {
+        meta_comp.set_metadata("body_radius", &radius.to_string());
+    }
+    if let Some(brightness) = brightness {
+        meta_comp.set_metadata("body_brightness", &brightness.to_string());
+    }
 
     // Child mesh holder entity
     // Separate entity so that our main entity can have children, and yet a separate child mesh
@@ -172,7 +180,7 @@ pub fn add_body_instance_entities(
     if let Some(scale) = body_instance.scale {
         sphere_trans.scale = scale;
     }
-    if let Some(radius) = body.and_then(|b| b.radius) {
+    if let Some(radius) = radius {
         if radius > 0.0 {
             sphere_trans.scale.scale_mut(radius as f64);
         }

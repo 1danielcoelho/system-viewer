@@ -27,6 +27,7 @@
             
             // BodyDescription overrides
             mass: 23,                       // Optional. Mass override in Kg
+            radius: 23,                     // Optional. Radius override in Mm
             brightness: 23,                 // Optional. Brightness override in Candela
             mesh: "cube",                   // Optional. Mesh name override
             mesh_params: {                  // Optional. Mesh params (TODO)

@@ -70,6 +70,7 @@ pub struct BodyInstanceDescription {
 
     // BodyDescription overrides
     pub mass: Option<f32>,
+    pub radius: Option<f32>,
     pub brightness: Option<f32>,
     pub mesh: Option<String>,
     pub mesh_params: Option<HashMap<String, String>>,
