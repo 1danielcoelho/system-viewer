@@ -268,7 +268,6 @@ def handle_database_exceptions(database):
         database['major_bodies']['1'] = copy.deepcopy(database['major_bodies']['199'])
         database['major_bodies']['1']['name'] = 'Mercury Barycenter'
         database['major_bodies']['1']['type'] = 'barycenter'
-        database['major_bodies']['1']['mass'] = 0
         database['major_bodies']['1']['radius'] = 0
         database['major_bodies']['1']['albedo'] = 0
         database['major_bodies']['1']['magnitude'] = 0
@@ -287,7 +286,6 @@ def handle_database_exceptions(database):
         database['major_bodies']['2'] = copy.deepcopy(database['major_bodies']['299'])
         database['major_bodies']['2']['name'] = 'Venus Barycenter'
         database['major_bodies']['2']['type'] = 'barycenter'
-        database['major_bodies']['2']['mass'] = 0
         database['major_bodies']['2']['radius'] = 0
         database['major_bodies']['2']['albedo'] = 0
         database['major_bodies']['2']['magnitude'] = 0

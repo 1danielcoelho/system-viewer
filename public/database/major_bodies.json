@@ -2,7 +2,7 @@
     "1": {
         "name": "Mercury Barycenter",
         "type": "barycenter",
-        "mass": 0,
+        "mass": 3.3020000000000006e+23,
         "radius": 0,
         "albedo": 0,
         "magnitude": 0,
@@ -20,8 +20,7 @@
         "radius": 695.7,
         "material_params": {
             "base_color": "FF9900FF",
-            "emissive_texture": "2k_sun.jpg",
-            "emissive_factor": "[1.0, 1.0, 1.0]"
+            "emissive_texture": "2k_sun.jpg"
         },
         "brightness": 3.024e+27
     },
@@ -40,7 +39,7 @@
     "2": {
         "name": "Venus Barycenter",
         "type": "barycenter",
-        "mass": 0,
+        "mass": 4.868500000000001e+24,
         "radius": 0,
         "albedo": 0,
         "magnitude": 0,

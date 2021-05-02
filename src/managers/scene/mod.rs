@@ -11,7 +11,6 @@ use crate::managers::OrbitManager;
 use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
 use crate::utils::units::J2000_JDN;
-use crate::STATE;
 use na::*;
 pub use scene::*;
 use std::collections::HashMap;
@@ -25,10 +24,6 @@ pub struct SceneManager {
     main: Option<String>,
     loaded_scenes: HashMap<String, Scene>,
     pub descriptions: HashMap<String, SceneDescription>,
-
-    // If this is larger than zero we have scene fetch requests
-    // in flight, and may receive a new scene any second
-    pub num_scenes_expected: u32,
 }
 impl SceneManager {
     pub fn new() -> Self {
@@ -36,7 +31,6 @@ impl SceneManager {
             main: None,
             loaded_scenes: HashMap::new(),
             descriptions: HashMap::new(),
-            num_scenes_expected: 0,
         };
 
         // Don't actually call set_scene here as we don't want to trigger all that stuff

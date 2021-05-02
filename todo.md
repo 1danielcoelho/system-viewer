@@ -724,6 +724,8 @@ color.rgb *= exposure;
 >     - Flatten nested hashmap by appending key names
 >     - No. I'll very frequently want to "fetch all major bodies", and without separate maps this will be very awkward
 > - Failing to parse wildcard number when there isn't one
+> - There is more async behavior here than what I think there is... sometimes we finish parsing a database file only after we start loading the last scene, somehow
+>     - I can work around this for now by just marking the resource as received after it was processed
 
 ================================================================================
 
@@ -731,6 +733,9 @@ color.rgb *= exposure;
 - Rings?
     - Figure out how to setup spawned bodies to have rings
         - Something is really messed up with scenes that load with wildcards, all meshes end up at NaN
+            - It's the physics system going nuts because all transforms end exactly at origin, so forces are infinite
+                - For some reason on the first pass the transforms are all identity, or even NaN for the barycenters
+                - It was getting into trouble because Venus/Mercury barycenters had 0 for mass
             - Camera also ends up at NaN somehow
         - Have to figure out what to do with Body List
         - Open Earth scene -> Reload page -> All parent entities are at NaN

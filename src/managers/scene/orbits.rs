@@ -63,10 +63,16 @@ pub fn add_body_instance_entities(
         linvel = Some(*instance_vel);
     }
 
+    // if let Some(t) = body.and_then(|b| Some(b.body_type)) {
+    //     if t == BodyType::Barycenter {
+    //         return;
+    //     }
+    // }
+
     log::info!(
         "Adding body '{}' to scene '{}'",
         name.unwrap_or(&String::new()),
-        scene.identifier
+        scene.identifier,
     );
 
     // Main entity
@@ -142,23 +148,20 @@ pub fn add_body_instance_entities(
     let sphere_ent = scene.new_entity(None);
     scene.set_entity_parent(body_ent, sphere_ent);
     let sphere_trans_comp = scene.add_component::<TransformComponent>(sphere_ent);
-    let trans = sphere_trans_comp.get_local_transform_mut();
+    let sphere_trans = sphere_trans_comp.get_local_transform_mut();
     if let Some(rot) = body_instance.rot {
-        trans.rot = UnitQuaternion::from_euler_angles(
+        sphere_trans.rot = UnitQuaternion::from_euler_angles(
             rot.x.to_radians(),
             rot.y.to_radians(),
             rot.z.to_radians(),
         );
     }
     if let Some(scale) = body_instance.scale {
-        trans.scale = scale;
+        sphere_trans.scale = scale;
     }
     if let Some(radius) = body.and_then(|b| b.radius) {
         if radius > 0.0 {
-            sphere_trans_comp
-                .get_local_transform_mut()
-                .scale
-                .scale_mut(radius as f64);
+            sphere_trans.scale.scale_mut(radius as f64);
         }
     }
 
@@ -174,10 +177,9 @@ pub fn add_body_instance_entities(
     }
 
     // Physics
-    if body_instance.parent.is_none() {
+    if body_instance.parent.is_none() && mass.is_some() && mass.unwrap() > 0.0 {
         let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
-
-        phys_comp.mass = body.and_then(|b| b.mass).unwrap_or(1E21) as f64;
+        phys_comp.mass = mass.unwrap() as f64;
 
         if let Some(linvel) = linvel {
             phys_comp.lin_mom = linvel.scale(phys_comp.mass);

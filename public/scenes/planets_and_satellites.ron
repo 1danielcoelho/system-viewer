@@ -6,7 +6,7 @@
     simulation_scale: 500,
     bodies: [
         (
-            source: "major_bodies/*2",
+            source: "major_bodies/*",
         ),
         // (
         //     source: "jovian_satellites/*",

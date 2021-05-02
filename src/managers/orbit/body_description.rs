@@ -2,7 +2,7 @@ use na::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum BodyType {
     Star,

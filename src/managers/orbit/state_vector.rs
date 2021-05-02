@@ -1,7 +1,6 @@
 use crate::utils::units::Jdn;
 use na::*;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct StateVector {

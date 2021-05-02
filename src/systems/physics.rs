@@ -10,6 +10,10 @@ use na::*;
 pub struct PhysicsSystem {}
 impl PhysicsSystem {
     pub fn run(&self, state: &AppState, scene: &mut Scene) {
+        if state.simulation_paused || state.simulation_speed == 0.0 {
+            return;
+        }
+
         // Load in current transforms
         for (ent, phys) in scene.physics.ent_iter_mut() {
             let trans = scene.transform.get_component(*ent).unwrap();
@@ -56,8 +60,16 @@ fn collect_gravity(scene: &mut Scene) {
 
             let delta = other_comp.trans.trans - pos;
             let dist = delta.magnitude();
-            let force: Vector3<f64> =
-                delta.normalize() * GRAVITATION_CONSTANT * mass * other_comp.mass / (dist * dist);
+
+            // TEMP Safety in case something causes two bodies to be right on top of eachother
+            // Should go away once I properly implement collision
+            let force: Vector3<f64>;
+            if dist < 1E-10 {
+                force = Vector3::zeros()
+            } else {
+                force = delta.normalize() * GRAVITATION_CONSTANT * mass * other_comp.mass
+                    / (dist * dist);
+            }
 
             phys_comps[i].force_sum += force;
             phys_comps[j].force_sum += -force;
