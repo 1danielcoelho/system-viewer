@@ -13,6 +13,7 @@
         (
             name: "Earth",
             source: "major_bodies/399",
+            angvel: [0, 0, 1E-20],
         ),
         (
             name: "Moon",

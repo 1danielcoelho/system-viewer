@@ -747,6 +747,10 @@ color.rgb *= exposure;
     - Figure out how to setup spawned bodies to have rings
         - Actually allow children to have parents (doesn't really do anything but disable physics yet)
             - Something is wrong with materials: It seems like only one instance of the material/textures can be used?
+        - Angvel doesn't work so great: It seems to be spinning crazy fast every time
+            - I've made only the parent entity have a PhysicsComponent, but the mesh needs one too.. I think I'll have some type of toggle for kinematic PhysicsComponents, and basically have it handle rotational motion while the parent handles translational motion
+                - It would be a bit weird if the parent also picked up rotational motion, or if the child picked up translational motion, but I don't think these can happen yet
+        - Rotation seems incorrect: Rotating Earth rotates the moons too
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.
             - Rings with its own scale, tilt, rotation, etc.
