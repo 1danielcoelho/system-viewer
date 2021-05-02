@@ -2,7 +2,6 @@
     "1": {
         "name": "Mercury Barycenter",
         "type": "barycenter",
-        "mass": 3.3020000000000006e+23,
         "radius": 0,
         "albedo": 0,
         "magnitude": 0,
@@ -40,7 +39,6 @@
     "2": {
         "name": "Venus Barycenter",
         "type": "barycenter",
-        "mass": 4.868500000000001e+24,
         "radius": 0,
         "albedo": 0,
         "magnitude": 0,

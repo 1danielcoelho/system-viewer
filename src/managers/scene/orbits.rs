@@ -63,11 +63,12 @@ pub fn add_body_instance_entities(
         linvel = Some(*instance_vel);
     }
 
-    // if let Some(t) = body.and_then(|b| Some(b.body_type)) {
-    //     if t == BodyType::Barycenter {
-    //         return;
-    //     }
-    // }
+    // Skip barycenters for now as they also end up generating points and just waste time in general
+    if let Some(t) = body.and_then(|b| Some(b.body_type)) {
+        if t == BodyType::Barycenter {
+            return;
+        }
+    }
 
     log::info!(
         "Adding body '{}' to scene '{}'",

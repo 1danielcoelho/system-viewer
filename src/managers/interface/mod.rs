@@ -1177,6 +1177,10 @@ impl InterfaceManager {
                                     continue;
                                 }
 
+                                if scene.get_component::<PhysicsComponent>(entity.current).is_none() {
+                                    continue;
+                                }
+
                                 if let Some(name) = &entity.name {
                                     if name.to_lowercase().contains(&filter_lower) {
                                         if ui.button(name).clicked() {
