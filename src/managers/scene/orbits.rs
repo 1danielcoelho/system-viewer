@@ -6,7 +6,7 @@ use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, BodyType,
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
-use crate::managers::scene::Scene;
+use crate::managers::scene::{Entity, Scene};
 use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::string::decode_hex;
 use crate::utils::units::Jdn;
@@ -23,7 +23,7 @@ pub fn add_body_instance_entities(
     body_instance: &BodyInstanceDescription,
     default_state_vector: Option<StateVector>,
     res_man: &mut ResourceManager,
-) {
+) -> Option<(String, Entity)> {
     // Get overridable properties
     let mut name = None;
     let mut mass = None;
@@ -43,12 +43,12 @@ pub fn add_body_instance_entities(
                 // If our auto-generated mesh would have zero size, ignore it. Keep artificial because that may not
                 // have a radius
                 if body.radius.is_none() || body.radius.unwrap() <= 0.0 {
-                    return;
+                    return None;
                 }
             }
             BodyType::Artificial => {}
             // Skip barycenters for now as they also end up generating points and just waste time in general
-            BodyType::Barycenter => return,
+            BodyType::Barycenter => return None,
             BodyType::Other => {}
         }
 
@@ -210,6 +210,8 @@ pub fn add_body_instance_entities(
             phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
         }
     }
+
+    return Some((name.cloned().unwrap_or_default(), body_ent));
 }
 
 pub fn get_body_mesh(

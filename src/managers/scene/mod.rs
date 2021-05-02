@@ -703,11 +703,12 @@ impl SceneManager {
 
         let scene = self.new_scene(&name).unwrap();
 
-        // Bodies
-        for instance_desc in instance_descs.iter_mut() {
-            let mut body_desc: Option<BodyDescription> = None;
-            let mut default_state_vector: Option<StateVector> = None;
+        let mut parsed_body_name_to_main_ent: HashMap<String, Entity> = HashMap::new();
+        let mut bodies_to_parse: Vec<(Option<&BodyDescription>, &BodyInstanceDescription)> =
+            Vec::new();
 
+        // Collect all bodies to parse
+        for instance_desc in instance_descs.iter_mut() {
             if let Some(source) = instance_desc.source.clone() {
                 let slash_pos = source.rfind("/").unwrap();
                 let db_name = &source[..slash_pos]; // e.g. "major_bodies"
@@ -737,39 +738,75 @@ impl SceneManager {
                         db_name
                     );
 
+                    bodies_to_parse.reserve(bodies.len());
                     for body in bodies {
-                        let default_state_vector = fetch_default_motion_if_needed(
-                            body.id.as_ref().unwrap(),
-                            orbit_man,
-                            time,
-                        );
-
-                        add_body_instance_entities(
-                            scene,
-                            time,
-                            Some(body),
-                            &instance_desc,
-                            default_state_vector,
-                            res_man,
-                        );
+                        bodies_to_parse.push((Some(body), instance_desc));
                     }
                 // Just a single body with a source
                 } else {
-                    body_desc = orbit_man.get_body(db_name, body_id).ok().cloned();
-                    default_state_vector = fetch_default_motion_if_needed(body_id, orbit_man, time);
+                    bodies_to_parse
+                        .push((orbit_man.get_body(db_name, body_id).ok(), instance_desc));
                 }
             }
+        }
 
-            // Create body entity and components (even if we have no actual body we may need it
-            // in order to parent other things to)
-            add_body_instance_entities(
-                scene,
-                time,
-                body_desc.as_ref(),
-                &instance_desc,
-                default_state_vector,
-                res_man,
-            );
+        // Parse bodies
+        let mut last_num_left = 0;
+        let num_left = loop {
+            bodies_to_parse.retain(|(body, instance)| {
+                // Check if we have/need a parent
+                let mut parent_entity: Option<Entity> = None;
+                if let Some(parent_name) = &instance.parent {
+                    if parent_name.len() > 0 {
+                        if let Some(parsed_parent) = parsed_body_name_to_main_ent.get(parent_name) {
+                            parent_entity = Some(*parsed_parent);
+                        } else {
+                            // We haven't parsed the parent yet, skip this body for now
+                            return true;
+                        }
+                    }
+                }
+    
+                let default_state_vector = body.and_then(|b| fetch_default_motion_if_needed(b.id.as_ref().unwrap(), orbit_man, time));
+
+                let name_ent = add_body_instance_entities(
+                    scene,
+                    time,
+                    *body,
+                    &instance,
+                    default_state_vector,
+                    res_man,
+                );
+
+                // Sometimes we abort due to missing mass/radius, etc.
+                if name_ent.is_none() {
+                    return false;
+                }
+                let name_ent = name_ent.unwrap();
+
+                // Add our entity as a child if we have a designated parent that we found
+                if let Some(parent_entity) = parent_entity {
+                    scene.set_entity_parent(parent_entity, name_ent.1);
+                }
+    
+                let old = parsed_body_name_to_main_ent.insert(name_ent.0.clone(), name_ent.1);
+                if let Some(_) = old {
+                    log::error!("Name collision for body instance name '{}'. Entity '{:?}' will be used from now on", name_ent.0, name_ent.1);
+                }
+
+                // We successfully parsed this one, so remove it from the vec
+                return false;
+            });
+
+            // Break if we haven't parsed anything this whole pass
+            let new_num_left = bodies_to_parse.len();
+            if new_num_left == last_num_left {
+                break new_num_left;
+            }
+            last_num_left = new_num_left;
+        };
+        if num_left > 0 {
+            log::error!("Failed to parse {} bodies due to missing parents! Bodies left:\n{:#?}", num_left, bodies_to_parse);
         }
 
         // Grid

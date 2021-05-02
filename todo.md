@@ -746,6 +746,7 @@ color.rgb *= exposure;
 - Rings?
     - Figure out how to setup spawned bodies to have rings
         - Actually allow children to have parents (doesn't really do anything but disable physics yet)
+            - Something is wrong with materials: It seems like only one instance of the material/textures can be used?
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.
             - Rings with its own scale, tilt, rotation, etc.

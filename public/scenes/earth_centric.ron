@@ -18,5 +18,17 @@
             name: "Moon",
             source: "other_satellites/301",
         ),
+        (
+            name: "Test",
+            source: "other_satellites/301",
+            parent: "Earth",
+            pos: [0, 0, 8],
+        ),
+        (
+            name: "Test1",
+            source: "other_satellites/301",
+            parent: "Earth",
+            pos: [0, 0, -8],
+        ),
     ]
 )
