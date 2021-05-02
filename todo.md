@@ -726,26 +726,26 @@ color.rgb *= exposure;
 > - Failing to parse wildcard number when there isn't one
 > - There is more async behavior here than what I think there is... sometimes we finish parsing a database file only after we start loading the last scene, somehow
 >     - I can work around this for now by just marking the resource as received after it was processed
+> - Something is really messed up with scenes that load with wildcards, all meshes end up at NaN
+>     - It's the physics system going nuts because all transforms end exactly at origin, so forces are infinite
+>         - For some reason on the first pass the transforms are all identity, or even NaN for the barycenters
+>         - It was getting into trouble because Venus/Mercury barycenters had 0 for mass and gravity calculations were spreading it around
+>     - Camera also ends up at NaN somehow
+> - Open Earth scene -> Reload page -> All parent entities are at NaN
+>     - State vectors db finishes parsing after we try loading the scene
+>     - Why do we get NaNs if we don't set a valid state vector? pos 0 should work...
 
 ================================================================================
 
 # TODO MVP
 - Rings?
     - Figure out how to setup spawned bodies to have rings
-        - Something is really messed up with scenes that load with wildcards, all meshes end up at NaN
-            - It's the physics system going nuts because all transforms end exactly at origin, so forces are infinite
-                - For some reason on the first pass the transforms are all identity, or even NaN for the barycenters
-                - It was getting into trouble because Venus/Mercury barycenters had 0 for mass
-            - Camera also ends up at NaN somehow
         - Have to figure out what to do with Body List
-        - Open Earth scene -> Reload page -> All parent entities are at NaN
-            - State vectors db finishes parsing after we try loading the scene
-            - Why do we get NaNs if we don't set a valid state vector? pos 0 should work...
-        - Actually allow children to have parents (doesn't really do anything but disable physics yet)
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.
             - Rings with its own scale, tilt, rotation, etc.
         - Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
+        - Actually allow children to have parents (doesn't really do anything but disable physics yet)
     - Try out ring texture mapping
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
@@ -755,6 +755,7 @@ color.rgb *= exposure;
     - MAYBE investigate async loading of assets before doing this because the skybox is way too slow
 
 # TODO Bug fixes
+- Points don't have custom colors anymore?
 - Can't see the text on 'Metal Rough Spheres No Textures' for some reason
 - If a scene is loaded and it doesn't specify a focus target, it should be cleared instead
 - Whenever we get a crash it just spams the console log with a million crashes because the global objects can't be borrowed again
