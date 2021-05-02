@@ -33,6 +33,24 @@ pub fn add_body_instance_entities(
     let mut pos = default_state_vector.as_ref().and_then(|v| Some(v.pos));
     let mut linvel = default_state_vector.as_ref().and_then(|v| Some(v.vel));
     if let Some(body) = body {
+        match body.body_type {
+            BodyType::Star
+            | BodyType::Planet
+            | BodyType::Satellite
+            | BodyType::Asteroid
+            | BodyType::Comet => {
+                // If our auto-generated mesh would have zero size, ignore it. Keep artificial because that may not
+                // have a radius
+                if body.radius.is_none() || body.radius.unwrap() <= 0.0 {
+                    return;
+                }
+            }
+            BodyType::Artificial => {}
+            // Skip barycenters for now as they also end up generating points and just waste time in general
+            BodyType::Barycenter => return,
+            BodyType::Other => {}
+        }
+
         name = Some(&body.name);
         mass = body.mass;
         brightness = body.brightness;
@@ -61,13 +79,6 @@ pub fn add_body_instance_entities(
     }
     if let Some(instance_vel) = body_instance.linvel.as_ref() {
         linvel = Some(*instance_vel);
-    }
-
-    // Skip barycenters for now as they also end up generating points and just waste time in general
-    if let Some(t) = body.and_then(|b| Some(b.body_type)) {
-        if t == BodyType::Barycenter {
-            return;
-        }
     }
 
     log::info!(
@@ -146,7 +157,8 @@ pub fn add_body_instance_entities(
     // Child mesh holder entity
     // Separate entity so that our main entity can have children, and yet a separate child mesh
     // that rotates independently of it
-    let sphere_ent = scene.new_entity(None);
+    let sphere_ent_name = name.and_then(|s| Some(s.clone() + "'s mesh"));
+    let sphere_ent = scene.new_entity(sphere_ent_name.as_ref().and_then(|s| Some(s.as_str())));
     scene.set_entity_parent(body_ent, sphere_ent);
     let sphere_trans_comp = scene.add_component::<TransformComponent>(sphere_ent);
     let sphere_trans = sphere_trans_comp.get_local_transform_mut();

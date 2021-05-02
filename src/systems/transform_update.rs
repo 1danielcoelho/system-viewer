@@ -144,6 +144,9 @@ fn handle_go_to(state: &mut AppState, scene: &mut Scene) {
     }
     let target_entity = state.camera.entity_going_to.unwrap();
 
+    // If we want to go to Saturn's rings, use the whole Saturn's bounding box
+    let target_entity = scene.get_entity_ancestor(target_entity);
+
     let transform = scene
         .get_component::<TransformComponent>(target_entity)
         .unwrap()

@@ -1177,7 +1177,10 @@ impl InterfaceManager {
                                     continue;
                                 }
 
-                                if scene.get_component::<PhysicsComponent>(entity.current).is_none() {
+                                if scene
+                                    .get_component::<PhysicsComponent>(entity.current)
+                                    .is_none()
+                                {
                                     continue;
                                 }
 
@@ -1216,8 +1219,13 @@ fn handle_pointer_on_scene(state: &mut AppState, scene: &mut Scene) {
         direction: (end_world - start_world).normalize(),
     };
 
-    let entity =
+    let mut entity =
         raycast(&ray, &scene).and_then(|hit| scene.get_entity_from_index(hit.entity_index));
+
+    // If we hit e.g. Saturn's rings we want to select Saturn itself, as that will contain all the useful stuff
+    if let Some(valid_entity) = entity {
+        entity = Some(scene.get_entity_ancestor(valid_entity));
+    }
 
     let window = web_sys::window().unwrap();
     let doc = window.document().unwrap();

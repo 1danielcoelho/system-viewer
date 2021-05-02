@@ -1,1 +1,327 @@
-{"301": {"name": "Moon", "type": "satellite", "mass": 7.349e+22, "radius": 1.73753, "albedo": 0.12, "material_params": {"base_color": "CFCFD1FF", "base_color_texture": "2k_moon.jpg"}}, "401": {"name": "Phobos", "type": "satellite", "mass": 1.08e+16, "radius": 0.011166666666666667, "albedo": 0.06}, "402": {"name": "Deimos", "type": "satellite", "mass": 1800000000000000.0, "radius": 0.0063, "albedo": 0.06}, "701": {"name": "Ariel", "type": "satellite", "mass": 1.353e+21, "radius": 0.5789, "albedo": 0.34}, "702": {"name": "Umbriel", "type": "satellite", "mass": 1.172e+21, "radius": 0.5847, "albedo": 0.18}, "703": {"name": "Titania", "type": "satellite", "mass": 3.527e+21, "radius": 0.7888999999999999, "albedo": 0.27}, "704": {"name": "Oberon", "type": "satellite", "mass": 3.014e+21, "radius": 0.7614, "albedo": 0.24}, "705": {"name": "Miranda", "type": "satellite", "mass": 6.59e+19, "radius": 0.23570000000000002, "albedo": 0.27}, "706": {"name": "Cordelia", "type": "satellite", "radius": 0.013, "albedo": 0.07, "mass": 4.496005299291579e+16}, "707": {"name": "Ophelia", "type": "satellite", "radius": 0.016, "albedo": 0.07, "mass": 5.395206359149895e+16}, "708": {"name": "Bianca", "type": "satellite", "radius": 0.022, "albedo": 0.07, "mass": 9.291744285202597e+16}, "709": {"name": "Cressida", "type": "satellite", "radius": 0.033, "albedo": 0.07, "mass": 3.431950711792572e+17}, "710": {"name": "Desdemona", "type": "satellite", "radius": 0.029, "albedo": 0.07, "mass": 1.7834154353856598e+17}, "711": {"name": "Juliet", "type": "satellite", "radius": 0.042, "albedo": 0.07, "mass": 5.575046571121558e+17}, "712": {"name": "Portia", "type": "satellite", "radius": 0.055, "albedo": 0.07, "mass": 1.6815059819350505e+18}, "713": {"name": "Rosalind", "type": "satellite", "radius": 0.029, "albedo": 0.07, "mass": 2.5477363362652285e+17}, "714": {"name": "Belinda", "type": "satellite", "radius": 0.034, "albedo": 0.07, "mass": 3.5668308707713197e+17}, "715": {"name": "Puck", "type": "satellite", "radius": 0.077, "albedo": 0.07, "mass": 2.8939287443106796e+18}, "716": {"name": "Caliban", "type": "satellite", "radius": 0.0, "albedo": 0.07, "mass": 2.9973368661943866e+17}, "717": {"name": "Sycorax", "type": "satellite", "radius": 0.0, "albedo": 0.07, "mass": 2.6976031795749473e+18}, "718": {"name": "Prospero", "type": "satellite", "radius": 0.0, "mass": 9.891211658441475e+16}, "719": {"name": "Setebos", "type": "satellite", "radius": 0.0, "mass": 8.69227691196372e+16}, "720": {"name": "Stephano", "type": "satellite", "radius": 0.0, "mass": 2.547736336265228e+16}, "721": {"name": "Trinculo", "type": "satellite", "radius": 0.0, "mass": 4645872142601299.0}, "722": {"name": "Francisco", "type": "satellite", "radius": 0.0, "mass": 8392543225344281.0}, "723": {"name": "Margaret", "type": "satellite", "radius": 0.0, "mass": 6294407419008211.0}, "724": {"name": "Ferdinand", "type": "satellite", "radius": 0.0, "mass": 6294407419008211.0}, "725": {"name": "Perdita", "type": "satellite", "radius": 0.0, "mass": 1.7984021197166316e+16}, "726": {"name": "Mab", "type": "satellite", "radius": 0.0, "mass": 8992010598583158.0}, "727": {"name": "Cupid", "type": "satellite", "radius": 0.0, "mass": 2997336866194386.5}, "801": {"name": "Triton", "type": "satellite", "mass": 2.147e+22, "radius": 1.3525999999999998, "albedo": 0.7}, "802": {"name": "Nereid", "type": "satellite", "radius": 0.17, "albedo": 0.2, "mass": 3.087256972180218e+19}, "803": {"name": "Naiad", "type": "satellite", "radius": 0.029, "albedo": 0.06, "mass": 1.948268963026351e+17}, "804": {"name": "Thalassa", "type": "satellite", "radius": 0.04, "albedo": 0.06, "mass": 3.746671082742983e+17}, "805": {"name": "Despina", "type": "satellite", "radius": 0.074, "albedo": 0.06, "mass": 2.0981358063360707e+18}, "806": {"name": "Galatea", "type": "satellite", "radius": 0.079, "albedo": 0.06, "mass": 3.7466710827429827e+18}, "807": {"name": "Larissa", "type": "satellite", "radius": 0.0965, "albedo": 0.06, "mass": 4.945605829220737e+18}, "808": {"name": "Proteus", "type": "satellite", "radius": 0.209, "albedo": 0.06, "mass": 5.035525935206569e+19}, "809": {"name": "Halimede", "type": "satellite", "radius": 0.0, "mass": 1.7984021197166317e+17}, "810": {"name": "Psamathe", "type": "satellite", "radius": 0.0, "mass": 4.945605829220738e+16}, "811": {"name": "Sao", "type": "satellite", "radius": 0.0, "mass": 6.744007948937369e+16}, "812": {"name": "Laomedeia", "type": "satellite", "radius": 0.0, "mass": 5.844806889079053e+16}, "813": {"name": "Neso", "type": "satellite", "radius": 0.0, "mass": 1.6485352764069123e+17}, "814": {"name": "Hippocamp", "type": "satellite", "radius": 0.0}, "901": {"name": "Charon", "type": "satellite", "mass": 1.53e+21, "radius": 0.605, "albedo": 0.372}, "902": {"name": "Nix", "type": "satellite", "radius": 0.0, "mass": 1.9482689630263508e+16}, "903": {"name": "Hydra", "type": "satellite", "radius": 0.0, "mass": 9.741344815131755e+16}, "904": {"name": "Kerberos", "type": "satellite", "radius": 0.0, "mass": 1.6485352764069126e+16}, "905": {"name": "Styx", "type": "satellite", "radius": 0.0}}
+{
+    "301": {
+        "name": "Moon",
+        "type": "satellite",
+        "mass": 7.349e+22,
+        "radius": 1.73753,
+        "albedo": 0.12,
+        "material_params": {
+            "base_color": "CFCFD1FF",
+            "base_color_texture": "2k_moon.jpg"
+        }
+    },
+    "401": {
+        "name": "Phobos",
+        "type": "satellite",
+        "mass": 1.08e+16,
+        "radius": 0.011166666666666667,
+        "albedo": 0.06
+    },
+    "402": {
+        "name": "Deimos",
+        "type": "satellite",
+        "mass": 1800000000000000.0,
+        "radius": 0.0063,
+        "albedo": 0.06
+    },
+    "701": {
+        "name": "Ariel",
+        "type": "satellite",
+        "mass": 1.353e+21,
+        "radius": 0.5789,
+        "albedo": 0.34
+    },
+    "702": {
+        "name": "Umbriel",
+        "type": "satellite",
+        "mass": 1.172e+21,
+        "radius": 0.5847,
+        "albedo": 0.18
+    },
+    "703": {
+        "name": "Titania",
+        "type": "satellite",
+        "mass": 3.527e+21,
+        "radius": 0.7888999999999999,
+        "albedo": 0.27
+    },
+    "704": {
+        "name": "Oberon",
+        "type": "satellite",
+        "mass": 3.014e+21,
+        "radius": 0.7614,
+        "albedo": 0.24
+    },
+    "705": {
+        "name": "Miranda",
+        "type": "satellite",
+        "mass": 6.59e+19,
+        "radius": 0.23570000000000002,
+        "albedo": 0.27
+    },
+    "706": {
+        "name": "Cordelia",
+        "type": "satellite",
+        "radius": 0.013,
+        "albedo": 0.07,
+        "mass": 4.496005299291579e+16
+    },
+    "707": {
+        "name": "Ophelia",
+        "type": "satellite",
+        "radius": 0.016,
+        "albedo": 0.07,
+        "mass": 5.395206359149895e+16
+    },
+    "708": {
+        "name": "Bianca",
+        "type": "satellite",
+        "radius": 0.022,
+        "albedo": 0.07,
+        "mass": 9.291744285202597e+16
+    },
+    "709": {
+        "name": "Cressida",
+        "type": "satellite",
+        "radius": 0.033,
+        "albedo": 0.07,
+        "mass": 3.431950711792572e+17
+    },
+    "710": {
+        "name": "Desdemona",
+        "type": "satellite",
+        "radius": 0.029,
+        "albedo": 0.07,
+        "mass": 1.7834154353856598e+17
+    },
+    "711": {
+        "name": "Juliet",
+        "type": "satellite",
+        "radius": 0.042,
+        "albedo": 0.07,
+        "mass": 5.575046571121558e+17
+    },
+    "712": {
+        "name": "Portia",
+        "type": "satellite",
+        "radius": 0.055,
+        "albedo": 0.07,
+        "mass": 1.6815059819350505e+18
+    },
+    "713": {
+        "name": "Rosalind",
+        "type": "satellite",
+        "radius": 0.029,
+        "albedo": 0.07,
+        "mass": 2.5477363362652285e+17
+    },
+    "714": {
+        "name": "Belinda",
+        "type": "satellite",
+        "radius": 0.034,
+        "albedo": 0.07,
+        "mass": 3.5668308707713197e+17
+    },
+    "715": {
+        "name": "Puck",
+        "type": "satellite",
+        "radius": 0.077,
+        "albedo": 0.07,
+        "mass": 2.8939287443106796e+18
+    },
+    "716": {
+        "name": "Caliban",
+        "type": "satellite",
+        "radius": 0.0,
+        "albedo": 0.07,
+        "mass": 2.9973368661943866e+17
+    },
+    "717": {
+        "name": "Sycorax",
+        "type": "satellite",
+        "radius": 0.0,
+        "albedo": 0.07,
+        "mass": 2.6976031795749473e+18
+    },
+    "718": {
+        "name": "Prospero",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 9.891211658441475e+16
+    },
+    "719": {
+        "name": "Setebos",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 8.69227691196372e+16
+    },
+    "720": {
+        "name": "Stephano",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 2.547736336265228e+16
+    },
+    "721": {
+        "name": "Trinculo",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 4645872142601299.0
+    },
+    "722": {
+        "name": "Francisco",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 8392543225344281.0
+    },
+    "723": {
+        "name": "Margaret",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 6294407419008211.0
+    },
+    "724": {
+        "name": "Ferdinand",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 6294407419008211.0
+    },
+    "725": {
+        "name": "Perdita",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1.7984021197166316e+16
+    },
+    "726": {
+        "name": "Mab",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 8992010598583158.0
+    },
+    "727": {
+        "name": "Cupid",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 2997336866194386.5
+    },
+    "801": {
+        "name": "Triton",
+        "type": "satellite",
+        "mass": 2.147e+22,
+        "radius": 1.3525999999999998,
+        "albedo": 0.7
+    },
+    "802": {
+        "name": "Nereid",
+        "type": "satellite",
+        "radius": 0.17,
+        "albedo": 0.2,
+        "mass": 3.087256972180218e+19
+    },
+    "803": {
+        "name": "Naiad",
+        "type": "satellite",
+        "radius": 0.029,
+        "albedo": 0.06,
+        "mass": 1.948268963026351e+17
+    },
+    "804": {
+        "name": "Thalassa",
+        "type": "satellite",
+        "radius": 0.04,
+        "albedo": 0.06,
+        "mass": 3.746671082742983e+17
+    },
+    "805": {
+        "name": "Despina",
+        "type": "satellite",
+        "radius": 0.074,
+        "albedo": 0.06,
+        "mass": 2.0981358063360707e+18
+    },
+    "806": {
+        "name": "Galatea",
+        "type": "satellite",
+        "radius": 0.079,
+        "albedo": 0.06,
+        "mass": 3.7466710827429827e+18
+    },
+    "807": {
+        "name": "Larissa",
+        "type": "satellite",
+        "radius": 0.0965,
+        "albedo": 0.06,
+        "mass": 4.945605829220737e+18
+    },
+    "808": {
+        "name": "Proteus",
+        "type": "satellite",
+        "radius": 0.209,
+        "albedo": 0.06,
+        "mass": 5.035525935206569e+19
+    },
+    "809": {
+        "name": "Halimede",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1.7984021197166317e+17
+    },
+    "810": {
+        "name": "Psamathe",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 4.945605829220738e+16
+    },
+    "811": {
+        "name": "Sao",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 6.744007948937369e+16
+    },
+    "812": {
+        "name": "Laomedeia",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 5.844806889079053e+16
+    },
+    "813": {
+        "name": "Neso",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1.6485352764069123e+17
+    },
+    "814": {
+        "name": "Hippocamp",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "901": {
+        "name": "Charon",
+        "type": "satellite",
+        "mass": 1.53e+21,
+        "radius": 0.605,
+        "albedo": 0.372
+    },
+    "902": {
+        "name": "Nix",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1.9482689630263508e+16
+    },
+    "903": {
+        "name": "Hydra",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 9.741344815131755e+16
+    },
+    "904": {
+        "name": "Kerberos",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1.6485352764069126e+16
+    },
+    "905": {
+        "name": "Styx",
+        "type": "satellite",
+        "radius": 0.0
+    }
+}

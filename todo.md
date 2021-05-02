@@ -734,18 +734,20 @@ color.rgb *= exposure;
 > - Open Earth scene -> Reload page -> All parent entities are at NaN
 >     - State vectors db finishes parsing after we try loading the scene
 >     - Why do we get NaNs if we don't set a valid state vector? pos 0 should work...
+> - Have to figure out what to do with Body List
+> - Hoppocamp's mesh
+>     - Bodies without mass or radius get assigned some default mesh
 
 ================================================================================
 
 # TODO MVP
 - Rings?
     - Figure out how to setup spawned bodies to have rings
-        - Have to figure out what to do with Body List
+        - Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
+        - Actually allow children to have parents (doesn't really do anything but disable physics yet)
         - Parent entity with bounding box, mass, linear velocity and no rotation
             - Child sphere mesh with scale, axial tilt, rotation, etc.
             - Rings with its own scale, tilt, rotation, etc.
-        - Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
-        - Actually allow children to have parents (doesn't really do anything but disable physics yet)
     - Try out ring texture mapping
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
