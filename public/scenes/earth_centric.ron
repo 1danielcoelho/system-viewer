@@ -3,7 +3,7 @@
     name: "Earth",
     description: "Earth, Moon and artificial satellites.",
     time: "J2000",
-    simulation_scale: 500,
+    simulation_scale: 1,
     focus: "399",
     bodies: [
         (
@@ -13,7 +13,7 @@
         (
             name: "Earth",
             source: "major_bodies/399",
-            angvel: [0, 0, 1E-20],
+            angvel: [0, 0, 0.628318530718],
         ),
         (
             name: "Moon",

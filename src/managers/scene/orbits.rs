@@ -202,12 +202,17 @@ pub fn add_body_instance_entities(
         let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
         phys_comp.mass = mass.unwrap() as f64;
 
+        // Solid sphere moment of inertia tensor (https://en.wikipedia.org/wiki/List_of_moments_of_inertia)
+        let val = (2.0 / 5.0) * phys_comp.mass * (radius.unwrap() as f64).powi(2);
+        let inertia_tensor = Matrix3::from_diagonal(&Vector3::new(val, val, val));
+        phys_comp.inv_inertia = inertia_tensor.try_inverse().unwrap();
+
         if let Some(linvel) = linvel {
             phys_comp.lin_mom = linvel.scale(phys_comp.mass);
         }
 
         if let Some(ang_vel) = body_instance.angvel {
-            phys_comp.ang_mom += phys_comp.mass * ang_vel; // TODO: VERY WRONG! Needs to be moment of inertia instead of mass here
+            phys_comp.ang_mom += inertia_tensor * ang_vel;
         }
     }
 
