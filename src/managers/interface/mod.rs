@@ -878,6 +878,24 @@ impl InterfaceManager {
                                 ));
                                 ui.end_row();
 
+                                if let Some(children) = scene.get_entity_children(selection) {
+                                    if children.len() > 0 {
+                                        ui.collapsing("Children", |ui| {
+                                            for child in children {
+                                                let but_child = ui.button(
+                                                    scene
+                                                        .get_entity_name(*child)
+                                                        .unwrap_or_default(),
+                                                );
+                                                if but_child.clicked() {
+                                                    state.selection = Some(*child);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                                ui.end_row();
+
                                 // TODO: Make this more generic
                                 if let Some(comp) =
                                     scene.get_component_mut::<TransformComponent>(selection)

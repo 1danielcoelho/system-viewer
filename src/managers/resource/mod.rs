@@ -739,13 +739,14 @@ impl ResourceManager {
         identifier: &str,
         is_cubemap: bool,
     ) -> Option<Rc<RefCell<Texture>>> {
-        if let Some(tex) = self.textures.get(identifier) {
+        let full_path: String = "public/textures/".to_owned() + identifier;
+
+        if let Some(tex) = self.textures.get(&full_path) {
             return Some(tex.clone());
         }
 
         // We don't have this one, put out a request for this asset and just return
         // the default pink texture instead
-        let full_path: String = "public/textures/".to_owned() + identifier;
         if is_cubemap {
             fetch_bytes(&(full_path.clone() + "/Right.jpg"), "cubemap_face");
             fetch_bytes(&(full_path.clone() + "/Left.jpg"), "cubemap_face");
@@ -754,7 +755,6 @@ impl ResourceManager {
             fetch_bytes(&(full_path.clone() + "/Front.jpg"), "cubemap_face");
             fetch_bytes(&(full_path.clone() + "/Back.jpg"), "cubemap_face");
         } else {
-            let full_path: String = "public/textures/".to_owned() + identifier;
             fetch_bytes(&full_path, "texture");
         }
 

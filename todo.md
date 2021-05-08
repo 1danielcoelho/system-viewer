@@ -739,14 +739,14 @@ color.rgb *= exposure;
 >     - Bodies without mass or radius get assigned some default mesh
 >- Figure out what to do with bounding boxes: If I click on a child mesh I want to defer back to selecting the parent entity, or no?
     > - Don't need to mess with this for now: I can defer selection in another way, and I can use radius fo goto
+> - Actually allow children to have parents (doesn't really do anything but disable physics yet)
+>     - Something is wrong with materials: It seems like only one instance of the material/textures can be used?
 
 ================================================================================
 
 # TODO MVP
 - Rings?
     - Figure out how to setup spawned bodies to have rings
-        - Actually allow children to have parents (doesn't really do anything but disable physics yet)
-            - Something is wrong with materials: It seems like only one instance of the material/textures can be used?
         - Angvel doesn't work so great: It seems to be spinning crazy fast every time
             - I've made only the parent entity have a PhysicsComponent, but the mesh needs one too.. I think I'll have some type of toggle for kinematic PhysicsComponents, and basically have it handle rotational motion while the parent handles translational motion
                 - It would be a bit weird if the parent also picked up rotational motion, or if the child picked up translational motion, but I don't think these can happen yet
@@ -797,6 +797,10 @@ color.rgb *= exposure;
 - Maybe pressing F/G without anything selected/focused would frame all of the objects in the scene
 
 # TODO Visuals
+- Relativistic effects of speed of travel: https://math.ucr.edu/home/baez/physics/Relativity/SR/Spaceship/spaceship.html
+    - Not as hard as it seems.. mostly an FOV-like distortion and red-shifting
+    - https://math.ucr.edu/home/baez/physics/Relativity/SR/penrose.html
+    - https://jila.colorado.edu/~ajsh/insidebh/4dperspective.html
 - Antialiasing: The default canvas framebuffer has antialiasing by default. Now that I setup my own framebuffer I'll need to enable it manually
 - Custom material for earth that uses the light/day and cloud textures
 - Planet trails for physics bodies
