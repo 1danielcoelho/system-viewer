@@ -1,12 +1,11 @@
 use crate::app_state::AppState;
 use crate::managers::scene::Scene;
 use crate::managers::ResourceManager;
-use crate::systems::{OrbitalSystem, PhysicsSystem, RenderingSystem, TransformUpdateSystem};
+use crate::systems::{PhysicsSystem, RenderingSystem, TransformUpdateSystem};
 use crate::GLCTX;
 
 pub struct SystemManager {
     render: RenderingSystem,
-    orbital: OrbitalSystem,
     physics: PhysicsSystem,
     trans: TransformUpdateSystem,
 }
@@ -14,7 +13,6 @@ impl SystemManager {
     pub fn new(res_man: &mut ResourceManager) -> Self {
         return Self {
             render: RenderingSystem::new(res_man),
-            orbital: OrbitalSystem {},
             physics: PhysicsSystem {},
             trans: TransformUpdateSystem {},
         };
@@ -22,8 +20,7 @@ impl SystemManager {
 
     // TODO: Make some "context" object that has mut refs to everything and is created every frame
     pub fn run(&mut self, state: &mut AppState, mut scene: &mut Scene) {
-        self.orbital.run(state, &mut scene);
-        self.physics.run(state, &mut scene); 
+        self.physics.run(state, &mut scene);
         self.trans.run(state, &mut scene);
         self.render.run(state, &mut scene);
     }

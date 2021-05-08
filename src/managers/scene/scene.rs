@@ -1,6 +1,6 @@
 use crate::components::{
     Component, KinematicComponent, LightComponent, MeshComponent, MetadataComponent,
-    OrbitalComponent, RigidBodyComponent, TransformComponent,
+    RigidBodyComponent, TransformComponent,
 };
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
@@ -57,7 +57,6 @@ pub struct Scene {
     pub mesh: SparseStorage<MeshComponent>,
     pub transform: SparseStorage<TransformComponent>,
     pub light: HashStorage<LightComponent>,
-    pub orbital: HashStorage<OrbitalComponent>,
     pub metadata: HashStorage<MetadataComponent>,
 }
 
@@ -84,7 +83,6 @@ impl Scene {
             mesh: SparseStorage::new(entity_to_index.clone()),
             transform: SparseStorage::new(entity_to_index.clone()),
             light: HashStorage::new(),
-            orbital: HashStorage::new(),
             metadata: HashStorage::new(),
         }
     }
@@ -141,6 +139,8 @@ impl Scene {
         }
 
         // Move component data over
+        self.kinematic
+            .move_from_other(other_man.kinematic, &other_ent_to_new_ent);
         self.rigidbody
             .move_from_other(other_man.rigidbody, &other_ent_to_new_ent);
         self.mesh
@@ -149,8 +149,6 @@ impl Scene {
             .move_from_other(other_man.transform, &other_index_to_new_index);
         self.light
             .move_from_other(other_man.light, &other_ent_to_new_ent);
-        self.orbital
-            .move_from_other(other_man.orbital, &other_ent_to_new_ent);
 
         // TODO: Update entity references in components
     }
@@ -165,10 +163,10 @@ impl Scene {
         self.entity_storage.reserve(num_missing);
 
         self.rigidbody.reserve_for_n_more(num_missing);
+        self.kinematic.reserve_for_n_more(num_missing);
         self.transform.reserve_for_n_more(num_missing);
         self.mesh.reserve_for_n_more(num_missing);
         self.light.reserve_for_n_more(num_missing);
-        self.orbital.reserve_for_n_more(num_missing);
     }
 
     fn new_entity_at_index(&mut self, entity_storage_index: u32, name: Option<&str>) -> Entity {
@@ -556,10 +554,10 @@ impl Scene {
         let max_index = index_a.max(index_b);
         self.resize_components(max_index + 1);
 
+        self.kinematic.swap_components(ent_a, ent_b);
         self.rigidbody.swap_components(ent_a, ent_b);
         self.mesh.swap_components(ent_a, ent_b);
         self.transform.swap_components(ent_a, ent_b);
-        self.orbital.swap_components(ent_a, ent_b);
         self.light.swap_components(ent_a, ent_b);
     }
 

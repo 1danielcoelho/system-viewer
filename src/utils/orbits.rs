@@ -183,6 +183,7 @@ pub fn bake_eccentric_anomaly_times(elements: &OrbitalElements, num_angles: u32)
     return result;
 }
 
+#[allow(dead_code)]
 pub fn get_eccentric_anomaly(mut date: Jdn, orbital_period: f64, baked_times: &Vec<Jdn>) -> Rad {
     while date > baked_times[baked_times.len() - 1] {
         date.0 -= orbital_period;

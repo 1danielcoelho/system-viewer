@@ -752,13 +752,13 @@ color.rgb *= exposure;
 > - Rings
 >     - Add rings to main bodies on default scenes
 >     - It looks a bit wonky because I don't have the proper planet orientations yet but this will do
+> - Get rid of everything osculating elements *motion type*
+>     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
+>     - Keep it in there in case I want to draw osculating orbits perhaps?
 
 ================================================================================
 
 # TODO MVP
-- Get rid of everything osculating elements *motion type*
-    - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
-    - Keep it in there in case I want to draw osculating orbits perhaps?
 - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
     - MAYBE investigate async loading of assets before doing this because the skybox is way too slow

@@ -1,7 +1,5 @@
 use crate::app_state::{AppState, ButtonState, ReferenceChange};
-use crate::components::{
-    MeshComponent, MetadataComponent, OrbitalComponent, RigidBodyComponent, TransformComponent,
-};
+use crate::components::{MeshComponent, MetadataComponent, RigidBodyComponent, TransformComponent};
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Entity, Scene, SceneManager};
@@ -909,14 +907,6 @@ impl InterfaceManager {
                                     scene.get_component_mut::<MeshComponent>(selection)
                                 {
                                     ui.collapsing("Mesh component", |ui| comp.draw_details_ui(ui));
-                                }
-
-                                if let Some(comp) =
-                                    scene.get_component_mut::<OrbitalComponent>(selection)
-                                {
-                                    ui.collapsing("Orbital component", |ui| {
-                                        comp.draw_details_ui(ui)
-                                    });
                                 }
 
                                 if let Some(comp) =
