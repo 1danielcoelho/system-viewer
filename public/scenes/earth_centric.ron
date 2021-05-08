@@ -7,20 +7,13 @@
     focus: "399",
     bodies: [
         (
-            name: "Sun",
             source: "major_bodies/10",
         ),
         (
-            name: "Saturn",
-            source: "major_bodies/699",
-            angvel: [0, 0, 0],
-            rot: [45, 0, 0],
+            source: "major_bodies/399",
         ),
         (
-            name: "Test",
-            source: "artificial/saturn_rings",
-            parent: "Saturn",
-            rot: [45, 0, 0],
+            source: "other_satellites/301",
         ),
     ]
 )

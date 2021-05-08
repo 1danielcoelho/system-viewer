@@ -749,12 +749,13 @@ color.rgb *= exposure;
 >         - Later on we can use this to do on-track elliptical movement on orbits and stuff
 > - Try out ring texture mapping
 > - Allow double-sided mesh rendering
+> - Rings
+>     - Add rings to main bodies on default scenes
+>     - It looks a bit wonky because I don't have the proper planet orientations yet but this will do
 
 ================================================================================
 
 # TODO MVP
-- Rings
-    - Add rings to main bodies on default scenes
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
     - Keep it in there in case I want to draw osculating orbits perhaps?

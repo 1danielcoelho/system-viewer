@@ -6,7 +6,39 @@
     simulation_scale: 500,
     bodies: [
         (
-            source: "major_bodies/*",
+            source: "major_bodies/10",
+        ),
+        (
+            source: "major_bodies/199",
+        ),
+        (
+            source: "major_bodies/299",
+        ),
+        (
+            source: "major_bodies/399",
+        ),
+        (
+            source: "major_bodies/499",
+        ),
+        (
+            source: "major_bodies/599",
+        ),
+        (
+            name: "Saturn",
+            source: "major_bodies/699",
+        ),
+        (
+            source: "artificial/saturn_rings",
+            parent: "Saturn",
+        ),
+        (
+            source: "major_bodies/799",
+        ),
+        (
+            source: "major_bodies/899",
+        ),
+        (
+            source: "major_bodies/999",
         ),
         (
             source: "jovian_satellites/*",
