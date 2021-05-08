@@ -1,6 +1,6 @@
 use crate::app_state::AppState;
-use crate::components::Component;
-use crate::components::PhysicsComponent;
+use crate::components::RigidBodyComponent;
+use crate::components::{Component, KinematicComponent, TransformComponent};
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::Scene;
 use crate::managers::EventReceiver;
@@ -15,7 +15,7 @@ impl PhysicsSystem {
         }
 
         // Load in current transforms
-        for (ent, phys) in scene.physics.ent_iter_mut() {
+        for (ent, phys) in scene.rigidbody.ent_iter_mut() {
             let trans = scene.transform.get_component(*ent).unwrap();
 
             phys.trans = trans.get_local_transform().clone();
@@ -25,15 +25,22 @@ impl PhysicsSystem {
         collect_gravity(scene);
 
         // Update state vector
-        for phys in scene.physics.iter_mut() {
-            update_comp(state, phys);
+        for phys in scene.rigidbody.iter_mut() {
+            update_rigidbody(state, phys);
         }
 
         // Unload new transforms
-        for (ent, phys) in scene.physics.ent_iter() {
+        for (ent, phys) in scene.rigidbody.ent_iter() {
             let trans = scene.transform.get_component_mut(*ent).unwrap();
 
             *trans.get_local_transform_mut() = phys.trans.clone();
+        }
+
+        // Kinematic components
+        // TODO: There's probably a way of doing both at once
+        for (ent, kin) in scene.kinematic.ent_iter_mut() {
+            let trans = scene.transform.get_component_mut(*ent).unwrap();
+            update_kinematic(state, kin, trans);
         }
     }
 }
@@ -44,7 +51,7 @@ impl EventReceiver for PhysicsSystem {
 }
 
 fn collect_gravity(scene: &mut Scene) {
-    let phys_comps = scene.physics.get_storage_mut();
+    let phys_comps = scene.rigidbody.get_storage_mut();
     if phys_comps.len() < 2 {
         return;
     }
@@ -78,7 +85,7 @@ fn collect_gravity(scene: &mut Scene) {
 }
 
 // Applies semi-implicit Euler integration to update `physics` to time t
-fn update_comp(state: &AppState, phys_comp: &mut PhysicsComponent) {
+fn update_rigidbody(state: &AppState, phys_comp: &mut RigidBodyComponent) {
     if !phys_comp.get_enabled() {
         return;
     }
@@ -102,13 +109,11 @@ fn update_comp(state: &AppState, phys_comp: &mut PhysicsComponent) {
     // Update velocities
     let lin_vel = phys_comp.lin_mom / phys_comp.mass;
     let ang_vel = inv_inertia_world * phys_comp.ang_mom;
-    let ang_vel_q = Quaternion::new(0.0, ang_vel.x, ang_vel.y, ang_vel.z);
+    let ang_vel_q = UnitQuaternion::from_scaled_axis(ang_vel * dt_s);
 
     // Update position and rotation
     phys_comp.trans.trans += lin_vel * dt_s;
-    let new_rot = phys_comp.trans.rot.quaternion()
-        + 0.5 * ang_vel_q * phys_comp.trans.rot.quaternion() * dt_s; // todo
-    phys_comp.trans.rot = UnitQuaternion::new_normalize(new_rot);
+    phys_comp.trans.rot *= ang_vel_q;
 
     // Clear accumulators
     phys_comp.force_sum = Vector3::new(0.0, 0.0, 0.0);
@@ -119,4 +124,10 @@ fn update_comp(state: &AppState, phys_comp: &mut PhysicsComponent) {
     // Solve constraints
 
     // events?
+}
+
+fn update_kinematic(state: &AppState, kin: &KinematicComponent, trans: &mut TransformComponent) {
+    let transform = trans.get_local_transform_mut();
+    transform.trans += kin.lin_vel * state.sim_delta_time_s;
+    transform.rot *= UnitQuaternion::from_scaled_axis(kin.ang_vel * state.sim_delta_time_s);
 }

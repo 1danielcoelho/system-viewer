@@ -1,6 +1,7 @@
 use crate::components::light::LightType;
 use crate::components::{
-    LightComponent, MeshComponent, MetadataComponent, PhysicsComponent, TransformComponent,
+    KinematicComponent, LightComponent, MeshComponent, MetadataComponent, RigidBodyComponent,
+    TransformComponent,
 };
 use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, BodyType, StateVector};
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
@@ -197,9 +198,9 @@ pub fn add_body_instance_entities(
         mesh_comp.set_material_override(Some(mat_over.clone()), 0);
     }
 
-    // Physics
+    // Parent rigidbody
     if body_instance.parent.is_none() && mass.is_some() && mass.unwrap() > 0.0 {
-        let phys_comp = scene.add_component::<PhysicsComponent>(body_ent);
+        let phys_comp = scene.add_component::<RigidBodyComponent>(body_ent);
         phys_comp.mass = mass.unwrap() as f64;
 
         // Solid sphere moment of inertia tensor (https://en.wikipedia.org/wiki/List_of_moments_of_inertia)
@@ -210,10 +211,13 @@ pub fn add_body_instance_entities(
         if let Some(linvel) = linvel {
             phys_comp.lin_mom = linvel.scale(phys_comp.mass);
         }
+    }
 
-        if let Some(ang_vel) = body_instance.angvel {
-            phys_comp.ang_mom += inertia_tensor * ang_vel;
-        }
+    // Child mesh kinematic
+    if body_instance.angvel.is_some() || body_instance.linvel.is_some() {
+        let kin_comp = scene.add_component::<KinematicComponent>(sphere_ent);
+        kin_comp.ang_vel = body_instance.angvel.unwrap_or_default();
+        kin_comp.lin_vel = body_instance.linvel.unwrap_or_default();
     }
 
     return Some((name.cloned().unwrap_or_default(), body_ent));

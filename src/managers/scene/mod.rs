@@ -1,8 +1,8 @@
 use super::ResourceManager;
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::light::LightType;
-use crate::components::{LightComponent, MeshComponent, PhysicsComponent, TransformComponent};
-use crate::managers::orbit::{BodyDescription, BodyInstanceDescription, StateVector};
+use crate::components::{LightComponent, MeshComponent, RigidBodyComponent, TransformComponent};
+use crate::managers::orbit::{BodyDescription, BodyInstanceDescription};
 use crate::managers::resource::material::{UniformName, UniformValue};
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::description::SceneDescription;
@@ -274,8 +274,8 @@ impl SceneManager {
         // Light center
         let light_center = scene.new_entity(Some("light_center"));
         scene.add_component::<TransformComponent>(light_center);
-        let physics = scene.add_component::<PhysicsComponent>(light_center);
-        physics.ang_mom = Vector3::new(0.0, 0.0, 300.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(light_center);
+        rigidbody.ang_mom = Vector3::new(0.0, 0.0, 300.0);
 
         // Light
         let light_ent = scene.new_entity(Some("Mega-sun"));
@@ -392,7 +392,7 @@ impl SceneManager {
         //     let mesh_comp = scene.add_component::<MeshComponent>(ent);
         //     mesh_comp.set_mesh(res_man.get_or_create_mesh("ico_sphere"));
         //     mesh_comp.set_material_override(res_man.get_or_create_material("phong"), 0);
-        //     let phys_comp = scene.add_component::<PhysicsComponent>(ent);
+        //     let phys_comp = scene.add_component::<RigidBodyComponent>(ent);
         //     phys_comp.mass = 1E20;
         //     phys_comp.force_sum = pos
         //         .cross(&Vector3::z())
@@ -452,8 +452,8 @@ impl SceneManager {
         // System center so the sun doesn't have to rotate for the planet to orbit
         let sun_bary = scene.new_entity(Some("sun_barycenter"));
         scene.add_component::<TransformComponent>(sun_bary);
-        let physics = scene.add_component::<PhysicsComponent>(sun_bary);
-        physics.ang_mom = Vector3::new(0.0, 0.0, 470.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(sun_bary);
+        rigidbody.ang_mom = Vector3::new(0.0, 0.0, 470.0);
 
         // Planet
         let planet = scene.new_entity(Some("planet"));
@@ -475,8 +475,8 @@ impl SceneManager {
         // Moon orbit center
         let planet_bary = scene.new_entity(Some("center"));
         scene.add_component::<TransformComponent>(planet_bary);
-        let physics = scene.add_component::<PhysicsComponent>(planet_bary);
-        physics.ang_mom = Vector3::new(0.0, 0.0, 720.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(planet_bary);
+        rigidbody.ang_mom = Vector3::new(0.0, 0.0, 720.0);
         scene.set_entity_parent(planet, planet_bary);
 
         let moon_mat = res_man.instantiate_material("gltf_metal_rough", "moon_mat");
@@ -507,8 +507,8 @@ impl SceneManager {
         // Outer system center
         let outer_bary = scene.new_entity(Some("outer_barycenter"));
         scene.add_component::<TransformComponent>(outer_bary);
-        let physics = scene.add_component::<PhysicsComponent>(outer_bary);
-        physics.ang_mom = Vector3::new(0.0, 0.0, -80.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(outer_bary);
+        rigidbody.ang_mom = Vector3::new(0.0, 0.0, -80.0);
 
         // Outer planet 1
         let mat = res_man.instantiate_material("gltf_metal_rough", "outer_mat_1");
@@ -588,8 +588,8 @@ impl SceneManager {
         // Counter-sun barycenter
         let counter_sun_bary = scene.new_entity(Some("counter_sun_barycenter"));
         scene.add_component::<TransformComponent>(counter_sun_bary);
-        let physics = scene.add_component::<PhysicsComponent>(counter_sun_bary);
-        physics.ang_mom = Vector3::new(0.0, 0.0, -75.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(counter_sun_bary);
+        rigidbody.ang_mom = Vector3::new(0.0, 0.0, -75.0);
 
         // Counter-sun
         let counter_sun = scene.new_entity(Some("Counter-sun"));
@@ -622,8 +622,8 @@ impl SceneManager {
         // Mega-sun barycenter
         let mega_sun_bary = scene.new_entity(Some("mega_sun_barycenter"));
         scene.add_component::<TransformComponent>(mega_sun_bary);
-        let physics = scene.add_component::<PhysicsComponent>(mega_sun_bary);
-        physics.ang_mom = Vector3::new(0.0, 0.0, 133.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(mega_sun_bary);
+        rigidbody.ang_mom = Vector3::new(0.0, 0.0, 133.0);
 
         // Mega-sun
         let mega_sun = scene.new_entity(Some("Mega-sun"));
@@ -653,8 +653,8 @@ impl SceneManager {
         // Vertical-sun bary
         let vert_sun_bary = scene.new_entity(Some("vertical_sun_barycenter"));
         scene.add_component::<TransformComponent>(vert_sun_bary);
-        let physics = scene.add_component::<PhysicsComponent>(vert_sun_bary);
-        physics.ang_mom = Vector3::new(150.0, 0.0, 0.0);
+        let rigidbody = scene.add_component::<RigidBodyComponent>(vert_sun_bary);
+        rigidbody.ang_mom = Vector3::new(150.0, 0.0, 0.0);
 
         // Vertical-sun
         let vert_sun = scene.new_entity(Some("Vertical-sun"));

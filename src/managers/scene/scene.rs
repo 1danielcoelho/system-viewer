@@ -1,6 +1,6 @@
 use crate::components::{
-    Component, LightComponent, MeshComponent, MetadataComponent, OrbitalComponent,
-    PhysicsComponent, TransformComponent,
+    Component, KinematicComponent, LightComponent, MeshComponent, MetadataComponent,
+    OrbitalComponent, RigidBodyComponent, TransformComponent,
 };
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
@@ -43,7 +43,7 @@ pub struct Scene {
     last_used_entity: Entity,
 
     // Not sure where these should be. I think once I expand the rendering capabilities
-    // to add shadows, multiple passes and stuff it will become more clear 
+    // to add shadows, multiple passes and stuff it will become more clear
     pub skybox_trans: Option<Matrix4<f64>>,
     pub skybox_mesh: Option<Rc<RefCell<Mesh>>>,
     pub skybox_mat: Option<Rc<RefCell<Material>>>,
@@ -52,7 +52,8 @@ pub struct Scene {
 
     // Until there is a proper way to split member borrows in Rust I think
     // hard-coding the component types in here is the simplest way of doing things, sadly
-    pub physics: PackedStorage<PhysicsComponent>,
+    pub rigidbody: PackedStorage<RigidBodyComponent>,
+    pub kinematic: PackedStorage<KinematicComponent>,
     pub mesh: SparseStorage<MeshComponent>,
     pub transform: SparseStorage<TransformComponent>,
     pub light: HashStorage<LightComponent>,
@@ -78,7 +79,8 @@ impl Scene {
             points_mesh: None,
             points_mat: None,
 
-            physics: PackedStorage::new(),
+            rigidbody: PackedStorage::new(),
+            kinematic: PackedStorage::new(),
             mesh: SparseStorage::new(entity_to_index.clone()),
             transform: SparseStorage::new(entity_to_index.clone()),
             light: HashStorage::new(),
@@ -139,8 +141,8 @@ impl Scene {
         }
 
         // Move component data over
-        self.physics
-            .move_from_other(other_man.physics, &other_ent_to_new_ent);
+        self.rigidbody
+            .move_from_other(other_man.rigidbody, &other_ent_to_new_ent);
         self.mesh
             .move_from_other(other_man.mesh, &other_index_to_new_index);
         self.transform
@@ -162,7 +164,7 @@ impl Scene {
 
         self.entity_storage.reserve(num_missing);
 
-        self.physics.reserve_for_n_more(num_missing);
+        self.rigidbody.reserve_for_n_more(num_missing);
         self.transform.reserve_for_n_more(num_missing);
         self.mesh.reserve_for_n_more(num_missing);
         self.light.reserve_for_n_more(num_missing);
@@ -554,7 +556,7 @@ impl Scene {
         let max_index = index_a.max(index_b);
         self.resize_components(max_index + 1);
 
-        self.physics.swap_components(ent_a, ent_b);
+        self.rigidbody.swap_components(ent_a, ent_b);
         self.mesh.swap_components(ent_a, ent_b);
         self.transform.swap_components(ent_a, ent_b);
         self.orbital.swap_components(ent_a, ent_b);

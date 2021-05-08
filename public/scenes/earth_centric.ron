@@ -13,7 +13,7 @@
         (
             name: "Earth",
             source: "major_bodies/399",
-            angvel: [0, 0, 0.628318530718],
+            angvel: [0, 0, 0],
         ),
         (
             name: "Moon",
@@ -23,13 +23,12 @@
             name: "Test",
             source: "other_satellites/301",
             parent: "Earth",
-            pos: [0, 0, 8],
-        ),
-        (
-            name: "Test1",
-            source: "other_satellites/301",
-            parent: "Earth",
-            pos: [0, 0, -8],
+            mesh: "disk",
+            material: "uv0",
+            pos: [0, 0, 0],
+            rot: [45, 0, 0],
+            scale: [10, 10, 1],
+            angvel: [0, 0, 1],            
         ),
     ]
 )

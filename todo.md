@@ -743,18 +743,15 @@ color.rgb *= exposure;
 >     - Something is wrong with materials: It seems like only one instance of the material/textures can be used?
 > - Angvel doesn't work so great: It seems to be spinning crazy fast every time
 >     - It's the moment of inertia matrix thing
+> - Rotation seems incorrect: Rotating Earth rotates the moons too
+>     - RigidBodyComponent for N-body and free body physics
+>     - KinematicComponent for on-track movement and set angular/linear velocities
+>         - Later on we can use this to do on-track elliptical movement on orbits and stuff
 
 ================================================================================
 
 # TODO MVP
 - Rings?
-    - Figure out how to setup spawned bodies to have rings
-        - Rotation seems incorrect: Rotating Earth rotates the moons too
-            - I've made only the parent entity have a PhysicsComponent, but the mesh needs one too.. I think I'll have some type of toggle for kinematic PhysicsComponents, and basically have it handle rotational motion while the parent handles translational motion
-                - It would be a bit weird if the parent also picked up rotational motion, or if the child picked up translational motion, but I don't think these can happen yet
-        - Parent entity with bounding box, mass, linear velocity and no rotation
-            - Child sphere mesh with scale, axial tilt, rotation, etc.
-            - Rings with its own scale, tilt, rotation, etc.
     - Try out ring texture mapping
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward

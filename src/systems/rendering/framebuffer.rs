@@ -98,6 +98,7 @@ impl Framebuffer {
         };
     }
 
+    #[allow(dead_code)]
     pub fn cleanup(&self, gl: &WebGl2RenderingContext) {
         // Delete attachments
         gl.delete_texture(self.color_tex.borrow().gl_handle.as_ref());

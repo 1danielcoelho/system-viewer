@@ -7,7 +7,7 @@ use nalgebra::UnitQuaternion;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PhysicsComponent {
+pub struct RigidBodyComponent {
     enabled: bool,
     pub collision_enabled: bool,
 
@@ -30,14 +30,14 @@ pub struct PhysicsComponent {
     pub trans: Transform<f64>,
 }
 
-impl PhysicsComponent {
+impl RigidBodyComponent {
     #[allow(dead_code)]
     fn new() -> Self {
         return Self::default();
     }
 }
 
-impl Default for PhysicsComponent {
+impl Default for RigidBodyComponent {
     fn default() -> Self {
         return Self {
             enabled: false,
@@ -53,8 +53,8 @@ impl Default for PhysicsComponent {
     }
 }
 
-impl Component for PhysicsComponent {
-    type ComponentType = PhysicsComponent;
+impl Component for RigidBodyComponent {
+    type ComponentType = RigidBodyComponent;
 
     fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
@@ -65,15 +65,15 @@ impl Component for PhysicsComponent {
     }
 
     fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&scene.physics);
+        return Box::new(&scene.rigidbody);
     }
 
     fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&mut scene.physics);
+        return Box::new(&mut scene.rigidbody);
     }
 }
 
-impl DetailsUI for PhysicsComponent {
+impl DetailsUI for RigidBodyComponent {
     fn draw_details_ui(&mut self, ui: &mut egui::Ui) {
         ui.columns(2, |cols| {
             cols[0].label("Collision enabled:");

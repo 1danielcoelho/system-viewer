@@ -1,6 +1,6 @@
 use crate::app_state::{AppState, ButtonState, ReferenceChange};
 use crate::components::{
-    MeshComponent, MetadataComponent, OrbitalComponent, PhysicsComponent, TransformComponent,
+    MeshComponent, MetadataComponent, OrbitalComponent, RigidBodyComponent, TransformComponent,
 };
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
@@ -253,7 +253,7 @@ impl InterfaceManager {
                 let num_bodies = scene_man
                     .get_main_scene()
                     .unwrap()
-                    .physics
+                    .rigidbody
                     .get_num_components();
 
                 let sim_date_str = format!(
@@ -920,9 +920,9 @@ impl InterfaceManager {
                                 }
 
                                 if let Some(comp) =
-                                    scene.get_component_mut::<PhysicsComponent>(selection)
+                                    scene.get_component_mut::<RigidBodyComponent>(selection)
                                 {
-                                    ui.collapsing("Physics component", |ui| {
+                                    ui.collapsing("RigidBody component", |ui| {
                                         comp.draw_details_ui(ui)
                                     });
                                 }
@@ -1196,7 +1196,7 @@ impl InterfaceManager {
                                 }
 
                                 if scene
-                                    .get_component::<PhysicsComponent>(entity.current)
+                                    .get_component::<RigidBodyComponent>(entity.current)
                                     .is_none()
                                 {
                                     continue;
