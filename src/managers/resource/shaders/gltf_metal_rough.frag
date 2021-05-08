@@ -163,5 +163,5 @@ void main()
 
     // Convert to sRGB
     color = linear_to_sRGB(color);
-    out_frag_color = vec4(color, base_color.a);    
+    out_frag_color = vec4(color * base_color.a, base_color.a);
 }

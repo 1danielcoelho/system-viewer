@@ -381,6 +381,18 @@ pub fn get_body_material(
                 UniformValue::Vec3([floats[0], floats[1], floats[2]]),
             );
         }
+
+        if let Some(path) = params.get("double_sided") {
+            let double_sided = path == "true";
+
+            log::info!(
+                "Parsed double_sided '{:?}' for body {:?}",
+                double_sided,
+                body_name
+            );
+
+            mat_mut.double_sided = double_sided;
+        }
     }
 
     return Some(mat);

@@ -3,11 +3,12 @@
         "name": "Saturn's rings",
         "mesh": "disk",
         "type": "artificial",
-        "radius": 15,
+        "radius": 125,
         "material": "gltf_metal_rough",
         "material_params": {
             "base_color": "A49FB3FF",
-            "base_color_texture": "2k_saturn_ring_alpha.png"
+            "base_color_texture": "2k_saturn_ring_alpha.png",
+            "double_sided": "true"
         }        
     },
     "2cylinderengine": {

@@ -747,13 +747,14 @@ color.rgb *= exposure;
 >     - RigidBodyComponent for N-body and free body physics
 >     - KinematicComponent for on-track movement and set angular/linear velocities
 >         - Later on we can use this to do on-track elliptical movement on orbits and stuff
+> - Try out ring texture mapping
+> - Allow double-sided mesh rendering
 
 ================================================================================
 
 # TODO MVP
-- Rings?
-    - Try out ring texture mapping
-    - Allow double-sided mesh rendering
+- Rings
+    - Add rings to main bodies on default scenes
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
     - Keep it in there in case I want to draw osculating orbits perhaps?
@@ -762,6 +763,7 @@ color.rgb *= exposure;
     - MAYBE investigate async loading of assets before doing this because the skybox is way too slow
 
 # TODO Bug fixes
+- Need to flip the normals on the shaders if we're rendering double-sided
 - Points don't have custom colors anymore?
 - Can't see the text on 'Metal Rough Spheres No Textures' for some reason
 - If a scene is loaded and it doesn't specify a focus target, it should be cleared instead
