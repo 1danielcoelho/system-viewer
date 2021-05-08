@@ -1,1 +1,360 @@
-{"601": {"name": "Mimas", "type": "satellite", "mass": 3.75e+19, "radius": 0.1988, "albedo": 0.6}, "602": {"name": "Enceladus", "type": "satellite", "mass": 1.0805e+20, "radius": 0.2523, "albedo": 1.04}, "603": {"name": "Tethys", "type": "satellite", "mass": 6.176e+20, "radius": 0.5363, "albedo": 0.8}, "604": {"name": "Dione", "type": "satellite", "mass": 1.09572e+21, "radius": 0.5625, "albedo": 0.6}, "605": {"name": "Rhea", "type": "satellite", "mass": 2.309e+21, "radius": 0.7645, "albedo": 0.6}, "606": {"name": "Titan", "type": "satellite", "mass": 1.3455299999999999e+23, "radius": 2.5755, "albedo": 0.2}, "607": {"name": "Hyperion", "type": "satellite", "mass": 1.08e+19, "radius": 0.133, "albedo": 0.25}, "608": {"name": "Iapetus", "type": "satellite", "mass": 1.8059e+21, "radius": 0.7345}, "609": {"name": "Phoebe", "type": "satellite", "mass": 8.289e+18, "radius": 0.1066}, "610": {"name": "Janus", "type": "satellite", "mass": 1.9800000000000003e+18, "radius": 0.08966666666666667, "albedo": 0.5}, "611": {"name": "Epimetheus", "type": "satellite", "mass": 5.5e+17, "radius": 0.059666666666666666, "albedo": 0.5}, "612": {"name": "Helene", "type": "satellite", "mass": 2.547e+16, "radius": 0.0, "albedo": 0.6}, "613": {"name": "Telesto", "type": "satellite", "mass": 7194000000000000.0, "radius": 0.011666666666666665, "albedo": 1.0}, "614": {"name": "Calypso", "type": "satellite", "mass": 3597000000000000.0, "radius": 0.010333333333333333, "albedo": 0.7}, "615": {"name": "Atlas", "type": "satellite", "radius": 0.0164, "albedo": 0.5, "mass": 6594141105627650.0}, "616": {"name": "Prometheus", "type": "satellite", "mass": 1.4e+17, "radius": 0.05266666666666667, "albedo": 0.5}, "617": {"name": "Pandora", "type": "satellite", "mass": 1.3e+17, "radius": 0.043333333333333335, "albedo": 0.5}, "618": {"name": "Pan", "type": "satellite", "radius": 0.01, "albedo": 0.5, "mass": 4945605829220737.0}, "619": {"name": "Ymir", "type": "satellite", "radius": 0.0, "mass": 4945605829220737.0}, "620": {"name": "Paaliaq", "type": "satellite", "radius": 0.0, "mass": 8242676382034563.0}, "621": {"name": "Tarvos", "type": "satellite", "radius": 0.0, "mass": 2697603179574948.0}, "622": {"name": "Ijiraq", "type": "satellite", "radius": 0.0, "mass": 1198934746477754.5}, "623": {"name": "Suttungr", "type": "satellite", "radius": 0.0, "mass": 209813580633607.03}, "624": {"name": "Kiviuq", "type": "satellite", "radius": 0.0, "mass": 3297070552813825.0}, "625": {"name": "Mundilfari", "type": "satellite", "radius": 0.0, "mass": 209813580633607.03}, "626": {"name": "Albiorix", "type": "satellite", "radius": 0.0, "mass": 2.0981358063360704e+16}, "627": {"name": "Skathi", "type": "satellite", "radius": 0.0, "mass": 314720370950410.56}, "628": {"name": "Erriapus", "type": "satellite", "radius": 0.0, "mass": 764320900879568.5}, "629": {"name": "Siarnaq", "type": "satellite", "radius": 0.0, "mass": 3.8965379260527016e+16}, "630": {"name": "Thrymr", "type": "satellite", "radius": 0.0, "mass": 209813580633607.03}, "631": {"name": "Narvi", "type": "satellite", "radius": 0.0, "mass": 344693739612354.44}, "632": {"name": "Methone", "type": "satellite", "radius": 0.0, "mass": 8992010598583.158}, "633": {"name": "Pallene", "type": "satellite", "radius": 0.0, "mass": 32970705528138.25}, "634": {"name": "Polydeuces", "type": "satellite", "radius": 0.0, "mass": 4496005299291.579}, "635": {"name": "Daphnis", "type": "satellite", "radius": 0.0, "mass": 77930758521054.05}, "636": {"name": "Aegir", "type": "satellite", "radius": 0.0}, "637": {"name": "Bebhionn", "type": "satellite", "radius": 0.0}, "638": {"name": "Bergelmir", "type": "satellite", "radius": 0.0}, "639": {"name": "Bestla", "type": "satellite", "radius": 0.0}, "640": {"name": "Farbauti", "type": "satellite", "radius": 0.0}, "641": {"name": "Fenrir", "type": "satellite", "radius": 0.0}, "642": {"name": "Fornjot", "type": "satellite", "radius": 0.0}, "643": {"name": "Hati", "type": "satellite", "radius": 0.0}, "644": {"name": "Hyrrokkin", "type": "satellite", "radius": 0.0}, "645": {"name": "Kari", "type": "satellite", "radius": 0.0}, "646": {"name": "Loge", "type": "satellite", "radius": 0.0}, "647": {"name": "Skoll", "type": "satellite", "radius": 0.0}, "648": {"name": "Surtur", "type": "satellite", "radius": 0.0}, "649": {"name": "Anthe", "type": "satellite", "radius": 0.0, "mass": 1498668433097.193}, "650": {"name": "Jarnsaxa", "type": "satellite", "radius": 0.0}, "65035": {"name": "2004S7", "type": "satellite", "radius": 0.0}, "65040": {"name": "2004S12", "type": "satellite", "radius": 0.0}, "65041": {"name": "2004S13", "type": "satellite", "radius": 0.0}, "65045": {"name": "2004S17", "type": "satellite", "radius": 0.0}, "65048": {"name": "2006S1", "type": "satellite", "radius": 0.0}, "65050": {"name": "2006S3", "type": "satellite", "radius": 0.0}, "65055": {"name": "2007S2", "type": "satellite", "radius": 0.0}, "65056": {"name": "2007S3", "type": "satellite", "radius": 0.0}, "651": {"name": "Greip", "type": "satellite", "radius": 0.0}, "652": {"name": "Tarqeq", "type": "satellite", "radius": 0.0}, "653": {"name": "Aegaeon", "type": "satellite", "radius": 0.0, "mass": 59946737323.887726}}
+{
+    "601": {
+        "name": "Mimas",
+        "type": "satellite",
+        "mass": 3.75e+19,
+        "radius": 0.1988,
+        "albedo": 0.6
+    },
+    "602": {
+        "name": "Enceladus",
+        "type": "satellite",
+        "mass": 1.0805e+20,
+        "radius": 0.2523,
+        "albedo": 1.04
+    },
+    "603": {
+        "name": "Tethys",
+        "type": "satellite",
+        "mass": 6.176e+20,
+        "radius": 0.5363,
+        "albedo": 0.8
+    },
+    "604": {
+        "name": "Dione",
+        "type": "satellite",
+        "mass": 1.09572e+21,
+        "radius": 0.5625,
+        "albedo": 0.6
+    },
+    "605": {
+        "name": "Rhea",
+        "type": "satellite",
+        "mass": 2.309e+21,
+        "radius": 0.7645,
+        "albedo": 0.6
+    },
+    "606": {
+        "name": "Titan",
+        "type": "satellite",
+        "mass": 1.3455299999999999e+23,
+        "radius": 2.5755,
+        "albedo": 0.2
+    },
+    "607": {
+        "name": "Hyperion",
+        "type": "satellite",
+        "mass": 1.08e+19,
+        "radius": 0.133,
+        "albedo": 0.25
+    },
+    "608": {
+        "name": "Iapetus",
+        "type": "satellite",
+        "mass": 1.8059e+21,
+        "radius": 0.7345
+    },
+    "609": {
+        "name": "Phoebe",
+        "type": "satellite",
+        "mass": 8.289e+18,
+        "radius": 0.1066
+    },
+    "610": {
+        "name": "Janus",
+        "type": "satellite",
+        "mass": 1.9800000000000003e+18,
+        "radius": 0.08966666666666667,
+        "albedo": 0.5
+    },
+    "611": {
+        "name": "Epimetheus",
+        "type": "satellite",
+        "mass": 5.5e+17,
+        "radius": 0.059666666666666666,
+        "albedo": 0.5
+    },
+    "612": {
+        "name": "Helene",
+        "type": "satellite",
+        "mass": 2.547e+16,
+        "radius": 0.0,
+        "albedo": 0.6
+    },
+    "613": {
+        "name": "Telesto",
+        "type": "satellite",
+        "mass": 7194000000000000.0,
+        "radius": 0.011666666666666665,
+        "albedo": 1.0
+    },
+    "614": {
+        "name": "Calypso",
+        "type": "satellite",
+        "mass": 3597000000000000.0,
+        "radius": 0.010333333333333333,
+        "albedo": 0.7
+    },
+    "615": {
+        "name": "Atlas",
+        "type": "satellite",
+        "radius": 0.0164,
+        "albedo": 0.5,
+        "mass": 6594141105627650.0
+    },
+    "616": {
+        "name": "Prometheus",
+        "type": "satellite",
+        "mass": 1.4e+17,
+        "radius": 0.05266666666666667,
+        "albedo": 0.5
+    },
+    "617": {
+        "name": "Pandora",
+        "type": "satellite",
+        "mass": 1.3e+17,
+        "radius": 0.043333333333333335,
+        "albedo": 0.5
+    },
+    "618": {
+        "name": "Pan",
+        "type": "satellite",
+        "radius": 0.01,
+        "albedo": 0.5,
+        "mass": 4945605829220737.0
+    },
+    "619": {
+        "name": "Ymir",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 4945605829220737.0
+    },
+    "620": {
+        "name": "Paaliaq",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 8242676382034563.0
+    },
+    "621": {
+        "name": "Tarvos",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 2697603179574948.0
+    },
+    "622": {
+        "name": "Ijiraq",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1198934746477754.5
+    },
+    "623": {
+        "name": "Suttungr",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 209813580633607.03
+    },
+    "624": {
+        "name": "Kiviuq",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 3297070552813825.0
+    },
+    "625": {
+        "name": "Mundilfari",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 209813580633607.03
+    },
+    "626": {
+        "name": "Albiorix",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 2.0981358063360704e+16
+    },
+    "627": {
+        "name": "Skathi",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 314720370950410.56
+    },
+    "628": {
+        "name": "Erriapus",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 764320900879568.5
+    },
+    "629": {
+        "name": "Siarnaq",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 3.8965379260527016e+16
+    },
+    "630": {
+        "name": "Thrymr",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 209813580633607.03
+    },
+    "631": {
+        "name": "Narvi",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 344693739612354.44
+    },
+    "632": {
+        "name": "Methone",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 8992010598583.158
+    },
+    "633": {
+        "name": "Pallene",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 32970705528138.25
+    },
+    "634": {
+        "name": "Polydeuces",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 4496005299291.579
+    },
+    "635": {
+        "name": "Daphnis",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 77930758521054.05
+    },
+    "636": {
+        "name": "Aegir",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "637": {
+        "name": "Bebhionn",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "638": {
+        "name": "Bergelmir",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "639": {
+        "name": "Bestla",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "640": {
+        "name": "Farbauti",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "641": {
+        "name": "Fenrir",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "642": {
+        "name": "Fornjot",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "643": {
+        "name": "Hati",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "644": {
+        "name": "Hyrrokkin",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "645": {
+        "name": "Kari",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "646": {
+        "name": "Loge",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "647": {
+        "name": "Skoll",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "648": {
+        "name": "Surtur",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "649": {
+        "name": "Anthe",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 1498668433097.193
+    },
+    "650": {
+        "name": "Jarnsaxa",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65035": {
+        "name": "2004S7",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65040": {
+        "name": "2004S12",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65041": {
+        "name": "2004S13",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65045": {
+        "name": "2004S17",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65048": {
+        "name": "2006S1",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65050": {
+        "name": "2006S3",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65055": {
+        "name": "2007S2",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "65056": {
+        "name": "2007S3",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "651": {
+        "name": "Greip",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "652": {
+        "name": "Tarqeq",
+        "type": "satellite",
+        "radius": 0.0
+    },
+    "653": {
+        "name": "Aegaeon",
+        "type": "satellite",
+        "radius": 0.0,
+        "mass": 59946737323.887726
+    }
+}

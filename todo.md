@@ -753,6 +753,7 @@ color.rgb *= exposure;
 # TODO MVP
 - Rings?
     - Try out ring texture mapping
+    - Allow double-sided mesh rendering
 - Get rid of everything osculating elements *motion type*
     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
     - Keep it in there in case I want to draw osculating orbits perhaps?

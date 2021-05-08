@@ -83,8 +83,8 @@ pub fn generate_disk(
 
             temp_positions.push(Vector3::new(x, y, 0.0));
             temp_uv0.push(Vector2::new(
-                (seg_index as f32) / (num_segments as f32),
                 (shell_index as f32) / (num_shells as f32),
+                (seg_index as f32) / (num_segments as f32),
             ));
             tangents.push(Vector3::new(long_angle.cos(), -long_angle.sin(), 0.0));
         }
