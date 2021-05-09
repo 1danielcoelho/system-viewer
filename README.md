@@ -28,7 +28,7 @@ It should open the browser right away. If not you can open http://localhost:9000
 
 Within the app, make sure you go to Settings and `Allow Local Storage` if you wish: That will allow it to store app state on your browser, as well as the last opened scene.
 
-See the `/schemas` folder for schemas describing the format for the database and scene description files. New scenes can be added to the `/public/scenes` folder and hot-reloaded, but will need to also be listed on the `/public/scenes/_auto_load_manifest.txt` file. 
+See the `/schemas` folder for schemas describing the format for the database and scene description files. New scenes can be added to the `/public/scenes` folder and hot-reloaded, but will need to also be listed on the `/public/scenes/auto_load_manifest.txt` file. 
 
 ## Deploying
 Run this:

@@ -6,14 +6,11 @@ const WriteFilePlugin = require("write-file-webpack-plugin");
 const path = require("path");
 
 module.exports = (env, args) => {
-  const isProductionMode = args.mode === "production";
-
   return {
     entry: "./index.js",
     output: {
       path: path.resolve(__dirname, "dist"),
-      // filename: isProductionMode ? '[name].[contenthash].js' : '[name].[hash].js',
-      filename: isProductionMode ? "[name].js" : "[name].js",
+      filename: "[name].js",
     },
     plugins: [
       new WriteFilePlugin(),
@@ -25,6 +22,7 @@ module.exports = (env, args) => {
       }),
       new WasmPackPlugin({
         crateDirectory: path.resolve(__dirname, "."),
+        outName: "index"
       }),
       new webpack.ProvidePlugin({
         TextDecoder: ["text-encoding", "TextDecoder"],

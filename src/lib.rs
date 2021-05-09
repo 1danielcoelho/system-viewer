@@ -83,7 +83,7 @@ pub fn initialize() {
     fetch_required_text("public/database/osc_elements.json", "elements_database");
 
     fetch_required_text(
-        "public/scenes/_auto_load_manifest.txt",
+        "public/scenes/auto_load_manifest.txt",
         "auto_load_manifest",
     );
 }

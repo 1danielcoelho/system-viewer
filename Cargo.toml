@@ -3,6 +3,9 @@ name = "system_viewer"
 version = "0.1.0"
 authors = ["Daniel Coelho"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/1danielcoelho/system-viewer"
+description = "Small 3D engine written in Rust and targetting WASM for viewing solar system N-body simulations"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
