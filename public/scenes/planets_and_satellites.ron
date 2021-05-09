@@ -4,6 +4,7 @@
     description: "All planets and moons in the solar system. No asteroids, comets or artificial bodies.",
     time: "J2000",
     simulation_scale: 500,
+    focus: "399",
     bodies: [
         (
             source: "major_bodies/10",

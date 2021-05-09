@@ -113,7 +113,7 @@ impl Engine {
         if let Some(expected_type) = expected_type {
             if expected_type == content_type {
                 self.pending_resources.remove(url);
-                log::warn!(
+                log::info!(
                     "Received resource from '{}'. {} other resources are still pending",
                     url,
                     self.pending_resources.len()

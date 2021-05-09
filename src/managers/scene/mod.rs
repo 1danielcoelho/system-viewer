@@ -101,6 +101,8 @@ impl SceneManager {
 
             // Loading previous scene from state --> Keep our state transform
             if state.last_scene_identifier.as_str() == identifier {
+                log::info!("Loading last scene from state");
+
                 // Unpack our reference entity from its name
                 if let Some(reference_name) = &state.camera.reference_entity_name {
                     if let Some(found_ent) = main_scene.get_entity_from_name(&reference_name[..]) {
@@ -119,6 +121,8 @@ impl SceneManager {
             }
             // Loading a new scene from its defaults
             else {
+                log::info!("Loading new scene from its defaults");
+
                 if desc.camera_pos.is_some()
                     && desc.camera_target.is_some()
                     && desc.camera_up.is_some()
@@ -196,10 +200,18 @@ impl SceneManager {
                 self.set_scene(&identifier, res_man, orbit_man, state);
             } else {
                 log::warn!(
-                    "Failed to find a description for last loaded scene '{}'",
-                    identifier
+                    "Failed to find a description for last loaded scene '{}'. Current descriptions: '{:#?}'",
+                    identifier,
+                    self.descriptions.keys()
                 );
             }
+        } 
+        // We never had a last scene: This is a cold start up, so load some scene
+        // TODO: Allow specifying startup scene without recompiling
+        else {
+            let startup_scene = "All major planets and moons";
+            log::info!("Loading startup scene '{}'", startup_scene);
+            self.set_scene(startup_scene, res_man, orbit_man, state);
         }
     }
 

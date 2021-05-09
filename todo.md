@@ -760,17 +760,20 @@ color.rgb *= exposure;
 > - If a scene is loaded and it doesn't specify a focus target, it should be cleared instead
 > - Real weird "headlight" effect when I get close to any mesh?
 >     - This went away on its own, I think I was mishandling normals
+> - Deploy it on my website
+    > - Setup better defaults or else it will just open with no scene, grid/axis showing, no background, etc.
 
 ================================================================================
 
 # TODO MVP
-- Deploy it on my website
-    - Setup better defaults or else it will just open with no scene, grid/axis showing, no background, etc.
 - MAYBE investigate async loading of assets before doing this because the skybox is way too slow
 - I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
 - Remove bulk of code from mod.rs files and put them in e.g. interface/interface.rs instead, as it's easier to Ctrl+P to
 
 # TODO Bug fixes
+- Need to be able to specify a body instance to focus, not id
+- Body instance names should default to ids with trailing suffixes
+- All entities should have some unique name
 - Labels are not to the side of the bodies anymore because they don't have radius/BB?
 - Need to flip the normals on the shaders if we're rendering double-sided
 - Points don't have custom colors anymore?
@@ -858,6 +861,7 @@ color.rgb *= exposure;
 - Make sure that skybox is aligned correctly with J2000 equatorial ecliptic reference system
 
 # TODO Engine
+- Setup a script to automatically deploy a new commit to githubio
 - Salvage capability to display on-rails bodies and static orbits
     - Big scene with as many asteroids as I can handle
 - Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.

@@ -3,7 +3,7 @@ use crate::utils::web::{local_storage_get, local_storage_set};
 use na::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OpenWindows {
     pub debug: bool,
     pub body_list: bool,
@@ -11,6 +11,19 @@ pub struct OpenWindows {
     pub settings: bool,
     pub controls: bool,
     pub about: bool,
+}
+
+impl Default for OpenWindows {
+    fn default() -> Self {
+        Self {
+            debug: false,
+            body_list: true,
+            scene_browser: true,
+            settings: true,
+            controls: true,
+            about: false,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -28,7 +41,7 @@ pub struct Camera {
     pub fov_v: f64,
     pub near: f64,
     pub far: f64,
-    
+
     #[serde(skip)]
     pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. reference_translation
     pub reference_entity_name: Option<String>, // Only used when serializing reference_entity, as actual Entity ids are not expected to be consistent
@@ -229,7 +242,7 @@ impl AppState {
             move_speed: 5.0,
             rotate_speed: 2.0,
             frames_per_second_limit: 120.0,
-            ev100: 0.0,
+            ev100: 11.0,
             input: Input::default(),
             hovered: None,
             selection: None,

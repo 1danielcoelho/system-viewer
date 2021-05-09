@@ -4,6 +4,7 @@
     description: "All planets, dwarf planets and satellites in the solar system, plus a bunch of asteroids and comets.",
     time: "J2000",
     simulation_scale: 500,
+    focus: "399",
     bodies: [
         (
             source: "major_bodies/10",
