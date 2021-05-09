@@ -762,13 +762,20 @@ color.rgb *= exposure;
 >     - This went away on its own, I think I was mishandling normals
 > - Deploy it on my website
     > - Setup better defaults or else it will just open with no scene, grid/axis showing, no background, etc.
+> - TODO MVP
+>     - MVP complete!
+> - Fix VSCode using html comment instead of quotes for markdown
 
 ================================================================================
 
-# TODO MVP
-- MAYBE investigate async loading of assets before doing this because the skybox is way too slow
+# TODO v0.1
 - I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
 - Remove bulk of code from mod.rs files and put them in e.g. interface/interface.rs instead, as it's easier to Ctrl+P to
+- Better logging system that allows me to switch logging level for categories at a time
+- Fix weird situation where I need two separate commits or else git thinks that small binary changes are just renames
+- Display current version on About/UI
+
+================================================================================
 
 # TODO Bug fixes
 - Need to be able to specify a body instance to focus, not id
@@ -790,8 +797,6 @@ color.rgb *= exposure;
 - Need better prediction of label size to prevent it from ever leaving the canvas
 - Annoying bug where if you drag while moving the += movement_x() stuff will add to an invalid mouse_x as it never run, making it snap
     - Seems to only happen on firefox
-
-================================================================================
 
 # TODO Cleanup
 
@@ -861,7 +866,8 @@ color.rgb *= exposure;
 - Make sure that skybox is aligned correctly with J2000 equatorial ecliptic reference system
 
 # TODO Engine
-- Setup a script to automatically deploy a new commit to githubio
+- Investigate async/sync loading of assets before doing this because the skybox is way too slow
+    - It's fine to just show a big loading bar, honestly. Just need to see if we can maybe do async/webworker stuff with the winit event loop situation
 - Salvage capability to display on-rails bodies and static orbits
     - Big scene with as many asteroids as I can handle
 - Some way of specifying parameters for procedural meshes, or hashing the parameters, etc.
@@ -873,7 +879,6 @@ color.rgb *= exposure;
 - Maybe find a nicer way of having a generic component storage system
     - It should be easier now that I don't need the components to be serializable 
 - Maybe investigate separate web worker thread with a shared memory buffer dedicated for the N-body stuff
-- Better logging system that allows me to switch logging level for categories at a time
 
 # TODO Content
 - Earth satellites scene
@@ -882,7 +887,7 @@ color.rgb *= exposure;
     - Different commercial satellites, starlink constellations, etc.
 
 # TODO Devops
-- Fix VSCode using html comment instead of quotes for markdown
+- Setup a script to automatically deploy a new commit to githubio
 - I think it should be possible to use chrome to debug WASM
     - Yes, but it doesn't have rust source maps yet, so good luck
 - I think it should be possible to store the shaders in the public folder and tweak the automatic reloading stuff to allow hot-reloading of shaders
