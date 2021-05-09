@@ -764,12 +764,14 @@ color.rgb *= exposure;
 ================================================================================
 
 # TODO MVP
-- Cleanup github repo and properly handle licensing like on my blog
-    - MAYBE investigate async loading of assets before doing this because the skybox is way too slow
+- Deploy it on my website
+    - Setup better defaults or else it will just open with no scene, grid/axis showing, no background, etc.
+- MAYBE investigate async loading of assets before doing this because the skybox is way too slow
 - I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
 - Remove bulk of code from mod.rs files and put them in e.g. interface/interface.rs instead, as it's easier to Ctrl+P to
 
 # TODO Bug fixes
+- Labels are not to the side of the bodies anymore because they don't have radius/BB?
 - Need to flip the normals on the shaders if we're rendering double-sided
 - Points don't have custom colors anymore?
 - Can't see the text on 'Metal Rough Spheres No Textures' for some reason
