@@ -16,6 +16,11 @@ I have many cool plans for this like visualizing asteroids/comets in the solar s
 - [`egui_web`](https://crates.io/crates/egui_web) as a source of the `gui_backend` inner crate
 
 # Usage:
+## Running 
+Check it out on your browser by clicking [here](https://1danielcoelho.github.io/assets/system-viewer/index.html)!
+
+It's still a work-in-progress though, and it may stutter a little big while it downloads all the high-resolution textures.
+
 ## Development  
 Run this:
 ```
@@ -30,7 +35,7 @@ Within the app, make sure you go to Settings and `Allow Local Storage` if you wi
 
 See the `/schemas` folder for schemas describing the format for the database and scene description files. New scenes can be added to the `/public/scenes` folder and hot-reloaded, but will need to also be listed on the `/public/scenes/auto_load_manifest.txt` file. 
 
-## Deploying
+## Deployment
 Run this:
 ```
 git clone https://github.com/1danielcoelho/system-viewer
@@ -38,7 +43,7 @@ cd system-viewer
 npm install
 npm run build
 ```
-The packaged build is fully contained within `/dist`. To deploy the build locally for a sanity check, do:
+The packaged build is fully contained within `/dist`. To deploy the build locally for a sanity check, run this from `/dist`:
 ```
 python -m http.server 8000
 ```
