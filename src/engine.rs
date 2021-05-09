@@ -58,6 +58,14 @@ impl Engine {
         if let Some(scene) = self.scene_man.get_main_scene_mut() {
             // Run all systems
             self.sys_man.run(state, scene);
+
+            // Update serializable state
+            // TODO: Find a better place for this?
+            state.camera.reference_entity_name = state
+                .camera
+                .reference_entity
+                .and_then(|e| scene.get_entity_name(e))
+                .and_then(|s| Some(s.to_owned()));
         }
 
         // Draw the UI elements

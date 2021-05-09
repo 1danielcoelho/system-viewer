@@ -45,9 +45,7 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
         if state.input.f == ButtonState::Pressed {
             state.camera.next_reference_entity = Some(ReferenceChange::FocusKeepLocation(selected));
         }
-    }
-
-    if let Some(selected) = state.selection {
+        
         if state.input.g == ButtonState::Pressed {
             state.camera.entity_going_to = Some(selected);
         }

@@ -755,27 +755,30 @@ color.rgb *= exposure;
 > - Get rid of everything osculating elements *motion type*
 >     - I mostly want the n-body stuff and reconcyling both is a massive effort with no reward
 >     - Keep it in there in case I want to draw osculating orbits perhaps?
+> - Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
+> - Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
+> - If a scene is loaded and it doesn't specify a focus target, it should be cleared instead
+> - Real weird "headlight" effect when I get close to any mesh?
+>     - This went away on its own, I think I was mishandling normals
 
 ================================================================================
 
 # TODO MVP
-- Fix that bug where we can't save state with an entity selected, because entity ids are non deterministic
 - Cleanup github repo and properly handle licensing like on my blog
     - MAYBE investigate async loading of assets before doing this because the skybox is way too slow
+- I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
+- Remove bulk of code from mod.rs files and put them in e.g. interface/interface.rs instead, as it's easier to Ctrl+P to
 
 # TODO Bug fixes
 - Need to flip the normals on the shaders if we're rendering double-sided
 - Points don't have custom colors anymore?
 - Can't see the text on 'Metal Rough Spheres No Textures' for some reason
-- If a scene is loaded and it doesn't specify a focus target, it should be cleared instead
 - Whenever we get a crash it just spams the console log with a million crashes because the global objects can't be borrowed again
 - Figure out why my blender GLTF scenes somehow prevent all other GLTF files from loading
 - GLTF test scene crashes when resetting scene
 - Textures get reloaded when we reload/open new scenes
-- Serializing entities kind of doesn't work because there's no guarantee the IDs will be the same. I think I need to serialize via body_id or name instead
 - Customize the hover text on drag values whenever he adds it to egui
 - Seems kind of weird to put Unit<> in scene description because I'm not sure what happens when deserializing it
-- Real weird "headlight" effect when I get close to any mesh?
 - Annoying spam of not finding the sampler for a gltf metal rough material even if we don't intend on specifying any texture
 - Fix firefox dragging bug
 - Position of labels when body is off screen is not correct, it flails everywhere
@@ -786,16 +789,15 @@ color.rgb *= exposure;
 ================================================================================
 
 # TODO Cleanup
-- I think I'm doing some (or all) of the stuff in https://webgl2fundamentals.org/webgl/lessons/webgl-anti-patterns.html
-- Remove bulk of code from mod.rs files and put them in e.g. interface/interface.rs instead, as it's easier to Ctrl+P to
 
 # TODO UX
 - I should be able to orbit the selection even if not focused...
 - Let user upload his own scene ron files
     - Allow download of sample ron schema
 - GUI to "add a body" with some state vectors/orbital parameters
+- Have a way of finding some nice default camera transform when loading a scene that doesn't specify one. Maybe entire scene bounding box?
 - Use < and > keys to speed up and down
-- Allow specifying move speed and other state settings for scenes (like paused/not, whether grid is on, etc.)
+- Allow specifying move speed and other state settings for scenes (like paused/not, whether grid is on, EV100, etc.)
 - Maybe pressing F/G without anything selected/focused would frame all of the objects in the scene
 
 # TODO Visuals

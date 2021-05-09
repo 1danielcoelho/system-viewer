@@ -97,10 +97,28 @@ impl SceneManager {
         if let Some(desc) = self.descriptions.get(identifier) {
             state.simulation_speed = desc.simulation_scale;
 
-            // Camera target (already wrt. reference)
-            // If the identifier is the same as last_scene we're loading from state, so keep our camera transform
             let mut need_go_to: bool = false;
-            if state.last_scene_identifier.as_str() != identifier {
+
+            // Loading previous scene from state --> Keep our state transform
+            if state.last_scene_identifier.as_str() == identifier {
+                // Unpack our reference entity from its name
+                if let Some(reference_name) = &state.camera.reference_entity_name {
+                    if let Some(found_ent) = main_scene.get_entity_from_name(&reference_name[..]) {
+                        state.camera.next_reference_entity =
+                        Some(ReferenceChange::FocusKeepCoords(found_ent));
+
+                        log::info!(
+                            "Setting startup focused entity to '{:?}': '{}'",
+                            found_ent,
+                            reference_name
+                        );
+                    }
+                }
+
+                state.camera.reference_entity_name = None;
+            }
+            // Loading a new scene from its defaults
+            else {
                 if desc.camera_pos.is_some()
                     && desc.camera_target.is_some()
                     && desc.camera_up.is_some()
@@ -132,6 +150,9 @@ impl SceneManager {
                             }
                         }
                     }
+                } else {
+                    state.camera.next_reference_entity =
+                                    Some(ReferenceChange::Clear);                                    
                 }
             }
 

@@ -354,6 +354,18 @@ impl Scene {
         };
     }
 
+    pub fn get_entity_from_name(&self, name: &str) -> Option<Entity> {
+        for entry in &self.entity_storage {
+            if let Some(ent_name) = &entry.name {
+                if entry.live && &ent_name[..] == name {
+                    return Some(entry.current);
+                }
+            }
+        }
+
+        return None;
+    }
+
     // Weird hacky function to quickly get the parent index for TransformUpdateSystem
     pub fn get_parent_index_from_index(&self, entity_index: u32) -> Option<u32> {
         match self.entity_storage.get(entity_index as usize) {
