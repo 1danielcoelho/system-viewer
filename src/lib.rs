@@ -285,7 +285,7 @@ pub fn fetch_required_bytes(url: &str, content_type: &str) {
     fetch_bytes(url, content_type);
 }
 
-#[wasm_bindgen(module = "/io.js")]
+#[wasm_bindgen(module = "/www/io.js")]
 extern "C" {
     pub fn fetch_text(url: &str, content_type: &str);
     pub fn fetch_bytes(url: &str, content_type: &str);
