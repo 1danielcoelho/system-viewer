@@ -82,10 +82,7 @@ pub fn initialize() {
     fetch_required_text("public/database/state_vectors.json", "vectors_database");
     fetch_required_text("public/database/osc_elements.json", "elements_database");
 
-    fetch_required_text(
-        "public/scenes/auto_load_manifest.txt",
-        "auto_load_manifest",
-    );
+    fetch_required_text("public/scenes/auto_load_manifest.txt", "auto_load_manifest");
 }
 
 #[wasm_bindgen]

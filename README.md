@@ -16,12 +16,12 @@ I have many cool plans for this like visualizing asteroids/comets in the solar s
 - [`egui_web`](https://crates.io/crates/egui_web) as a source of the `gui_backend` inner crate
 
 # Usage:
-## Running 
+## Running
 Check it out on your browser by clicking [here](https://1danielcoelho.github.io/assets/system-viewer/index.html)!
 
-It's still a work-in-progress though, and it may stutter a little big while it downloads all the high-resolution textures.
+It's still a work-in-progress though, and it may stutter a little bit while it downloads all the high-resolution textures.
 
-## Development  
+## Development
 Run this:
 ```
 git clone https://github.com/1danielcoelho/system-viewer
@@ -33,7 +33,7 @@ It should open the browser right away. If not you can open http://localhost:9000
 
 Within the app, make sure you go to Settings and `Allow Local Storage` if you wish: That will allow it to store app state on your browser, as well as the last opened scene.
 
-See the `/schemas` folder for schemas describing the format for the database and scene description files. New scenes can be added to the `/public/scenes` folder and hot-reloaded, but will need to also be listed on the `/public/scenes/auto_load_manifest.txt` file. 
+See the `/schemas` folder for schemas describing the format for the database and scene description files. New scenes can be added to the `/public/scenes` folder and hot-reloaded, but will need to also be listed on the `/public/scenes/auto_load_manifest.txt` file.
 
 ## Deployment
 Run this:
@@ -50,7 +50,7 @@ python -m http.server 8000
 Then open http://localhost:8000/
 
 ## Source data
-This part is not meant to be done by users/dev, but if you have the source data on your drive, run `/scripts/main.py`. There are a few hard-coded paths within the files pointing to where that data is, and those would need to be manually edited. 
+This part is not meant to be done by users/dev, but if you have the source data on your drive, run `/scripts/main.py`. There are a few hard-coded paths within the files pointing to where that data is, and those would need to be manually edited.
 Some of the source data can be downloaded with the `download_horizons_files.py` script.
 
 # Features:
