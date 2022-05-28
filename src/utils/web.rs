@@ -58,7 +58,6 @@ pub async fn request_text(url: &str) -> Result<String, JsValue> {
 }
 
 pub async fn request_bytes(url: &str) -> Result<Vec<u8>, JsValue> {
-    log::error!("starting request for url {}", url);
     let mut opts = RequestInit::new();
     opts.method("GET");
     opts.mode(RequestMode::Cors);
@@ -78,8 +77,6 @@ pub async fn request_bytes(url: &str) -> Result<Vec<u8>, JsValue> {
     let array_buffer: ArrayBuffer = array_buffer_value.dyn_into().unwrap();
     let u8array: Uint8Array = Uint8Array::new(&array_buffer);
     let vec: Vec<u8> = u8array.to_vec();
-
-    log::error!("internally received {} bytes", vec.len());
     return Ok(vec);
 }
 

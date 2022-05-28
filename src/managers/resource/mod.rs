@@ -6,11 +6,13 @@ use crate::managers::resource::material::UniformName;
 use crate::utils::gl::GL;
 use crate::utils::hashmap::InsertOrGet;
 use crate::utils::string::{get_unique_name, remove_numbered_suffix};
-use crate::GLCTX;
+use crate::utils::web::request_bytes;
+use crate::{ENGINE, GLCTX};
 use image::{io::Reader, DynamicImage};
 use std::path::PathBuf;
 use std::rc::Weak;
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
+use wasm_bindgen_futures::spawn_local;
 use web_sys::WebGl2RenderingContext;
 
 pub mod collider;
@@ -790,7 +792,8 @@ impl ResourceManager {
         }
 
         // We don't have this one, put out a request for this asset and just return
-        // the default pink texture instead
+        // the default texture instead
+        let internal_full_path = full_path.clone();
         if is_cubemap {
             // fetch_bytes(&(full_path.clone() + "/Right.jpg"), "cubemap_face");
             // fetch_bytes(&(full_path.clone() + "/Left.jpg"), "cubemap_face");
@@ -799,7 +802,16 @@ impl ResourceManager {
             // fetch_bytes(&(full_path.clone() + "/Front.jpg"), "cubemap_face");
             // fetch_bytes(&(full_path.clone() + "/Back.jpg"), "cubemap_face");
         } else {
-            // fetch_bytes(&full_path, "texture");
+            spawn_local(async move {
+                let mut vec = request_bytes(&internal_full_path).await.unwrap();
+
+                ENGINE.with(|e| {
+                    let mut ref_mut = e.borrow_mut();
+                    let e = ref_mut.as_mut().unwrap();
+
+                    e.receive_bytes(&internal_full_path, "texture", &mut vec);
+                });
+            });
         }
 
         // Create the default texture on-demand.

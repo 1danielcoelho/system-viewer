@@ -109,14 +109,6 @@ pub async fn start() -> Result<(), JsValue> {
         .collect::<Result<Vec<String>, JsValue>>()
         .unwrap();
 
-    log::error!("Before fetching");
-    spawn_local(async {
-        let some_tex_url = "public/textures/2k_mars.jpg";
-        let vec = request_bytes(some_tex_url).await.unwrap();
-        log::error!("Received {} bytes", vec.len());
-    });
-    log::error!("After fetching");
-
     ENGINE.with(|e| {
         let mut ref_mut = e.borrow_mut();
         let e = ref_mut.as_mut().unwrap();
