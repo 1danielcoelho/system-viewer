@@ -21,7 +21,7 @@ impl TextureUnit {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Texture {
     pub name: String,
     pub width: u32,

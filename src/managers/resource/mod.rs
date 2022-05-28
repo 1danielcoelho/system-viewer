@@ -9,8 +9,9 @@ use crate::utils::string::{get_unique_name, remove_numbered_suffix};
 use crate::GLCTX;
 use image::{io::Reader, DynamicImage};
 use std::path::PathBuf;
+use std::rc::Weak;
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
-use web_sys::WebGl2RenderingContext;
+use web_sys::{WebGl2RenderingContext, WebGlTexture};
 
 pub mod collider;
 pub mod gltf;
@@ -21,10 +22,77 @@ pub mod procedural_meshes;
 pub mod shaders;
 pub mod texture;
 
+fn load_texture_from_bytes(
+    identifier: &str,
+    width: u32,
+    height: u32,
+    num_channels: u8,
+    format: u32,
+    data: &[u8],
+    mag_filter: Option<i32>,
+    min_filter: Option<i32>,
+    wrap_s: Option<i32>,
+    wrap_t: Option<i32>,
+) -> Result<Rc<RefCell<Texture>>, String> {
+    return GLCTX.with(|ctx| {
+        let ref_mut = ctx.borrow_mut();
+        let ctx = ref_mut.as_ref().unwrap();
+
+        let gl_tex = ctx.create_texture().unwrap();
+        ctx.active_texture(GL::TEXTURE0);
+        ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
+
+        ctx.tex_parameteri(
+            GL::TEXTURE_2D,
+            GL::TEXTURE_WRAP_S,
+            wrap_s.unwrap_or(GL::CLAMP_TO_EDGE as i32),
+        );
+        ctx.tex_parameteri(
+            GL::TEXTURE_2D,
+            GL::TEXTURE_WRAP_T,
+            wrap_t.unwrap_or(GL::CLAMP_TO_EDGE as i32),
+        );
+        ctx.tex_parameteri(
+            GL::TEXTURE_2D,
+            GL::TEXTURE_MIN_FILTER,
+            min_filter.unwrap_or(GL::NEAREST as i32),
+        );
+        ctx.tex_parameteri(
+            GL::TEXTURE_2D,
+            GL::TEXTURE_MAG_FILTER,
+            mag_filter.unwrap_or(GL::NEAREST as i32),
+        );
+
+        ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+            GL::TEXTURE_2D,
+            0,
+            format as i32,
+            width as i32,
+            height as i32,
+            0,
+            format,
+            GL::UNSIGNED_BYTE, // Just u8 for now
+            Some(data),
+        )
+        .unwrap();
+
+        ctx.bind_texture(GL::TEXTURE_2D, None);
+
+        return Ok(Rc::new(RefCell::new(Texture {
+            name: identifier.to_owned(),
+            width,
+            height,
+            gl_format: format,
+            num_channels,
+            gl_handle: Some(gl_tex),
+            is_cubemap: false,
+        })));
+    });
+}
+
 fn load_texture_from_image_bytes(
     identifier: &str,
     bytes: &[u8],
-    ctx: &WebGl2RenderingContext,
 ) -> Result<Rc<RefCell<Texture>>, String> {
     let reader = Reader::new(Cursor::new(bytes))
         .with_guessed_format()
@@ -97,39 +165,18 @@ fn load_texture_from_image_bytes(
         identifier
     ))?;
 
-    let gl_tex = ctx.create_texture().unwrap();
-    ctx.active_texture(GL::TEXTURE0);
-    ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
-
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, GL::CLAMP_TO_EDGE as i32);
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, GL::CLAMP_TO_EDGE as i32);
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
-    ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
-
-    ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
-        GL::TEXTURE_2D,
-        0,
-        format as i32,
-        width as i32,
-        height as i32,
-        0,
-        format,
-        GL::UNSIGNED_BYTE, // Just u8 for now
-        Some(buf),
-    )
-    .unwrap();
-
-    ctx.bind_texture(GL::TEXTURE_2D, None);
-
-    return Ok(Rc::new(RefCell::new(Texture {
-        name: identifier.to_owned(),
+    return load_texture_from_bytes(
+        identifier,
         width,
         height,
-        gl_format: format,
         num_channels,
-        gl_handle: Some(gl_tex),
-        is_cubemap: false,
-    })));
+        format,
+        buf,
+        None,
+        None,
+        None,
+        None,
+    );
 }
 
 fn load_cubemap_face(
@@ -341,6 +388,8 @@ pub struct ResourceManager {
     // We have to request cubemap textures one face at a time. This is where we
     // temporarily store them until we have received all 6 to create
     temp_cubemaps: HashMap<String, TempCubemap>,
+
+    default_texture: Option<Weak<RefCell<Texture>>>,
 }
 impl ResourceManager {
     pub fn new() -> Self {
@@ -349,6 +398,7 @@ impl ResourceManager {
             textures: HashMap::new(),
             materials: HashMap::new(),
             temp_cubemaps: HashMap::new(),
+            default_texture: None,
         };
 
         return new_res_man;
@@ -704,33 +754,28 @@ impl ResourceManager {
     }
 
     pub fn receive_texture_file_bytes(&mut self, identifier: &str, bytes: &[u8]) {
-        GLCTX.with(|ctx| {
-            let ref_mut = ctx.borrow_mut();
-            let ctx = ref_mut.as_ref().unwrap();
+        let tex = load_texture_from_image_bytes(identifier, bytes);
+        if let Err(err) = tex {
+            log::error!(
+                "Error when trying to load texture '{}': {}",
+                identifier,
+                err
+            );
+            return;
+        }
+        let tex = tex.unwrap();
 
-            let tex = load_texture_from_image_bytes(identifier, bytes, &ctx);
-            if let Err(err) = tex {
-                log::error!(
-                    "Error when trying to load texture '{}': {}",
-                    identifier,
-                    err
-                );
-                return;
-            }
-            let tex = tex.unwrap();
+        log::info!("Generated texture '{}'", identifier);
+        if let Some(existing_tex) = self.textures.get(identifier) {
+            existing_tex.swap(&tex);
 
-            log::info!("Generated texture '{}'", identifier);
-            if let Some(existing_tex) = self.textures.get(identifier) {
-                existing_tex.swap(&tex);
-
-                log::info!(
-                    "Mutating existing texture resource '{}' with new data",
-                    identifier
-                );
-            } else {
-                self.textures.insert(identifier.to_owned(), tex);
-            }
-        });
+            log::info!(
+                "Mutating existing texture resource '{}' with new data",
+                identifier
+            );
+        } else {
+            self.textures.insert(identifier.to_owned(), tex);
+        }
     }
 
     pub fn get_or_request_texture(
@@ -757,15 +802,46 @@ impl ResourceManager {
             // fetch_bytes(&full_path, "texture");
         }
 
-        let tex = Rc::new(RefCell::new(Texture {
-            name: full_path.to_owned(),
-            width: 1,
-            height: 1,
-            gl_format: GL::RGBA,
-            num_channels: 4,
-            gl_handle: None,
-            is_cubemap,
-        }));
+        // Create the default texture on-demand.
+        // Its much better to have this thing than to just end up with black, especially since we
+        // have no IBL which means that 0 roughness instantly makes everything black
+        if let None = self.default_texture {
+            let buf: [u8; 16] = [
+                128, 128, 255, 255, 128, 255, 128, 255, 255, 128, 128, 255, 255, 128, 255, 255,
+            ];
+
+            let default_texture = load_texture_from_bytes(
+                "default_texture",
+                2,
+                2,
+                4,
+                GL::RGBA,
+                &buf,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+
+            let default_full_path = "public/textures/".to_owned() + &default_texture.borrow().name;
+
+            self.default_texture = Some(Rc::<RefCell<Texture>>::downgrade(&default_texture));
+
+            self.textures.insert(default_full_path, default_texture);
+        }
+
+        let tex = Rc::new(RefCell::new(
+            self.default_texture
+                .as_ref()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .borrow()
+                .clone(),
+        ));
+        tex.borrow_mut().name = full_path.to_owned();
+
         self.textures.insert(full_path, tex.clone());
 
         return Some(tex);

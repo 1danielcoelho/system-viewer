@@ -2,18 +2,17 @@ use crate::managers::resource::collider::AxisAlignedBoxCollider;
 use crate::managers::resource::intermediate_mesh::{
     intermediate_to_mesh, IntermediateMesh, IntermediatePrimitive,
 };
+use crate::managers::resource::load_texture_from_bytes;
 use crate::managers::resource::material::{Material, UniformName, UniformValue};
 use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::ResourceManager;
 use crate::utils::gl::GL;
 use crate::utils::transform::Transform;
-use crate::GLCTX;
 use gltf::image::Format;
 use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
 use na::*;
 use std::{cell::RefCell, f32::INFINITY, rc::Rc};
-use web_sys::WebGl2RenderingContext;
 
 pub trait GltfResource {
     fn get_identifier(&self, identifier: &str) -> String;
@@ -510,7 +509,6 @@ impl ResourceManager {
         file_identifier: &str,
         texture: &gltf::Texture,
         image_data: &gltf::image::Data,
-        ctx: &WebGl2RenderingContext,
     ) -> Result<Rc<RefCell<Texture>>, String> {
         let identifier = texture.get_identifier(file_identifier);
         let width = image_data.width;
@@ -525,16 +523,12 @@ impl ResourceManager {
             other => return Err(format!("Unsupported gltf texture format '{:?}'", other)),
         };
 
-        let gl_handle = ctx.create_texture().unwrap();
-        ctx.active_texture(GL::TEXTURE0);
-        ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_handle));
-
         let sampler = texture.sampler();
         let mag_filter = match sampler.mag_filter() {
             Some(gltf::texture::MagFilter::Nearest) => GL::NEAREST,
             Some(gltf::texture::MagFilter::Linear) => GL::LINEAR,
             None => GL::LINEAR,
-        };
+        } as i32;
         // TODO: Enable mipmap texture filtering. Needs special handling because not all texture formats
         // support automatic generation of mipmaps, so I'd need to check for a proper extension in some cases
         let min_filter = match sampler.min_filter() {
@@ -546,17 +540,17 @@ impl ResourceManager {
             // Some(gltf::texture::MinFilter::NearestMipmapLinear) => GL::NEAREST_MIPMAP_LINEAR,
             // Some(gltf::texture::MinFilter::LinearMipmapLinear) => GL::LINEAR_MIPMAP_LINEAR,
             None => GL::LINEAR,
-        };
+        } as i32;
         let wrap_s = match sampler.wrap_s() {
             gltf::texture::WrappingMode::ClampToEdge => GL::CLAMP_TO_EDGE,
             gltf::texture::WrappingMode::MirroredRepeat => GL::MIRRORED_REPEAT,
             gltf::texture::WrappingMode::Repeat => GL::REPEAT,
-        };
+        } as i32;
         let wrap_t = match sampler.wrap_t() {
             gltf::texture::WrappingMode::ClampToEdge => GL::CLAMP_TO_EDGE,
             gltf::texture::WrappingMode::MirroredRepeat => GL::MIRRORED_REPEAT,
             gltf::texture::WrappingMode::Repeat => GL::REPEAT,
-        };
+        } as i32;
 
         log::info!(
             "\tLoading texture '{}': Width: {}, Height: {}, Format: {}, Num channels: {}, wrap_s: {:?}, wrap_t: {:?}, mag_filter: {:?}, min_filter: {:?}",
@@ -571,37 +565,18 @@ impl ResourceManager {
             sampler.min_filter()
         );
 
-        // ctx.generate_mipmap(GL::TEXTURE_2D);
-
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, mag_filter as i32);
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, min_filter as i32);
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_S, wrap_s as i32);
-        ctx.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_WRAP_T, wrap_t as i32);
-
-        ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
-            GL::TEXTURE_2D,
-            0,
-            gl_format as i32,
-            width as i32,
-            height as i32,
-            0,
-            gl_format,
-            GL::UNSIGNED_BYTE,
-            Some(&image_data.pixels),
-        )
-        .unwrap();
-
-        ctx.bind_texture(GL::TEXTURE_2D, None);
-
-        return Ok(Rc::new(RefCell::new(Texture {
-            name: identifier,
+        return load_texture_from_bytes(
+            identifier.as_str(),
             width,
             height,
-            gl_format,
             num_channels,
-            gl_handle: Some(gl_handle),
-            is_cubemap: false,
-        })));
+            gl_format,
+            &image_data.pixels,
+            Some(mag_filter),
+            Some(min_filter),
+            Some(wrap_s),
+            Some(wrap_t),
+        );
     }
 
     fn load_textures_from_gltf(
@@ -616,40 +591,32 @@ impl ResourceManager {
             file_identifier
         );
 
-        GLCTX.with(|ctx| {
-            let ref_mut = ctx.borrow_mut();
-            let ctx = ref_mut.as_ref().unwrap();
+        for texture in textures {
+            match ResourceManager::load_texture_from_gltf(
+                file_identifier,
+                &texture,
+                &images[texture.source().index()],
+            ) {
+                Ok(new_tex) => {
+                    let name = &new_tex.borrow().name;
 
-            for texture in textures {
-                match ResourceManager::load_texture_from_gltf(
-                    file_identifier,
-                    &texture,
-                    &images[texture.source().index()],
-                    ctx,
-                ) {
-                    Ok(new_tex) => {
-                        let name = &new_tex.borrow().name;
+                    if let Some(existing_tex) = self.textures.get(name) {
+                        existing_tex.swap(&new_tex);
 
-                        if let Some(existing_tex) = self.textures.get(name) {
-                            existing_tex.swap(&new_tex);
-
-                            log::info!(
-                                "Mutating existing texture resource '{}' with new data from '{}'",
-                                name,
-                                file_identifier
-                            );
-                        } else if let Some(_) =
-                            self.textures.insert(name.to_owned(), new_tex.clone())
-                        {
-                            log::info!("Changing tracked texture resource for name '{}'", name);
-                        }
-                    }
-                    Err(msg) => {
-                        log::error!("Failed to load gltf texture: {}", msg);
+                        log::info!(
+                            "Mutating existing texture resource '{}' with new data from '{}'",
+                            name,
+                            file_identifier
+                        );
+                    } else if let Some(_) = self.textures.insert(name.to_owned(), new_tex.clone()) {
+                        log::info!("Changing tracked texture resource for name '{}'", name);
                     }
                 }
+                Err(msg) => {
+                    log::error!("Failed to load gltf texture: {}", msg);
+                }
             }
-        });
+        }
     }
 
     fn load_gltf_node(
