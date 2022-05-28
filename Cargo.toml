@@ -35,7 +35,7 @@ wasm-bindgen-futures = "0.4"
 wasm-bindgen-test = "0.3.0"
 
 [dependencies.web-sys]
-version = "0.3.44"
+version = "0.3.57"
 features = [
   'Blob',
   'console',

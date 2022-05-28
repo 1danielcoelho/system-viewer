@@ -12,8 +12,7 @@ extern crate wasm_bindgen;
 use crate::app_state::AppState;
 use crate::engine::Engine;
 use crate::utils::web::{
-    get_canvas, get_gl_context, get_window, local_storage_remove, request_animation_frame,
-    setup_event_handlers,
+    get_canvas, get_gl_context, local_storage_remove, request_animation_frame, setup_event_handlers,
 };
 use egui::Ui;
 use std::cell::RefCell;
@@ -99,16 +98,6 @@ pub async fn start_loop() -> Result<(), JsValue> {
 
     request_animation_frame(g.borrow().as_ref().unwrap());
 
-    // event_loop.run(move |event, _, control_flow| {
-    //     *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
-
-    //     match event {
-    //         Event::MainEventsCleared => window.request_redraw(),
-    //         Event::RedrawRequested(id) if id == window.id() => redraw_requested(&window, &canvas),
-    //         _ => {}
-    //     }
-    // });
-
     Ok(())
 }
 
@@ -117,10 +106,9 @@ fn redraw_requested() {
         if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
             let s = ref_mut_s.as_mut().unwrap();
 
-            let window = get_window();
             let canvas = get_canvas();
 
-            let state_result = update_state(s, &window, &canvas);
+            let state_result = update_state(s, &canvas);
             if state_result == UpdateStateResult::NoDraw {
                 return;
             }
@@ -170,11 +158,7 @@ enum UpdateStateResult {
     ResizeDraw(u32, u32),
 }
 
-fn update_state(
-    state: &mut AppState,
-    _window: &web_sys::Window,
-    canvas: &HtmlCanvasElement,
-) -> UpdateStateResult {
+fn update_state(state: &mut AppState, canvas: &HtmlCanvasElement) -> UpdateStateResult {
     if state.pending_reset {
         *state = AppState::new();
         local_storage_remove("app_state");
@@ -183,26 +167,23 @@ fn update_state(
     let canvas_width_on_screen = canvas.client_width() as u32;
     let canvas_height_on_screen = canvas.client_height() as u32;
 
-    let resized = false;
+    let mut resized = false;
+    if canvas.width() as u32 != canvas_width_on_screen || canvas.height() != canvas_height_on_screen
+    {
+        // Sets the actual resolution of the canvas in pixels
+        canvas.set_width(canvas_width_on_screen);
+        canvas.set_height(canvas_height_on_screen);
 
-    // Check if we need to resize
-    // if window.inner_size().width != canvas_width_on_screen
-    //     || window.inner_size().height != canvas_height_on_screen
-    // {
-    //     // Sets canvas height and width, unfortunately also setting its style height and width
-    //     window.set_inner_size(winit::dpi::LogicalSize::new(
-    //         canvas_width_on_screen,
-    //         canvas_height_on_screen,
-    //     ));
+        log::info!(
+            "Resized to w: {}, h: {}",
+            canvas_width_on_screen,
+            canvas_height_on_screen
+        );
 
-    //     log::info!(
-    //         "Resized to w: {}, h: {}",
-    //         canvas_width_on_screen,
-    //         canvas_height_on_screen
-    //     );
+        // We'll need to resize framebuffers and stuff
+        resized = true;
+    }
 
-    //     resized = true;
-    // }
     state.canvas_height = canvas_height_on_screen;
     state.canvas_width = canvas_width_on_screen;
 
