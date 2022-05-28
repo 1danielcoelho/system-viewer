@@ -14,12 +14,12 @@
         import init from './system_viewer.js';
 
         async function run() {
-            let wasm = await init();
+            let wasm=await init();
 
-            const canvas = document.getElementById("rustCanvas");
-            const gl = canvas.getContext("webgl2", { antialias: true });
+            const canvas=document.getElementById("rustCanvas");
+            const gl=canvas.getContext("webgl2",{antialias: true});
 
-            if (!gl) {
+            if(!gl) {
                 alert("Failed to initialize WebGL");
                 return;
             }
@@ -42,7 +42,7 @@
             // the wasm module (e.g. from a JS callback) it would just panic saying we tried to access a moved value.
             wasm.initialize();
             wasm.start_loop();  // Note how we don't await this async function here: This is impotant, but I don't know why...
-            window.wasm_module = wasm;
+            window.wasm_module=wasm;
         }
 
         run();

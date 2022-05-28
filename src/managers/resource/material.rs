@@ -236,7 +236,6 @@ pub struct Material {
     pub(super) name: String,
 
     // These and defines could technically be &'static str, but being owned simplifies serialization
-    master: String,
     vert: String,
     frag: String,
 
@@ -270,7 +269,6 @@ impl Material {
 
         Self {
             name: master.to_owned(),
-            master: master.to_owned(),
             vert: vert.to_owned(),
             frag: frag.to_owned(),
             compatible_prim_hash: 0,
@@ -496,9 +494,9 @@ impl Material {
         }
 
         if self.double_sided {
-            gl.disable(GL::CULL_FACE); 
+            gl.disable(GL::CULL_FACE);
         } else {
-            gl.enable(GL::CULL_FACE); 
+            gl.enable(GL::CULL_FACE);
         }
     }
 

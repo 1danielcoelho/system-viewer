@@ -172,8 +172,11 @@ impl Scene {
     fn new_entity_at_index(&mut self, entity_storage_index: u32, name: Option<&str>) -> Entity {
         if entity_storage_index >= self.entity_storage.len() as u32 {
             assert!(
-                self.entity_storage.len() < 500 || entity_storage_index < (2 * self.entity_storage.len() as u32),
-                format!("Trying to create new entity at an unreasonable index {}! (we currently have {})", entity_storage_index, self.entity_storage.len())
+                self.entity_storage.len() < 500
+                    || entity_storage_index < (2 * self.entity_storage.len() as u32),
+                "Trying to create new entity at an unreasonable index {}! (we currently have {})",
+                entity_storage_index,
+                self.entity_storage.len()
             );
 
             self.entity_storage.resize(
@@ -436,7 +439,9 @@ impl Scene {
             let old_child_index = entry.children.iter().position(|&c| c == child);
             assert!(
                 old_child_index.is_none(),
-                format!("Entity {:#?} was already child of {:#?}!", child, parent)
+                "Entity {:#?} was already child of {:#?}!",
+                child,
+                parent
             );
 
             entry.children.push(child);

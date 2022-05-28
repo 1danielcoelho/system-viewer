@@ -14,6 +14,16 @@ pub fn get_canvas() -> HtmlCanvasElement {
     return canvas;
 }
 
+pub fn get_window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
+}
+
+pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+    get_window()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("failed to request animation frame");
+}
+
 pub fn get_gl_context(canvas: &HtmlCanvasElement) -> WebGl2RenderingContext {
     let gl: WebGl2RenderingContext = canvas
         .get_context("webgl2")
@@ -23,16 +33,6 @@ pub fn get_gl_context(canvas: &HtmlCanvasElement) -> WebGl2RenderingContext {
         .unwrap();
 
     return gl;
-}
-
-pub fn force_full_canvas(canvas: &HtmlCanvasElement) {
-    let style = canvas.style();
-    style
-        .set_property_with_priority("width", "100%", "")
-        .expect("Failed to set width!");
-    style
-        .set_property_with_priority("height", "100%", "")
-        .expect("Failed to set height!");
 }
 
 #[allow(dead_code)]

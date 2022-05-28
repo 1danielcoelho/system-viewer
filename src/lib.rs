@@ -12,16 +12,14 @@ extern crate wasm_bindgen;
 use crate::app_state::AppState;
 use crate::engine::Engine;
 use crate::utils::web::{
-    force_full_canvas, get_canvas, get_gl_context, local_storage_remove, setup_event_handlers,
+    get_canvas, get_gl_context, get_window, local_storage_remove, request_animation_frame,
+    setup_event_handlers,
 };
 use egui::Ui;
 use std::cell::RefCell;
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
-use winit::event::Event;
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::platform::web::WindowBuilderExtWebSys;
-use winit::window::{Window, WindowBuilder};
 
 mod app_state;
 mod components;
@@ -72,52 +70,57 @@ pub fn initialize() {
         e.replace(Engine::new());
     });
 
-    fetch_required_text("public/database/artificial.json", "body_database");
-    fetch_required_text("public/database/asteroids.json", "body_database");
-    fetch_required_text("public/database/comets.json", "body_database");
-    fetch_required_text("public/database/jovian_satellites.json", "body_database");
-    fetch_required_text("public/database/major_bodies.json", "body_database");
-    fetch_required_text("public/database/other_satellites.json", "body_database");
-    fetch_required_text("public/database/saturnian_satellites.json", "body_database");
-    fetch_required_text("public/database/state_vectors.json", "vectors_database");
-    fetch_required_text("public/database/osc_elements.json", "elements_database");
+    // fetch_required_text("public/database/artificial.json", "body_database");
+    // fetch_required_text("public/database/asteroids.json", "body_database");
+    // fetch_required_text("public/database/comets.json", "body_database");
+    // fetch_required_text("public/database/jovian_satellites.json", "body_database");
+    // fetch_required_text("public/database/major_bodies.json", "body_database");
+    // fetch_required_text("public/database/other_satellites.json", "body_database");
+    // fetch_required_text("public/database/saturnian_satellites.json", "body_database");
+    // fetch_required_text("public/database/state_vectors.json", "vectors_database");
+    // fetch_required_text("public/database/osc_elements.json", "elements_database");
 
-    fetch_required_text("public/scenes/auto_load_manifest.txt", "auto_load_manifest");
+    // fetch_required_text("public/scenes/auto_load_manifest.txt", "auto_load_manifest");
 }
 
 #[wasm_bindgen]
-pub async fn start_loop() {
+pub async fn start_loop() -> Result<(), JsValue> {
     log::info!("Beginning engine loop...");
 
-    let event_loop = EventLoop::new();
+    // Summoning ritual curtesy of https://rustwasm.github.io/docs/wasm-bindgen/examples/request-animation-frame.html
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
 
-    let window = WindowBuilder::new()
-        .with_title("Title")
-        .with_canvas(Some(get_canvas()))
-        .build(&event_loop)
-        .expect("Failed to find window!");
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+        redraw_requested();
 
-    // Every time winit resizes the canvas it manually sets width and height values we must undo
-    let canvas = get_canvas();
-    force_full_canvas(&canvas);
+        request_animation_frame(f.borrow().as_ref().unwrap());
+    }) as Box<dyn FnMut()>));
 
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
+    request_animation_frame(g.borrow().as_ref().unwrap());
 
-        match event {
-            Event::MainEventsCleared => window.request_redraw(),
-            Event::RedrawRequested(id) if id == window.id() => redraw_requested(&window, &canvas),
-            _ => {}
-        }
-    });
+    // event_loop.run(move |event, _, control_flow| {
+    //     *control_flow = ControlFlow::Poll; // Can change this to Wait to pause when no input is given
+
+    //     match event {
+    //         Event::MainEventsCleared => window.request_redraw(),
+    //         Event::RedrawRequested(id) if id == window.id() => redraw_requested(&window, &canvas),
+    //         _ => {}
+    //     }
+    // });
+
+    Ok(())
 }
 
-fn redraw_requested(window: &Window, canvas: &HtmlCanvasElement) {
+fn redraw_requested() {
     STATE.with(|s| {
         if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
             let s = ref_mut_s.as_mut().unwrap();
 
-            let state_result = update_state(s, window, canvas);
+            let window = get_window();
+            let canvas = get_canvas();
+
+            let state_result = update_state(s, &window, &canvas);
             if state_result == UpdateStateResult::NoDraw {
                 return;
             }
@@ -169,7 +172,7 @@ enum UpdateStateResult {
 
 fn update_state(
     state: &mut AppState,
-    window: &Window,
+    _window: &web_sys::Window,
     canvas: &HtmlCanvasElement,
 ) -> UpdateStateResult {
     if state.pending_reset {
@@ -180,27 +183,26 @@ fn update_state(
     let canvas_width_on_screen = canvas.client_width() as u32;
     let canvas_height_on_screen = canvas.client_height() as u32;
 
+    let resized = false;
+
     // Check if we need to resize
-    let mut resized = false;
-    if window.inner_size().width != canvas_width_on_screen
-        || window.inner_size().height != canvas_height_on_screen
-    {
-        // Sets canvas height and width, unfortunately also setting its style height and width
-        window.set_inner_size(winit::dpi::LogicalSize::new(
-            canvas_width_on_screen,
-            canvas_height_on_screen,
-        ));
+    // if window.inner_size().width != canvas_width_on_screen
+    //     || window.inner_size().height != canvas_height_on_screen
+    // {
+    //     // Sets canvas height and width, unfortunately also setting its style height and width
+    //     window.set_inner_size(winit::dpi::LogicalSize::new(
+    //         canvas_width_on_screen,
+    //         canvas_height_on_screen,
+    //     ));
 
-        force_full_canvas(&canvas);
+    //     log::info!(
+    //         "Resized to w: {}, h: {}",
+    //         canvas_width_on_screen,
+    //         canvas_height_on_screen
+    //     );
 
-        log::info!(
-            "Resized to w: {}, h: {}",
-            canvas_width_on_screen,
-            canvas_height_on_screen
-        );
-
-        resized = true;
-    }
+    //     resized = true;
+    // }
     state.canvas_height = canvas_height_on_screen;
     state.canvas_width = canvas_width_on_screen;
 
