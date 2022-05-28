@@ -12,14 +12,16 @@ extern crate wasm_bindgen;
 use crate::app_state::AppState;
 use crate::engine::Engine;
 use crate::utils::web::{
-    get_canvas, get_gl_context, local_storage_remove, request_animation_frame, request_text,
-    setup_event_handlers,
+    get_canvas, get_gl_context, local_storage_remove, request_animation_frame, request_bytes,
+    request_text, setup_event_handlers,
 };
 use egui::Ui;
-use futures::future::join_all;
+use futures::future::{join_all, ok};
+use futures::TryFutureExt;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
 
 mod app_state;
@@ -107,6 +109,14 @@ pub async fn start() -> Result<(), JsValue> {
         .collect::<Result<Vec<String>, JsValue>>()
         .unwrap();
 
+    log::error!("Before fetching");
+    spawn_local(async {
+        let some_tex_url = "public/textures/2k_mars.jpg";
+        let vec = request_bytes(some_tex_url).await.unwrap();
+        log::error!("Received {} bytes", vec.len());
+    });
+    log::error!("After fetching");
+
     ENGINE.with(|e| {
         let mut ref_mut = e.borrow_mut();
         let e = ref_mut.as_mut().unwrap();
@@ -134,8 +144,6 @@ pub async fn start() -> Result<(), JsValue> {
 
         e.try_loading_last_scene();
     });
-
-    // TODO: Load scenes
 
     // Summoning ritual courtesy of https://rustwasm.github.io/docs/wasm-bindgen/examples/request-animation-frame.html
     log::info!("Beginning request_animation_frame loop...");

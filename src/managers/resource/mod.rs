@@ -11,7 +11,7 @@ use image::{io::Reader, DynamicImage};
 use std::path::PathBuf;
 use std::rc::Weak;
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
-use web_sys::{WebGl2RenderingContext, WebGlTexture};
+use web_sys::WebGl2RenderingContext;
 
 pub mod collider;
 pub mod gltf;

@@ -1,5 +1,6 @@
 use crate::{app_state::AppState, STATE};
 use crate::{app_state::ButtonState, wasm_bindgen::JsCast};
+use js_sys::{ArrayBuffer, Uint8Array};
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
@@ -54,6 +55,32 @@ pub async fn request_text(url: &str) -> Result<String, JsValue> {
     // Convert this other `Promise` into a rust `Future`.
     let text = JsFuture::from(resp.text()?).await?.as_string().unwrap();
     return Ok(text);
+}
+
+pub async fn request_bytes(url: &str) -> Result<Vec<u8>, JsValue> {
+    log::error!("starting request for url {}", url);
+    let mut opts = RequestInit::new();
+    opts.method("GET");
+    opts.mode(RequestMode::Cors);
+
+    let request = Request::new_with_str_and_init(url, &opts)?;
+
+    let resp_value = JsFuture::from(get_window().fetch_with_request(&request)).await?;
+
+    // `resp_value` is a `Response` object.
+    assert!(resp_value.is_instance_of::<Response>());
+    let resp: Response = resp_value.dyn_into().unwrap();
+
+    let array_buffer_value = JsFuture::from(resp.array_buffer()?).await?;
+    assert!(array_buffer_value.is_instance_of::<ArrayBuffer>());
+
+    // TODO: This is probably copying more than needed
+    let array_buffer: ArrayBuffer = array_buffer_value.dyn_into().unwrap();
+    let u8array: Uint8Array = Uint8Array::new(&array_buffer);
+    let vec: Vec<u8> = u8array.to_vec();
+
+    log::error!("internally received {} bytes", vec.len());
+    return Ok(vec);
 }
 
 /// From https://github.com/emilk/egui/blob/650450bc3a01f8fe44ba89781597c3c8f60c2777/egui_web/src/lib.rs#L516
@@ -126,6 +153,8 @@ fn should_ignore_key(key: &str) -> bool {
         )
 }
 
+// TODO: I feel like some of this should maybe be inside the input manager. I mean, there's no
+// web stuff in this function at all
 fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pressed: bool) {
     let button_state = if pressed {
         ButtonState::Pressed
