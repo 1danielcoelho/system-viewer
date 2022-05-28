@@ -12,9 +12,11 @@ extern crate wasm_bindgen;
 use crate::app_state::AppState;
 use crate::engine::Engine;
 use crate::utils::web::{
-    get_canvas, get_gl_context, local_storage_remove, request_animation_frame, setup_event_handlers,
+    get_canvas, get_gl_context, local_storage_remove, request_animation_frame, request_text,
+    setup_event_handlers,
 };
 use egui::Ui;
+use futures::future::join_all;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
@@ -46,7 +48,7 @@ pub fn main_js() {
 }
 
 #[wasm_bindgen]
-pub fn initialize() {
+pub async fn initialize() -> Result<(), JsValue> {
     log::info!("Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
@@ -68,6 +70,39 @@ pub fn initialize() {
         let mut e = e.borrow_mut();
         e.replace(Engine::new());
     });
+
+    let body_databases = vec![
+        "public/database/artificial.json",
+        "public/database/asteroids.json",
+        "public/database/comets.json",
+        "public/database/jovian_satellites.json",
+        "public/database/major_bodies.json",
+        "public/database/other_satellites.json",
+        "public/database/saturnian_satellites.json",
+        // "public/database/state_vectors.json",
+        // "public/database/osc_elements.json",
+    ];
+
+    let body_database_results: Vec<String> =
+        join_all(body_databases.iter().map(|url| request_text(url)))
+            .await
+            .into_iter()
+            .collect::<Result<Vec<String>, JsValue>>()
+            .unwrap();
+
+    ENGINE.with(|e| {
+        let mut ref_mut = e.borrow_mut();
+        let e = ref_mut.as_mut().unwrap();
+
+        for it in body_databases.iter().zip(body_database_results.iter()) {
+            let (url, text) = it;
+            e.receive_text(url, "body_database", text.as_str());
+        }
+    });
+
+    Ok(())
+
+    // TODO: Load scenes
 
     // fetch_required_text("public/database/artificial.json", "body_database");
     // fetch_required_text("public/database/asteroids.json", "body_database");
@@ -208,70 +243,4 @@ fn update_state(state: &mut AppState, canvas: &HtmlCanvasElement) -> UpdateState
     } else {
         return UpdateStateResult::Draw;
     }
-}
-
-/// Synchronous function that JS calls to inject text data into the engine because we can't await for a JS promise from within the winit engine loop
-#[wasm_bindgen]
-pub fn receive_text(url: &str, content_type: &str, text: &str) {
-    log::info!(
-        "Engine received text from url '{}', content type '{}', length: {}",
-        url,
-        content_type,
-        text.len()
-    );
-
-    ENGINE.with(|e| {
-        let mut ref_mut = e.borrow_mut();
-        let e = ref_mut.as_mut().unwrap();
-
-        e.receive_text(url, content_type, text);
-    });
-}
-
-/// Synchronous function that JS calls to inject bytes data into the engine because we can't await for a JS promise from within the winit engine loop
-#[wasm_bindgen]
-pub fn receive_bytes(url: &str, content_type: &str, data: &mut [u8]) {
-    log::info!(
-        "Engine received bytes from url '{}', content type '{}', length: {}",
-        url,
-        content_type,
-        data.len()
-    );
-
-    ENGINE.with(|e| {
-        let mut ref_mut = e.borrow_mut();
-        let e = ref_mut.as_mut().unwrap();
-
-        e.receive_bytes(url, content_type, data);
-    });
-}
-
-pub fn fetch_required_text(url: &str, content_type: &str) {
-    ENGINE.with(|e| {
-        let mut ref_mut = e.borrow_mut();
-        let e = ref_mut.as_mut().unwrap();
-
-        e.push_pending_resource(url, content_type);
-    });
-
-    fetch_text(url, content_type);
-}
-
-pub fn fetch_required_bytes(url: &str, content_type: &str) {
-    ENGINE.with(|e| {
-        let mut ref_mut = e.borrow_mut();
-        let e = ref_mut.as_mut().unwrap();
-
-        e.push_pending_resource(url, content_type);
-    });
-
-    fetch_bytes(url, content_type);
-}
-
-#[wasm_bindgen(module = "/www/io.js")]
-extern "C" {
-    pub fn fetch_text(url: &str, content_type: &str);
-    pub fn fetch_bytes(url: &str, content_type: &str);
-    pub fn prompt_for_text_file(content_type: &str, extension: &str);
-    pub fn prompt_for_bytes_file(content_type: &str, extension: &str);
 }

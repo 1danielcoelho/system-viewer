@@ -1,8 +1,11 @@
 use crate::{app_state::AppState, STATE};
 use crate::{app_state::ButtonState, wasm_bindgen::JsCast};
-use js_sys::encode_uri_component;
 use wasm_bindgen::prelude::Closure;
-use web_sys::{HtmlCanvasElement, HtmlElement, WebGl2RenderingContext};
+use wasm_bindgen::JsValue;
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{
+    HtmlCanvasElement, Request, RequestInit, RequestMode, Response, WebGl2RenderingContext,
+};
 
 const OUR_CANVAS_ID: &str = "rustCanvas";
 
@@ -35,23 +38,22 @@ pub fn get_gl_context(canvas: &HtmlCanvasElement) -> WebGl2RenderingContext {
     return gl;
 }
 
-#[allow(dead_code)]
-pub fn write_string_to_file_prompt(file_name: &str, data: &str) {
-    let window = web_sys::window().expect("no global `window` exists");
-    let document = window.document().expect("should have a document on window");
+pub async fn request_text(url: &str) -> Result<String, JsValue> {
+    let mut opts = RequestInit::new();
+    opts.method("GET");
+    opts.mode(RequestMode::Cors);
 
-    let data_str =
-        "data:text/json;charset=utf-8,".to_owned() + &String::from(encode_uri_component(data));
+    let request = Request::new_with_str_and_init(url, &opts)?;
 
-    let el = document.create_element("a").unwrap();
-    let html_el = el.dyn_ref::<HtmlElement>().unwrap();
-    html_el
-        .set_attribute("href", &data_str)
-        .expect("Failed to set href");
-    html_el
-        .set_attribute("download", file_name)
-        .expect("Failed to set download");
-    html_el.click();
+    let resp_value = JsFuture::from(get_window().fetch_with_request(&request)).await?;
+
+    // `resp_value` is a `Response` object.
+    assert!(resp_value.is_instance_of::<Response>());
+    let resp: Response = resp_value.dyn_into().unwrap();
+
+    // Convert this other `Promise` into a rust `Future`.
+    let text = JsFuture::from(resp.text()?).await?.as_string().unwrap();
+    return Ok(text);
 }
 
 /// From https://github.com/emilk/egui/blob/650450bc3a01f8fe44ba89781597c3c8f60c2777/egui_web/src/lib.rs#L516

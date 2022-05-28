@@ -2,7 +2,6 @@ use self::material::Material;
 use self::mesh::Mesh;
 use self::procedural_meshes::*;
 use self::texture::Texture;
-use crate::fetch_bytes;
 use crate::managers::resource::material::UniformName;
 use crate::utils::gl::GL;
 use crate::utils::hashmap::InsertOrGet;
@@ -403,7 +402,7 @@ impl ResourceManager {
         }
 
         let full_path: String = "public/gltf/".to_owned() + identifier;
-        fetch_bytes(&full_path, "gltf");
+        // fetch_bytes(&full_path, "gltf");
         let temp_mesh = Some(generate_temp());
         self.meshes
             .insert(full_path, temp_mesh.as_ref().unwrap().clone());
@@ -748,14 +747,14 @@ impl ResourceManager {
         // We don't have this one, put out a request for this asset and just return
         // the default pink texture instead
         if is_cubemap {
-            fetch_bytes(&(full_path.clone() + "/Right.jpg"), "cubemap_face");
-            fetch_bytes(&(full_path.clone() + "/Left.jpg"), "cubemap_face");
-            fetch_bytes(&(full_path.clone() + "/Top.jpg"), "cubemap_face");
-            fetch_bytes(&(full_path.clone() + "/Bottom.jpg"), "cubemap_face");
-            fetch_bytes(&(full_path.clone() + "/Front.jpg"), "cubemap_face");
-            fetch_bytes(&(full_path.clone() + "/Back.jpg"), "cubemap_face");
+            // fetch_bytes(&(full_path.clone() + "/Right.jpg"), "cubemap_face");
+            // fetch_bytes(&(full_path.clone() + "/Left.jpg"), "cubemap_face");
+            // fetch_bytes(&(full_path.clone() + "/Top.jpg"), "cubemap_face");
+            // fetch_bytes(&(full_path.clone() + "/Bottom.jpg"), "cubemap_face");
+            // fetch_bytes(&(full_path.clone() + "/Front.jpg"), "cubemap_face");
+            // fetch_bytes(&(full_path.clone() + "/Back.jpg"), "cubemap_face");
         } else {
-            fetch_bytes(&full_path, "texture");
+            // fetch_bytes(&full_path, "texture");
         }
 
         let tex = Rc::new(RefCell::new(Texture {

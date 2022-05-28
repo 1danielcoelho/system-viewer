@@ -7,7 +7,7 @@ use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::{local_storage_clear, local_storage_enable, local_storage_get};
-use crate::{prompt_for_bytes_file, UICTX};
+use crate::UICTX;
 use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::*;
@@ -303,10 +303,6 @@ impl InterfaceManager {
                                     ui.separator();
                                     ui.separator();
                                     ui.separator();
-
-                                    if ui.button("Inject GLB...").clicked() {
-                                        prompt_for_bytes_file("glb_inject", ".glb");
-                                    }
 
                                     ui.separator();
 

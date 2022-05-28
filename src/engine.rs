@@ -1,11 +1,9 @@
 use crate::app_state::AppState;
-use crate::fetch_text;
 use crate::managers::scene::SceneManager;
 use crate::managers::{
     EventManager, InputManager, InterfaceManager, OrbitManager, ResourceManager, SystemManager,
 };
 use crate::STATE;
-use std::collections::HashMap;
 
 pub struct Engine {
     pub res_man: ResourceManager,
@@ -15,11 +13,6 @@ pub struct Engine {
     pub int_man: InterfaceManager,
     pub scene_man: SceneManager,
     pub orbit_man: OrbitManager,
-
-    // Maps from url to its expected content type of the pending resource.
-    // We will only update once we receive something from all of these URLs.
-    // TEMP hack until I get proper Async/Sync loading
-    pub pending_resources: HashMap<String, String>,
 }
 impl Engine {
     pub fn new() -> Self {
@@ -34,21 +27,12 @@ impl Engine {
             input_man: InputManager::new(),
             int_man: InterfaceManager::new(),
             orbit_man: OrbitManager::new(),
-            pending_resources: HashMap::new(),
         };
 
         return new_engine;
     }
 
     pub fn update(&mut self, state: &mut AppState) {
-        if self.has_pending_resources() {
-            log::info!(
-                "Not updating due to {} pending resources",
-                self.pending_resources.len()
-            );
-            return;
-        }
-
         // Startup the UI frame, collecting UI elements
         self.int_man.begin_frame(state);
 
@@ -81,23 +65,8 @@ impl Engine {
         self.sys_man.resize(width, height);
     }
 
-    pub fn has_pending_resources(&self) -> bool {
-        return !self.pending_resources.is_empty();
-    }
-
-    pub fn push_pending_resource(&mut self, url: &str, content_type: &str) {
-        let old = self
-            .pending_resources
-            .insert(url.to_owned(), content_type.to_owned());
-
-        log::info!("Engine will wait for '{}' from url '{}'", content_type, url);
-
-        assert!(old.is_none());
-    }
-
     pub fn receive_text(&mut self, url: &str, content_type: &str, text: &str) {
         match content_type {
-            "auto_load_manifest" => self.receive_auto_load_manifest_text(url, text),
             "scene" => self.receive_scene_text(url, text),
             "body_database" | "vectors_database" | "elements_database" => {
                 self.receive_database_text(url, content_type, text)
@@ -107,44 +76,6 @@ impl Engine {
                 content_type,
                 url
             ),
-        }
-
-        let expected_type = self.pending_resources.get(url).cloned();
-        if let Some(expected_type) = expected_type {
-            if expected_type == content_type {
-                self.pending_resources.remove(url);
-                log::info!(
-                    "Received resource from '{}'. {} other resources are still pending",
-                    url,
-                    self.pending_resources.len()
-                );
-            } else {
-                log::error!(
-                    "Received text of unexpected type '{}' from url '{}'! Expected '{}'",
-                    content_type,
-                    url,
-                    expected_type
-                );
-                return;
-            }
-        }
-
-        self.try_loading_last_scene();
-    }
-
-    fn receive_auto_load_manifest_text(&mut self, url: &str, text: &str) {
-        log::info!(
-            "Loading auto load manifest from '{}' (length {})",
-            url,
-            text.len()
-        );
-
-        let files: Vec<&str> = text.lines().collect();
-        for file in files.iter() {
-            let scene_url = "public/scenes/".to_owned() + file;
-
-            fetch_text(&scene_url, "scene");
-            self.push_pending_resource(&scene_url, "scene");
         }
     }
 
@@ -156,18 +87,16 @@ impl Engine {
     }
 
     fn try_loading_last_scene(&mut self) {
-        if !self.has_pending_resources() {
-            log::info!("Engine has no pending resources. Loading last scene...");
+        log::info!("Engine has no pending resources. Loading last scene...");
 
-            STATE.with(|s| {
-                if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
-                    let s = ref_mut_s.as_mut().unwrap();
+        STATE.with(|s| {
+            if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
+                let s = ref_mut_s.as_mut().unwrap();
 
-                    self.scene_man
-                        .load_last_scene(&mut self.res_man, &self.orbit_man, s);
-                }
-            });
-        }
+                self.scene_man
+                    .load_last_scene(&mut self.res_man, &self.orbit_man, s);
+            }
+        });
     }
 
     fn receive_database_text(&mut self, url: &str, content_type: &str, text: &str) {
@@ -190,26 +119,6 @@ impl Engine {
                 content_type,
                 url
             ),
-        }
-
-        let expected_type = self.pending_resources.get(url).cloned();
-        if let Some(expected_type) = expected_type {
-            if expected_type == content_type {
-                self.pending_resources.remove(url);
-                log::info!(
-                    "Received resource from '{}'. {} other resources are still pending",
-                    url,
-                    self.pending_resources.len()
-                );
-            } else {
-                log::error!(
-                    "Received bytes of unexpected type '{}' from url '{}'! Expected '{}'",
-                    content_type,
-                    url,
-                    expected_type
-                );
-                return;
-            }
         }
     }
 
