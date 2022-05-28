@@ -8,10 +8,12 @@ use crate::utils::hashmap::InsertOrGet;
 use crate::utils::string::{get_unique_name, remove_numbered_suffix};
 use crate::utils::web::request_bytes;
 use crate::{ENGINE, GLCTX};
+use futures::future::join_all;
 use image::{io::Reader, DynamicImage};
 use std::path::PathBuf;
 use std::rc::Weak;
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::WebGl2RenderingContext;
 
@@ -795,12 +797,32 @@ impl ResourceManager {
         // the default texture instead
         let internal_full_path = full_path.clone();
         if is_cubemap {
-            // fetch_bytes(&(full_path.clone() + "/Right.jpg"), "cubemap_face");
-            // fetch_bytes(&(full_path.clone() + "/Left.jpg"), "cubemap_face");
-            // fetch_bytes(&(full_path.clone() + "/Top.jpg"), "cubemap_face");
-            // fetch_bytes(&(full_path.clone() + "/Bottom.jpg"), "cubemap_face");
-            // fetch_bytes(&(full_path.clone() + "/Front.jpg"), "cubemap_face");
-            // fetch_bytes(&(full_path.clone() + "/Back.jpg"), "cubemap_face");
+            spawn_local(async move {
+                let urls = [
+                    &(internal_full_path.clone() + "/Right.jpg"),
+                    &(internal_full_path.clone() + "/Left.jpg"),
+                    &(internal_full_path.clone() + "/Top.jpg"),
+                    &(internal_full_path.clone() + "/Bottom.jpg"),
+                    &(internal_full_path.clone() + "/Front.jpg"),
+                    &(internal_full_path.clone() + "/Back.jpg"),
+                ];
+
+                let mut vecs: Vec<Vec<u8>> = join_all(urls.iter().map(|url| request_bytes(url)))
+                    .await
+                    .into_iter()
+                    .collect::<Result<Vec<Vec<u8>>, JsValue>>()
+                    .unwrap();
+
+                ENGINE.with(|e| {
+                    let mut ref_mut = e.borrow_mut();
+                    let e = ref_mut.as_mut().unwrap();
+
+                    for it in urls.iter().zip(vecs.iter_mut()) {
+                        let (url, mut vec) = it;
+                        e.receive_bytes(&url, "cubemap_face", &mut vec);
+                    }
+                });
+            });
         } else {
             spawn_local(async move {
                 let mut vec = request_bytes(&internal_full_path).await.unwrap();
