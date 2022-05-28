@@ -48,7 +48,7 @@ pub fn main_js() {
 }
 
 #[wasm_bindgen]
-pub async fn initialize() -> Result<(), JsValue> {
+pub async fn start() -> Result<(), JsValue> {
     log::info!("Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
@@ -100,8 +100,6 @@ pub async fn initialize() -> Result<(), JsValue> {
         }
     });
 
-    Ok(())
-
     // TODO: Load scenes
 
     // fetch_required_text("public/database/artificial.json", "body_database");
@@ -115,22 +113,16 @@ pub async fn initialize() -> Result<(), JsValue> {
     // fetch_required_text("public/database/osc_elements.json", "elements_database");
 
     // fetch_required_text("public/scenes/auto_load_manifest.txt", "auto_load_manifest");
-}
-
-#[wasm_bindgen]
-pub async fn start_loop() -> Result<(), JsValue> {
-    log::info!("Beginning engine loop...");
 
     // Summoning ritual curtesy of https://rustwasm.github.io/docs/wasm-bindgen/examples/request-animation-frame.html
+    log::info!("Beginning request_animation_frame loop...");
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
-
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
         redraw_requested();
 
         request_animation_frame(f.borrow().as_ref().unwrap());
     }) as Box<dyn FnMut()>));
-
     request_animation_frame(g.borrow().as_ref().unwrap());
 
     Ok(())
