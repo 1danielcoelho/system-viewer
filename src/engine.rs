@@ -83,12 +83,9 @@ impl Engine {
         log::info!("Loading scene from '{}' (length {})", url, text.len());
 
         self.scene_man.receive_serialized_scene(text);
-        self.try_loading_last_scene();
     }
 
-    fn try_loading_last_scene(&mut self) {
-        log::info!("Engine has no pending resources. Loading last scene...");
-
+    pub fn try_loading_last_scene(&mut self) {
         STATE.with(|s| {
             if let Ok(mut ref_mut_s) = s.try_borrow_mut() {
                 let s = ref_mut_s.as_mut().unwrap();

@@ -107,7 +107,7 @@ impl SceneManager {
                 if let Some(reference_name) = &state.camera.reference_entity_name {
                     if let Some(found_ent) = main_scene.get_entity_from_name(&reference_name[..]) {
                         state.camera.next_reference_entity =
-                        Some(ReferenceChange::FocusKeepCoords(found_ent));
+                            Some(ReferenceChange::FocusKeepCoords(found_ent));
 
                         log::info!(
                             "Setting startup focused entity to '{:?}': '{}'",
@@ -155,8 +155,7 @@ impl SceneManager {
                         }
                     }
                 } else {
-                    state.camera.next_reference_entity =
-                                    Some(ReferenceChange::Clear);                                    
+                    state.camera.next_reference_entity = Some(ReferenceChange::Clear);
                 }
             }
 
@@ -205,13 +204,6 @@ impl SceneManager {
                     self.descriptions.keys()
                 );
             }
-        } 
-        // We never had a last scene: This is a cold start up, so load some scene
-        // TODO: Allow specifying startup scene without recompiling
-        else {
-            let startup_scene = "All major planets and moons";
-            log::info!("Loading startup scene '{}'", startup_scene);
-            self.set_scene(startup_scene, res_man, orbit_man, state);
         }
     }
 
@@ -799,7 +791,7 @@ impl SceneManager {
                         }
                     }
                 }
-    
+
                 let default_state_vector = body.and_then(|b| fetch_default_motion_if_needed(b.id.as_ref().unwrap(), orbit_man, time));
 
                 let name_ent = add_body_instance_entities(
@@ -821,7 +813,7 @@ impl SceneManager {
                 if let Some(parent_entity) = parent_entity {
                     scene.set_entity_parent(parent_entity, name_ent.1);
                 }
-    
+
                 let old = parsed_body_name_to_main_ent.insert(name_ent.0.clone(), name_ent.1);
                 if let Some(_) = old {
                     log::error!("Name collision for body instance name '{}'. Entity '{:?}' will be used from now on", name_ent.0, name_ent.1);
@@ -839,7 +831,11 @@ impl SceneManager {
             last_num_left = new_num_left;
         };
         if num_left > 0 {
-            log::error!("Failed to parse {} bodies due to missing parents! Bodies left:\n{:#?}", num_left, bodies_to_parse);
+            log::error!(
+                "Failed to parse {} bodies due to missing parents! Bodies left:\n{:#?}",
+                num_left,
+                bodies_to_parse
+            );
         }
 
         // Grid

@@ -71,6 +71,7 @@ pub async fn start() -> Result<(), JsValue> {
         e.replace(Engine::new());
     });
 
+    // TODO: Actually request all asset types at the same time
     let body_databases = vec![
         "public/database/artificial.json",
         "public/database/asteroids.json",
@@ -79,16 +80,33 @@ pub async fn start() -> Result<(), JsValue> {
         "public/database/major_bodies.json",
         "public/database/other_satellites.json",
         "public/database/saturnian_satellites.json",
-        // "public/database/state_vectors.json",
-        // "public/database/osc_elements.json",
     ];
-
     let body_database_results: Vec<String> =
         join_all(body_databases.iter().map(|url| request_text(url)))
             .await
             .into_iter()
             .collect::<Result<Vec<String>, JsValue>>()
             .unwrap();
+
+    let state_vector_url = "public/database/state_vectors.json";
+    let state_vector_text = request_text(state_vector_url).await?;
+
+    let osc_elements_url = "public/database/osc_elements.json";
+    let osc_elements_text = request_text(osc_elements_url).await?;
+
+    let scenes = vec![
+        "public/scenes/earth_centric.ron",
+        "public/scenes/full_solar_system.ron",
+        "public/scenes/gltf_test.ron",
+        "public/scenes/light_test.ron",
+        "public/scenes/planet_line_up.ron",
+        "public/scenes/planets_and_satellites.ron",
+    ];
+    let scene_results: Vec<String> = join_all(scenes.iter().map(|url| request_text(url)))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<String>, JsValue>>()
+        .unwrap();
 
     ENGINE.with(|e| {
         let mut ref_mut = e.borrow_mut();
@@ -98,23 +116,29 @@ pub async fn start() -> Result<(), JsValue> {
             let (url, text) = it;
             e.receive_text(url, "body_database", text.as_str());
         }
+
+        e.receive_text(
+            state_vector_url,
+            "vectors_database",
+            state_vector_text.as_str(),
+        );
+        e.receive_text(
+            osc_elements_url,
+            "elements_database",
+            osc_elements_text.as_str(),
+        );
+
+        for it in scenes.iter().zip(scene_results.iter()) {
+            let (url, text) = it;
+            e.receive_text(url, "scene", text.as_str());
+        }
+
+        e.try_loading_last_scene();
     });
 
     // TODO: Load scenes
 
-    // fetch_required_text("public/database/artificial.json", "body_database");
-    // fetch_required_text("public/database/asteroids.json", "body_database");
-    // fetch_required_text("public/database/comets.json", "body_database");
-    // fetch_required_text("public/database/jovian_satellites.json", "body_database");
-    // fetch_required_text("public/database/major_bodies.json", "body_database");
-    // fetch_required_text("public/database/other_satellites.json", "body_database");
-    // fetch_required_text("public/database/saturnian_satellites.json", "body_database");
-    // fetch_required_text("public/database/state_vectors.json", "vectors_database");
-    // fetch_required_text("public/database/osc_elements.json", "elements_database");
-
-    // fetch_required_text("public/scenes/auto_load_manifest.txt", "auto_load_manifest");
-
-    // Summoning ritual curtesy of https://rustwasm.github.io/docs/wasm-bindgen/examples/request-animation-frame.html
+    // Summoning ritual courtesy of https://rustwasm.github.io/docs/wasm-bindgen/examples/request-animation-frame.html
     log::info!("Beginning request_animation_frame loop...");
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
