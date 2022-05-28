@@ -55,14 +55,13 @@ pub async fn start() -> Result<(), JsValue> {
         s.replace(AppState::load_or_new());
     });
 
-    log::info!("Initializing canvas...");
-    let canvas = get_canvas();
-    setup_event_handlers(&canvas);
+    log::info!("Setting up events...");
+    setup_event_handlers();
 
     log::info!("Initializing WebGl rendering context...");
     GLCTX.with(|gl| {
         let mut gl = gl.borrow_mut();
-        gl.replace(get_gl_context(&canvas));
+        gl.replace(get_gl_context(&get_canvas()));
     });
 
     log::info!("Initializing engine...");

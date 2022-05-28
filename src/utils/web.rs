@@ -221,7 +221,10 @@ fn handle_key_press(key: &str, modifiers: &egui::Modifiers, s: &mut AppState, pr
 }
 
 /// Sets up the canvas event handlers to change the app_state blackboard
-pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
+pub fn setup_event_handlers() {
+    let canvas = get_canvas();
+    let window = get_window();
+
     canvas.set_oncontextmenu(Some(&js_sys::Function::new_with_args(
         "ev",
         r"ev.preventDefault();return false;",
@@ -415,7 +418,7 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-        canvas
+        window
             .add_event_listener_with_callback("keydown", handler.as_ref().unchecked_ref())
             .expect("Failed to set keydown event handler");
         handler.forget();
@@ -441,7 +444,7 @@ pub fn setup_event_handlers(canvas: &HtmlCanvasElement) {
         };
 
         let handler = Closure::wrap(Box::new(handler) as Box<dyn FnMut(_)>);
-        canvas
+        window
             .add_event_listener_with_callback("keyup", handler.as_ref().unchecked_ref())
             .expect("Failed to set keyup event handler");
         handler.forget();
