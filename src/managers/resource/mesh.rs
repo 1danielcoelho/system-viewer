@@ -2,13 +2,11 @@ use crate::managers::resource::collider::Collider;
 use crate::managers::resource::intermediate_mesh::IntermediatePrimitive;
 use crate::managers::resource::material::Material;
 use crate::utils::gl::GL;
-use js_sys::WebAssembly;
+use crate::utils::memory::any_slice_to_u8_slice;
+use glow::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::{cell::RefCell, rc::Rc};
-use wasm_bindgen::JsCast;
-use web_sys::WebGlVertexArrayObject;
-use web_sys::{WebGl2RenderingContext, WebGlBuffer};
 
 pub enum PrimitiveAttribute {
     Position = 0,
@@ -38,7 +36,7 @@ pub struct Primitive {
 
     pub index_count: i32,
     pub mode: u32,
-    pub vao: WebGlVertexArrayObject,
+    pub vao: glow::VertexArray,
 
     pub has_tangents: bool,
     pub has_normals: bool,
@@ -53,10 +51,12 @@ pub struct Primitive {
     pub default_material: Option<Rc<RefCell<Material>>>,
 }
 impl Primitive {
-    pub fn draw(&self, ctx: &WebGl2RenderingContext) {
-        ctx.bind_vertex_array(Some(&self.vao));
-        ctx.draw_elements_with_i32(self.mode, self.index_count, GL::UNSIGNED_SHORT, 0);
-        ctx.bind_vertex_array(None);
+    pub fn draw(&self, ctx: &glow::Context) {
+        unsafe {
+            ctx.bind_vertex_array(Some(self.vao));
+            ctx.draw_elements(self.mode, self.index_count, GL::UNSIGNED_SHORT, 0);
+            ctx.bind_vertex_array(None);
+        }
     }
 
     pub fn update_hash(&mut self) {
@@ -75,67 +75,73 @@ impl Hash for Primitive {
     }
 }
 
+// This is just used to draw points for now, so its not as generic
+// as the name may suggest
 #[derive(Debug)]
 pub struct DynamicPrimitive {
     pub mode: u32,
-    pub vao: WebGlVertexArrayObject,
+    pub vao: glow::VertexArray,
 
-    pub pos_buffer: WebGlBuffer,
+    pub pos_buffer: glow::Buffer,
     pos_buffer_data: Vec<f32>,
 
-    pub color_buffer: WebGlBuffer,
+    pub color_buffer: glow::Buffer,
     color_buffer_data: Vec<f32>,
 
     last_uploaded_point_count: usize,
 }
 impl DynamicPrimitive {
-    pub fn new(ctx: &WebGl2RenderingContext) -> Self {
-        let vao = ctx.create_vertex_array().unwrap();
-        ctx.bind_vertex_array(Some(&vao));
+    pub fn new(ctx: &glow::Context) -> Self {
+        unsafe {
+            let vao = ctx.create_vertex_array().unwrap();
+            ctx.bind_vertex_array(Some(vao));
 
-        // Positions
-        let pos_buffer = ctx.create_buffer().unwrap();
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(pos_buffer.as_ref()));
-        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Position as u32,
-            4,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
+            // Positions
+            let pos_buffer = ctx.create_buffer().unwrap();
+            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(pos_buffer));
+            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
+            ctx.vertex_attrib_pointer_f32(
+                PrimitiveAttribute::Position as u32,
+                4, // TODO: Remember and comment why (point size?)
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
 
-        // Colors
-        let color_buffer = ctx.create_buffer().unwrap();
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(color_buffer.as_ref()));
-        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Color as u32,
-            4,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
+            // Colors
+            let color_buffer = ctx.create_buffer().unwrap();
+            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(color_buffer));
+            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
+            ctx.vertex_attrib_pointer_f32(
+                PrimitiveAttribute::Color as u32,
+                4,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
 
-        ctx.bind_vertex_array(None);
+            ctx.bind_vertex_array(None);
 
-        Self {
-            mode: GL::POINTS,
-            vao,
-            pos_buffer,
-            color_buffer,
-            pos_buffer_data: Vec::new(),
-            color_buffer_data: Vec::new(),
-            last_uploaded_point_count: 0,
+            Self {
+                mode: GL::POINTS,
+                vao,
+                pos_buffer,
+                color_buffer,
+                pos_buffer_data: Vec::new(),
+                color_buffer_data: Vec::new(),
+                last_uploaded_point_count: 0,
+            }
         }
     }
 
-    pub fn draw(&self, ctx: &WebGl2RenderingContext) {
-        ctx.bind_vertex_array(Some(&self.vao));
-        ctx.draw_arrays(self.mode, 0, self.last_uploaded_point_count as i32);
-        ctx.bind_vertex_array(None);
+    pub fn draw(&self, ctx: &glow::Context) {
+        unsafe {
+            ctx.bind_vertex_array(Some(self.vao));
+            ctx.draw_arrays(self.mode, 0, self.last_uploaded_point_count as i32);
+            ctx.bind_vertex_array(None);
+        }
     }
 
     pub fn set_num_elements(&mut self, num_points: usize) {
@@ -163,39 +169,25 @@ impl DynamicPrimitive {
         return self.color_buffer_data.as_mut_slice();
     }
 
-    pub fn upload_buffers(&mut self, ctx: &WebGl2RenderingContext) {
-        let pos_buffer_data_location = self.pos_buffer_data.as_ptr() as u32 / 4;
-        let pos_buffer_data_len = self.pos_buffer_data.len() as u32;
+    pub fn upload_buffers(&mut self, ctx: &glow::Context) {
+        unsafe {
+            let pos_slice = any_slice_to_u8_slice(&self.pos_buffer_data);
+            let color_slice = any_slice_to_u8_slice(&self.color_buffer_data);
 
-        let color_buffer_data_location = self.color_buffer_data.as_ptr() as u32 / 4;
-        let color_buffer_data_len = self.color_buffer_data.len() as u32;
+            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(self.pos_buffer));
 
-        let memory_buffer = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
+            if self.pos_buffer_data.len() != self.last_uploaded_point_count {
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, pos_slice, GL::DYNAMIC_DRAW);
 
-        let pos_arr = js_sys::Float32Array::new(&memory_buffer).subarray(
-            pos_buffer_data_location,
-            pos_buffer_data_location + pos_buffer_data_len,
-        );
-        let color_arr = js_sys::Float32Array::new(&memory_buffer).subarray(
-            color_buffer_data_location,
-            color_buffer_data_location + color_buffer_data_len,
-        );
+                // If we're resizing also upload our color buffer
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(self.color_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, color_slice, GL::DYNAMIC_DRAW);
 
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(self.pos_buffer.as_ref()));
-
-        if self.pos_buffer_data.len() != self.last_uploaded_point_count {
-            ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &pos_arr, GL::DYNAMIC_DRAW);
-
-            // If we're resizing also upload our color buffer
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(self.color_buffer.as_ref()));
-            ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_arr, GL::DYNAMIC_DRAW);
-
-            self.last_uploaded_point_count = self.pos_buffer_data.len() / 4;
-        } else {
-            ctx.buffer_sub_data_with_i32_and_array_buffer_view(GL::ARRAY_BUFFER, 0, &pos_arr);
+                self.last_uploaded_point_count = self.pos_buffer_data.len() / 4;
+            } else {
+                // TODO: What does this even do?
+                ctx.buffer_sub_data_u8_slice(GL::ARRAY_BUFFER, 0, &pos_slice);
+            }
         }
     }
 }

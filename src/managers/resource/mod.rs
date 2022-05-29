@@ -9,13 +9,13 @@ use crate::utils::string::{get_unique_name, remove_numbered_suffix};
 use crate::utils::web::request_bytes;
 use crate::{ENGINE, GLCTX};
 use futures::future::join_all;
+use glow::*;
 use image::{io::Reader, DynamicImage};
 use std::path::PathBuf;
 use std::rc::Weak;
 use std::{cell::RefCell, collections::HashMap, io::Cursor, rc::Rc};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::WebGl2RenderingContext;
 
 pub mod collider;
 pub mod gltf;
@@ -42,55 +42,56 @@ fn load_texture_from_bytes(
         let ref_mut = ctx.borrow_mut();
         let ctx = ref_mut.as_ref().unwrap();
 
-        let gl_tex = ctx.create_texture().unwrap();
-        ctx.active_texture(GL::TEXTURE0);
-        ctx.bind_texture(GL::TEXTURE_2D, Some(&gl_tex));
+        unsafe {
+            let gl_tex = ctx.create_texture().unwrap();
+            ctx.active_texture(GL::TEXTURE0);
+            ctx.bind_texture(GL::TEXTURE_2D, Some(gl_tex));
 
-        ctx.tex_parameteri(
-            GL::TEXTURE_2D,
-            GL::TEXTURE_WRAP_S,
-            wrap_s.unwrap_or(GL::CLAMP_TO_EDGE as i32),
-        );
-        ctx.tex_parameteri(
-            GL::TEXTURE_2D,
-            GL::TEXTURE_WRAP_T,
-            wrap_t.unwrap_or(GL::CLAMP_TO_EDGE as i32),
-        );
-        ctx.tex_parameteri(
-            GL::TEXTURE_2D,
-            GL::TEXTURE_MIN_FILTER,
-            min_filter.unwrap_or(GL::NEAREST as i32),
-        );
-        ctx.tex_parameteri(
-            GL::TEXTURE_2D,
-            GL::TEXTURE_MAG_FILTER,
-            mag_filter.unwrap_or(GL::NEAREST as i32),
-        );
+            ctx.tex_parameter_i32(
+                GL::TEXTURE_2D,
+                GL::TEXTURE_WRAP_S,
+                wrap_s.unwrap_or(GL::CLAMP_TO_EDGE as i32),
+            );
+            ctx.tex_parameter_i32(
+                GL::TEXTURE_2D,
+                GL::TEXTURE_WRAP_T,
+                wrap_t.unwrap_or(GL::CLAMP_TO_EDGE as i32),
+            );
+            ctx.tex_parameter_i32(
+                GL::TEXTURE_2D,
+                GL::TEXTURE_MIN_FILTER,
+                min_filter.unwrap_or(GL::NEAREST as i32),
+            );
+            ctx.tex_parameter_i32(
+                GL::TEXTURE_2D,
+                GL::TEXTURE_MAG_FILTER,
+                mag_filter.unwrap_or(GL::NEAREST as i32),
+            );
 
-        ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
-            GL::TEXTURE_2D,
-            0,
-            format as i32,
-            width as i32,
-            height as i32,
-            0,
-            format,
-            GL::UNSIGNED_BYTE, // Just u8 for now
-            Some(data),
-        )
-        .unwrap();
+            ctx.tex_image_2d(
+                GL::TEXTURE_2D,
+                0,
+                format as i32,
+                width as i32,
+                height as i32,
+                0,
+                format,
+                GL::UNSIGNED_BYTE, // Just u8 for now
+                Some(data),
+            );
 
-        ctx.bind_texture(GL::TEXTURE_2D, None);
+            ctx.bind_texture(GL::TEXTURE_2D, None);
 
-        return Ok(Rc::new(RefCell::new(Texture {
-            name: identifier.to_owned(),
-            width,
-            height,
-            gl_format: format,
-            num_channels,
-            gl_handle: Some(gl_tex),
-            is_cubemap: false,
-        })));
+            return Ok(Rc::new(RefCell::new(Texture {
+                name: identifier.to_owned(),
+                width,
+                height,
+                gl_format: format,
+                num_channels,
+                gl_handle: Some(gl_tex),
+                is_cubemap: false,
+            })));
+        }
     });
 }
 
@@ -186,7 +187,7 @@ fn load_texture_from_image_bytes(
 fn load_cubemap_face(
     face: usize,
     face_data: &Vec<u8>,
-    ctx: &WebGl2RenderingContext,
+    ctx: &glow::Context,
 ) -> Result<(u32, u32, u32, u8), String> {
     let reader = Reader::new(Cursor::new(face_data))
         .with_guessed_format()
@@ -258,18 +259,19 @@ fn load_cubemap_face(
         "Failed to retrieve a buffer for cubemap face texture",
     ))?;
 
-    ctx.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
-        TempCubemap::get_target_from_index(face).unwrap(),
-        0,
-        format as i32,
-        width as i32,
-        height as i32,
-        0,
-        format,
-        GL::UNSIGNED_BYTE, // Just u8 for now
-        Some(buf),
-    )
-    .unwrap();
+    unsafe {
+        ctx.tex_image_2d(
+            TempCubemap::get_target_from_index(face).unwrap(),
+            0,
+            format as i32,
+            width as i32,
+            height as i32,
+            0,
+            format,
+            GL::UNSIGNED_BYTE, // Just u8 for now
+            Some(buf),
+        );
+    }
 
     return Ok((width, height, format, num_channels));
 }
@@ -277,11 +279,14 @@ fn load_cubemap_face(
 fn load_cubemap_texture_from_image_bytes(
     identifier: &str,
     cubemap: &mut TempCubemap,
-    ctx: &WebGl2RenderingContext,
+    ctx: &glow::Context,
 ) -> Result<Rc<RefCell<Texture>>, String> {
-    let gl_tex = ctx.create_texture().unwrap();
-    ctx.active_texture(GL::TEXTURE0);
-    ctx.bind_texture(GL::TEXTURE_CUBE_MAP, Some(&gl_tex));
+    let gl_tex: Option<glow::Texture>;
+    unsafe {
+        gl_tex = Some(ctx.create_texture().unwrap());
+        ctx.active_texture(GL::TEXTURE0);
+        ctx.bind_texture(GL::TEXTURE_CUBE_MAP, gl_tex);
+    }
 
     let mut success: bool = true;
     let mut width: u32 = 0;
@@ -309,22 +314,24 @@ fn load_cubemap_texture_from_image_bytes(
         }
     }
 
-    if success {
-        ctx.generate_mipmap(GL::TEXTURE_CUBE_MAP);
-        ctx.tex_parameteri(
-            GL::TEXTURE_CUBE_MAP,
-            GL::TEXTURE_MIN_FILTER,
-            GL::LINEAR_MIPMAP_LINEAR as i32,
-        );
-    }
-
     // Dump our input bytes now that the texture is created/failed
     for face in cubemap.faces.iter_mut() {
         face.clear();
     }
     cubemap.completed = false;
 
-    ctx.bind_texture(GL::TEXTURE_CUBE_MAP, None);
+    unsafe {
+        if success {
+            ctx.generate_mipmap(GL::TEXTURE_CUBE_MAP);
+            ctx.tex_parameter_i32(
+                GL::TEXTURE_CUBE_MAP,
+                GL::TEXTURE_MIN_FILTER,
+                GL::LINEAR_MIPMAP_LINEAR as i32,
+            );
+        }
+
+        ctx.bind_texture(GL::TEXTURE_CUBE_MAP, None);
+    }
 
     return Ok(Rc::new(RefCell::new(Texture {
         name: identifier.to_owned(),
@@ -332,7 +339,7 @@ fn load_cubemap_texture_from_image_bytes(
         height,
         gl_format: format,
         num_channels,
-        gl_handle: Some(gl_tex),
+        gl_handle: gl_tex,
         is_cubemap: true,
     })));
 }

@@ -13,11 +13,11 @@ use crate::systems::Framebuffer;
 use crate::utils::gl::GL;
 use crate::utils::string::decode_hex;
 use crate::{GLCTX, STATE};
+use glow::*;
 use na::*;
 use std::cell::RefCell;
 use std::convert::TryInto;
 use std::rc::Rc;
-use web_sys::WebGl2RenderingContext;
 
 pub const NUM_LIGHTS: usize = 8;
 
@@ -72,7 +72,7 @@ impl RenderingSystem {
         };
     }
 
-    pub fn resize(&mut self, width: u32, height: u32, gl: &WebGl2RenderingContext) {
+    pub fn resize(&mut self, width: u32, height: u32, gl: &glow::Context) {
         self.framebuffer.resize(width, height, gl);
     }
 
@@ -101,19 +101,17 @@ impl RenderingSystem {
     }
 }
 
-fn pre_draw(
-    state: &AppState,
-    gl: &WebGl2RenderingContext,
-    scene: &mut Scene,
-) -> FrameUniformValues {
-    gl.enable(GL::CULL_FACE);
-    gl.disable(GL::SCISSOR_TEST);
+fn pre_draw(state: &AppState, gl: &glow::Context, scene: &mut Scene) -> FrameUniformValues {
+    unsafe {
+        gl.enable(GL::CULL_FACE);
+        gl.disable(GL::SCISSOR_TEST);
 
-    gl.enable(GL::DEPTH_TEST);
-    gl.depth_func(GL::LESS);
+        gl.enable(GL::DEPTH_TEST);
+        gl.depth_func(GL::LESS);
 
-    gl.clear_color(0.1, 0.1, 0.2, 1.0);
-    gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+        gl.clear_color(0.1, 0.1, 0.2, 1.0);
+        gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+    }
 
     let mut result = FrameUniformValues {
         v: state.camera.v,
@@ -169,7 +167,7 @@ fn pre_draw(
     return result;
 }
 
-fn draw(gl: &WebGl2RenderingContext, uniform_data: &mut FrameUniformValues, scene: &mut Scene) {
+fn draw(gl: &glow::Context, uniform_data: &mut FrameUniformValues, scene: &mut Scene) {
     for (t, m) in scene.transform.iter().zip(scene.mesh.iter_mut()) {
         draw_one(gl, uniform_data, t, m);
     }
@@ -178,14 +176,16 @@ fn draw(gl: &WebGl2RenderingContext, uniform_data: &mut FrameUniformValues, scen
 fn post_draw(
     width: u32,
     height: u32,
-    gl: &WebGl2RenderingContext,
+    gl: &glow::Context,
     mat: Option<&Rc<RefCell<Material>>>,
     quad: Option<&Rc<RefCell<Mesh>>>,
 ) {
-    gl.viewport(0, 0, width as i32, height as i32);
-    gl.clear_color(0.1, 0.1, 0.2, 1.0);
-    gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
-    gl.disable(GL::DEPTH_TEST);
+    unsafe {
+        gl.viewport(0, 0, width as i32, height as i32);
+        gl.clear_color(0.1, 0.1, 0.2, 1.0);
+        gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+        gl.disable(GL::DEPTH_TEST);
+    }
 
     // Blit the main framebuffer to the default (canvas) framebuffer
     // We could actually blit here but I like having this actual draw call as it's helpful for debugging
@@ -202,13 +202,15 @@ fn post_draw(
         mat.unbind_from_drawing(gl);
     }
 
-    // TODO: Move this somewhere else
-    // After we finish drawing, set this for Egui
-    gl.disable(GL::DEPTH_TEST);
+    unsafe {
+        // TODO: Move this somewhere else
+        // After we finish drawing, set this for Egui
+        gl.disable(GL::DEPTH_TEST);
+    }
 }
 
 fn draw_one(
-    gl: &WebGl2RenderingContext,
+    gl: &glow::Context,
     uniform_data: &FrameUniformValues,
     tc: &TransformComponent,
     mc: &mut MeshComponent,
@@ -318,7 +320,7 @@ fn draw_one(
 
 fn draw_points(
     _state: &AppState,
-    gl: &WebGl2RenderingContext,
+    gl: &glow::Context,
     uniform_data: &mut FrameUniformValues,
     scene: &mut Scene,
 ) {
@@ -413,7 +415,7 @@ fn draw_points(
 
 fn draw_skybox(
     state: &AppState,
-    gl: &WebGl2RenderingContext,
+    gl: &glow::Context,
     uniform_data: &mut FrameUniformValues,
     scene: &mut Scene,
 ) {
@@ -432,8 +434,11 @@ fn draw_skybox(
     .try_into()
     .unwrap();
 
-    let old_depth_func = gl.get_parameter(GL::DEPTH_FUNC).unwrap().as_f64().unwrap() as u32;
-    gl.depth_func(GL::LEQUAL);
+    let old_depth_func;
+    unsafe {
+        old_depth_func = gl.get_parameter_i32(GL::DEPTH_FUNC) as u32;
+        gl.depth_func(GL::LEQUAL);
+    }
 
     for primitive in scene
         .skybox_mesh
@@ -463,5 +468,7 @@ fn draw_skybox(
         }
     }
 
-    gl.depth_func(old_depth_func);
+    unsafe {
+        gl.depth_func(old_depth_func);
+    }
 }

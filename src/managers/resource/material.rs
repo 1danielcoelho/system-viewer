@@ -4,6 +4,7 @@ use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::{details_ui::DetailsUI, resource::shaders::*};
 use crate::utils::gl::GL;
 use egui::Ui;
+use glow::*;
 use na::Matrix4;
 use std::collections::HashSet;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
@@ -153,81 +154,70 @@ impl ShaderDefine {
 }
 
 fn link_program(
-    gl: &WebGl2RenderingContext,
+    gl: &glow::Context,
     prefix_lines: &str,
     vert_source: &str,
     frag_source: &str,
-) -> Result<WebGlProgram, String> {
-    let program = gl
-        .create_program()
-        .ok_or_else(|| String::from("Error creating program"))?;
+) -> Result<glow::Program, String> {
+    unsafe {
+        let program = gl.create_program()?;
 
-    let vert_shader = compile_shader(
-        &gl,
-        GL::VERTEX_SHADER,
-        prefix_lines,
-        &SHADER_STORAGE[vert_source],
-    )?;
-    let frag_shader = compile_shader(
-        &gl,
-        GL::FRAGMENT_SHADER,
-        prefix_lines,
-        &SHADER_STORAGE[frag_source],
-    )?;
+        let vert_shader = compile_shader(
+            &gl,
+            GL::VERTEX_SHADER,
+            prefix_lines,
+            &SHADER_STORAGE[vert_source],
+        )?;
+        let frag_shader = compile_shader(
+            &gl,
+            GL::FRAGMENT_SHADER,
+            prefix_lines,
+            &SHADER_STORAGE[frag_source],
+        )?;
 
-    gl.attach_shader(&program, &vert_shader);
-    gl.attach_shader(&program, &frag_shader);
+        gl.attach_shader(program, vert_shader);
+        gl.attach_shader(program, frag_shader);
 
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Position as u32, "a_position");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Normal as u32, "a_normal");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Tangent as u32, "a_tangent");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::Color as u32, "a_color");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::UV0 as u32, "a_uv0");
-    gl.bind_attrib_location(&program, PrimitiveAttribute::UV1 as u32, "a_uv1");
+        gl.bind_attrib_location(program, PrimitiveAttribute::Position as u32, "a_position");
+        gl.bind_attrib_location(program, PrimitiveAttribute::Normal as u32, "a_normal");
+        gl.bind_attrib_location(program, PrimitiveAttribute::Tangent as u32, "a_tangent");
+        gl.bind_attrib_location(program, PrimitiveAttribute::Color as u32, "a_color");
+        gl.bind_attrib_location(program, PrimitiveAttribute::UV0 as u32, "a_uv0");
+        gl.bind_attrib_location(program, PrimitiveAttribute::UV1 as u32, "a_uv1");
 
-    gl.link_program(&program);
+        gl.link_program(program);
 
-    if gl
-        .get_program_parameter(&program, WebGl2RenderingContext::LINK_STATUS)
-        .as_bool()
-        .unwrap_or(false)
-    {
-        Ok(program)
-    } else {
-        Err(gl
-            .get_program_info_log(&program)
-            .unwrap_or_else(|| String::from("Unknown error creating program object")))
+        if gl.get_program_link_status(program) {
+            Ok(program)
+        } else {
+            Err(gl.get_program_info_log(program))
+        }
     }
 }
 
 fn compile_shader(
-    gl: &WebGl2RenderingContext,
+    gl: &glow::Context,
     shader_type: u32,
     prefix_lines: &str,
     source: &str,
-) -> Result<WebGlShader, String> {
+) -> Result<glow::Shader, String> {
     let final_source = "#version 300 es\n".to_owned() + prefix_lines + "\n" + source;
 
-    let shader = gl
-        .create_shader(shader_type)
-        .ok_or_else(|| String::from("Error creating shader"))?;
+    unsafe {
+        let shader = gl.create_shader(shader_type)?;
 
-    gl.shader_source(&shader, &final_source);
-    gl.compile_shader(&shader);
+        gl.shader_source(shader, &final_source);
+        gl.compile_shader(shader);
 
-    if gl
-        .get_shader_parameter(&shader, WebGl2RenderingContext::COMPILE_STATUS)
-        .as_bool()
-        .unwrap_or(false)
-    {
-        Ok(shader)
-    } else {
-        Err(format!(
-            "Error compiling shader source below: \n\n{}\n\n=======================================================================\nError:\n{}",
-            final_source,
-            gl.get_shader_info_log(&shader)
-                .unwrap_or_else(|| String::from("Unable to get shader info log"))
-        ))
+        if gl.get_shader_compile_status(shader) {
+            Ok(shader)
+        } else {
+            Err(format!(
+                "Error compiling shader source below: \n\n{}\n\n=======================================================================\nError:\n{}",
+                final_source,
+                gl.get_shader_info_log(shader)
+            ))
+        }
     }
 }
 
@@ -240,7 +230,7 @@ pub struct Material {
     frag: String,
 
     compatible_prim_hash: u64,
-    program: Option<WebGlProgram>,
+    program: Option<glow::Program>,
 
     textures: HashMap<TextureUnit, Rc<RefCell<Texture>>>,
     uniforms: HashMap<UniformName, Uniform>,
@@ -289,7 +279,7 @@ impl Material {
         return self.compatible_prim_hash;
     }
 
-    pub fn recompile_program(&mut self, gl: &WebGl2RenderingContext) {
+    pub fn recompile_program(&mut self, gl: &glow::Context) {
         if self.failed_to_compile {
             return;
         }
@@ -320,7 +310,10 @@ impl Material {
         let program = program.unwrap();
 
         for (uniform_name, uniform) in self.uniforms.iter_mut() {
-            uniform.location = gl.get_uniform_location(&program, uniform_name.as_str());
+            unsafe {
+                uniform.location = gl.get_uniform_location(program, uniform_name.as_str());
+            }
+
             if uniform.location.is_none() {
                 log::warn!(
                     "Failed to find uniform '{}' on shaders used by material '{}': Vert: '{}', frag: '{}'",
@@ -427,7 +420,7 @@ impl Material {
         );
     }
 
-    pub fn bind_for_drawing(&mut self, gl: &WebGl2RenderingContext) {
+    pub fn bind_for_drawing(&mut self, gl: &glow::Context) {
         if self.program.is_none() {
             // Prevent repeatedly trying to recompile something that doesn't work
             if self.failed_to_compile {
@@ -437,82 +430,89 @@ impl Material {
             self.recompile_program(gl);
         }
 
-        // Set our shader program
-        gl.use_program(self.program.as_ref());
+        unsafe {
+            // Set our shader program
+            gl.use_program(self.program);
 
-        // Set uniforms
-        for (_, uniform) in self.uniforms.iter() {
-            match &uniform.value {
-                UniformValue::Float(value) => gl.uniform1f(uniform.location.as_ref(), *value),
-                UniformValue::Int(value) => gl.uniform1i(uniform.location.as_ref(), *value),
-                UniformValue::Vec2(value) => {
-                    gl.uniform2f(uniform.location.as_ref(), value[0], value[1])
-                }
-                UniformValue::Vec3(value) => {
-                    gl.uniform3f(uniform.location.as_ref(), value[0], value[1], value[2])
-                }
-                UniformValue::Vec4(value) => gl.uniform4f(
-                    uniform.location.as_ref(),
-                    value[0],
-                    value[1],
-                    value[2],
-                    value[3],
-                ),
-                UniformValue::Matrix(value) => {
-                    gl.uniform_matrix4fv_with_f32_array(uniform.location.as_ref(), false, value)
-                }
-                UniformValue::FloatArr(value) => {
-                    gl.uniform1fv_with_f32_array(uniform.location.as_ref(), &value)
-                }
-                UniformValue::IntArr(value) => {
-                    gl.uniform1iv_with_i32_array(uniform.location.as_ref(), &value)
-                }
-                UniformValue::Vec2Arr(value) => {
-                    gl.uniform2fv_with_f32_array(uniform.location.as_ref(), &value)
-                }
-                UniformValue::Vec3Arr(value) => {
-                    gl.uniform3fv_with_f32_array(uniform.location.as_ref(), &value)
-                }
-                UniformValue::Vec4Arr(value) => {
-                    gl.uniform4fv_with_f32_array(uniform.location.as_ref(), &value)
+            // Set uniforms
+            // TODO: This is crazy slow: I need uniform blocks!
+            for (_, uniform) in self.uniforms.iter() {
+                match &uniform.value {
+                    UniformValue::Float(value) => {
+                        gl.uniform_1_f32(uniform.location.as_ref(), *value)
+                    }
+                    UniformValue::Int(value) => gl.uniform_1_i32(uniform.location.as_ref(), *value),
+                    UniformValue::Vec2(value) => {
+                        gl.uniform_2_f32(uniform.location.as_ref(), value[0], value[1])
+                    }
+                    UniformValue::Vec3(value) => {
+                        gl.uniform_3_f32(uniform.location.as_ref(), value[0], value[1], value[2])
+                    }
+                    UniformValue::Vec4(value) => gl.uniform_4_f32(
+                        uniform.location.as_ref(),
+                        value[0],
+                        value[1],
+                        value[2],
+                        value[3],
+                    ),
+                    UniformValue::Matrix(value) => {
+                        gl.uniform_matrix_4_f32_slice(uniform.location.as_ref(), false, value)
+                    }
+                    UniformValue::FloatArr(value) => {
+                        gl.uniform_1_f32_slice(uniform.location.as_ref(), &value)
+                    }
+                    UniformValue::IntArr(value) => {
+                        gl.uniform_1_i32_slice(uniform.location.as_ref(), &value)
+                    }
+                    UniformValue::Vec2Arr(value) => {
+                        gl.uniform_2_f32_slice(uniform.location.as_ref(), &value)
+                    }
+                    UniformValue::Vec3Arr(value) => {
+                        gl.uniform_3_f32_slice(uniform.location.as_ref(), &value)
+                    }
+                    UniformValue::Vec4Arr(value) => {
+                        gl.uniform_4_f32_slice(uniform.location.as_ref(), &value)
+                    }
                 }
             }
-        }
 
-        // Bind textures
-        for (unit, tex) in &self.textures {
-            // log::info!("\tBinding texture {} to unit {:?}", tex.name, unit);
+            // Bind textures
+            for (unit, tex) in &self.textures {
+                // log::info!("\tBinding texture {} to unit {:?}", tex.name, unit);
 
-            gl.active_texture(GL::TEXTURE0 + (*unit as u32));
+                gl.active_texture(GL::TEXTURE0 + (*unit as u32));
 
-            let tex_borrow = RefCell::borrow(&tex);
-            let target = match tex_borrow.is_cubemap {
-                false => GL::TEXTURE_2D,
-                true => GL::TEXTURE_CUBE_MAP,
-            };
-            gl.bind_texture(target, tex_borrow.gl_handle.as_ref());
-        }
+                let tex_borrow = RefCell::borrow(&tex);
+                let target = match tex_borrow.is_cubemap {
+                    false => GL::TEXTURE_2D,
+                    true => GL::TEXTURE_CUBE_MAP,
+                };
+                gl.bind_texture(target, tex_borrow.gl_handle);
+            }
 
-        if self.double_sided {
-            gl.disable(GL::CULL_FACE);
-        } else {
-            gl.enable(GL::CULL_FACE);
+            if self.double_sided {
+                gl.disable(GL::CULL_FACE);
+            } else {
+                gl.enable(GL::CULL_FACE);
+            }
         }
     }
 
-    pub fn unbind_from_drawing(&self, gl: &WebGl2RenderingContext) {
-        for (unit, tex) in &self.textures {
-            gl.active_texture(GL::TEXTURE0 + (*unit as u32));
+    pub fn unbind_from_drawing(&self, gl: &glow::Context) {
+        unsafe {
+            for (unit, tex) in &self.textures {
+                gl.active_texture(GL::TEXTURE0 + (*unit as u32));
 
-            let tex_borrow = RefCell::borrow(&tex);
-            let target = match tex_borrow.is_cubemap {
-                false => GL::TEXTURE_2D,
-                true => GL::TEXTURE_CUBE_MAP,
-            };
-            gl.bind_texture(target, None);
+                let tex_borrow = RefCell::borrow(&tex);
+                let target = match tex_borrow.is_cubemap {
+                    false => GL::TEXTURE_2D,
+                    true => GL::TEXTURE_CUBE_MAP,
+                };
+                gl.bind_texture(target, None);
+            }
+
+            gl.use_program(None);
         }
-
-        gl.use_program(None);
     }
 }
 

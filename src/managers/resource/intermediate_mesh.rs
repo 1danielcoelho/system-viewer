@@ -5,12 +5,11 @@ use super::{
 };
 use crate::managers::resource::mesh::DynamicPrimitive;
 use crate::utils::gl::GL;
+use crate::utils::memory::any_slice_to_u8_slice;
 use crate::GLCTX;
-use js_sys::WebAssembly;
+use glow::*;
 use na::{Vector2, Vector3, Vector4};
 use std::{cell::RefCell, rc::Rc};
-use wasm_bindgen::JsCast;
-use web_sys::{WebGl2RenderingContext, WebGlBuffer};
 
 #[derive(Clone)]
 pub struct IntermediateMesh {
@@ -32,50 +31,6 @@ pub struct IntermediatePrimitive {
     pub mode: u32,
     pub mat: Option<Rc<RefCell<Material>>>,
     pub collider: Option<Box<dyn Collider>>,
-}
-
-pub fn fill_float_attribute_buffer(
-    ctx: &WebGl2RenderingContext,
-    location: u32,
-    num_elements: u32,
-    out_buffer: &mut WebGlBuffer,
-) {
-    if num_elements == 0 {
-        return;
-    }
-
-    let memory_buffer = wasm_bindgen::memory()
-        .dyn_into::<WebAssembly::Memory>()
-        .unwrap()
-        .buffer();
-    let buffer_array =
-        js_sys::Float32Array::new(&memory_buffer).subarray(location, location + num_elements);
-    ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&out_buffer));
-    ctx.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &buffer_array, GL::STATIC_DRAW);
-}
-
-pub fn fill_short_element_buffer(
-    ctx: &WebGl2RenderingContext,
-    location: u32,
-    num_elements: u32,
-    out_buffer: &mut WebGlBuffer,
-) {
-    if num_elements == 0 {
-        return;
-    }
-
-    let memory_buffer = wasm_bindgen::memory()
-        .dyn_into::<WebAssembly::Memory>()
-        .unwrap()
-        .buffer();
-    let buffer_array =
-        js_sys::Uint16Array::new(&memory_buffer).subarray(location, location + num_elements);
-    ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&out_buffer));
-    ctx.buffer_data_with_array_buffer_view(
-        GL::ELEMENT_ARRAY_BUFFER,
-        &buffer_array,
-        GL::STATIC_DRAW,
-    );
 }
 
 pub fn generate_dynamic_mesh() -> Rc<RefCell<Mesh>> {
@@ -127,75 +82,65 @@ pub fn generate_screen_space_quad(
         let ctx = ref_mut.as_ref().unwrap();
 
         // Create VAO
-        let vao = ctx.create_vertex_array();
-        ctx.bind_vertex_array(vao.as_ref());
+        unsafe {
+            let vao = ctx.create_vertex_array().unwrap();
+            ctx.bind_vertex_array(Some(vao));
 
-        // Indices
-        let mut index_buffer = ctx.create_buffer().unwrap();
-        fill_short_element_buffer(
-            &ctx,
-            indices.as_ptr() as u32 / 2, // Divided by 2 because the wasm_bindgen memory will be interpreted as a short array, so the position of indices needs to be divided by 2 bytes to get to the correct element
-            indices.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
-            &mut index_buffer,
-        );
-        ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&index_buffer));
+            // Indices
+            let index_buffer = ctx.create_buffer().unwrap();
+            let indices_as_u8 = any_slice_to_u8_slice(&indices);
+            ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(index_buffer));
+            ctx.buffer_data_u8_slice(GL::ELEMENT_ARRAY_BUFFER, indices_as_u8, GL::STATIC_DRAW);
 
-        // Positions
-        let mut position_buffer = ctx.create_buffer().unwrap();
-        fill_float_attribute_buffer(
-            &ctx,
-            positions.as_ptr() as u32 / 4, // Divided by 4 because the wasm_bindgen memory buffer will be interpreted as an array of floats, so the prim.positions' array pointer target address (u8* basically) needs to be divided by 4 to get the correct starting element
-            positions.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
-            &mut position_buffer,
-        );
-        ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::Position as u32,
-            2,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
+            // Positions
+            let position_buffer = ctx.create_buffer().unwrap();
+            let positions_as_u8 = any_slice_to_u8_slice(&positions);
+            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(position_buffer));
+            ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, positions_as_u8, GL::STATIC_DRAW);
+            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
+            ctx.vertex_attrib_pointer_f32(
+                PrimitiveAttribute::Position as u32,
+                2,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
 
-        // UV0
-        let mut uv0_buffer = ctx.create_buffer().unwrap();
-        fill_float_attribute_buffer(
-            &ctx,
-            uvs.as_ptr() as u32 / 4,
-            uvs.len() as u32 * 2,
-            &mut uv0_buffer,
-        );
-        ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
-        ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&uv0_buffer));
-        ctx.vertex_attrib_pointer_with_i32(
-            PrimitiveAttribute::UV0 as u32,
-            2,
-            GL::FLOAT,
-            false,
-            0,
-            0,
-        );
+            // UV0
+            let uv0_buffer = ctx.create_buffer().unwrap();
+            let uv0_as_u8 = any_slice_to_u8_slice(&uvs);
+            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(uv0_buffer));
+            ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, uv0_as_u8, GL::STATIC_DRAW);
+            ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
+            ctx.vertex_attrib_pointer_f32(
+                PrimitiveAttribute::UV0 as u32,
+                2,
+                GL::FLOAT,
+                false,
+                0,
+                0,
+            );
 
-        ctx.bind_vertex_array(None);
+            ctx.bind_vertex_array(None);
 
-        let mut primitive = Primitive {
-            name: String::from("0"),
-            index_count: indices.len() as i32,
-            vao: vao.unwrap(),
-            mode: GL::TRIANGLES,
-            has_normals: false,
-            has_tangents: false,
-            has_colors: false,
-            has_uv0: true,
-            has_uv1: false,
-            compatible_hash: 0,
-            default_material,
-            source_data: None,
-        };
-        primitive.update_hash();
-        primitives.push(primitive);
+            let mut primitive = Primitive {
+                name: String::from("0"),
+                index_count: indices.len() as i32,
+                vao,
+                mode: GL::TRIANGLES,
+                has_normals: false,
+                has_tangents: false,
+                has_colors: false,
+                has_uv0: true,
+                has_uv1: false,
+                compatible_hash: 0,
+                default_material,
+                source_data: None,
+            };
+            primitive.update_hash();
+            primitives.push(primitive);
+        }
     });
 
     let result = Rc::new(RefCell::new(Mesh {
@@ -216,164 +161,139 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
         let ref_mut = ctx.borrow_mut();
         let ctx = ref_mut.as_ref().unwrap();
 
-        for prim in &inter.primitives {
-            // Create VAO
-            let vao = ctx.create_vertex_array();
-            ctx.bind_vertex_array(vao.as_ref());
+        unsafe {
+            for prim in &inter.primitives {
+                // Create VAO
+                let vao = ctx.create_vertex_array().unwrap();
+                ctx.bind_vertex_array(Some(vao));
 
-            // Indices
-            let mut index_buffer = ctx.create_buffer().unwrap();
-            fill_short_element_buffer(
-                &ctx,
-                prim.indices.as_ptr() as u32 / 2, // Divided by 2 because the wasm_bindgen memory will be interpreted as a short array, so the position of indices needs to be divided by 2 bytes to get to the correct element
-                prim.indices.len() as u32, // Not multiplying anything because we have exactly this many u16 indices
-                &mut index_buffer,
-            );
-            ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(&index_buffer));
+                // Indices
+                let index_buffer = ctx.create_buffer().unwrap();
+                let indices_as_u8 = any_slice_to_u8_slice(&prim.indices);
+                ctx.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, Some(index_buffer));
+                ctx.buffer_data_u8_slice(GL::ELEMENT_ARRAY_BUFFER, indices_as_u8, GL::STATIC_DRAW);
 
-            // Positions
-            let mut position_buffer = ctx.create_buffer().unwrap();
-            fill_float_attribute_buffer(
-                &ctx,
-                prim.positions.as_ptr() as u32 / 4, // Divided by 4 because the wasm_bindgen memory buffer will be interpreted as an array of floats, so the prim.positions' array pointer target address (u8* basically) needs to be divided by 4 to get the correct starting element
-                prim.positions.len() as u32 * 3, // Multiplying by 3 because this will be moved into an f32 buffer, and we have len * 3 f32s
-                &mut position_buffer,
-            );
-            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
-            ctx.vertex_attrib_pointer_with_i32(
-                PrimitiveAttribute::Position as u32,
-                3,
-                GL::FLOAT,
-                false,
-                0,
-                0,
-            );
+                // Positions
+                let position_buffer = ctx.create_buffer().unwrap();
+                let positions_as_u8 = any_slice_to_u8_slice(&prim.positions);
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(position_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, positions_as_u8, GL::STATIC_DRAW);
+                ctx.enable_vertex_attrib_array(PrimitiveAttribute::Position as u32);
+                ctx.vertex_attrib_pointer_f32(
+                    PrimitiveAttribute::Position as u32,
+                    3,
+                    GL::FLOAT,
+                    false,
+                    0,
+                    0,
+                );
 
-            // Normals
-            let has_normals = prim.normals.len() > 0;
-            let mut normal_buffer = ctx.create_buffer().unwrap();
-            fill_float_attribute_buffer(
-                &ctx,
-                prim.normals.as_ptr() as u32 / 4,
-                prim.normals.len() as u32 * 3,
-                &mut normal_buffer,
-            );
-            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&normal_buffer));
-            ctx.vertex_attrib_pointer_with_i32(
-                PrimitiveAttribute::Normal as u32,
-                3,
-                GL::FLOAT,
-                false,
-                0,
-                0,
-            );
+                // Normals
+                let has_normals = prim.normals.len() > 0;
+                let normal_buffer = ctx.create_buffer().unwrap();
+                let normals_as_u8 = any_slice_to_u8_slice(&prim.normals);
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(normal_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, normals_as_u8, GL::STATIC_DRAW);
+                ctx.enable_vertex_attrib_array(PrimitiveAttribute::Normal as u32);
+                ctx.vertex_attrib_pointer_f32(
+                    PrimitiveAttribute::Normal as u32,
+                    3,
+                    GL::FLOAT,
+                    false,
+                    0,
+                    0,
+                );
 
-            // Tangents
-            let has_tangents = prim.tangents.len() > 0;
-            let mut tangent_buffer = ctx.create_buffer().unwrap();
-            fill_float_attribute_buffer(
-                &ctx,
-                prim.tangents.as_ptr() as u32 / 4,
-                prim.tangents.len() as u32 * 3,
-                &mut tangent_buffer,
-            );
-            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Tangent as u32);
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&tangent_buffer));
-            ctx.vertex_attrib_pointer_with_i32(
-                PrimitiveAttribute::Tangent as u32,
-                3,
-                GL::FLOAT,
-                false,
-                0,
-                0,
-            );
+                // Tangents
+                let has_tangents = prim.tangents.len() > 0;
+                let tangent_buffer = ctx.create_buffer().unwrap();
+                let tangents_as_u8 = any_slice_to_u8_slice(&prim.tangents);
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(tangent_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, tangents_as_u8, GL::STATIC_DRAW);
+                ctx.enable_vertex_attrib_array(PrimitiveAttribute::Tangent as u32);
+                ctx.vertex_attrib_pointer_f32(
+                    PrimitiveAttribute::Tangent as u32,
+                    3,
+                    GL::FLOAT,
+                    false,
+                    0,
+                    0,
+                );
 
-            // Colors
-            let has_colors = prim.colors.len() > 0;
-            let mut color_buffer = ctx.create_buffer().unwrap();
-            fill_float_attribute_buffer(
-                &ctx,
-                prim.colors.as_ptr() as u32 / 4,
-                prim.colors.len() as u32 * 4,
-                &mut color_buffer,
-            );
-            ctx.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&color_buffer));
-            ctx.vertex_attrib_pointer_with_i32(
-                PrimitiveAttribute::Color as u32,
-                4,
-                GL::FLOAT,
-                false,
-                0,
-                0,
-            );
+                // Colors
+                // TODO: Can I just not create these buffers if there's no data?
+                let has_colors = prim.colors.len() > 0;
+                let color_buffer = ctx.create_buffer().unwrap();
+                let colors_as_u8 = any_slice_to_u8_slice(&prim.colors);
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(color_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, colors_as_u8, GL::STATIC_DRAW);
+                ctx.enable_vertex_attrib_array(PrimitiveAttribute::Color as u32);
+                ctx.vertex_attrib_pointer_f32(
+                    PrimitiveAttribute::Color as u32,
+                    4,
+                    GL::FLOAT,
+                    false,
+                    0,
+                    0,
+                );
 
-            // UV0
-            let has_uv0 = prim.uv0.len() > 0;
-            let mut uv0_buffer = ctx.create_buffer().unwrap();
-            fill_float_attribute_buffer(
-                &ctx,
-                prim.uv0.as_ptr() as u32 / 4,
-                prim.uv0.len() as u32 * 2,
-                &mut uv0_buffer,
-            );
-            ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&uv0_buffer));
-            ctx.vertex_attrib_pointer_with_i32(
-                PrimitiveAttribute::UV0 as u32,
-                2,
-                GL::FLOAT,
-                false,
-                0,
-                0,
-            );
+                // UV0
+                let has_uv0 = prim.uv0.len() > 0;
+                let color_buffer = ctx.create_buffer().unwrap();
+                let uv0_as_u8 = any_slice_to_u8_slice(&prim.uv0);
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(color_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, uv0_as_u8, GL::STATIC_DRAW);
+                ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV0 as u32);
+                ctx.vertex_attrib_pointer_f32(
+                    PrimitiveAttribute::UV0 as u32,
+                    2,
+                    GL::FLOAT,
+                    false,
+                    0,
+                    0,
+                );
 
-            // UV1
-            let has_uv1 = prim.uv1.len() > 0;
-            let mut uv1_buffer = ctx.create_buffer().unwrap();
-            fill_float_attribute_buffer(
-                &ctx,
-                prim.uv0.as_ptr() as u32 / 4,
-                prim.uv0.len() as u32 * 2,
-                &mut uv1_buffer,
-            );
-            ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
-            ctx.bind_buffer(GL::ARRAY_BUFFER, Some(&uv0_buffer));
-            ctx.vertex_attrib_pointer_with_i32(
-                PrimitiveAttribute::UV1 as u32,
-                2,
-                GL::FLOAT,
-                false,
-                0,
-                0,
-            );
+                // UV1
+                let has_uv1 = prim.uv1.len() > 0;
+                let color_buffer = ctx.create_buffer().unwrap();
+                let uv1_as_u8 = any_slice_to_u8_slice(&prim.uv1);
+                ctx.bind_buffer(GL::ARRAY_BUFFER, Some(color_buffer));
+                ctx.buffer_data_u8_slice(GL::ARRAY_BUFFER, uv1_as_u8, GL::STATIC_DRAW);
+                ctx.enable_vertex_attrib_array(PrimitiveAttribute::UV1 as u32);
+                ctx.vertex_attrib_pointer_f32(
+                    PrimitiveAttribute::UV1 as u32,
+                    2,
+                    GL::FLOAT,
+                    false,
+                    0,
+                    0,
+                );
 
-            ctx.bind_vertex_array(None);
+                ctx.bind_vertex_array(None);
 
-            let mut primitive = Primitive {
-                name: String::from("0"),
-                index_count: prim.indices.len() as i32,
-                vao: vao.unwrap(),
-                mode: prim.mode,
-                has_normals,
-                has_tangents,
-                has_colors,
-                has_uv0,
-                has_uv1,
-                compatible_hash: 0,
-                default_material: prim.mat.clone(),
-                source_data: None,
-            };
-            primitive.update_hash();
-            log::info!(
-                "Set prim compatible hash of prim '{}' of mesh '{}' as '{}'",
-                primitive.name,
-                inter.name,
-                primitive.compatible_hash
-            );
-            primitives.push(primitive);
+                let mut primitive = Primitive {
+                    name: String::from("0"),
+                    index_count: prim.indices.len() as i32,
+                    vao,
+                    mode: prim.mode,
+                    has_normals,
+                    has_tangents,
+                    has_colors,
+                    has_uv0,
+                    has_uv1,
+                    compatible_hash: 0,
+                    default_material: prim.mat.clone(),
+                    source_data: None,
+                };
+                primitive.update_hash();
+                log::info!(
+                    "Set prim compatible hash of prim '{}' of mesh '{}' as '{}'",
+                    primitive.name,
+                    inter.name,
+                    primitive.compatible_hash
+                );
+                primitives.push(primitive);
+            }
         }
     });
 

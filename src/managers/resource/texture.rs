@@ -1,4 +1,3 @@
-use web_sys::WebGlTexture;
 use crate::managers::resource::material::ShaderDefine;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -29,6 +28,5 @@ pub struct Texture {
     pub num_channels: u8,
     pub gl_format: u32,
     pub is_cubemap: bool,
-    pub gl_handle: Option<WebGlTexture>,
+    pub gl_handle: Option<glow::Texture>,
 }
-

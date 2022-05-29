@@ -28,7 +28,9 @@ pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
         .expect("failed to request animation frame");
 }
 
-pub fn get_gl_context(canvas: &HtmlCanvasElement) -> WebGl2RenderingContext {
+pub fn get_gl_context() -> glow::Context {
+    let canvas = get_canvas();
+
     let gl: WebGl2RenderingContext = canvas
         .get_context("webgl2")
         .unwrap()
@@ -36,7 +38,7 @@ pub fn get_gl_context(canvas: &HtmlCanvasElement) -> WebGl2RenderingContext {
         .dyn_into()
         .unwrap();
 
-    return gl;
+    return glow::Context::from_webgl2_context(gl);
 }
 
 pub async fn request_text(url: &str) -> Result<String, JsValue> {
