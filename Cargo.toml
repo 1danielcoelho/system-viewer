@@ -16,11 +16,11 @@ getrandom = { version = "0.2", features = ["js"] }
 console_error_panic_hook = "=0.1.5"
 console_log = "0.2"
 chrono = "0.4"
-egui = { version = "0.9.0", features = ["persistence"] }
+glow = "0.11.2"
+egui = { version = "0.18.1", features = ["persistence"] }
+egui_glow = "0.18.1"
 futures = "0.3"
 gltf = { version = "0.15.2", features = ["extras", "names"]}
-glow = "0.11.2"
-gui_backend = { path = "gui_backend", features = ["persistence"] }
 image = { version = "0.23.12", default-features = false, features = ["jpeg"] }
 instant = { version = "0.1", features = [ "wasm-bindgen", "now" ] }
 js-sys = "0.3.19"

@@ -6,9 +6,8 @@ use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
-use crate::utils::web::{local_storage_clear, local_storage_enable, local_storage_get};
+use crate::utils::web::{get_window, local_storage_clear, local_storage_enable, local_storage_get};
 use crate::UICTX;
-use gui_backend::WebInput;
 use lazy_static::__Deref;
 use na::*;
 use std::collections::VecDeque;
@@ -18,7 +17,7 @@ pub mod details_ui;
 const DEBUG: bool = true;
 
 pub struct InterfaceManager {
-    backend: gui_backend::WebBackend,
+    painter: egui_glow::Painter,
     web_input: WebInput,
 
     selected_scene_desc_name: String,
@@ -32,42 +31,32 @@ pub struct InterfaceManager {
 }
 impl InterfaceManager {
     pub fn new() -> Self {
-        let new_man = Self {
-            backend: gui_backend::WebBackend::new("rustCanvas")
-                .expect("Failed to make a web backend for egui"),
-            web_input: Default::default(),
-            selected_scene_desc_name: String::from(""),
-            body_list_filter: String::from(""),
-            frame_times: vec![16.66; 15].into_iter().collect(),
-            time_of_last_update: -2.0,
-            last_frame_rate: 60.0,
-            local_storage_ok: local_storage_get("storage_ok").is_some(),
-        };
+        return UICTX.with(|ctx| {
+            let new_man = Self {
+                painter: egui_glow::Painter::new(ctx.clone(), None, "").unwrap(),
+                web_input: Default::default(),
+                selected_scene_desc_name: String::from(""),
+                body_list_filter: String::from(""),
+                frame_times: vec![16.66; 15].into_iter().collect(),
+                time_of_last_update: -2.0,
+                last_frame_rate: 60.0,
+                local_storage_ok: local_storage_get("storage_ok").is_some(),
+            };
 
-        if !new_man.local_storage_ok {
-            local_storage_clear();
-        }
+            if !new_man.local_storage_ok {
+                local_storage_clear();
+            }
 
-        let rect = egui::Rect {
-            min: egui::pos2(0.0, 0.0),
-            max: egui::pos2(0.0, 0.0),
-        };
+            let rect = egui::Rect {
+                min: egui::pos2(0.0, 0.0),
+                max: egui::pos2(0.0, 0.0),
+            };
 
-        UICTX.with(|ui| {
-            let mut ui = ui.borrow_mut();
-            ui.replace(egui::Ui::new(
-                new_man.backend.ctx.clone(),
-                egui::LayerId::background(),
-                egui::Id::new("interface"),
-                rect,
-                rect,
-            ));
+            log::info!("Loading egui state...");
+            gui_backend::load_memory(&new_man.backend.ctx);
+
+            return new_man;
         });
-
-        log::info!("Loading egui state...");
-        gui_backend::load_memory(&new_man.backend.ctx);
-
-        return new_man;
     }
 
     /// This runs before all systems, and starts collecting all the UI elements we'll draw, as
@@ -118,8 +107,8 @@ impl InterfaceManager {
 
         // If we have pointer lock then we don't really want to use the UI (we're rotating/orbiting/etc.)
         // so don't give the updated mouse position to egui
-        let window = web_sys::window().unwrap();
-        let doc = window.document().unwrap();
+        let window = get_window();
+        let doc = window.document().unwrap(); // TODO: Make a get_document?
         if let None = doc.pointer_lock_element() {
             raw_input.events.append(&mut state.input.egui_events);
         }

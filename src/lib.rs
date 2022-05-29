@@ -15,7 +15,6 @@ use crate::utils::web::{
     get_canvas, get_gl_context, local_storage_remove, request_animation_frame, request_text,
     setup_event_handlers,
 };
-use egui::Ui;
 use futures::future::join_all;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -29,16 +28,14 @@ mod managers;
 mod systems;
 mod utils;
 
-// Note that even though these are pub, we can't really use them spaghettily from within
-// the engine as they're mut borrowed in engine update, so it's not so bad.
-// This is mostly used so that we can affect the engine from JS callbacks.
 // Also, having the webgl context in here is actually safer, as there is no guarantee two random
 // callers pulled it from the canvas at the same time
 thread_local! {
     pub static ENGINE: RefCell<Option<Engine>> = RefCell::new(None);
     pub static STATE: RefCell<Option<AppState>> = RefCell::new(None);
+    // TODO: I probably don't need to RefCell this one either
     pub static GLCTX: RefCell<Option<glow::Context>> = RefCell::new(None);
-    pub static UICTX: RefCell<Option<Ui>> = RefCell::new(None);
+    pub static UICTX: egui::Context = egui::Context::default();
 }
 
 #[wasm_bindgen(start)]
