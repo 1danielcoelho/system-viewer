@@ -456,7 +456,19 @@ impl ResourceManager {
         }
 
         let full_path: String = "public/gltf/".to_owned() + identifier;
-        // fetch_bytes(&full_path, "gltf");
+
+        let internal_full_path = full_path.clone();
+        spawn_local(async move {
+            let mut vec = request_bytes(&internal_full_path).await.unwrap();
+
+            ENGINE.with(|e| {
+                let mut ref_mut = e.borrow_mut();
+                let e = ref_mut.as_mut().unwrap();
+
+                e.receive_bytes(&internal_full_path, "gltf", &mut vec);
+            });
+        });
+
         let temp_mesh = Some(generate_temp());
         self.meshes
             .insert(full_path, temp_mesh.as_ref().unwrap().clone());
@@ -787,24 +799,28 @@ impl ResourceManager {
         identifier: &str,
         is_cubemap: bool,
     ) -> Option<Rc<RefCell<Texture>>> {
-        let full_path: String = "public/textures/".to_owned() + identifier;
-
-        if let Some(tex) = self.textures.get(&full_path) {
+        if let Some(tex) = self.textures.get(identifier) {
             return Some(tex.clone());
         }
 
+        // log::info!(
+        //     "Failed to find texture {} in texture map {:#?}",
+        //     full_path,
+        //     self.textures
+        // );
+
         // We don't have this one, put out a request for this asset and just return
         // the default texture instead
-        let internal_full_path = full_path.clone();
+        let internal_full_path = identifier.to_owned();
         if is_cubemap {
             spawn_local(async move {
                 let urls = [
-                    &(internal_full_path.clone() + "/Right.jpg"),
-                    &(internal_full_path.clone() + "/Left.jpg"),
-                    &(internal_full_path.clone() + "/Top.jpg"),
-                    &(internal_full_path.clone() + "/Bottom.jpg"),
-                    &(internal_full_path.clone() + "/Front.jpg"),
-                    &(internal_full_path.clone() + "/Back.jpg"),
+                    &(internal_full_path.to_owned() + "/Right.jpg"),
+                    &(internal_full_path.to_owned() + "/Left.jpg"),
+                    &(internal_full_path.to_owned() + "/Top.jpg"),
+                    &(internal_full_path.to_owned() + "/Bottom.jpg"),
+                    &(internal_full_path.to_owned() + "/Front.jpg"),
+                    &(internal_full_path.to_owned() + "/Back.jpg"),
                 ];
 
                 let mut vecs: Vec<Vec<u8>> = join_all(urls.iter().map(|url| request_bytes(url)))
@@ -874,9 +890,9 @@ impl ResourceManager {
                 .borrow()
                 .clone(),
         ));
-        tex.borrow_mut().name = full_path.to_owned();
+        tex.borrow_mut().name = identifier.to_owned();
 
-        self.textures.insert(full_path, tex.clone());
+        self.textures.insert(identifier.to_owned(), tex.clone());
 
         return Some(tex);
     }

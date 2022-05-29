@@ -345,7 +345,7 @@ impl SceneManager {
             scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
             scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
                 TextureUnit::BaseColor,
-                res_man.get_or_request_texture("starmap_16k", true),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() + "starmap_16k"), true),
             );
         }
 
@@ -870,7 +870,7 @@ impl SceneManager {
             scene.skybox_mat = res_man.instantiate_material("skybox", "test_skybox");
             scene.skybox_mat.as_ref().unwrap().borrow_mut().set_texture(
                 TextureUnit::BaseColor,
-                res_man.get_or_request_texture("starmap_16k", true),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() + "starmap_16k"), true),
             );
         }
 

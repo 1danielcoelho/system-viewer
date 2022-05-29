@@ -321,7 +321,7 @@ pub fn get_body_material(
 
             mat_mut.set_texture(
                 TextureUnit::BaseColor,
-                res_man.get_or_request_texture(path, false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() + path), false),
             );
         }
 
@@ -330,7 +330,7 @@ pub fn get_body_material(
 
             mat_mut.set_texture(
                 TextureUnit::Normal,
-                res_man.get_or_request_texture(path, false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() +path), false),
             );
         }
 
@@ -343,7 +343,7 @@ pub fn get_body_material(
 
             mat_mut.set_texture(
                 TextureUnit::MetallicRoughness,
-                res_man.get_or_request_texture(path, false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() +path), false),
             );
         }
 
@@ -356,7 +356,7 @@ pub fn get_body_material(
 
             mat_mut.set_texture(
                 TextureUnit::Emissive,
-                res_man.get_or_request_texture(path, false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() +path), false),
             );
         }
 
