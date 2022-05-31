@@ -7,7 +7,7 @@ use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::{get_window, local_storage_clear, local_storage_enable, local_storage_get};
-use crate::UICTX;
+use crate::{GLCTX, UICTX};
 use lazy_static::__Deref;
 use na::*;
 use std::collections::VecDeque;
@@ -18,7 +18,6 @@ const DEBUG: bool = true;
 
 pub struct InterfaceManager {
     painter: egui_glow::Painter,
-    web_input: WebInput,
 
     selected_scene_desc_name: String,
     body_list_filter: String,
@@ -31,38 +30,132 @@ pub struct InterfaceManager {
 }
 impl InterfaceManager {
     pub fn new() -> Self {
-        return UICTX.with(|ctx| {
-            let new_man = Self {
-                painter: egui_glow::Painter::new(ctx.clone(), None, "").unwrap(),
-                web_input: Default::default(),
-                selected_scene_desc_name: String::from(""),
-                body_list_filter: String::from(""),
-                frame_times: vec![16.66; 15].into_iter().collect(),
-                time_of_last_update: -2.0,
-                last_frame_rate: 60.0,
-                local_storage_ok: local_storage_get("storage_ok").is_some(),
-            };
+        return GLCTX.with(|glctx| {
+            return UICTX.with(|uictx| {
+                let new_man = Self {
+                    painter: egui_glow::Painter::new(glctx.clone(), None, "").unwrap(),
+                    selected_scene_desc_name: String::from(""),
+                    body_list_filter: String::from(""),
+                    frame_times: vec![16.66; 15].into_iter().collect(),
+                    time_of_last_update: -2.0,
+                    last_frame_rate: 60.0,
+                    local_storage_ok: local_storage_get("storage_ok").is_some(),
+                };
 
-            if !new_man.local_storage_ok {
-                local_storage_clear();
-            }
+                if !new_man.local_storage_ok {
+                    local_storage_clear();
+                }
 
-            let rect = egui::Rect {
-                min: egui::pos2(0.0, 0.0),
-                max: egui::pos2(0.0, 0.0),
-            };
+                let rect = egui::Rect {
+                    min: egui::pos2(0.0, 0.0),
+                    max: egui::pos2(0.0, 0.0),
+                };
 
-            log::info!("Loading egui state...");
-            gui_backend::load_memory(&new_man.backend.ctx);
+                log::info!("Loading egui state...");
+                if new_man.local_storage_ok {
+                    if let Some(memory_string) = local_storage_get("egui_memory_json") {
+                        if let Ok(memory) = serde_json::from_str(&memory_string) {
+                            *uictx.memory() = memory;
+                        } else {
+                            log::error!(
+                                "Failed to load egui state from memory string {}",
+                                memory_string
+                            );
+                        }
+                    }
+                }
 
-            return new_man;
+                return new_man;
+            });
         });
     }
 
     /// This runs before all systems, and starts collecting all the UI elements we'll draw, as
     /// well as draws the main UI
     pub fn begin_frame(&mut self, state: &mut AppState) {
-        self.pre_draw(state);
+        state.input.over_ui = false;
+
+        // Lets fill this in and give it to egui
+        let new_input = egui::RawInput::default();
+        new_input.screen_rect = Some(egui::Rect {
+            min: egui::Pos2::new(0.0, 0.0),
+            max: egui::Pos2::new(state.canvas_width as f32, state.canvas_height as f32),
+        });
+
+        // If we have pointer lock then we don't really want to use the UI (we're rotating/orbiting/etc.)
+        // so don't give the updated mouse position to egui
+        let window = get_window();
+        let doc = window.document().unwrap(); // TODO: Make a get_document?
+        if let None = doc.pointer_lock_element() {
+            new_input.events.append(&mut state.input.egui_events);
+        }
+        new_input.modifiers = state.input.modifiers;
+
+        UICTX.with(|uictx| {
+            // TODO: Pointers are events now :(
+            // new_input.scroll_delta = egui::Vec2 {
+            //     x: state.input.scroll_delta_x as f32,
+            //     y: -state.input.scroll_delta_y as f32,
+            // };
+
+            uictx.begin_frame(new_input);
+            // let rect = self.backend.ctx.available_rect();
+
+            // Always record our new frame times
+            self.frame_times.pop_back();
+            self.frame_times.push_front(state.real_delta_time_s);
+
+            // Update framerate display only once a second or else it's too hard to read
+            if state.real_time_s - self.time_of_last_update > 1.0 {
+                self.time_of_last_update = state.real_time_s;
+
+                let new_frame_rate: f64 =
+                    1.0 / (self.frame_times.iter().sum::<f64>() / (self.frame_times.len() as f64));
+                self.last_frame_rate = new_frame_rate;
+            }
+
+            let mut has_kb: bool = false;
+            let mut egui_consuming_pointer: bool = false;
+
+            has_kb = uictx.wants_keyboard_input();
+            egui_consuming_pointer = uictx.wants_pointer_input();
+
+            // Suppress our inputs if egui wants it instead
+            {
+                if egui_consuming_pointer {
+                    state.input.scroll_delta_x = 0;
+                    state.input.scroll_delta_y = 0;
+                }
+
+                // Consume keyboard input if egui has keyboard focus, to prevent
+                // the input manager from also handling these
+                if has_kb {
+                    if state.input.forward == ButtonState::Pressed {
+                        state.input.forward = ButtonState::Handled;
+                    }
+
+                    if state.input.left == ButtonState::Pressed {
+                        state.input.left = ButtonState::Handled;
+                    }
+
+                    if state.input.right == ButtonState::Pressed {
+                        state.input.right = ButtonState::Handled;
+                    }
+
+                    if state.input.back == ButtonState::Pressed {
+                        state.input.back = ButtonState::Handled;
+                    }
+
+                    if state.input.up == ButtonState::Pressed {
+                        state.input.up = ButtonState::Handled;
+                    }
+
+                    if state.input.down == ButtonState::Pressed {
+                        state.input.down = ButtonState::Handled;
+                    }
+                }
+            }
+        });
     }
 
     /// This runs after all systems, and draws the collected UI elements to the framebuffer
@@ -71,131 +164,32 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
-        orbit_man: &OrbitManager,
+        orbit_man: &OrbitManager, // TODO: This shouldn't be done this way, man
     ) {
         self.draw_main_ui(state, scene_man, res_man, orbit_man);
 
-        self.draw();
+        UICTX.with(|uictx| {
+            let output = uictx.end_frame();
 
-        let mut egui_consuming_pointer: bool = false;
-        UICTX.with(|ui| {
-            let ui = ui.borrow();
-            let ui_ref = ui.as_ref().unwrap();
-            let ctx = ui_ref.ctx();
+            let clipped_primitives = uictx.tessellate(output.shapes);
 
-            egui_consuming_pointer = ctx.wants_pointer_input();
-        });
+            // TODO: pixels_per_point
+            self.painter.paint_primitives(
+                [state.canvas_width, state.canvas_height],
+                1.0,
+                &clipped_primitives,
+            );
 
-        // Always reset the hovered entity even if we won't get to
-        // hover new ones: This prevents the tooltip from sticking around if the UI
-        // starts covering it (which can also include the label tooltip itself)
-        state.hovered = None;
-        if let Some(scene) = scene_man.get_main_scene_mut() {
-            if !egui_consuming_pointer {
-                handle_pointer_on_scene(state, scene);
-            }
-        }
-    }
-
-    fn pre_draw(&mut self, state: &mut AppState) {
-        state.input.over_ui = false;
-
-        let mut raw_input = self.web_input.new_frame(egui::Vec2 {
-            x: state.canvas_width as f32,
-            y: state.canvas_height as f32,
-        });
-
-        // If we have pointer lock then we don't really want to use the UI (we're rotating/orbiting/etc.)
-        // so don't give the updated mouse position to egui
-        let window = get_window();
-        let doc = window.document().unwrap(); // TODO: Make a get_document?
-        if let None = doc.pointer_lock_element() {
-            raw_input.events.append(&mut state.input.egui_events);
-        }
-        raw_input.modifiers = state.input.modifiers;
-        raw_input.scroll_delta = egui::Vec2 {
-            x: state.input.scroll_delta_x as f32,
-            y: -state.input.scroll_delta_y as f32,
-        };
-
-        self.backend.begin_frame(raw_input);
-        let rect = self.backend.ctx.available_rect();
-
-        // Always record our new frame times
-        self.frame_times.pop_back();
-        self.frame_times.push_front(state.real_delta_time_s);
-
-        // Update framerate display only once a second or else it's too hard to read
-        if state.real_time_s - self.time_of_last_update > 1.0 {
-            self.time_of_last_update = state.real_time_s;
-
-            let new_frame_rate: f64 =
-                1.0 / (self.frame_times.iter().sum::<f64>() / (self.frame_times.len() as f64));
-            self.last_frame_rate = new_frame_rate;
-        }
-
-        let mut has_kb: bool = false;
-        let mut egui_consuming_pointer: bool = false;
-
-        UICTX.with(|ui| {
-            let mut ui = ui.borrow_mut();
-            ui.replace(egui::Ui::new(
-                self.backend.ctx.clone(),
-                egui::LayerId::background(),
-                egui::Id::new("interface"),
-                rect,
-                rect,
-            ));
-
-            let ui_ref = ui.as_ref().unwrap();
-            has_kb = ui_ref.ctx().wants_keyboard_input();
-            egui_consuming_pointer = ui_ref.ctx().wants_pointer_input();
-        });
-
-        // Suppress our inputs if egui wants it instead
-        {
-            if egui_consuming_pointer {
-                state.input.scroll_delta_x = 0;
-                state.input.scroll_delta_y = 0;
-            }
-
-            // Consume keyboard input if egui has keyboard focus, to prevent
-            // the input manager from also handling these
-            if has_kb {
-                if state.input.forward == ButtonState::Pressed {
-                    state.input.forward = ButtonState::Handled;
-                }
-
-                if state.input.left == ButtonState::Pressed {
-                    state.input.left = ButtonState::Handled;
-                }
-
-                if state.input.right == ButtonState::Pressed {
-                    state.input.right = ButtonState::Handled;
-                }
-
-                if state.input.back == ButtonState::Pressed {
-                    state.input.back = ButtonState::Handled;
-                }
-
-                if state.input.up == ButtonState::Pressed {
-                    state.input.up = ButtonState::Handled;
-                }
-
-                if state.input.down == ButtonState::Pressed {
-                    state.input.down = ButtonState::Handled;
+            // Always reset the hovered entity even if we won't get to
+            // hover new ones: This prevents the tooltip from sticking around if the UI
+            // starts covering it (which can also include the label tooltip itself)
+            state.hovered = None;
+            if let Some(scene) = scene_man.get_main_scene_mut() {
+                if !uictx.wants_pointer_input() {
+                    handle_pointer_on_scene(state, scene);
                 }
             }
-        }
-    }
-
-    fn draw(&mut self) {
-        // We shouldn't need to raycast against the drawn elements because every widget we draw will optionally
-        // also write to AppState if the mouse is over itself
-        let (_, paint_jobs) = self.backend.end_frame().unwrap();
-        self.backend
-            .paint(egui::Rgba::TRANSPARENT, paint_jobs)
-            .expect("Failed to paint!");
+        });
     }
 
     fn draw_main_ui(
@@ -219,11 +213,8 @@ impl InterfaceManager {
         res_man: &mut ResourceManager,
         orbit_man: &OrbitManager,
     ) {
-        UICTX.with(|ui| {
-            let mut ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_mut().unwrap();
-
-            let old_style = ui.ctx().style().deref().clone();
+        UICTX.with(|uictx| {
+            let old_style = uictx.style().deref().clone();
             let mut style = old_style.clone();
 
             style.visuals.widgets.noninteractive.bg_fill =
@@ -234,9 +225,9 @@ impl InterfaceManager {
                 egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200);
             style.visuals.widgets.inactive.bg_stroke.width = 0.0;
 
-            ui.ctx().set_style(style.clone());
+            uictx.set_style(style.clone());
 
-            egui::TopPanel::top(egui::Id::new("top panel")).show(&ui.ctx(), |ui| {
+            egui::TopBottomPanel::top(egui::Id::new("top panel")).show(&uictx, |ui| {
                 let num_bodies = scene_man
                     .get_main_scene()
                     .unwrap()
@@ -249,7 +240,7 @@ impl InterfaceManager {
                 );
 
                 ui.with_layout(egui::Layout::left_to_right(), |ui| {
-                    egui::menu::menu(ui, "⚙", |ui| {
+                    ui.menu_button("⚙", |ui| {
                         egui::Frame::dark_canvas(ui.style())
                             .fill(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200))
                             .show(ui, |ui| {
@@ -300,7 +291,7 @@ impl InterfaceManager {
                                     }
 
                                     if ui.button("Organize windows").clicked() {
-                                        ui.ctx().memory().reset_areas();
+                                        uictx.memory().reset_areas();
                                     }
 
                                     if ui.button("Close all windows").clicked() {
@@ -317,7 +308,7 @@ impl InterfaceManager {
                                         .on_hover_text("Forget scroll, collapsing headers etc")
                                         .clicked()
                                     {
-                                        *ui.ctx().memory() = Default::default();
+                                        *uictx.memory() = Default::default();
                                     }
 
                                     if ui
@@ -332,21 +323,23 @@ impl InterfaceManager {
                     });
 
                     if ui
-                        .add(
-                            egui::Button::new(format!("{:.2} fps", self.last_frame_rate))
-                                .text_style(egui::TextStyle::Monospace),
-                        )
+                        .add(egui::Button::new(
+                            egui::RichText::new(format!("{:.2} fps", self.last_frame_rate))
+                                .monospace(),
+                        ))
                         .clicked()
                     {}
 
                     if ui
-                        .add(egui::Button::new(sim_date_str).text_style(egui::TextStyle::Monospace))
+                        .add(egui::Button::new(
+                            egui::RichText::new(sim_date_str).monospace(),
+                        ))
                         .clicked()
                     {}
 
                     ui.horizontal(|ui| {
                         ui.add(
-                            egui::DragValue::f64(&mut state.simulation_speed)
+                            egui::DragValue::new(&mut state.simulation_speed)
                                 .speed(1.0)
                                 .suffix("x time scale"),
                         );
@@ -354,18 +347,17 @@ impl InterfaceManager {
 
                     ui.horizontal(|ui| {
                         ui.add(
-                            egui::DragValue::f64(&mut state.move_speed)
+                            egui::DragValue::new(&mut state.move_speed)
                                 .speed(0.001)
-                                .clamp_range(0.0..=1000000.0)
+                                .clamp_range::<f64>(0.0..=1000000.0)
                                 .suffix(" Mm/s velocity"),
                         );
                     });
 
                     if ui
-                        .add(
-                            egui::Button::new(format!("{} bodies", num_bodies))
-                                .text_style(egui::TextStyle::Monospace),
-                        )
+                        .add(egui::Button::new(
+                            egui::RichText::new(format!("{} bodies", num_bodies)).monospace(),
+                        ))
                         .clicked()
                     {
                         state.open_windows.body_list = !state.open_windows.body_list;
@@ -382,10 +374,15 @@ impl InterfaceManager {
                             None => None,
                         };
 
-                        let mut style = ui.ctx().style().deref().clone();
+                        let mut style = uictx.style().deref().clone();
                         style.visuals.widgets.noninteractive.bg_stroke.width = 1.0;
 
-                        style.spacing.window_padding = egui::vec2(0.0, 0.0);
+                        style.spacing.window_margin = egui::style::Margin {
+                            left: 0.0,
+                            right: 0.0,
+                            top: 0.0,
+                            bottom: 0.0,
+                        };
 
                         style.visuals.widgets.noninteractive.bg_stroke.width = 0.0;
                         style.visuals.widgets.inactive.bg_stroke.width = 0.0;
@@ -423,23 +420,22 @@ impl InterfaceManager {
                         egui::Frame::popup(&style.clone()).show(ui, |ui| {
                             ui.label("");
 
-                            ui.add(
-                                egui::Label::new(ref_name.unwrap_or("No focus"))
-                                    .text_style(egui::TextStyle::Monospace)
-                                    .text_color(style.visuals.widgets.inactive.fg_stroke.color),
-                            );
+                            ui.add(egui::Label::new(
+                                egui::RichText::new(ref_name.unwrap_or("No focus"))
+                                    .monospace()
+                                    .color(style.visuals.widgets.inactive.fg_stroke.color),
+                            ));
 
                             style.visuals.widgets.noninteractive =
                                 old_style.visuals.widgets.noninteractive;
-                            style.spacing.window_padding = old_style.spacing.window_padding;
+                            style.spacing.window_margin = old_style.spacing.window_margin;
                             ui.set_style(style.clone());
-                            ui.ctx().set_style(style.clone());
+                            uictx.set_style(style.clone());
 
                             if ui
-                                .add(
-                                    egui::Button::new("❌")
-                                        .enabled(state.camera.reference_entity.is_some())
-                                        .text_color(text_color),
+                                .add_enabled(
+                                    state.camera.reference_entity.is_some(),
+                                    egui::Button::new(egui::RichText::new("❌").color(text_color)),
                                 )
                                 .on_hover_text("Stop focusing this body")
                                 .clicked()
@@ -451,7 +447,7 @@ impl InterfaceManager {
                 });
             });
 
-            ui.ctx().set_style(old_style);
+            uictx.set_style(old_style);
         });
     }
 
@@ -484,7 +480,7 @@ impl InterfaceManager {
             egui::Window::new("Settings")
                 .open(&mut open_window)
                 .resizable(false)
-                .show(&ui.ctx(), |ui| {
+                .show(&uictx, |ui| {
                     egui::Grid::new("settings").show(ui, |ui| {
                         ui.label("Vertical FOV:");
                         ui.add(
@@ -644,12 +640,12 @@ impl InterfaceManager {
                     })
                     .resizable(false)
                     .scroll(false)
-                    .show(&ui.ctx(), |ui| {
+                    .show(&uictx, |ui| {
                         ui.label(format!("Distance: {:.3} Mm", distance));
 
                         ui.horizontal(|ui| {
                             if state.camera.reference_entity == Some(*selected_entity) {
-                                let mut style = ui.ctx().style().deref().clone();
+                                let mut style = uictx.style().deref().clone();
                                 let old_bg_fill = style.visuals.widgets.inactive.bg_fill;
                                 style.visuals.widgets.inactive.bg_fill =
                                     egui::Color32::from_rgba_unmultiplied(0, 160, 160, 200);
@@ -702,7 +698,7 @@ impl InterfaceManager {
                             .scroll(false)
                             .collapsible(false)
                             .title_bar(false)
-                            .show(&ui.ctx(), |ui| {
+                            .show(&uictx, |ui| {
                                 ui.label(name);
                             })
                             .unwrap();
@@ -722,7 +718,7 @@ impl InterfaceManager {
 
             egui::Window::new("Debug")
                 .open(&mut open_window)
-                .show(&ui.ctx(), |ui| {
+                .show(&uictx, |ui| {
                     egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
                         egui::Grid::new("controls").show(ui, |ui| {
                             ui.label("Simulation time since reference:");
@@ -928,7 +924,7 @@ impl InterfaceManager {
                 .scroll(false)
                 .resizable(false)
                 .fixed_size(egui::vec2(400.0, 400.0))
-                .show(&ui.ctx(), |ui| {
+                .show(&uictx, |ui| {
                     ui.label("This is a simple, custom N-body simulation 3D engine written for the web.");
                     ui.label("\nIt uses simple semi-implicit Euler integration to calculate the effect of gravity at each timestep.\nInitial J2000 state vectors were collected from NASA's HORIZONS system and JPL's Small-Body Database Search Engine, and when required evolved to J2000 using the mean orbital elements (e.g. for asteroids).");
                     ui.label("\nIt is fully written in Rust (save for some glue Javascript code), and compiled to WebAssembly via wasm_bindgen, which includes WebGL2 bindings.");
@@ -949,7 +945,7 @@ impl InterfaceManager {
             egui::Window::new("Controls")
                 .open(&mut state.open_windows.controls)
                 .resizable(false)
-                .show(&ui.ctx(), |ui| {
+                .show(&uictx, |ui| {
                     egui::Grid::new("controls").show(ui, |ui| {
                         ui.label("Movement:");
                         ui.label("WASDQE, Arrow keys");
@@ -1013,7 +1009,7 @@ impl InterfaceManager {
                 .scroll(false)
                 .resizable(false)
                 .fixed_size(egui::vec2(600.0, 300.0))
-                .show(&ui.ctx(), |ui| {
+                .show(&uictx, |ui| {
                     ui.columns(2, |cols| {
                         cols[0].set_min_height(300.0);
                         cols[1].set_min_height(300.0);
@@ -1151,7 +1147,7 @@ impl InterfaceManager {
                 .scroll(false)
                 .resizable(true)
                 .default_size(egui::vec2(300.0, 400.0))
-                .show(&ui.ctx(), |ui| {
+                .show(&uictx, |ui| {
                     ui.set_min_height(300.0);
 
                     ui.horizontal(|ui| {

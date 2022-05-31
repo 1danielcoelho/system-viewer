@@ -18,6 +18,7 @@ use crate::utils::web::{
 use futures::future::join_all;
 use std::cell::RefCell;
 use std::rc::Rc;
+use utils::web::local_storage_set;
 use wasm_bindgen::prelude::*;
 use web_sys::HtmlCanvasElement;
 
@@ -28,13 +29,10 @@ mod managers;
 mod systems;
 mod utils;
 
-// Also, having the webgl context in here is actually safer, as there is no guarantee two random
-// callers pulled it from the canvas at the same time
 thread_local! {
     pub static ENGINE: RefCell<Option<Engine>> = RefCell::new(None);
     pub static STATE: RefCell<Option<AppState>> = RefCell::new(None);
-    // TODO: I probably don't need to RefCell this one either
-    pub static GLCTX: RefCell<Option<glow::Context>> = RefCell::new(None);
+    pub static GLCTX: Rc<glow::Context> = Rc::new(get_gl_context());
     pub static UICTX: egui::Context = egui::Context::default();
 }
 
@@ -56,10 +54,10 @@ pub async fn start() -> Result<(), JsValue> {
     setup_event_handlers();
 
     log::info!("Initializing WebGl rendering context...");
-    GLCTX.with(|gl| {
-        let mut gl = gl.borrow_mut();
-        gl.replace(get_gl_context());
-    });
+    // GLCTX.with(|gl| {
+    //     let mut gl = gl.borrow_mut();
+    //     gl.replace(get_gl_context());
+    // });
 
     log::info!("Initializing engine...");
     ENGINE.with(|e| {
@@ -188,11 +186,11 @@ fn serialize_state(state: &mut AppState) {
     state.save();
 
     UICTX.with(|ui| {
-        let ui = ui.borrow();
-        let ui_ref = ui.as_ref().unwrap();
-        let ctx = ui_ref.ctx();
-
-        gui_backend::save_memory(ctx);
+        if let Ok(memory_string) = serde_json::to_string(&*ui.memory()) {
+            local_storage_set("egui_memory_json", &memory_string)
+        } else {
+            log::error!("Failed to serialize egui state to local storage!");
+        }
     });
 }
 
