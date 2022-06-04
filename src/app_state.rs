@@ -233,7 +233,7 @@ impl AppState {
             sim_delta_time_s: 0.,
             real_delta_time_s: 0.,
             time_of_last_save: 0.,
-            use_skyboxes: true,
+            use_skyboxes: false,
             show_grid: false,
             show_axes: false,
             show_points: true,

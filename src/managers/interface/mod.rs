@@ -46,11 +46,6 @@ impl InterfaceManager {
                     local_storage_clear();
                 }
 
-                let rect = egui::Rect {
-                    min: egui::pos2(0.0, 0.0),
-                    max: egui::pos2(0.0, 0.0),
-                };
-
                 log::info!("Loading egui state...");
                 if new_man.local_storage_ok {
                     if let Some(memory_string) = local_storage_get("egui_memory_json") {
@@ -174,10 +169,11 @@ impl InterfaceManager {
             let clipped_primitives = uictx.tessellate(output.shapes);
 
             // TODO: pixels_per_point
-            self.painter.paint_primitives(
+            self.painter.paint_and_update_textures(
                 [state.canvas_width, state.canvas_height],
                 1.0,
                 &clipped_primitives,
+                &output.textures_delta,
             );
 
             // Always reset the hovered entity even if we won't get to

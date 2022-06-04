@@ -195,12 +195,6 @@ fn post_draw(
 
         mat.unbind_from_drawing(gl);
     }
-
-    unsafe {
-        // TODO: Move this somewhere else
-        // After we finish drawing, set this for Egui
-        gl.disable(GL::DEPTH_TEST);
-    }
 }
 
 fn draw_one(
