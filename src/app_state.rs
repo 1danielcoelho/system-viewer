@@ -33,6 +33,7 @@ pub enum ReferenceChange {
     Clear,
 }
 
+// TODO: Move somewhere else
 #[derive(Serialize, Deserialize)]
 pub struct Camera {
     pub pos: Point3<f64>,
@@ -202,6 +203,8 @@ pub struct AppState {
     pub show_axes: bool,
     pub show_points: bool,
 
+    pub pixels_per_point: f32,
+
     pub frames_per_second_limit: f64,
     pub simulation_speed: f64,
     pub simulation_paused: bool,
@@ -237,7 +240,8 @@ impl AppState {
             show_grid: false,
             show_axes: false,
             show_points: true,
-            simulation_speed: 1.,
+            pixels_per_point: 1.0,
+            simulation_speed: 1.0,
             simulation_paused: true,
             move_speed: 5.0,
             rotate_speed: 2.0,

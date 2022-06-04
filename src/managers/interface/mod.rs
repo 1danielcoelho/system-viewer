@@ -46,6 +46,10 @@ impl InterfaceManager {
                     local_storage_clear();
                 }
 
+                let mut visuals = egui::Visuals::dark();
+                visuals.collapsing_header_frame = true;
+                uictx.set_visuals(visuals);
+
                 log::info!("Loading egui state...");
                 if new_man.local_storage_ok {
                     if let Some(memory_string) = local_storage_get("egui_memory_json") {
@@ -171,7 +175,7 @@ impl InterfaceManager {
             // TODO: pixels_per_point
             self.painter.paint_and_update_textures(
                 [state.canvas_width, state.canvas_height],
-                1.0,
+                state.pixels_per_point,
                 &clipped_primitives,
                 &output.textures_delta,
             );
@@ -491,6 +495,12 @@ impl InterfaceManager {
                         ui.add(
                             egui::Slider::new(&mut state.frames_per_second_limit, 0.5..=120.0)
                                 .text("fps"),
+                        );
+                        ui.end_row();
+
+                        ui.label("Pixels per point:");
+                        ui.add(
+                            egui::Slider::new(&mut state.pixels_per_point, 0.1..=10.0)
                         );
                         ui.end_row();
 
