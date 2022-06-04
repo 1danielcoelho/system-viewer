@@ -76,7 +76,7 @@ impl InterfaceManager {
         state.input.over_ui = false;
 
         // Lets fill this in and give it to egui
-        let new_input = egui::RawInput::default();
+        let mut new_input = egui::RawInput::default();
         new_input.screen_rect = Some(egui::Rect {
             min: egui::Pos2::new(0.0, 0.0),
             max: egui::Pos2::new(state.canvas_width as f32, state.canvas_height as f32),
@@ -471,10 +471,7 @@ impl InterfaceManager {
     }
 
     fn draw_settings_window(&mut self, state: &mut AppState) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             let mut open_window = state.open_windows.settings;
 
             egui::Window::new("Settings")
@@ -484,19 +481,19 @@ impl InterfaceManager {
                     egui::Grid::new("settings").show(ui, |ui| {
                         ui.label("Vertical FOV:");
                         ui.add(
-                            egui::Slider::f64(&mut state.camera.fov_v, 0.0..=120.0)
+                            egui::Slider::new(&mut state.camera.fov_v, 0.0..=120.0)
                                 .text("degrees")
                                 .integer(),
                         );
                         ui.end_row();
 
                         ui.label("Rotation sensitivity:");
-                        ui.add(egui::Slider::f64(&mut state.rotate_speed, 0.0..=10.0).text(""));
+                        ui.add(egui::Slider::new(&mut state.rotate_speed, 0.0..=10.0).text(""));
                         ui.end_row();
 
                         ui.label("Framerate limit:");
                         ui.add(
-                            egui::Slider::f64(&mut state.frames_per_second_limit, 0.5..=120.0)
+                            egui::Slider::new(&mut state.frames_per_second_limit, 0.5..=120.0)
                                 .text("fps"),
                         );
                         ui.end_row();
@@ -518,7 +515,7 @@ impl InterfaceManager {
                         ui.end_row();
 
                         ui.label("EV100:");
-                        ui.add(egui::Slider::f32(&mut state.ev100, -20.0..=20.0).text(""));
+                        ui.add(egui::Slider::new(&mut state.ev100, -20.0..=20.0).text(""));
                         ui.end_row();
 
                         ui.label("Allow Local Storage:");
@@ -547,10 +544,7 @@ impl InterfaceManager {
         }
         let scene = scene.unwrap();
 
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             let mut cam_pos = state.camera.pos;
             let mut cam_target = state.camera.target;
             if let Some(reference) = state.camera.reference_translation {
@@ -639,7 +633,6 @@ impl InterfaceManager {
                         y: canvas_y as f32 - 20.0, // TODO: Find actual size
                     })
                     .resizable(false)
-                    .scroll(false)
                     .show(&uictx, |ui| {
                         ui.label(format!("Distance: {:.3} Mm", distance));
 
@@ -695,7 +688,6 @@ impl InterfaceManager {
                                 y: state.input.mouse_y as f32 + 10.0,
                             })
                             .resizable(false)
-                            .scroll(false)
                             .collapsible(false)
                             .title_bar(false)
                             .show(&uictx, |ui| {
@@ -709,205 +701,216 @@ impl InterfaceManager {
     }
 
     fn draw_debug_window(&mut self, state: &mut AppState, scene_man: &mut SceneManager) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             let frame_rate = self.last_frame_rate;
             let mut open_window = state.open_windows.debug;
 
             egui::Window::new("Debug")
                 .open(&mut open_window)
                 .show(&uictx, |ui| {
-                    egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                        egui::Grid::new("controls").show(ui, |ui| {
-                            ui.label("Simulation time since reference:");
-                            ui.label(format!("{:.2} seconds", state.sim_time_s));
-                            ui.end_row();
-
-                            ui.label("Simulation date:");
-                            ui.label(format!(
-                                "{}",
-                                julian_date_number_to_date(Jdn(
-                                    state.sim_time_s / 86400.0 + J2000_JDN.0
-                                ))
-                            ));
-                            ui.end_row();
-
-                            ui.label("Real time since start:");
-                            ui.label(format!("{:.2} s", state.real_time_s));
-                            ui.end_row();
-
-                            ui.label("Frames per second:");
-                            ui.label(format!("{:.2}", frame_rate));
-                            ui.end_row();
-
-                            ui.label("Simulation scale:");
-                            ui.add(egui::DragValue::f64(&mut state.simulation_speed).speed(0.01));
-                            ui.end_row();
-
-                            ui.separator();
-                            ui.separator();
-                            ui.end_row();
-
-                            ui.label("EV100:");
-                            ui.add(
-                                egui::DragValue::f32(&mut state.ev100)
-                                    .clamp_range(-20.0..=20.0)
-                                    .speed(0.01),
-                            );
-                            ui.end_row();
-
-                            ui.separator();
-                            ui.separator();
-                            ui.end_row();
-
-                            ui.label("Vertical FOV [deg]:");
-                            ui.add(
-                                egui::DragValue::f64(&mut state.camera.fov_v)
-                                    .clamp_range(0.1..=120.0)
-                                    .speed(0.5),
-                            );
-                            ui.end_row();
-
-                            ui.label("Near [Mm]:");
-                            ui.add(egui::DragValue::f64(&mut state.camera.near).speed(0.01));
-                            ui.end_row();
-
-                            ui.label("Far [Mm]:");
-                            ui.add(egui::DragValue::f64(&mut state.camera.far));
-                            ui.end_row();
-
-                            // Guarantee valid values even if we manually typed garbage in
-                            state.camera.near = state.camera.near.max(0.0001);
-                            state.camera.far = state.camera.far.max(state.camera.near + 0.0001);
-
-                            ui.label("Camera pos [Mm]:");
-                            ui.horizontal(|ui| {
-                                ui.add(egui::DragValue::f64(&mut state.camera.pos.x).prefix("x: "));
-                                ui.add(egui::DragValue::f64(&mut state.camera.pos.y).prefix("y: "));
-                                ui.add(egui::DragValue::f64(&mut state.camera.pos.z).prefix("z: "));
-                            });
-                            ui.end_row();
-
-                            if let Some(scene) = scene_man.get_main_scene_mut() {
-                                ui.label("Reference:");
-
-                                if let Some(reference) = state.camera.reference_entity {
-                                    ui.horizontal(|ui| {
-                                        ui.label(format!(
-                                            "{:?}: {}",
-                                            reference,
-                                            scene.get_entity_name(reference).unwrap_or_default()
-                                        ));
-
-                                        let clear_resp = ui
-                                            .button("🗑")
-                                            .on_hover_text("Stop focusing this entity");
-                                        if clear_resp.clicked() {
-                                            state.camera.next_reference_entity =
-                                                Some(ReferenceChange::Clear);
-                                        }
-                                    });
-                                };
-                                ui.end_row();
-                            };
-
-                            ui.separator();
-                            ui.separator();
-                            ui.end_row();
-
-                            ui.label("Move speed [???]:");
-                            ui.add(
-                                egui::DragValue::f64(&mut state.move_speed)
-                                    .clamp_range(1.0..=1000.0)
-                                    .speed(0.1),
-                            );
-                            ui.end_row();
-
-                            ui.label("Rotation speed:");
-                            ui.add(
-                                egui::DragValue::f64(&mut state.rotate_speed)
-                                    .clamp_range(1.0..=10.0)
-                                    .speed(0.1),
-                            );
-                            ui.end_row();
-                        });
-
-                        ui.separator();
-
-                        if let Some(selection) = state.selection.iter().next().cloned() {
-                            if let Some(scene) = scene_man.get_main_scene_mut() {
-                                ui.label("Selected entity:");
-                                ui.horizontal(|ui| {
-                                    ui.label(format!("{:?}", selection));
-                                    let but_res =
-                                        ui.button("🎥").on_hover_text("Focus this entity");
-                                    if but_res.clicked() {
-                                        state.camera.next_reference_entity =
-                                            Some(ReferenceChange::FocusKeepLocation(selection));
-                                    }
-                                });
+                    egui::ScrollArea::vertical()
+                        .max_height(std::f32::INFINITY)
+                        .show(ui, |ui| {
+                            egui::Grid::new("controls").show(ui, |ui| {
+                                ui.label("Simulation time since reference:");
+                                ui.label(format!("{:.2} seconds", state.sim_time_s));
                                 ui.end_row();
 
-                                ui.label("Name:");
+                                ui.label("Simulation date:");
                                 ui.label(format!(
                                     "{}",
-                                    scene.get_entity_name(selection).unwrap_or_default()
+                                    julian_date_number_to_date(Jdn(
+                                        state.sim_time_s / 86400.0 + J2000_JDN.0
+                                    ))
                                 ));
                                 ui.end_row();
 
-                                if let Some(children) = scene.get_entity_children(selection) {
-                                    if children.len() > 0 {
-                                        ui.collapsing("Children", |ui| {
-                                            for child in children {
-                                                let but_child = ui.button(
-                                                    scene
-                                                        .get_entity_name(*child)
-                                                        .unwrap_or_default(),
-                                                );
-                                                if but_child.clicked() {
-                                                    state.selection = Some(*child);
-                                                }
+                                ui.label("Real time since start:");
+                                ui.label(format!("{:.2} s", state.real_time_s));
+                                ui.end_row();
+
+                                ui.label("Frames per second:");
+                                ui.label(format!("{:.2}", frame_rate));
+                                ui.end_row();
+
+                                ui.label("Simulation scale:");
+                                ui.add(
+                                    egui::DragValue::new(&mut state.simulation_speed).speed(0.01),
+                                );
+                                ui.end_row();
+
+                                ui.separator();
+                                ui.separator();
+                                ui.end_row();
+
+                                ui.label("EV100:");
+                                ui.add(
+                                    egui::DragValue::new(&mut state.ev100)
+                                        .clamp_range(-20.0..=20.0)
+                                        .speed(0.01),
+                                );
+                                ui.end_row();
+
+                                ui.separator();
+                                ui.separator();
+                                ui.end_row();
+
+                                ui.label("Vertical FOV [deg]:");
+                                ui.add(
+                                    egui::DragValue::new(&mut state.camera.fov_v)
+                                        .clamp_range(0.1..=120.0)
+                                        .speed(0.5),
+                                );
+                                ui.end_row();
+
+                                ui.label("Near [Mm]:");
+                                ui.add(egui::DragValue::new(&mut state.camera.near).speed(0.01));
+                                ui.end_row();
+
+                                ui.label("Far [Mm]:");
+                                ui.add(egui::DragValue::new(&mut state.camera.far));
+                                ui.end_row();
+
+                                // Guarantee valid values even if we manually typed garbage in
+                                state.camera.near = state.camera.near.max(0.0001);
+                                state.camera.far = state.camera.far.max(state.camera.near + 0.0001);
+
+                                ui.label("Camera pos [Mm]:");
+                                ui.horizontal(|ui| {
+                                    ui.add(
+                                        egui::DragValue::new(&mut state.camera.pos.x).prefix("x: "),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::new(&mut state.camera.pos.y).prefix("y: "),
+                                    );
+                                    ui.add(
+                                        egui::DragValue::new(&mut state.camera.pos.z).prefix("z: "),
+                                    );
+                                });
+                                ui.end_row();
+
+                                if let Some(scene) = scene_man.get_main_scene_mut() {
+                                    ui.label("Reference:");
+
+                                    if let Some(reference) = state.camera.reference_entity {
+                                        ui.horizontal(|ui| {
+                                            ui.label(format!(
+                                                "{:?}: {}",
+                                                reference,
+                                                scene
+                                                    .get_entity_name(reference)
+                                                    .unwrap_or_default()
+                                            ));
+
+                                            let clear_resp = ui
+                                                .button("🗑")
+                                                .on_hover_text("Stop focusing this entity");
+                                            if clear_resp.clicked() {
+                                                state.camera.next_reference_entity =
+                                                    Some(ReferenceChange::Clear);
                                             }
+                                        });
+                                    };
+                                    ui.end_row();
+                                };
+
+                                ui.separator();
+                                ui.separator();
+                                ui.end_row();
+
+                                ui.label("Move speed [???]:");
+                                ui.add(
+                                    egui::DragValue::new(&mut state.move_speed)
+                                        .clamp_range(1.0..=1000.0)
+                                        .speed(0.1),
+                                );
+                                ui.end_row();
+
+                                ui.label("Rotation speed:");
+                                ui.add(
+                                    egui::DragValue::new(&mut state.rotate_speed)
+                                        .clamp_range(1.0..=10.0)
+                                        .speed(0.1),
+                                );
+                                ui.end_row();
+                            });
+
+                            ui.separator();
+
+                            if let Some(selection) = state.selection.iter().next().cloned() {
+                                if let Some(scene) = scene_man.get_main_scene_mut() {
+                                    ui.label("Selected entity:");
+                                    ui.horizontal(|ui| {
+                                        ui.label(format!("{:?}", selection));
+                                        let but_res =
+                                            ui.button("🎥").on_hover_text("Focus this entity");
+                                        if but_res.clicked() {
+                                            state.camera.next_reference_entity =
+                                                Some(ReferenceChange::FocusKeepLocation(selection));
+                                        }
+                                    });
+                                    ui.end_row();
+
+                                    ui.label("Name:");
+                                    ui.label(format!(
+                                        "{}",
+                                        scene.get_entity_name(selection).unwrap_or_default()
+                                    ));
+                                    ui.end_row();
+
+                                    if let Some(children) = scene.get_entity_children(selection) {
+                                        if children.len() > 0 {
+                                            ui.collapsing("Children", |ui| {
+                                                for child in children {
+                                                    let but_child = ui.button(
+                                                        scene
+                                                            .get_entity_name(*child)
+                                                            .unwrap_or_default(),
+                                                    );
+                                                    if but_child.clicked() {
+                                                        state.selection = Some(*child);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                    ui.end_row();
+
+                                    // TODO: Make this more generic
+                                    if let Some(comp) =
+                                        scene.get_component_mut::<TransformComponent>(selection)
+                                    {
+                                        ui.collapsing("Transform component", |ui| {
+                                            comp.draw_details_ui(ui)
+                                        });
+                                    }
+
+                                    if let Some(comp) =
+                                        scene.get_component_mut::<MeshComponent>(selection)
+                                    {
+                                        ui.collapsing("Mesh component", |ui| {
+                                            comp.draw_details_ui(ui)
+                                        });
+                                    }
+
+                                    if let Some(comp) =
+                                        scene.get_component_mut::<RigidBodyComponent>(selection)
+                                    {
+                                        ui.collapsing("RigidBody component", |ui| {
+                                            comp.draw_details_ui(ui)
+                                        });
+                                    }
+
+                                    if let Some(comp) =
+                                        scene.get_component_mut::<MetadataComponent>(selection)
+                                    {
+                                        ui.collapsing("Metadata component", |ui| {
+                                            comp.draw_details_ui(ui)
                                         });
                                     }
                                 }
-                                ui.end_row();
-
-                                // TODO: Make this more generic
-                                if let Some(comp) =
-                                    scene.get_component_mut::<TransformComponent>(selection)
-                                {
-                                    ui.collapsing("Transform component", |ui| {
-                                        comp.draw_details_ui(ui)
-                                    });
-                                }
-
-                                if let Some(comp) =
-                                    scene.get_component_mut::<MeshComponent>(selection)
-                                {
-                                    ui.collapsing("Mesh component", |ui| comp.draw_details_ui(ui));
-                                }
-
-                                if let Some(comp) =
-                                    scene.get_component_mut::<RigidBodyComponent>(selection)
-                                {
-                                    ui.collapsing("RigidBody component", |ui| {
-                                        comp.draw_details_ui(ui)
-                                    });
-                                }
-
-                                if let Some(comp) =
-                                    scene.get_component_mut::<MetadataComponent>(selection)
-                                {
-                                    ui.collapsing("Metadata component", |ui| {
-                                        comp.draw_details_ui(ui)
-                                    });
-                                }
                             }
-                        }
-                    });
+                        });
                 });
 
             state.open_windows.debug = open_window;
@@ -915,13 +918,9 @@ impl InterfaceManager {
     }
 
     fn draw_about_window(&mut self, state: &mut AppState) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             egui::Window::new("About")
                 .open(&mut state.open_windows.about)
-                .scroll(false)
                 .resizable(false)
                 .fixed_size(egui::vec2(400.0, 400.0))
                 .show(&uictx, |ui| {
@@ -929,7 +928,7 @@ impl InterfaceManager {
                     ui.label("\nIt uses simple semi-implicit Euler integration to calculate the effect of gravity at each timestep.\nInitial J2000 state vectors were collected from NASA's HORIZONS system and JPL's Small-Body Database Search Engine, and when required evolved to J2000 using the mean orbital elements (e.g. for asteroids).");
                     ui.label("\nIt is fully written in Rust (save for some glue Javascript code), and compiled to WebAssembly via wasm_bindgen, which includes WebGL2 bindings.");
                     ui.label("The 3D engine uses a data-oriented entity component system in order to maximize performance of batch physics calculations, and the Egui immediate mode GUI library, also written in pure Rust.");
-                    ui.horizontal_wrapped_for_text(egui::TextStyle::Body, |ui| {
+                    ui.horizontal_wrapped(|ui| {
                         ui.label("\nProject home page:");
                         ui.hyperlink("https://github.com/1danielcoelho/system-viewer");
                     });
@@ -938,10 +937,7 @@ impl InterfaceManager {
     }
 
     fn draw_controls_window(&mut self, state: &mut AppState) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             egui::Window::new("Controls")
                 .open(&mut state.open_windows.controls)
                 .resizable(false)
@@ -998,15 +994,11 @@ impl InterfaceManager {
         res_man: &mut ResourceManager,
         orbit_man: &OrbitManager,
     ) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             let mut open_window = state.open_windows.scene_browser;
 
             egui::Window::new("Scene browser")
                 .open(&mut open_window)
-                .scroll(false)
                 .resizable(false)
                 .fixed_size(egui::vec2(600.0, 300.0))
                 .show(&uictx, |ui| {
@@ -1019,21 +1011,23 @@ impl InterfaceManager {
                         egui::Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
                             ui.set_min_height(ui.available_size().y);
 
-                            egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                                for (name, _) in scene_man.descriptions.iter() {
-                                    ui.radio_value(
-                                        &mut self.selected_scene_desc_name,
-                                        name.to_owned(),
-                                        {
-                                            if name == &main_name {
-                                                name.to_owned() + " (active)"
-                                            } else {
-                                                name.to_owned()
-                                            }
-                                        },
-                                    );
-                                }
-                            });
+                            egui::ScrollArea::vertical()
+                                .max_height(std::f32::INFINITY)
+                                .show(ui, |ui| {
+                                    for (name, _) in scene_man.descriptions.iter() {
+                                        ui.radio_value(
+                                            &mut self.selected_scene_desc_name,
+                                            name.to_owned(),
+                                            {
+                                                if name == &main_name {
+                                                    name.to_owned() + " (active)"
+                                                } else {
+                                                    name.to_owned()
+                                                }
+                                            },
+                                        );
+                                    }
+                                });
                         });
 
                         let selected_is_active =
@@ -1047,45 +1041,49 @@ impl InterfaceManager {
                         // inside another layout, and the ScrollArea spawns a scrollbar
                         let height = cols[1].available_size().y - 32.0;
 
-                        egui::ScrollArea::from_max_height(height).show(&mut cols[1], |ui| {
-                            ui.set_min_height(height);
+                        egui::ScrollArea::vertical()
+                            .max_height(height)
+                            .show(&mut cols[1], |ui| {
+                                ui.set_min_height(height);
 
-                            if let Some(desc) =
-                                scene_man.descriptions.get(&self.selected_scene_desc_name)
-                            {
-                                ui.columns(2, |cols| {
-                                    cols[0].label("Name:");
-                                    cols[1].label(&desc.name);
-                                });
+                                if let Some(desc) =
+                                    scene_man.descriptions.get(&self.selected_scene_desc_name)
+                                {
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Name:");
+                                        cols[1].label(&desc.name);
+                                    });
 
-                                ui.columns(2, |cols| {
-                                    cols[0].label("Description:");
-                                    cols[1].label(&desc.description);
-                                });
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Description:");
+                                        cols[1].label(&desc.description);
+                                    });
 
-                                ui.columns(2, |cols| {
-                                    cols[0].label("Time:");
-                                    cols[1].label(&desc.time);
-                                });
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Time:");
+                                        cols[1].label(&desc.time);
+                                    });
 
-                                ui.columns(2, |cols| {
-                                    cols[0].label("Simulation scale:");
-                                    cols[1].label(format!("{}", &desc.simulation_scale));
-                                });
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Simulation scale:");
+                                        cols[1].label(format!("{}", &desc.simulation_scale));
+                                    });
 
-                                ui.columns(2, |cols| {
-                                    cols[0].label("Focus");
-                                    cols[1].label(
-                                        desc.focus.as_ref().unwrap_or(&String::from("No focus")),
-                                    );
-                                });
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Focus");
+                                        cols[1].label(
+                                            desc.focus
+                                                .as_ref()
+                                                .unwrap_or(&String::from("No focus")),
+                                        );
+                                    });
 
-                                ui.columns(2, |cols| {
-                                    cols[0].label("Bodies:");
-                                    cols[1].label(format!("{}", desc.bodies.len()));
-                                });
-                            }
-                        });
+                                    ui.columns(2, |cols| {
+                                        cols[0].label("Bodies:");
+                                        cols[1].label(format!("{}", desc.bodies.len()));
+                                    });
+                                }
+                            });
 
                         cols[1].separator();
 
@@ -1117,9 +1115,9 @@ impl InterfaceManager {
 
                             cols[1].with_layout(egui::Layout::left_to_right(), |ui| {
                                 if ui
-                                    .add(
-                                        egui::Button::new("   Close   ")
-                                            .enabled(selected_is_active),
+                                    .add_enabled(
+                                        selected_is_active,
+                                        egui::Button::new("   Close   "),
                                     )
                                     .on_hover_text("Close this scene")
                                     .clicked()
@@ -1136,15 +1134,11 @@ impl InterfaceManager {
     }
 
     fn draw_body_list_window(&mut self, state: &mut AppState, scene: &Scene) {
-        UICTX.with(|ui| {
-            let ref_mut = ui.borrow_mut();
-            let ui = ref_mut.as_ref().unwrap();
-
+        UICTX.with(|uictx| {
             let mut open_window = state.open_windows.body_list;
 
             egui::Window::new("Body list")
                 .open(&mut open_window)
-                .scroll(false)
                 .resizable(true)
                 .default_size(egui::vec2(300.0, 400.0))
                 .show(&uictx, |ui| {
@@ -1160,28 +1154,30 @@ impl InterfaceManager {
                     egui::Frame::dark_canvas(ui.style()).show(ui, |ui| {
                         ui.set_min_height(ui.available_size().y);
 
-                        egui::ScrollArea::from_max_height(std::f32::INFINITY).show(ui, |ui| {
-                            for entity in scene.get_entity_entries() {
-                                if !entity.live {
-                                    continue;
-                                }
+                        egui::ScrollArea::vertical()
+                            .max_height(std::f32::INFINITY)
+                            .show(ui, |ui| {
+                                for entity in scene.get_entity_entries() {
+                                    if !entity.live {
+                                        continue;
+                                    }
 
-                                if scene
-                                    .get_component::<RigidBodyComponent>(entity.current)
-                                    .is_none()
-                                {
-                                    continue;
-                                }
+                                    if scene
+                                        .get_component::<RigidBodyComponent>(entity.current)
+                                        .is_none()
+                                    {
+                                        continue;
+                                    }
 
-                                if let Some(name) = &entity.name {
-                                    if name.to_lowercase().contains(&filter_lower) {
-                                        if ui.button(name).clicked() {
-                                            state.selection = Some(entity.current);
+                                    if let Some(name) = &entity.name {
+                                        if name.to_lowercase().contains(&filter_lower) {
+                                            if ui.button(name).clicked() {
+                                                state.selection = Some(entity.current);
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        });
+                            });
                     });
                 });
 

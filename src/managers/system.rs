@@ -27,9 +27,6 @@ impl SystemManager {
 
     pub fn resize(&mut self, width: u32, height: u32) {
         GLCTX.with(|ctx| {
-            let ref_mut = ctx.borrow_mut();
-            let ctx = ref_mut.as_ref().unwrap();
-
             self.render.resize(width, height, ctx);
         });
     }

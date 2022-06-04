@@ -42,9 +42,6 @@ pub fn generate_dynamic_mesh() -> Rc<RefCell<Mesh>> {
     }));
 
     GLCTX.with(|ctx| {
-        let ref_mut = ctx.borrow_mut();
-        let ctx = ref_mut.as_ref().unwrap();
-
         let mut result_mut = RefCell::borrow_mut(&result);
         result_mut.dynamic_primitive = Some(DynamicPrimitive::new(ctx));
     });
@@ -78,9 +75,6 @@ pub fn generate_screen_space_quad(
     ];
 
     GLCTX.with(|ctx| {
-        let ref_mut = ctx.borrow_mut();
-        let ctx = ref_mut.as_ref().unwrap();
-
         // Create VAO
         unsafe {
             let vao = ctx.create_vertex_array().unwrap();
@@ -158,9 +152,6 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
     primitives.reserve(inter.primitives.len());
 
     GLCTX.with(|ctx| {
-        let ref_mut = ctx.borrow_mut();
-        let ctx = ref_mut.as_ref().unwrap();
-
         unsafe {
             for prim in &inter.primitives {
                 // Create VAO

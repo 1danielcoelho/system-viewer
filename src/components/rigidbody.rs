@@ -82,16 +82,16 @@ impl DetailsUI for RigidBodyComponent {
 
         ui.columns(2, |cols| {
             cols[0].label("Mass [kg]:");
-            cols[1].add(egui::DragValue::f64(&mut self.mass));
+            cols[1].add(egui::DragValue::new(&mut self.mass));
         });
 
         ui.collapsing("Last transform:", |ui| {
             ui.columns(2, |cols| {
                 cols[0].label("Pos [Mm]:");
                 cols[1].horizontal(|ui| {
-                    ui.add(egui::DragValue::f64(&mut self.trans.trans.x).prefix("x: "));
-                    ui.add(egui::DragValue::f64(&mut self.trans.trans.y).prefix("y: "));
-                    ui.add(egui::DragValue::f64(&mut self.trans.trans.z).prefix("z: "));
+                    ui.add(egui::DragValue::new(&mut self.trans.trans.x).prefix("x: "));
+                    ui.add(egui::DragValue::new(&mut self.trans.trans.y).prefix("y: "));
+                    ui.add(egui::DragValue::new(&mut self.trans.trans.z).prefix("z: "));
                 });
             });
 
@@ -103,9 +103,9 @@ impl DetailsUI for RigidBodyComponent {
                     euler_y = euler_y.to_degrees();
                     euler_z = euler_z.to_degrees();
 
-                    ui.add(egui::DragValue::f64(&mut euler_x).prefix("x: "));
-                    ui.add(egui::DragValue::f64(&mut euler_y).prefix("y: "));
-                    ui.add(egui::DragValue::f64(&mut euler_z).prefix("z: "));
+                    ui.add(egui::DragValue::new(&mut euler_x).prefix("x: "));
+                    ui.add(egui::DragValue::new(&mut euler_y).prefix("y: "));
+                    ui.add(egui::DragValue::new(&mut euler_z).prefix("z: "));
 
                     self.trans.rot = UnitQuaternion::from_euler_angles(
                         euler_x.to_radians(),
@@ -119,17 +119,17 @@ impl DetailsUI for RigidBodyComponent {
                 cols[0].label("Scale:");
                 cols[1].horizontal(|ui| {
                     ui.add(
-                        egui::DragValue::f64(&mut self.trans.scale.x)
+                        egui::DragValue::new(&mut self.trans.scale.x)
                             .prefix("x: ")
                             .speed(0.1),
                     );
                     ui.add(
-                        egui::DragValue::f64(&mut self.trans.scale.y)
+                        egui::DragValue::new(&mut self.trans.scale.y)
                             .prefix("y: ")
                             .speed(0.1),
                     );
                     ui.add(
-                        egui::DragValue::f64(&mut self.trans.scale.z)
+                        egui::DragValue::new(&mut self.trans.scale.z)
                             .prefix("z: ")
                             .speed(0.1),
                     );
@@ -144,9 +144,9 @@ impl DetailsUI for RigidBodyComponent {
         ui.columns(2, |cols| {
             cols[0].label("Linear velocity [Mm/s]:");
             cols[1].horizontal(|ui| {
-                ui.add(egui::DragValue::f64(&mut vel_x).prefix("x: "));
-                ui.add(egui::DragValue::f64(&mut vel_y).prefix("y: "));
-                ui.add(egui::DragValue::f64(&mut vel_z).prefix("z: "));
+                ui.add(egui::DragValue::new(&mut vel_x).prefix("x: "));
+                ui.add(egui::DragValue::new(&mut vel_y).prefix("y: "));
+                ui.add(egui::DragValue::new(&mut vel_z).prefix("z: "));
             });
         });
 
@@ -157,9 +157,9 @@ impl DetailsUI for RigidBodyComponent {
         ui.columns(2, |cols| {
             cols[0].label("Angular momentum [kg Mm^2 rad/s]:");
             cols[1].horizontal(|ui| {
-                ui.add(egui::DragValue::f64(&mut self.ang_mom.x).prefix("x: "));
-                ui.add(egui::DragValue::f64(&mut self.ang_mom.y).prefix("y: "));
-                ui.add(egui::DragValue::f64(&mut self.ang_mom.z).prefix("z: "));
+                ui.add(egui::DragValue::new(&mut self.ang_mom.x).prefix("x: "));
+                ui.add(egui::DragValue::new(&mut self.ang_mom.y).prefix("y: "));
+                ui.add(egui::DragValue::new(&mut self.ang_mom.z).prefix("z: "));
             });
         });
     }

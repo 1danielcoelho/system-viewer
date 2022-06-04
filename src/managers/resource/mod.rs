@@ -39,9 +39,6 @@ fn load_texture_from_bytes(
     wrap_t: Option<i32>,
 ) -> Result<Rc<RefCell<Texture>>, String> {
     return GLCTX.with(|ctx| {
-        let ref_mut = ctx.borrow_mut();
-        let ctx = ref_mut.as_ref().unwrap();
-
         unsafe {
             let gl_tex = ctx.create_texture().unwrap();
             ctx.active_texture(GL::TEXTURE0);
@@ -746,9 +743,6 @@ impl ResourceManager {
 
         let mut tex: Option<Rc<RefCell<Texture>>> = None;
         GLCTX.with(|ctx| {
-            let ref_mut = ctx.borrow_mut();
-            let ctx = ref_mut.as_ref().unwrap();
-
             let converted_tex =
                 load_cubemap_texture_from_image_bytes(&cubemap_identifier, cubemap, &ctx);
             if let Err(err) = converted_tex {

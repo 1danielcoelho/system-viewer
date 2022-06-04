@@ -54,18 +54,18 @@ impl DetailsUI for KinematicComponent {
         ui.columns(2, |cols| {
             cols[0].label("Linear velocity [Mm/s]:");
             cols[1].horizontal(|ui| {
-                ui.add(egui::DragValue::f64(&mut self.lin_vel.x).prefix("x: "));
-                ui.add(egui::DragValue::f64(&mut self.lin_vel.y).prefix("y: "));
-                ui.add(egui::DragValue::f64(&mut self.lin_vel.z).prefix("z: "));
+                ui.add(egui::DragValue::new(&mut self.lin_vel.x).prefix("x: "));
+                ui.add(egui::DragValue::new(&mut self.lin_vel.y).prefix("y: "));
+                ui.add(egui::DragValue::new(&mut self.lin_vel.z).prefix("z: "));
             });
         });
 
         ui.columns(2, |cols| {
             cols[0].label("Angular momentum [kg Mm^2 rad/s]:");
             cols[1].horizontal(|ui| {
-                ui.add(egui::DragValue::f64(&mut self.ang_vel.x).prefix("x: "));
-                ui.add(egui::DragValue::f64(&mut self.ang_vel.y).prefix("y: "));
-                ui.add(egui::DragValue::f64(&mut self.ang_vel.z).prefix("z: "));
+                ui.add(egui::DragValue::new(&mut self.ang_vel.x).prefix("x: "));
+                ui.add(egui::DragValue::new(&mut self.ang_vel.y).prefix("y: "));
+                ui.add(egui::DragValue::new(&mut self.ang_vel.z).prefix("z: "));
             });
         });
     }

@@ -50,9 +50,6 @@ impl RenderingSystem {
 
         // Create framebuffer
         let framebuffer = GLCTX.with(|gl| {
-            let ref_mut = gl.borrow_mut();
-            let gl = ref_mut.as_ref().unwrap();
-
             return Framebuffer::new(canvas_width, canvas_height, gl);
         });
 
@@ -78,9 +75,6 @@ impl RenderingSystem {
 
     pub fn run(&mut self, state: &AppState, scene: &mut Scene) {
         GLCTX.with(|gl| {
-            let ref_mut = gl.borrow_mut();
-            let gl = ref_mut.as_ref().unwrap();
-
             // Main pass
             self.framebuffer.bind(gl);
             let mut uniform_data = pre_draw(state, gl, scene);

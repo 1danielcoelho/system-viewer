@@ -63,9 +63,9 @@ impl DetailsUI for TransformComponent {
         ui.columns(2, |cols| {
             cols[0].label("Pos [Mm]:");
             cols[1].horizontal(|ui| {
-                ui.add(egui::DragValue::f64(&mut self.local_transform.trans.x).prefix("x: "));
-                ui.add(egui::DragValue::f64(&mut self.local_transform.trans.y).prefix("y: "));
-                ui.add(egui::DragValue::f64(&mut self.local_transform.trans.z).prefix("z: "));
+                ui.add(egui::DragValue::new(&mut self.local_transform.trans.x).prefix("x: "));
+                ui.add(egui::DragValue::new(&mut self.local_transform.trans.y).prefix("y: "));
+                ui.add(egui::DragValue::new(&mut self.local_transform.trans.z).prefix("z: "));
             });
         });
 
@@ -78,9 +78,9 @@ impl DetailsUI for TransformComponent {
                 euler_y = euler_y.to_degrees();
                 euler_z = euler_z.to_degrees();
 
-                ui.add(egui::DragValue::f64(&mut euler_x).prefix("x: "));
-                ui.add(egui::DragValue::f64(&mut euler_y).prefix("y: "));
-                ui.add(egui::DragValue::f64(&mut euler_z).prefix("z: "));
+                ui.add(egui::DragValue::new(&mut euler_x).prefix("x: "));
+                ui.add(egui::DragValue::new(&mut euler_y).prefix("y: "));
+                ui.add(egui::DragValue::new(&mut euler_z).prefix("z: "));
 
                 self.local_transform.rot = UnitQuaternion::from_euler_angles(
                     euler_x.to_radians(),
@@ -94,17 +94,17 @@ impl DetailsUI for TransformComponent {
             cols[0].label("Scale:");
             cols[1].horizontal(|ui| {
                 ui.add(
-                    egui::DragValue::f64(&mut self.local_transform.scale.x)
+                    egui::DragValue::new(&mut self.local_transform.scale.x)
                         .prefix("x: ")
                         .speed(0.1),
                 );
                 ui.add(
-                    egui::DragValue::f64(&mut self.local_transform.scale.y)
+                    egui::DragValue::new(&mut self.local_transform.scale.y)
                         .prefix("y: ")
                         .speed(0.1),
                 );
                 ui.add(
-                    egui::DragValue::f64(&mut self.local_transform.scale.z)
+                    egui::DragValue::new(&mut self.local_transform.scale.z)
                         .prefix("z: ")
                         .speed(0.1),
                 );
