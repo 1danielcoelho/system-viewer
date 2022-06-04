@@ -8,6 +8,7 @@ use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::{get_window, local_storage_clear, local_storage_enable, local_storage_get};
 use crate::{GLCTX, UICTX};
+use egui::Widget;
 use lazy_static::__Deref;
 use na::*;
 use std::collections::VecDeque;
@@ -46,9 +47,25 @@ impl InterfaceManager {
                     local_storage_clear();
                 }
 
+                // Egui currently looks like ass on web because the text is too thin and
+                // not pixel perfect, so here we make things brighter and thicker to hide it
                 let mut visuals = egui::Visuals::dark();
                 visuals.collapsing_header_frame = true;
+                visuals.override_text_color = Some(egui::Color32::LIGHT_GRAY);
+                visuals.widgets.active.bg_stroke.width = 2.0;
+                visuals.widgets.active.fg_stroke.width = 2.0;
+                visuals.widgets.hovered.bg_stroke.width = 2.0;
+                visuals.widgets.hovered.fg_stroke.width = 2.0;
+                visuals.widgets.inactive.bg_stroke.width = 2.0;
+                visuals.widgets.inactive.fg_stroke.width = 2.0;
+                visuals.widgets.noninteractive.bg_stroke.width = 2.0;
+                visuals.widgets.noninteractive.fg_stroke.width = 2.0;
+                visuals.widgets.open.bg_stroke.width = 2.0;
+                visuals.widgets.open.fg_stroke.width = 2.0;
                 uictx.set_visuals(visuals);
+
+                let mut style: egui::Style = (*uictx.style()).clone();
+                uictx.set_style(style);
 
                 log::info!("Loading egui state...");
                 if new_man.local_storage_ok {
@@ -281,10 +298,6 @@ impl InterfaceManager {
 
                                 if DEBUG {
                                     ui.separator();
-                                    ui.separator();
-                                    ui.separator();
-
-                                    ui.separator();
 
                                     if ui.button("Debug").clicked() {
                                         state.open_windows.debug = !state.open_windows.debug;
@@ -299,6 +312,8 @@ impl InterfaceManager {
                                         state.open_windows.body_list = false;
                                         state.open_windows.about = false;
                                         state.open_windows.scene_browser = false;
+                                        state.open_windows.controls = false;
+                                        state.open_windows.settings = false;
                                     }
 
                                     ui.separator();
@@ -1152,7 +1167,9 @@ impl InterfaceManager {
 
                     ui.horizontal(|ui| {
                         ui.label("Search: ");
-                        ui.text_edit_singleline(&mut self.body_list_filter);
+                        egui::TextEdit::singleline(&mut self.body_list_filter)
+                            .desired_width(f32::INFINITY)
+                            .ui(ui);
                     });
 
                     let filter_lower = self.body_list_filter.to_lowercase();
@@ -1162,6 +1179,7 @@ impl InterfaceManager {
 
                         egui::ScrollArea::vertical()
                             .max_height(std::f32::INFINITY)
+                            .auto_shrink([false, false])
                             .show(ui, |ui| {
                                 for entity in scene.get_entity_entries() {
                                     if !entity.live {

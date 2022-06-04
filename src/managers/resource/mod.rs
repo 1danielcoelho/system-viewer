@@ -57,12 +57,12 @@ fn load_texture_from_bytes(
             ctx.tex_parameter_i32(
                 GL::TEXTURE_2D,
                 GL::TEXTURE_MIN_FILTER,
-                min_filter.unwrap_or(GL::NEAREST as i32),
+                min_filter.unwrap_or(GL::LINEAR as i32),
             );
             ctx.tex_parameter_i32(
                 GL::TEXTURE_2D,
                 GL::TEXTURE_MAG_FILTER,
-                mag_filter.unwrap_or(GL::NEAREST as i32),
+                mag_filter.unwrap_or(GL::LINEAR as i32),
             );
 
             ctx.tex_image_2d(
