@@ -1029,27 +1029,29 @@ impl InterfaceManager {
 
                         let main_name = scene_man.get_main_scene().unwrap().identifier.clone();
 
-                        egui::Frame::dark_canvas(cols[0].style()).show(&mut cols[0], |ui| {
-                            ui.set_min_height(ui.available_size().y);
+                        egui::Frame::dark_canvas(cols[0].style())
+                            .inner_margin(egui::style::Margin::same(5.0))
+                            .show(&mut cols[0], |ui| {
+                                ui.set_min_height(ui.available_size().y);
 
-                            egui::ScrollArea::vertical()
-                                .max_height(std::f32::INFINITY)
-                                .show(ui, |ui| {
-                                    for (name, _) in scene_man.descriptions.iter() {
-                                        ui.radio_value(
-                                            &mut self.selected_scene_desc_name,
-                                            name.to_owned(),
-                                            {
-                                                if name == &main_name {
-                                                    name.to_owned() + " (active)"
-                                                } else {
-                                                    name.to_owned()
-                                                }
-                                            },
-                                        );
-                                    }
-                                });
-                        });
+                                egui::ScrollArea::vertical()
+                                    .max_height(std::f32::INFINITY)
+                                    .show(ui, |ui| {
+                                        for (name, _) in scene_man.descriptions.iter() {
+                                            ui.radio_value(
+                                                &mut self.selected_scene_desc_name,
+                                                name.to_owned(),
+                                                {
+                                                    if name == &main_name {
+                                                        name.to_owned() + " (active)"
+                                                    } else {
+                                                        name.to_owned()
+                                                    }
+                                                },
+                                            );
+                                        }
+                                    });
+                            });
 
                         let selected_is_active =
                             match scene_man.descriptions.get(&self.selected_scene_desc_name) {
@@ -1067,43 +1069,49 @@ impl InterfaceManager {
                             .show(&mut cols[1], |ui| {
                                 ui.set_min_height(height);
 
-                                if let Some(desc) =
-                                    scene_man.descriptions.get(&self.selected_scene_desc_name)
-                                {
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Name:");
-                                        cols[1].label(&desc.name);
-                                    });
+                                egui::Frame::none()
+                                    .inner_margin(egui::style::Margin::same(5.0))
+                                    .show(ui, |ui| {
+                                        if let Some(desc) = scene_man
+                                            .descriptions
+                                            .get(&self.selected_scene_desc_name)
+                                        {
+                                            ui.columns(2, |cols| {
+                                                cols[0].label("Name:");
+                                                cols[1].label(&desc.name);
+                                            });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Description:");
-                                        cols[1].label(&desc.description);
-                                    });
+                                            ui.columns(2, |cols| {
+                                                cols[0].label("Description:");
+                                                cols[1].label(&desc.description);
+                                            });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Time:");
-                                        cols[1].label(&desc.time);
-                                    });
+                                            ui.columns(2, |cols| {
+                                                cols[0].label("Time:");
+                                                cols[1].label(&desc.time);
+                                            });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Simulation scale:");
-                                        cols[1].label(format!("{}", &desc.simulation_scale));
-                                    });
+                                            ui.columns(2, |cols| {
+                                                cols[0].label("Simulation scale:");
+                                                cols[1]
+                                                    .label(format!("{}", &desc.simulation_scale));
+                                            });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Focus");
-                                        cols[1].label(
-                                            desc.focus
-                                                .as_ref()
-                                                .unwrap_or(&String::from("No focus")),
-                                        );
-                                    });
+                                            ui.columns(2, |cols| {
+                                                cols[0].label("Focus");
+                                                cols[1].label(
+                                                    desc.focus
+                                                        .as_ref()
+                                                        .unwrap_or(&String::from("No focus")),
+                                                );
+                                            });
 
-                                    ui.columns(2, |cols| {
-                                        cols[0].label("Bodies:");
-                                        cols[1].label(format!("{}", desc.bodies.len()));
+                                            ui.columns(2, |cols| {
+                                                cols[0].label("Bodies:");
+                                                cols[1].label(format!("{}", desc.bodies.len()));
+                                            });
+                                        }
                                     });
-                                }
                             });
 
                         cols[1].separator();
@@ -1181,26 +1189,30 @@ impl InterfaceManager {
                             .max_height(std::f32::INFINITY)
                             .auto_shrink([false, false])
                             .show(ui, |ui| {
-                                for entity in scene.get_entity_entries() {
-                                    if !entity.live {
-                                        continue;
-                                    }
+                                egui::Frame::none()
+                                    .inner_margin(egui::style::Margin::same(5.0))
+                                    .show(ui, |ui| {
+                                        for entity in scene.get_entity_entries() {
+                                            if !entity.live {
+                                                continue;
+                                            }
 
-                                    if scene
-                                        .get_component::<RigidBodyComponent>(entity.current)
-                                        .is_none()
-                                    {
-                                        continue;
-                                    }
+                                            if scene
+                                                .get_component::<RigidBodyComponent>(entity.current)
+                                                .is_none()
+                                            {
+                                                continue;
+                                            }
 
-                                    if let Some(name) = &entity.name {
-                                        if name.to_lowercase().contains(&filter_lower) {
-                                            if ui.button(name).clicked() {
-                                                state.selection = Some(entity.current);
+                                            if let Some(name) = &entity.name {
+                                                if name.to_lowercase().contains(&filter_lower) {
+                                                    if ui.button(name).clicked() {
+                                                        state.selection = Some(entity.current);
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
-                                }
+                                    });
                             });
                     });
                 });
