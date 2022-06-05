@@ -937,6 +937,9 @@ impl InterfaceManager {
                 .resizable(false)
                 .fixed_size(egui::vec2(400.0, 400.0))
                 .show(&uictx, |ui| {
+                    ui.vertical_centered_justified(|ui|{
+                        ui.label("\nSystem Viewer\nv.0.2\nAuthor: Daniel Coelho\n");
+                    });
                     ui.label("This is a simple, custom N-body simulation 3D engine written for the web.");
                     ui.label("\nIt uses simple semi-implicit Euler integration to calculate the effect of gravity at each timestep.\nInitial J2000 state vectors were collected from NASA's HORIZONS system and JPL's Small-Body Database Search Engine, and when required evolved to J2000 using the mean orbital elements (e.g. for asteroids).");
                     ui.label("\nIt is fully written in Rust (save for some glue Javascript code), and compiled to WebAssembly via wasm_bindgen, which includes WebGL2 bindings.");
