@@ -1,6 +1,7 @@
 pub mod camera;
 pub mod gl;
 pub mod hashmap;
+pub mod log;
 pub mod memory;
 pub mod orbits;
 pub mod raycasting;

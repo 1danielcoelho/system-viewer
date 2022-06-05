@@ -11,6 +11,7 @@ extern crate wasm_bindgen;
 
 use crate::app_state::AppState;
 use crate::engine::Engine;
+use crate::utils::log::*;
 use crate::utils::web::{
     get_canvas, get_gl_context, local_storage_remove, request_animation_frame, request_text,
     setup_event_handlers,
@@ -39,11 +40,16 @@ thread_local! {
 #[wasm_bindgen(start)]
 pub fn main_js() {
     console_error_panic_hook::set_once();
-    console_log::init_with_level(log::Level::Debug).expect("Unable to initialize console logging");
 }
 
 #[wasm_bindgen]
 pub async fn start() -> Result<(), JsValue> {
+    crate::utils::log::info!("hi");
+    crate::utils::log::info!(LogCat::Engine, "{}", "Engine info");
+    crate::utils::log::debug!(LogCat::Io, "Io debug msg");
+    crate::utils::log::info!(LogCat::Rendering, "{:?}", Some("you shouldnt see me"));
+    crate::utils::log::error!(LogCat::Engine, "Here's what an error looks like: {}", 5);
+
     log::info!("Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
