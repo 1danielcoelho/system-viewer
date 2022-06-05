@@ -8,6 +8,7 @@ use crate::managers::resource::intermediate_mesh::{
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
 use crate::utils::gl::GL;
+use crate::utils::log::*;
 use na::{Point3, Vector2, Vector3, Vector4};
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
@@ -49,7 +50,8 @@ pub fn generate_disk(
         }
     }
 
-    log::info!(
+    debug!(
+        LogCat::Resources,
         "Generating disk: Inner radius: {}, Outer radius: {}, Num segments: {}, Num shells: {}, Vertices: {}, Indices: {}, Shared verts: {}",
         inner_radius,
         outer_radius,
@@ -236,7 +238,8 @@ pub fn generate_disk(
         }
     }
 
-    log::info!(
+    debug!(
+        LogCat::Resources,
         "\tUV sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, tangent: {}/{}, uv: {}/{}",
         positions.len(),
         positions.capacity(),
@@ -304,7 +307,8 @@ pub fn generate_lat_long_sphere(
         num_inds = num_verts;
     }
 
-    log::info!(
+    debug!(
+        LogCat::Resources,
         "Generating uv sphere: Radius: {}, Vertices: {}, Indices: {}, Smooth: {}, Shared verts: {}",
         radius,
         num_verts,
@@ -459,7 +463,8 @@ pub fn generate_lat_long_sphere(
         }
     }
 
-    log::info!(
+    debug!(
+        LogCat::Resources,
         "\tUV sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, tangent: {}/{}, uv: {}/{}",
         positions.len(),
         positions.capacity(),
@@ -507,7 +512,8 @@ pub fn generate_ico_sphere(
 ) -> Rc<RefCell<Mesh>> {
     let final_num_verts = (20 * 3 * 4u32.pow(num_subdiv)) as usize;
 
-    log::info!(
+    debug!(
+        LogCat::Resources,
         "Generating ico sphere: Radius: {}, Num subdiv: {}, Vertices: {}, Smooth: {}",
         radius,
         num_subdiv,
@@ -663,7 +669,8 @@ pub fn generate_ico_sphere(
     std::mem::swap(&mut positions, &mut temp_positions);
     std::mem::swap(&mut indices, &mut temp_indices);
 
-    log::info!(
+    debug!(
+        LogCat::Resources,
         "\tIco sphere final verts: {}/{}, ind: {}/{}, normal: {}/{}, tangent: {}/{}, uv: {}/{}",
         positions.len(),
         positions.capacity(),

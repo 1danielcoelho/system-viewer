@@ -9,6 +9,7 @@ use crate::managers::scene::orbits::{add_body_instance_entities, fetch_default_m
 use crate::managers::scene::{Entity, Scene};
 use crate::managers::OrbitManager;
 use crate::managers::ResourceManager;
+use crate::utils::log::*;
 use crate::utils::orbits::OBLIQUITY_OF_ECLIPTIC;
 use crate::utils::string::get_unique_name;
 use crate::utils::units::J2000_JDN;
@@ -41,7 +42,7 @@ impl SceneManager {
         let unique_scene_name = get_unique_name(scene_name, &self.loaded_scenes);
 
         let scene = Scene::new(&unique_scene_name);
-        log::info!("Created scene '{}'", unique_scene_name);
+        debug!(LogCat::Scene, "Created scene '{}'", unique_scene_name);
 
         assert!(!self.loaded_scenes.contains_key(&unique_scene_name));
 
@@ -96,7 +97,7 @@ impl SceneManager {
 
             // Loading previous scene from state --> Keep our state transform
             if state.last_scene_identifier.as_str() == identifier {
-                log::info!("Loading last scene from state");
+                info!(LogCat::Scene, "Loading last scene from state");
 
                 // Unpack our reference entity from its name
                 if let Some(reference_name) = &state.reference_entity_name {
@@ -104,7 +105,8 @@ impl SceneManager {
                         state.next_reference_entity =
                             Some(ReferenceChange::FocusKeepCoords(found_ent));
 
-                        log::info!(
+                        debug!(
+                            LogCat::Scene,
                             "Setting startup focused entity to '{:?}': '{}'",
                             found_ent,
                             reference_name
@@ -116,7 +118,7 @@ impl SceneManager {
             }
             // Loading a new scene from its defaults
             else {
-                log::info!("Loading new scene from its defaults");
+                info!(LogCat::Scene, "Loading new scene from its defaults");
 
                 if desc.camera_pos.is_some()
                     && desc.camera_target.is_some()
@@ -141,7 +143,8 @@ impl SceneManager {
                                     state.entity_going_to = Some(*entity);
                                 }
 
-                                log::info!(
+                                debug!(
+                                    LogCat::Scene,
                                     "Setting initial focused entity to '{:?}'",
                                     main_scene.get_entity_name(*entity)
                                 );
@@ -190,10 +193,11 @@ impl SceneManager {
 
         if !identifier.is_empty() {
             if self.descriptions.contains_key(&identifier) {
-                log::info!("Trying to load last scene '{}'", identifier);
+                info!(LogCat::Scene, "Trying to load last scene '{}'", identifier);
                 self.set_scene(&identifier, res_man, orbit_man, state);
             } else {
-                log::warn!(
+                warning!(
+                    LogCat::Scene,
                     "Failed to find a description for last loaded scene '{}'. Current descriptions: '{:#?}'",
                     identifier,
                     self.descriptions.keys()
@@ -216,10 +220,9 @@ impl SceneManager {
             }
         }
 
-        log::info!(
-            "Unloading scene '{}'. Scene is now '{:?}'",
-            identifier,
-            self.main
+        info!(
+            LogCat::Scene,
+            "Unloading scene '{}'. Scene is now '{:?}'", identifier, self.main
         );
 
         self.loaded_scenes.remove(identifier);
@@ -251,12 +254,15 @@ impl SceneManager {
         let new_desc: Result<SceneDescription, String> = ron::de::from_str(serialized)
             .map_err(|e| format!("RON deserialization error:\n{}", e).to_owned());
         if let Err(e) = new_desc {
-            log::error!("{}", e);
+            error!(LogCat::Io, "{}", e);
             return;
         }
         let new_desc = new_desc.unwrap();
 
-        log::info!("Loaded new scene description '{}'", new_desc.name);
+        info!(
+            LogCat::Scene,
+            "Loaded new scene description '{}'", new_desc.name
+        );
 
         let name = new_desc.name.clone();
         self.descriptions.insert(name, new_desc);
@@ -729,6 +735,7 @@ impl SceneManager {
             Vec::new();
 
         // Collect all bodies to parse
+        // TODO: This type of stuff shouldn't be here...
         for instance_desc in instance_descs.iter_mut() {
             if let Some(source) = instance_desc.source.clone() {
                 let slash_pos = source.rfind("/").unwrap();
@@ -742,7 +749,8 @@ impl SceneManager {
                     if num_str.len() > 0 {
                         let parsed = num_str.parse::<usize>();
                         if parsed.is_err() {
-                            log::warn!(
+                            warning!(
+                                LogCat::Scene,
                                 "Failed to parse the wildcard number in instance desc source '{}'",
                                 source
                             );
@@ -753,7 +761,8 @@ impl SceneManager {
 
                     let bodies = orbit_man.get_n_bodies(db_name, limit);
 
-                    log::info!(
+                    info!(
+                        LogCat::Scene,
                         "Found {} wildcard bodies from db '{}'",
                         bodies.len(),
                         db_name
@@ -812,7 +821,7 @@ impl SceneManager {
 
                 let old = parsed_body_name_to_main_ent.insert(name_ent.0.clone(), name_ent.1);
                 if let Some(_) = old {
-                    log::error!("Name collision for body instance name '{}'. Entity '{:?}' will be used from now on", name_ent.0, name_ent.1);
+                    error!(LogCat::Scene, "Name collision for body instance name '{}'. Entity '{:?}' will be used from now on", name_ent.0, name_ent.1);
                 }
 
                 // We successfully parsed this one, so remove it from the vec
@@ -827,7 +836,8 @@ impl SceneManager {
             last_num_left = new_num_left;
         };
         if num_left > 0 {
-            log::error!(
+            error!(
+                LogCat::Scene,
                 "Failed to parse {} bodies due to missing parents! Bodies left:\n{:#?}",
                 num_left,
                 bodies_to_parse

@@ -1,5 +1,6 @@
 use crate::managers::scene::Entity;
 use crate::utils::camera::Camera;
+use crate::utils::log::*;
 use crate::utils::web::{local_storage_get, local_storage_set};
 use na::*;
 use serde::{Deserialize, Serialize};
@@ -209,10 +210,9 @@ impl AppState {
                     return state;
                 }
                 Err(error) => {
-                    log::error!(
-                        "Error deserializing app state '{}': '{}'",
-                        serialized,
-                        error
+                    error!(
+                        LogCat::Io,
+                        "Error deserializing app state '{}': '{}'", serialized, error
                     );
                 }
             }

@@ -1,6 +1,7 @@
 use crate::app_state::{AppState, ReferenceChange};
 use crate::components::{MetadataComponent, TransformComponent};
 use crate::managers::scene::Scene;
+use crate::utils::log::*;
 use na::*;
 
 pub struct TransformUpdateSystem {}
@@ -59,7 +60,8 @@ fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
         .and_then(|c| Some(c.get_world_transform().trans));
 
     if trans.is_none() {
-        log::warn!(
+        warning!(
+            LogCat::Resources,
             "Found no transform component for focused entity '{:?}'",
             ref_ent
         );

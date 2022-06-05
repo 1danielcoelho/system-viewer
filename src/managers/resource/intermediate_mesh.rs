@@ -5,6 +5,7 @@ use super::{
 };
 use crate::managers::resource::mesh::DynamicPrimitive;
 use crate::utils::gl::GL;
+use crate::utils::log::*;
 use crate::utils::memory::any_slice_to_u8_slice;
 use crate::GLCTX;
 use glow::*;
@@ -277,7 +278,8 @@ pub fn intermediate_to_mesh(inter: &IntermediateMesh) -> Rc<RefCell<Mesh>> {
                     source_data: None,
                 };
                 primitive.update_hash();
-                log::info!(
+                info!(
+                    LogCat::Resources,
                     "Set prim compatible hash of prim '{}' of mesh '{}' as '{}'",
                     primitive.name,
                     inter.name,

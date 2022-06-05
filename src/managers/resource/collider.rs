@@ -1,4 +1,5 @@
 use crate::managers::resource::mesh::Mesh;
+use crate::utils::log::*;
 use crate::utils::raycasting::{
     aabb_ray_intersection, sphere_ray_intersection, triangle_ray_intersection, Ray,
 };
@@ -120,7 +121,8 @@ impl Collider for MeshCollider {
 
         let mesh = self.mesh.upgrade();
         if mesh.is_none() {
-            log::warn!(
+            warning!(
+                LogCat::Physics,
                 "Failed to reach target mesh when calculating intersection for a MeshCollider!"
             );
             return min_t;
@@ -139,7 +141,10 @@ impl Collider for MeshCollider {
 
             if other_as_mesh.is_none() || other_as_mesh.unwrap().mesh.upgrade() != mesh {
                 if collider.intersects(&ray) == min_t {
-                    log::warn!("Earlying out due to recursive MeshCollider!");
+                    warning!(
+                        LogCat::Physics,
+                        "Earlying out due to recursive MeshCollider!"
+                    );
                     return min_t;
                 }
             }
@@ -165,7 +170,10 @@ impl Collider for MeshCollider {
     fn contains(&self, point: &Point3<f32>) -> bool {
         let mesh = self.mesh.upgrade();
         if mesh.is_none() {
-            log::warn!("Failed to reach target mesh when calculating contains for a MeshCollider!");
+            warning!(
+                LogCat::Physics,
+                "Failed to reach target mesh when calculating contains for a MeshCollider!"
+            );
             return false;
         }
 

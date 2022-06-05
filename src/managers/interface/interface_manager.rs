@@ -4,6 +4,7 @@ use crate::managers::details_ui::DetailsUI;
 use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::{OrbitManager, ResourceManager};
+use crate::utils::log::*;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::{
@@ -65,18 +66,18 @@ impl InterfaceManager {
                 visuals.widgets.open.fg_stroke.width = 2.0;
                 uictx.set_visuals(visuals);
 
-                let mut style: egui::Style = (*uictx.style()).clone();
-                uictx.set_style(style);
+                // let style: egui::Style = (*uictx.style()).clone();
+                // uictx.set_style(style);
 
-                log::info!("Loading egui state...");
+                info!(LogCat::Io, "Loading egui state...");
                 if new_man.local_storage_ok {
                     if let Some(memory_string) = local_storage_get("egui_memory_json") {
                         if let Ok(memory) = serde_json::from_str(&memory_string) {
                             *uictx.memory() = memory;
                         } else {
-                            log::error!(
-                                "Failed to load egui state from memory string {}",
-                                memory_string
+                            error!(
+                                LogCat::Io,
+                                "Failed to load egui state from memory string {}", memory_string
                             );
                         }
                     }
@@ -534,10 +535,10 @@ impl InterfaceManager {
                         if ui.checkbox(&mut self.local_storage_ok, "").on_hover_text("Allow usage of localStorage for storing session data like app state, window state and last loaded scene.").clicked() {
 
                             if self.local_storage_ok {
-                                log::info!("Allowing usage of local storage");
+                                info!(LogCat::Ui, "Allowing usage of local storage");
                                 local_storage_enable();
                             } else {
-                                log::info!("Stopping usage and clearing local storage");
+                                info!(LogCat::Ui, "Stopping usage and clearing local storage");
                                 local_storage_clear();
                             }
                         }

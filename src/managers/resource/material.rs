@@ -3,6 +3,7 @@ use crate::managers::resource::mesh::{Primitive, PrimitiveAttribute};
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::{details_ui::DetailsUI, resource::shaders::*};
 use crate::utils::gl::GL;
+use crate::utils::log::*;
 use egui::Ui;
 use glow::*;
 use na::Matrix4;
@@ -284,7 +285,8 @@ impl Material {
             return;
         }
 
-        log::info!(
+        debug!(
+            LogCat::Resources,
             "Recompiling material '{}' with compatible hash '{}'",
             self.name,
             self.compatible_prim_hash
@@ -299,7 +301,8 @@ impl Material {
 
         let program = link_program(gl, &prefix_defines, &self.vert, &self.frag);
         if program.is_err() {
-            log::error!(
+            error!(
+                LogCat::Resources,
                 "Error compiling material '{}': '{}'",
                 self.name,
                 program.err().unwrap_or_default(),
@@ -315,7 +318,7 @@ impl Material {
             }
 
             if uniform.location.is_none() {
-                log::warn!(
+                warning!(LogCat::Resources,
                     "Failed to find uniform '{}' on shaders used by material '{}': Vert: '{}', frag: '{}'",
                     uniform_name.as_str(),
                     &self.name,
@@ -346,8 +349,9 @@ impl Material {
         if let Some(tex) = tex {
             self.set_define(unit.get_define());
 
-            log::info!(
-                "\t\t\tSet texture '{}' on unit '{:?}' of material '{}'. Defines: '{:?}'",
+            debug!(
+                LogCat::Resources,
+                "Set texture '{}' on unit '{:?}' of material '{}'. Defines: '{:?}'",
                 RefCell::borrow(&tex).name,
                 unit,
                 self.name,
@@ -358,8 +362,9 @@ impl Material {
             self.textures.remove(&unit);
             self.clear_define(unit.get_define());
 
-            log::info!(
-                "\t\t\tRemoved texture on unit '{:?}' of material '{}'. Defines: '{:?}'",
+            debug!(
+                LogCat::Resources,
+                "Removed texture on unit '{:?}' of material '{}'. Defines: '{:?}'",
                 unit,
                 self.name,
                 self.defines
@@ -374,7 +379,7 @@ impl Material {
     pub fn set_uniform_value(&mut self, name: UniformName, value: UniformValue) {
         if let Some(uniform) = self.uniforms.get_mut(&name) {
             if std::mem::discriminant(&uniform.value) != std::mem::discriminant(&value) {
-                log::warn!("Tried to set uniform '{:?}' with value '{:?}' which is of a different variant than it's current value of '{:?}'!", name, value, uniform.value);
+                warning!(LogCat::Resources,"Tried to set uniform '{:?}' with value '{:?}' which is of a different variant than it's current value of '{:?}'!", name, value, uniform.value);
             }
             uniform.value = value;
         }
@@ -413,10 +418,9 @@ impl Material {
 
         self.compatible_prim_hash = prim.compatible_hash;
 
-        log::info!(
-            "Updated defines according to prim '{}'. Now: '{:?}'",
-            prim.name,
-            self.defines
+        debug!(
+            LogCat::Resources,
+            "Updated defines according to prim '{}'. Now: '{:?}'", prim.name, self.defines
         );
     }
 
@@ -478,7 +482,7 @@ impl Material {
 
             // Bind textures
             for (unit, tex) in &self.textures {
-                // log::info!("\tBinding texture {} to unit {:?}", tex.name, unit);
+                // info!("\tBinding texture {} to unit {:?}", tex.name, unit);
 
                 gl.active_texture(GL::TEXTURE0 + (*unit as u32));
 

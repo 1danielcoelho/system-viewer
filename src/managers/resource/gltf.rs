@@ -8,6 +8,7 @@ use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::ResourceManager;
 use crate::utils::gl::GL;
+use crate::utils::log::*;
 use crate::utils::transform::Transform;
 use gltf::image::Format;
 use gltf::mesh::util::{ReadColors, ReadIndices, ReadTexCoords};
@@ -81,7 +82,7 @@ impl ResourceManager {
         material: &gltf::Material,
     ) -> Result<Rc<RefCell<Material>>, String> {
         let identifier = material.get_identifier(file_identifier);
-        log::info!("\tLoading gltf material '{}'", identifier);
+        debug!(LogCat::Gltf, "\tLoading gltf material '{}'", identifier);
 
         let mat = self
             .instantiate_material("gltf_metal_rough", &identifier)
@@ -94,10 +95,11 @@ impl ResourceManager {
         if let Some(gltf_tex) = pbr.base_color_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_or_request_texture(&tex_identifier, false) {
-                log::info!("\t\tBaseColor texture: '{}'", tex_identifier);
+                debug!(LogCat::Gltf, "\t\tBaseColor texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::BaseColor, Some(tex));
             } else {
-                log::warn!(
+                warning!(
+                    LogCat::Gltf,
                     "Failed to find texture '{}' referenced by material '{}'",
                     tex_identifier,
                     identifier
@@ -108,16 +110,20 @@ impl ResourceManager {
         // Base color factor
         let factor = pbr.base_color_factor();
         mat_mut.set_uniform_value(UniformName::BaseColorFactor, UniformValue::Vec4(factor));
-        log::info!("\t\tBaseColor factor: '{:?}'", factor);
+        debug!(LogCat::Gltf, "\t\tBaseColor factor: '{:?}'", factor);
 
         // Metallic-roughness texture
         if let Some(gltf_tex) = pbr.metallic_roughness_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_or_request_texture(&tex_identifier, false) {
-                log::info!("\t\tMetallicRoughness texture: '{}'", tex_identifier);
+                debug!(
+                    LogCat::Gltf,
+                    "\t\tMetallicRoughness texture: '{}'", tex_identifier
+                );
                 mat_mut.set_texture(TextureUnit::MetallicRoughness, Some(tex));
             } else {
-                log::warn!(
+                warning!(
+                    LogCat::Gltf,
                     "Failed to find texture '{}' referenced by material '{}'",
                     tex_identifier,
                     identifier
@@ -128,21 +134,22 @@ impl ResourceManager {
         // Metallic factor
         let factor = pbr.metallic_factor();
         mat_mut.set_uniform_value(UniformName::MetallicFactor, UniformValue::Float(factor));
-        log::info!("\t\tMetallic factor: '{:?}'", factor);
+        debug!(LogCat::Gltf, "\t\tMetallic factor: '{:?}'", factor);
 
         // Roughness factor
         let factor = pbr.roughness_factor();
         mat_mut.set_uniform_value(UniformName::RoughnessFactor, UniformValue::Float(factor));
-        log::info!("\t\tRoughness factor: '{:?}'", factor);
+        debug!(LogCat::Gltf, "\t\tRoughness factor: '{:?}'", factor);
 
         // Normal texture
         if let Some(gltf_tex) = material.normal_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_or_request_texture(&tex_identifier, false) {
-                log::info!("\t\tNormal texture: '{}'", tex_identifier);
+                debug!(LogCat::Gltf, "\t\tNormal texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::Normal, Some(tex));
             } else {
-                log::warn!(
+                warning!(
+                    LogCat::Gltf,
                     "Failed to find texture '{}' referenced by material '{}'",
                     tex_identifier,
                     identifier
@@ -154,10 +161,11 @@ impl ResourceManager {
         if let Some(gltf_tex) = material.occlusion_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_or_request_texture(&tex_identifier, false) {
-                log::info!("\t\tOcclusion texture: '{}'", tex_identifier);
+                debug!(LogCat::Gltf, "\t\tOcclusion texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::Occlusion, Some(tex));
             } else {
-                log::warn!(
+                warning!(
+                    LogCat::Gltf,
                     "Failed to find texture '{}' referenced by material '{}'",
                     tex_identifier,
                     identifier
@@ -169,10 +177,11 @@ impl ResourceManager {
         if let Some(gltf_tex) = material.emissive_texture() {
             let tex_identifier = gltf_tex.texture().get_identifier(file_identifier);
             if let Some(tex) = self.get_or_request_texture(&tex_identifier, false) {
-                log::info!("\t\tEmissive texture: '{}'", tex_identifier);
+                debug!(LogCat::Gltf, "\t\tEmissive texture: '{}'", tex_identifier);
                 mat_mut.set_texture(TextureUnit::Emissive, Some(tex));
             } else {
-                log::warn!(
+                warning!(
+                    LogCat::Gltf,
                     "Failed to find texture '{}' referenced by material '{}'",
                     tex_identifier,
                     identifier
@@ -183,7 +192,7 @@ impl ResourceManager {
         // Emissive factor
         let factor = material.emissive_factor();
         mat_mut.set_uniform_value(UniformName::EmissiveFactor, UniformValue::Vec3(factor));
-        log::info!("\t\tEmissive factor: '{:?}'", factor);
+        debug!(LogCat::Gltf, "\t\tEmissive factor: '{:?}'", factor);
 
         return Ok(mat.clone());
     }
@@ -196,7 +205,8 @@ impl ResourceManager {
         file_identifier: &str,
         materials: gltf::iter::Materials,
     ) -> Vec<Option<Rc<RefCell<Material>>>> {
-        log::info!(
+        info!(
+            LogCat::Gltf,
             "Loading {} materials from gltf file '{}'",
             materials.len(),
             file_identifier
@@ -211,7 +221,7 @@ impl ResourceManager {
                     result[index] = Some(new_mat);
                 }
                 Err(msg) => {
-                    log::error!("Failed to load gltf material: {}", msg);
+                    error!(LogCat::Gltf, "Failed to load gltf material: {}", msg);
                 }
             }
         }
@@ -228,7 +238,8 @@ impl ResourceManager {
     ) -> Result<IntermediateMesh, String> {
         let identifier = mesh.get_identifier(file_identifier);
 
-        log::info!(
+        debug!(
+            LogCat::Gltf,
             "\tMesh '{}', num_prims: {}",
             identifier,
             mesh.primitives().len()
@@ -253,7 +264,8 @@ impl ResourceManager {
                         indices_vec = iter.collect();
                     }
                     ReadIndices::U32(_) => {
-                        log::warn!(
+                        warning!(
+                            LogCat::Gltf,
                             "Skipping prim {} of mesh {} because it uses u32 vertex indices",
                             prim.index(),
                             identifier
@@ -417,7 +429,7 @@ impl ResourceManager {
                 }
             }
 
-            log::info!(
+            debug!(LogCat::Gltf,
                 "\t\tPrim {}, Ind: {}, Pos: {}, Nor: {}, Tan: {}, Col: {}, UV0: {}, UV1: {}, mode: {}, mat: {}",
                 prim_name,
                 indices_vec.len(),
@@ -491,7 +503,8 @@ impl ResourceManager {
         buffers: &Vec<gltf::buffer::Data>,
         parsed_mats: &Vec<Option<Rc<RefCell<Material>>>>,
     ) -> Vec<Option<IntermediateMesh>> {
-        log::info!(
+        info!(
+            LogCat::Gltf,
             "Loading {} meshes from gltf file '{}'",
             meshes.len(),
             file_identifier
@@ -552,7 +565,7 @@ impl ResourceManager {
             gltf::texture::WrappingMode::Repeat => GL::REPEAT,
         } as i32;
 
-        log::info!(
+        debug!(LogCat::Gltf,
             "\tLoading texture '{}': Width: {}, Height: {}, Format: {}, Num channels: {}, wrap_s: {:?}, wrap_t: {:?}, mag_filter: {:?}, min_filter: {:?}",
             identifier,
             width,
@@ -585,7 +598,8 @@ impl ResourceManager {
         textures: gltf::iter::Textures,
         images: &Vec<gltf::image::Data>,
     ) {
-        log::info!(
+        info!(
+            LogCat::Gltf,
             "Loading {} textures from gltf file '{}'",
             textures.len(),
             file_identifier
@@ -603,17 +617,21 @@ impl ResourceManager {
                     if let Some(existing_tex) = self.textures.get(name) {
                         existing_tex.swap(&new_tex);
 
-                        log::info!(
+                        debug!(
+                            LogCat::Gltf,
                             "Mutating existing texture resource '{}' with new data from '{}'",
                             name,
                             file_identifier
                         );
                     } else if let Some(_) = self.textures.insert(name.to_owned(), new_tex.clone()) {
-                        log::info!("Changing tracked texture resource for name '{}'", name);
+                        debug!(
+                            LogCat::Gltf,
+                            "Changing tracked texture resource for name '{}'", name
+                        );
                     }
                 }
                 Err(msg) => {
-                    log::error!("Failed to load gltf texture: {}", msg);
+                    error!(LogCat::Gltf, "Failed to load gltf texture: {}", msg);
                 }
             }
         }
@@ -709,7 +727,8 @@ impl ResourceManager {
         scenes: gltf::iter::Scenes,
         meshes: &Vec<Option<IntermediateMesh>>,
     ) -> Option<Rc<RefCell<Mesh>>> {
-        log::info!(
+        info!(
+            LogCat::Gltf,
             "Loading {} scenes from gltf file '{}':",
             scenes.len(),
             file_identifier
@@ -785,12 +804,15 @@ impl ResourceManager {
             if let Some(existing_mesh) = self.meshes.get(file_identifier) {
                 existing_mesh.swap(&combined_mesh);
 
-                log::info!(
-                    "Mutating existing mesh resource '{}' with new data ",
-                    file_identifier
+                debug!(
+                    LogCat::Gltf,
+                    "Mutating existing mesh resource '{}' with new data ", file_identifier
                 );
             } else {
-                log::info!("Inserting new mesh resource '{}'", file_identifier);
+                debug!(
+                    LogCat::Gltf,
+                    "Inserting new mesh resource '{}'", file_identifier
+                );
                 self.meshes
                     .insert(file_identifier.to_owned(), combined_mesh);
             }

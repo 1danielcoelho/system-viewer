@@ -3,6 +3,7 @@ use crate::managers::scene::SceneManager;
 use crate::managers::{
     EventManager, InputManager, InterfaceManager, OrbitManager, ResourceManager, SystemManager,
 };
+use crate::utils::log::*;
 use crate::STATE;
 
 pub struct Engine {
@@ -70,16 +71,20 @@ impl Engine {
             "body_database" | "vectors_database" | "elements_database" => {
                 self.receive_database_text(url, content_type, text)
             }
-            _ => log::error!(
-                "Can't handle text content_type '{}' from url: '{}'",
-                content_type,
-                url
+            _ => error!(
+                LogCat::Io,
+                "Can't handle text content_type '{}' from url: '{}'", content_type, url
             ),
         }
     }
 
     fn receive_scene_text(&mut self, url: &str, text: &str) {
-        log::info!("Loading scene from '{}' (length {})", url, text.len());
+        info!(
+            LogCat::Io,
+            "Loading scene from '{}' (length {})",
+            url,
+            text.len()
+        );
 
         self.scene_man.receive_serialized_scene(text);
     }
@@ -96,7 +101,8 @@ impl Engine {
     }
 
     fn receive_database_text(&mut self, url: &str, content_type: &str, text: &str) {
-        log::info!(
+        info!(
+            LogCat::Io,
             "Loading database file from '{}' (length {})",
             url,
             text.len()
@@ -110,16 +116,16 @@ impl Engine {
             "cubemap_face" => self.res_man.receive_cubemap_face_file_bytes(url, data),
             "texture" => self.res_man.receive_texture_file_bytes(url, data),
             "gltf" => self.receive_gltf_bytes(url, data),
-            _ => log::error!(
-                "Can't handle bytes content_type '{}' from url: '{}'",
-                content_type,
-                url
+            _ => error!(
+                LogCat::Io,
+                "Can't handle bytes content_type '{}' from url: '{}'", content_type, url
             ),
         }
     }
 
     fn receive_gltf_bytes(&mut self, file_identifier: &str, data: &mut [u8]) {
-        log::info!(
+        info!(
+            LogCat::Io,
             "Loading GLTF from file '{}' ({} bytes)",
             file_identifier,
             data.len()

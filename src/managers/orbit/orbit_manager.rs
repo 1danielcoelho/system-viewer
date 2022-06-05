@@ -1,5 +1,6 @@
-use std::collections::HashMap;
 use crate::managers::orbit::{BodyDescription, OrbitalElements, StateVector};
+use crate::utils::log::*;
+use std::collections::HashMap;
 
 pub struct OrbitManager {
     bodies: HashMap<String, HashMap<String, BodyDescription>>,
@@ -40,7 +41,10 @@ impl OrbitManager {
                 let num_parsed = parsed_data.len();
                 self.bodies.insert(database_name, parsed_data);
 
-                log::info!("Parsed {} bodies from database '{}'", num_parsed, url);
+                info!(
+                    LogCat::Orbit,
+                    "Parsed {} bodies from database '{}'", num_parsed, url
+                );
             }
             "vectors_database" => {
                 let parsed_data: HashMap<String, Vec<StateVector>> = serde_json::de::from_str(text)
@@ -50,10 +54,9 @@ impl OrbitManager {
                 let num_parsed = parsed_data.len();
                 self.state_vectors = parsed_data;
 
-                log::info!(
-                    "Parsed {} state vectors from database '{}'",
-                    num_parsed,
-                    url
+                info!(
+                    LogCat::Orbit,
+                    "Parsed {} state vectors from database '{}'", num_parsed, url
                 );
             }
             "elements_database" => {
@@ -65,17 +68,15 @@ impl OrbitManager {
                 let num_parsed = parsed_data.len();
                 self.osc_elements = parsed_data;
 
-                log::info!(
-                    "Parsed {} orbital elements from database '{}'",
-                    num_parsed,
-                    url
+                info!(
+                    LogCat::Orbit,
+                    "Parsed {} orbital elements from database '{}'", num_parsed, url
                 );
             }
             _ => {
-                log::error!(
-                    "Unexpected database content type '{}' with url '{}'",
-                    content_type,
-                    url
+                error!(
+                    LogCat::Orbit,
+                    "Unexpected database content type '{}' with url '{}'", content_type, url
                 );
                 return;
             }

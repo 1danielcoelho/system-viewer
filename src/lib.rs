@@ -44,28 +44,27 @@ pub fn main_js() {
 
 #[wasm_bindgen]
 pub async fn start() -> Result<(), JsValue> {
-    crate::utils::log::info!("hi");
-    crate::utils::log::info!(LogCat::Engine, "{}", "Engine info");
-    crate::utils::log::debug!(LogCat::Io, "Io debug msg");
-    crate::utils::log::info!(LogCat::Rendering, "{:?}", Some("you shouldnt see me"));
-    crate::utils::log::error!(LogCat::Engine, "Here's what an error looks like: {}", 5);
+    info!(LogCat::Engine, "{}", "Engine info");
+    debug!(LogCat::Io, "Io debug msg");
+    info!(LogCat::Resources, "{:?}", Some("you shouldnt see me"));
+    error!(LogCat::Engine, "Here's what an error looks like: {}", 5);
 
-    log::info!("Initializing state...");
+    info!(LogCat::Engine, "Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
         s.replace(AppState::load_or_new());
     });
 
-    log::info!("Setting up events...");
+    info!(LogCat::Engine, "Setting up events...");
     setup_event_handlers();
 
-    log::info!("Initializing WebGl rendering context...");
+    info!(LogCat::Engine, "Initializing WebGl rendering context...");
     // GLCTX.with(|gl| {
     //     let mut gl = gl.borrow_mut();
     //     gl.replace(get_gl_context());
     // });
 
-    log::info!("Initializing engine...");
+    info!(LogCat::Engine, "Initializing engine...");
     ENGINE.with(|e| {
         let mut e = e.borrow_mut();
         e.replace(Engine::new());
@@ -137,7 +136,7 @@ pub async fn start() -> Result<(), JsValue> {
     });
 
     // Summoning ritual courtesy of https://rustwasm.github.io/docs/wasm-bindgen/examples/request-animation-frame.html
-    log::info!("Beginning request_animation_frame loop...");
+    info!(LogCat::Engine, "Beginning request_animation_frame loop...");
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
@@ -178,11 +177,14 @@ fn redraw_requested() {
 
                     e.update(s);
                 } else {
-                    log::warn!("Failed to borrow engine for engine update!");
+                    warning!(LogCat::Engine, "Failed to borrow engine for engine update!");
                 }
             });
         } else {
-            log::warn!("Failed to borrow app state for engine update!");
+            warning!(
+                LogCat::Engine,
+                "Failed to borrow app state for engine update!"
+            );
         }
     });
 }
@@ -195,7 +197,10 @@ fn serialize_state(state: &mut AppState) {
         if let Ok(memory_string) = serde_json::to_string(&*ui.memory()) {
             local_storage_set("egui_memory_json", &memory_string)
         } else {
-            log::error!("Failed to serialize egui state to local storage!");
+            error!(
+                LogCat::Io,
+                "Failed to serialize egui state to local storage!"
+            );
         }
     });
 }
@@ -223,10 +228,9 @@ fn update_state(state: &mut AppState, canvas: &HtmlCanvasElement) -> UpdateState
         canvas.set_width(canvas_width_on_screen);
         canvas.set_height(canvas_height_on_screen);
 
-        log::info!(
-            "Resized to w: {}, h: {}",
-            canvas_width_on_screen,
-            canvas_height_on_screen
+        info!(
+            LogCat::Engine,
+            "Resized to w: {}, h: {}", canvas_width_on_screen, canvas_height_on_screen
         );
 
         // We'll need to resize framebuffers and stuff

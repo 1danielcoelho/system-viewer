@@ -9,6 +9,7 @@ use crate::managers::resource::mesh::Mesh;
 use crate::managers::resource::texture::TextureUnit;
 use crate::managers::scene::{Entity, Scene};
 use crate::managers::{OrbitManager, ResourceManager};
+use crate::utils::log::*;
 use crate::utils::string::decode_hex;
 use crate::utils::units::Jdn;
 use na::*;
@@ -87,7 +88,8 @@ pub fn add_body_instance_entities(
         linvel = Some(*instance_vel);
     }
 
-    log::info!(
+    debug!(
+        LogCat::Orbit,
         "Adding body '{}' to scene '{}'",
         name.unwrap_or(&String::new()),
         scene.identifier,
@@ -191,7 +193,8 @@ pub fn add_body_instance_entities(
     let mesh_comp = scene.add_component::<MeshComponent>(sphere_ent);
     mesh_comp.set_mesh(get_body_mesh(body, body_instance, res_man));
     if let Some(mat_over) = get_body_material(body, body_instance, res_man) {
-        log::info!(
+        debug!(
+            LogCat::Orbit,
             "Overriding slot 0 with material '{:?}'",
             mat_over.borrow().get_name()
         );
@@ -304,7 +307,10 @@ pub fn get_body_material(
                 .collect();
             bytes.resize(4, 1.0);
 
-            log::info!("Parsed base_color {:?} for body {:?}", bytes, body_name);
+            debug!(
+                LogCat::Orbit,
+                "Parsed base_color {:?} for body {:?}", bytes, body_name
+            );
 
             mat_mut.set_uniform_value(
                 UniformName::BaseColorFactor,
@@ -313,10 +319,9 @@ pub fn get_body_material(
         }
 
         if let Some(path) = params.get("base_color_texture") {
-            log::info!(
-                "Parsed base_color_texture {:?} for body {:?}",
-                path,
-                body_name
+            debug!(
+                LogCat::Orbit,
+                "Parsed base_color_texture {:?} for body {:?}", path, body_name
             );
 
             mat_mut.set_texture(
@@ -326,45 +331,45 @@ pub fn get_body_material(
         }
 
         if let Some(path) = params.get("normal_texture") {
-            log::info!("Parsed normal_texture {:?} for body {:?}", path, body_name);
+            debug!(
+                LogCat::Orbit,
+                "Parsed normal_texture {:?} for body {:?}", path, body_name
+            );
 
             mat_mut.set_texture(
                 TextureUnit::Normal,
-                res_man.get_or_request_texture(&("public/textures/".to_owned() +path), false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() + path), false),
             );
         }
 
         if let Some(path) = params.get("metal_rough_texture") {
-            log::info!(
-                "Parsed metal_rough_texture {:?} for body {:?}",
-                path,
-                body_name
+            debug!(
+                LogCat::Orbit,
+                "Parsed metal_rough_texture {:?} for body {:?}", path, body_name
             );
 
             mat_mut.set_texture(
                 TextureUnit::MetallicRoughness,
-                res_man.get_or_request_texture(&("public/textures/".to_owned() +path), false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() + path), false),
             );
         }
 
         if let Some(path) = params.get("emissive_texture") {
-            log::info!(
-                "Parsed emissive_texture {:?} for body {:?}",
-                path,
-                body_name
+            debug!(
+                LogCat::Orbit,
+                "Parsed emissive_texture {:?} for body {:?}", path, body_name
             );
 
             mat_mut.set_texture(
                 TextureUnit::Emissive,
-                res_man.get_or_request_texture(&("public/textures/".to_owned() +path), false),
+                res_man.get_or_request_texture(&("public/textures/".to_owned() + path), false),
             );
         }
 
         if let Some(float_vec_str) = params.get("emissive_factor") {
-            log::info!(
-                "Parsed emissive_factor {:?} for body {:?}",
-                float_vec_str,
-                body_name
+            debug!(
+                LogCat::Orbit,
+                "Parsed emissive_factor {:?} for body {:?}", float_vec_str, body_name
             );
 
             let mut floats = float_vec_str
@@ -385,10 +390,9 @@ pub fn get_body_material(
         if let Some(path) = params.get("double_sided") {
             let double_sided = path == "true";
 
-            log::info!(
-                "Parsed double_sided '{:?}' for body {:?}",
-                double_sided,
-                body_name
+            debug!(
+                LogCat::Orbit,
+                "Parsed double_sided '{:?}' for body {:?}", double_sided, body_name
             );
 
             mat_mut.double_sided = double_sided;
@@ -427,7 +431,14 @@ pub fn fetch_default_motion_if_needed(
     }
 
     if lowest_delta > 0.1 {
-        log::warn!("Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'", vectors[lowest_index], lowest_delta, default_time.0, body_id);
+        warning!(
+            LogCat::Orbit,
+            "Using state vector '{:?}' with time delta of '{}' days to scene time '{}', for used for body '{}'",
+            vectors[lowest_index],
+            lowest_delta,
+            default_time.0,
+            body_id
+        );
     }
 
     return Some(vectors[lowest_index].clone());

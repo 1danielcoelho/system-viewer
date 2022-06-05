@@ -2,35 +2,44 @@
 pub enum LogLevel {
     Debug = 1,
     Info = 2,
-    Warn = 3,
+    Warning = 3,
     Error = 4,
 }
 
 pub enum LogCat {
-    Default,
     Engine,
-    Rendering,
+    Scene,
+    Resources,
+    Physics,
+    Orbit,
+    Gltf,
     Io,
-    Input,
+    Ui,
 }
 impl LogCat {
     pub const fn default_level(cat: &LogCat) -> LogLevel {
         match cat {
-            LogCat::Default => LogLevel::Debug,
             LogCat::Engine => LogLevel::Debug,
-            LogCat::Rendering => LogLevel::Error,
+            LogCat::Scene => LogLevel::Debug,
+            LogCat::Resources => LogLevel::Debug,
+            LogCat::Physics => LogLevel::Debug,
+            LogCat::Orbit => LogLevel::Debug,
+            LogCat::Gltf => LogLevel::Debug,
             LogCat::Io => LogLevel::Debug,
-            LogCat::Input => LogLevel::Debug,
+            LogCat::Ui => LogLevel::Debug,
         }
     }
 
     pub const fn to_string(&self) -> &'static str {
         match self {
-            LogCat::Default => "",
             LogCat::Engine => "[ENGI]: ",
-            LogCat::Rendering => "[REND]: ",
+            LogCat::Scene => "[SCEN]: ",
+            LogCat::Resources => "[RESO]: ",
+            LogCat::Physics => "[PHYS]: ",
+            LogCat::Orbit => "[ORBT]: ",
+            LogCat::Gltf => "[GLTF]: ",
             LogCat::Io => "[  IO]: ",
-            LogCat::Input => "[INPT]: ",
+            LogCat::Ui => "[  UI]: ",
         }
     }
 }
@@ -40,7 +49,7 @@ pub fn log_internal(cat: LogCat, level: LogLevel, args: std::fmt::Arguments) {
         let log_fun = match level {
             LogLevel::Debug => web_sys::console::debug_1,
             LogLevel::Info => web_sys::console::info_1,
-            LogLevel::Warn => web_sys::console::warn_1,
+            LogLevel::Warning => web_sys::console::warn_1,
             LogLevel::Error => web_sys::console::error_1,
         };
 
@@ -52,15 +61,7 @@ macro_rules! debug {
     ($cat:expr, $($args:tt)+) => ({
         $crate::utils::log::log_internal(
             $cat,
-            $crate::utils::log::LogLevel::Info,
-            format_args!($($args)+)
-        );
-    });
-
-    ($($args:tt)+) => ({
-        $crate::utils::log::log_internal(
-            $crate::utils::log::LogCat::Default,
-            $crate::utils::log::LogLevel::Info,
+            $crate::utils::log::LogLevel::Debug,
             format_args!($($args)+)
         );
     });
@@ -70,37 +71,21 @@ macro_rules! info {
     ($cat:expr, $($args:tt)+) => ({
         $crate::utils::log::log_internal(
             $cat,
-            $crate::utils::log::LogLevel::Debug,
-            format_args!($($args)+)
-        );
-    });
-
-    ($($args:tt)+) => ({
-        $crate::utils::log::log_internal(
-            $crate::utils::log::LogCat::Default,
-            $crate::utils::log::LogLevel::Debug,
+            $crate::utils::log::LogLevel::Info,
             format_args!($($args)+)
         );
     });
 }
 
-// macro_rules! warn {
-//     ($cat:expr, $($args:tt)+) => ({
-//         $crate::utils::log::log_internal(
-//             $cat,
-//             $crate::utils::log::LogLevel::Warn,
-//             format_args!($($args)+)
-//         );
-//     });
-
-//     ($($args:tt)+) => ({
-//         $crate::utils::log::log_internal(
-//             $crate::utils::log::LogCat::Default,
-//             $crate::utils::log::LogLevel::Warn,
-//             format_args!($($args)+)
-//         );
-//     });
-// }
+macro_rules! warning {
+    ($cat:expr, $($args:tt)+) => ({
+        $crate::utils::log::log_internal(
+            $cat,
+            $crate::utils::log::LogLevel::Warning,
+            format_args!($($args)+)
+        );
+    });
+}
 
 macro_rules! error {
     ($cat:expr, $($args:tt)+) => ({
@@ -110,17 +95,9 @@ macro_rules! error {
             format_args!($($args)+)
         );
     });
-
-    ($($args:tt)+) => ({
-        $crate::utils::log::log_internal(
-            $crate::utils::log::LogCat::Default,
-            $crate::utils::log::LogLevel::Error,
-            format_args!($($args)+)
-        );
-    });
 }
 
 pub(crate) use debug;
 pub(crate) use error;
 pub(crate) use info;
-// pub(crate) use warn;
+pub(crate) use warning;

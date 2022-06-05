@@ -7,6 +7,7 @@ use crate::managers::resource::mesh::Mesh;
 use crate::managers::scene::component_storage::{
     ComponentStorage, HashStorage, PackedStorage, SparseStorage,
 };
+use crate::utils::log::*;
 use na::*;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -92,12 +93,13 @@ impl Scene {
     }
 
     /** Used when injecting scenes into eachother */
+    // TODO: Remove all of this stuff what was I even thinking
     pub fn move_from_other(&mut self, other_man: Self) {
         // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
         // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
         // packing
 
-        log::info!("Moving from other");
+        debug!(LogCat::Scene, "Moving from other");
 
         // Allocate new entities, keep an array of their newly allocated indices
         let num_other_ents = other_man.get_num_entities();
@@ -202,7 +204,8 @@ impl Scene {
             .borrow_mut()
             .insert(self.last_used_entity, entity_storage_index);
 
-        log::info!(
+        debug!(
+            LogCat::Scene,
             "Creating new entity {:?}: '{}'",
             new_entry.current,
             new_entry.name.as_ref().unwrap_or(&String::new()),
@@ -264,7 +267,7 @@ impl Scene {
     }
 
     pub fn delete_entity(&mut self, e: Entity) -> bool {
-        log::info!("Deleting entity {:?}", e);
+        debug!(LogCat::Scene, "Deleting entity {:?}", e);
         match self.get_entity_index(e) {
             Some(index) => {
                 let cloned_entry = self.entity_storage[index as usize].clone();
@@ -550,7 +553,8 @@ impl Scene {
     where
         T: Default + Component + Component<ComponentType = T>,
     {
-        log::info!(
+        debug!(
+            LogCat::Scene,
             "Adding component {:?} to entity '{:?}'",
             std::any::type_name::<T>(),
             entity

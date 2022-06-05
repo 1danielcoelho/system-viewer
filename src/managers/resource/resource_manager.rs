@@ -5,6 +5,7 @@ use crate::managers::resource::procedural_meshes::*;
 use crate::managers::resource::texture::Texture;
 use crate::utils::gl::GL;
 use crate::utils::hashmap::InsertOrGet;
+use crate::utils::log::*;
 use crate::utils::string::{get_unique_name, remove_numbered_suffix};
 use crate::utils::web::request_bytes;
 use crate::{ENGINE, GLCTX};
@@ -292,10 +293,9 @@ fn load_cubemap_texture_from_image_bytes(
             format = face_format;
             num_channels = face_channels;
         } else {
-            log::error!(
-                "Error loading cubemap face {} for identifier '{}'",
-                index,
-                identifier
+            error!(
+                LogCat::Resources,
+                "Error loading cubemap face {} for identifier '{}'", index, identifier
             );
             success = false;
             break;
@@ -354,7 +354,7 @@ impl TempCubemap {
             "Front" => Some(&mut self.faces[TempCubemap::FRONT]),
             "Back" => Some(&mut self.faces[TempCubemap::BACK]),
             _ => {
-                log::error!("Unexpected cubemap face '{}'", filename);
+                error!(LogCat::Resources, "Unexpected cubemap face '{}'", filename);
                 None
             }
         }
@@ -442,7 +442,7 @@ impl ResourceManager {
         };
 
         if let Some(mesh) = mesh {
-            log::info!("Generated mesh '{}'", identifier);
+            debug!(LogCat::Resources, "Generated mesh '{}'", identifier);
             assert!(!self.meshes.contains_key(identifier));
 
             mesh.borrow_mut().name = identifier.to_owned();
@@ -475,7 +475,8 @@ impl ResourceManager {
             return Some(mat.clone());
         }
 
-        log::error!(
+        error!(
+            LogCat::Resources,
             "Failed to find a material for identifier '{}'. Current valid identifiers:\n{:#?}",
             identifier,
             self.materials.keys()
@@ -499,7 +500,8 @@ impl ResourceManager {
         let new_name = get_unique_name(remove_numbered_suffix(name), &self.materials);
         instance.borrow_mut().name = new_name.to_owned();
 
-        log::info!(
+        info!(
+            LogCat::Resources,
             "Generated material instance '{}' from master '{}'",
             instance.borrow().name,
             master_mat.unwrap().borrow().name
@@ -669,7 +671,8 @@ impl ResourceManager {
             _ => None,
         };
         if mat.is_none() {
-            log::error!(
+            error!(
+                LogCat::Resources,
                 "Invalid material identifier '{}'. Current valid identifiers:\n{:#?}",
                 identifier,
                 self.materials.keys()
@@ -681,7 +684,7 @@ impl ResourceManager {
 
         assert!(!self.materials.contains_key(identifier));
 
-        log::info!("Generated material '{}'", identifier);
+        debug!(LogCat::Resources, "Generated material '{}'", identifier);
         self.materials
             .insert(identifier.to_string(), ref_mat.clone());
         return Some(ref_mat);
@@ -701,10 +704,9 @@ impl ResourceManager {
             self.temp_cubemaps.insert_or_get(cubemap_identifier.clone());
 
         if cubemap.completed {
-            log::error!(
-                "Received face '{}' for completed cubemap '{}",
-                file,
-                identifier
+            debug!(
+                LogCat::Resources,
+                "Received face '{}' for completed cubemap '{}", file, identifier
             );
             return;
         }
@@ -714,7 +716,8 @@ impl ResourceManager {
             face_vec.copy_from_slice(bytes);
         }
 
-        log::info!(
+        debug!(
+            LogCat::Resources,
             "Received cubemap face bytes: '{}'. Skybox id: '{}', file: '{}'",
             identifier,
             cubemap_identifier,
@@ -727,9 +730,9 @@ impl ResourceManager {
 
         cubemap.completed = true;
 
-        log::info!(
-            "Received all faces for cubemap: '{}'. Creating texture...",
-            cubemap_identifier,
+        debug!(
+            LogCat::Resources,
+            "Received all faces for cubemap: '{}'. Creating texture...", cubemap_identifier,
         );
 
         let mut tex: Option<Rc<RefCell<Texture>>> = None;
@@ -737,10 +740,9 @@ impl ResourceManager {
             let converted_tex =
                 load_cubemap_texture_from_image_bytes(&cubemap_identifier, cubemap, &ctx);
             if let Err(err) = converted_tex {
-                log::error!(
-                    "Error when trying to load cubemap texture '{}': {}",
-                    cubemap_identifier,
-                    err
+                error!(
+                    LogCat::Resources,
+                    "Error when trying to load cubemap texture '{}': {}", cubemap_identifier, err
                 );
                 return;
             }
@@ -748,13 +750,16 @@ impl ResourceManager {
         });
         let tex = tex.unwrap();
 
-        log::info!("Generated cubemap texture '{}'", cubemap_identifier);
+        debug!(
+            LogCat::Resources,
+            "Generated cubemap texture '{}'", cubemap_identifier
+        );
         if let Some(existing_tex) = self.textures.get(&cubemap_identifier) {
             existing_tex.swap(&tex);
 
-            log::info!(
-                "Mutating existing cubemap texture resource '{}' with new data",
-                cubemap_identifier
+            debug!(
+                LogCat::Resources,
+                "Mutating existing cubemap texture resource '{}' with new data", cubemap_identifier
             );
         } else {
             self.textures.insert(cubemap_identifier.to_owned(), tex);
@@ -764,22 +769,21 @@ impl ResourceManager {
     pub fn receive_texture_file_bytes(&mut self, identifier: &str, bytes: &[u8]) {
         let tex = load_texture_from_image_bytes(identifier, bytes);
         if let Err(err) = tex {
-            log::error!(
-                "Error when trying to load texture '{}': {}",
-                identifier,
-                err
+            error!(
+                LogCat::Resources,
+                "Error when trying to load texture '{}': {}", identifier, err
             );
             return;
         }
         let tex = tex.unwrap();
 
-        log::info!("Generated texture '{}'", identifier);
+        debug!(LogCat::Resources, "Generated texture '{}'", identifier);
         if let Some(existing_tex) = self.textures.get(identifier) {
             existing_tex.swap(&tex);
 
-            log::info!(
-                "Mutating existing texture resource '{}' with new data",
-                identifier
+            debug!(
+                LogCat::Resources,
+                "Mutating existing texture resource '{}' with new data", identifier
             );
         } else {
             self.textures.insert(identifier.to_owned(), tex);
@@ -795,7 +799,7 @@ impl ResourceManager {
             return Some(tex.clone());
         }
 
-        // log::info!(
+        // info!(
         //     "Failed to find texture {} in texture map {:#?}",
         //     full_path,
         //     self.textures

@@ -11,6 +11,7 @@ use crate::managers::scene::Scene;
 use crate::managers::ResourceManager;
 use crate::systems::Framebuffer;
 use crate::utils::gl::GL;
+use crate::utils::log::*;
 use crate::utils::string::decode_hex;
 use crate::{GLCTX, STATE};
 use glow::*;
@@ -150,7 +151,7 @@ fn pre_draw(state: &AppState, gl: &glow::Context, scene: &mut Scene) -> FrameUni
         result.light_pos_or_dir_c.push(pos.y as f32);
         result.light_pos_or_dir_c.push(pos.z as f32);
 
-        // log::info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
+        // info!("Setting light {} with pos: '{:?}', intensity: '{}' and color: '{:?}'", index, pos, light.intensity, light.color);
 
         index += 1;
         if index >= NUM_LIGHTS {
@@ -217,7 +218,10 @@ fn draw_one(
     wv_no_trans[(2, 3)] = 0.0;
     if let None = wv_no_trans.try_inverse() {
         // TODO. Usually happens when radius/scale is zero by some mistake
-        log::error!("Failed to invert trans '{:#?}'", wv_no_trans);
+        error!(
+            LogCat::Resources,
+            "Failed to invert trans '{:#?}'", wv_no_trans
+        );
         return;
     }
 
@@ -293,7 +297,7 @@ fn draw_one(
                     );
                 }
 
-                // log::info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
+                // info!("Drawing mesh {} with material {}", mesh.name, mat_mut.name);
                 mat_mut.bind_for_drawing(gl);
             }
 

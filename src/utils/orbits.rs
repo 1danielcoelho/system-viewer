@@ -1,4 +1,5 @@
 use crate::managers::orbit::OrbitalElements;
+use crate::utils::log::*;
 use crate::utils::transform::Transform;
 use crate::utils::units::{Au, Deg, Jdn, Rad, J2000_JDN};
 use na::{Point3, UnitQuaternion, Vector3};
@@ -100,7 +101,8 @@ pub fn orbital_elements_to_xyz(
         error = eccentric_anomaly - elements.eccentricity * eccentric_anomaly.sin() - mean_anomaly;
     }
     if error > NEWTON_RAPHSON_DELTA {
-        log::warn!(
+        warning!(
+            LogCat::Orbit,
             "Failed to converge eccentric anomaly for time {:?} and orbital elements {:#?}",
             t,
             elements
@@ -179,7 +181,7 @@ pub fn bake_eccentric_anomaly_times(elements: &OrbitalElements, num_angles: u32)
         result.push(Jdn(t));
     }
 
-    log::info!("Baked {} samples for an orbit", result.len());
+    info!(LogCat::Orbit, "Baked {} samples for an orbit", result.len());
     return result;
 }
 

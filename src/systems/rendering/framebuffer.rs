@@ -1,5 +1,6 @@
 use crate::managers::resource::texture::Texture;
 use crate::utils::gl::GL;
+use crate::utils::log::*;
 use glow::*;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -72,17 +73,15 @@ impl Framebuffer {
             );
 
             if gl.check_framebuffer_status(GL::FRAMEBUFFER) != GL::FRAMEBUFFER_COMPLETE {
-                log::error!(
-                    "Failed to create main framebuffer with width {}, height {}",
-                    width,
-                    height
+                error!(
+                    LogCat::Resources,
+                    "Failed to create main framebuffer with width {}, height {}", width, height
                 );
             }
 
-            log::info!(
-                "Created main framebuffer with width {}, height {}",
-                width,
-                height
+            debug!(
+                LogCat::Resources,
+                "Created main framebuffer with width {}, height {}", width, height
             );
 
             gl.bind_texture(GL::TEXTURE_2D, None);
@@ -156,10 +155,9 @@ impl Framebuffer {
             gl.bind_renderbuffer(GL::RENDERBUFFER, None);
         }
 
-        log::info!(
-            "Resized framebuffer attachments with width {}, height {}",
-            self.width,
-            self.height
+        debug!(
+            LogCat::Resources,
+            "Resized framebuffer attachments with width {}, height {}", self.width, self.height
         );
     }
 
