@@ -15,9 +15,10 @@ impl InputManager {
 
     pub fn run(&mut self, state: &mut AppState) {
         process_input(state, self.last_mouse_x, self.last_mouse_y);
-        state
-            .camera
-            .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
+        state.camera.update_transforms(
+            state.canvas_width as f64 / state.canvas_height as f64,
+            state.reference_translation,
+        );
 
         self.last_mouse_x = state.input.mouse_x;
         self.last_mouse_y = state.input.mouse_y;
@@ -43,20 +44,20 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
 
     if let Some(selected) = state.selection {
         if state.input.f == ButtonState::Pressed {
-            state.camera.next_reference_entity = Some(ReferenceChange::FocusKeepLocation(selected));
+            state.next_reference_entity = Some(ReferenceChange::FocusKeepLocation(selected));
         }
-        
+
         if state.input.g == ButtonState::Pressed {
-            state.camera.entity_going_to = Some(selected);
+            state.entity_going_to = Some(selected);
         }
     }
 
     if state.input.esc == ButtonState::Pressed {
-        state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+        state.next_reference_entity = Some(ReferenceChange::Clear);
     }
 
     // Zoom in/out
-    if state.input.modifiers.alt && state.camera.reference_translation.is_some() {
+    if state.input.modifiers.alt && state.reference_translation.is_some() {
         if state.input.scroll_delta_y < 0 {
             state.camera.pos *= 0.9;
             state.camera.target *= 0.9;
@@ -104,7 +105,7 @@ fn process_input(state: &mut AppState, last_mouse_x: i32, last_mouse_y: i32) {
     if state.input.m0 == ButtonState::Pressed
         && (state.input.delta_y.abs() > 0 || state.input.delta_x.abs() > 0)
         && state.input.modifiers.alt
-        && state.camera.reference_translation.is_some()
+        && state.reference_translation.is_some()
     {
         let half_canvas_height_world =
             state.camera.near * (state.camera.fov_v.to_radians() / 2.0).tan();

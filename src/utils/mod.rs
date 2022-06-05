@@ -1,3 +1,4 @@
+pub mod camera;
 pub mod gl;
 pub mod hashmap;
 pub mod memory;

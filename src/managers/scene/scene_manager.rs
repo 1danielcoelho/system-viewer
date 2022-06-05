@@ -99,9 +99,9 @@ impl SceneManager {
                 log::info!("Loading last scene from state");
 
                 // Unpack our reference entity from its name
-                if let Some(reference_name) = &state.camera.reference_entity_name {
+                if let Some(reference_name) = &state.reference_entity_name {
                     if let Some(found_ent) = main_scene.get_entity_from_name(&reference_name[..]) {
-                        state.camera.next_reference_entity =
+                        state.next_reference_entity =
                             Some(ReferenceChange::FocusKeepCoords(found_ent));
 
                         log::info!(
@@ -112,7 +112,7 @@ impl SceneManager {
                     }
                 }
 
-                state.camera.reference_entity_name = None;
+                state.reference_entity_name = None;
             }
             // Loading a new scene from its defaults
             else {
@@ -134,11 +134,11 @@ impl SceneManager {
                     for (entity, component) in main_scene.metadata.iter() {
                         if let Some(id) = component.get_metadata("body_id") {
                             if id == focus {
-                                state.camera.next_reference_entity =
+                                state.next_reference_entity =
                                     Some(ReferenceChange::FocusKeepCoords(*entity));
 
                                 if need_go_to {
-                                    state.camera.entity_going_to = Some(*entity);
+                                    state.entity_going_to = Some(*entity);
                                 }
 
                                 log::info!(
@@ -150,7 +150,7 @@ impl SceneManager {
                         }
                     }
                 } else {
-                    state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+                    state.next_reference_entity = Some(ReferenceChange::Clear);
                 }
             }
 

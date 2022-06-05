@@ -1,5 +1,4 @@
-use crate::app_state::AppState;
-use crate::app_state::ReferenceChange;
+use crate::app_state::{AppState, ReferenceChange};
 use crate::components::{MetadataComponent, TransformComponent};
 use crate::managers::scene::Scene;
 use na::*;
@@ -16,9 +15,10 @@ impl TransformUpdateSystem {
         handle_go_to(state, scene);
 
         // The systems may have updated the reference body's position, so refresh our camera transforms
-        state
-            .camera
-            .update_transforms(state.canvas_width as f64 / state.canvas_height as f64);
+        state.camera.update_transforms(
+            state.canvas_width as f64 / state.canvas_height as f64,
+            state.reference_translation,
+        );
     }
 }
 
@@ -47,12 +47,12 @@ fn concatenate_parent_transforms(scene: &mut Scene) {
 /// This so that the camera and other consumers don't have to all poke around the scene to find it
 /// Plus this way it is always up to date and a single consistent value throughout all uses
 fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
-    if state.camera.reference_entity.is_none() {
-        state.camera.reference_translation = None;
+    if state.reference_entity.is_none() {
+        state.reference_translation = None;
         return;
     }
 
-    let ref_ent = state.camera.reference_entity.unwrap();
+    let ref_ent = state.reference_entity.unwrap();
 
     let trans = scene
         .get_component::<TransformComponent>(ref_ent)
@@ -65,7 +65,7 @@ fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
         );
     }
 
-    state.camera.reference_translation = trans;
+    state.reference_translation = trans;
 }
 
 /// If we have a `state.camera.next_reference_entity`, this will update the camera `pos`/`target`/`up` to be with respect to
@@ -74,8 +74,8 @@ fn update_reference_translation(state: &mut AppState, scene: &mut Scene) {
 /// This function expects that world transforms are finalized, and that referen_translation is
 /// up-to-date
 fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
-    let old_entity = &mut state.camera.reference_entity;
-    let new_entity = &mut state.camera.next_reference_entity;
+    let old_entity = &mut state.reference_entity;
+    let new_entity = &mut state.next_reference_entity;
 
     // Don't do anything if asked to changed to the same entity
     if let Some(ReferenceChange::FocusKeepLocation(entity)) = new_entity {
@@ -95,7 +95,7 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
     let new_entity = new_entity.as_ref().unwrap();
     match new_entity {
         ReferenceChange::FocusKeepLocation(new_entity) => {
-            let old_to_world = match state.camera.reference_translation {
+            let old_to_world = match state.reference_translation {
                 Some(old_trans) => Translation3::from(old_trans).to_homogeneous(),
                 None => Matrix4::identity(),
             };
@@ -114,13 +114,13 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
             state.camera.pos = trans.transform_point(&state.camera.pos);
             state.camera.up = Unit::new_normalize(trans.transform_vector(&state.camera.up));
             state.camera.target = Point3::new(0.0, 0.0, 0.0);
-            state.camera.reference_entity = Some(*new_entity);
+            state.reference_entity = Some(*new_entity);
         }
         ReferenceChange::FocusKeepCoords(new_entity) => {
-            state.camera.reference_entity = Some(*new_entity);
+            state.reference_entity = Some(*new_entity);
         }
         ReferenceChange::Clear => {
-            let old_to_world = match state.camera.reference_translation {
+            let old_to_world = match state.reference_translation {
                 Some(old_trans) => Translation3::from(old_trans).to_homogeneous(),
                 None => Matrix4::identity(),
             };
@@ -128,21 +128,21 @@ fn handle_reference_changes(state: &mut AppState, scene: &mut Scene) {
             state.camera.pos = old_to_world.transform_point(&state.camera.pos);
             state.camera.up = Unit::new_normalize(old_to_world.transform_vector(&state.camera.up));
             state.camera.target = old_to_world.transform_point(&state.camera.target);
-            state.camera.reference_entity = None;
+            state.reference_entity = None;
         }
     };
 
     // If we changed reference, we need to cache the reference translation again
     // so that other calculations done this frame are correct
     update_reference_translation(state, scene);
-    state.camera.next_reference_entity = None;
+    state.next_reference_entity = None;
 }
 
 fn handle_go_to(state: &mut AppState, scene: &mut Scene) {
-    if state.camera.entity_going_to.is_none() {
+    if state.entity_going_to.is_none() {
         return;
     }
-    let target_entity = state.camera.entity_going_to.unwrap();
+    let target_entity = state.entity_going_to.unwrap();
 
     // If we want to go to Saturn's rings, use the whole Saturn's bounding box
     let target_entity = scene.get_entity_ancestor(target_entity);
@@ -165,12 +165,12 @@ fn handle_go_to(state: &mut AppState, scene: &mut Scene) {
     let mut target_pos = transform.trans;
     let mut camera_pos = target_pos + Vector3::new(offset, offset, offset);
 
-    if let Some(reference_trans) = state.camera.reference_translation {
+    if let Some(reference_trans) = state.reference_translation {
         target_pos -= reference_trans;
         camera_pos -= reference_trans;
     }
 
     state.camera.pos = Point3::from(camera_pos);
     state.camera.target = Point3::from(target_pos);
-    state.camera.entity_going_to = None;
+    state.entity_going_to = None;
 }

@@ -45,8 +45,7 @@ impl Engine {
 
             // Update serializable state
             // TODO: Find a better place for this?
-            state.camera.reference_entity_name = state
-                .camera
+            state.reference_entity_name = state
                 .reference_entity
                 .and_then(|e| scene.get_entity_name(e))
                 .and_then(|s| Some(s.to_owned()));

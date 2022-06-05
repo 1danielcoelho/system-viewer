@@ -371,7 +371,7 @@ impl InterfaceManager {
 
                     ui.horizontal(|ui| {
                         let ref_name = match scene_man.get_main_scene() {
-                            Some(scene) => match state.camera.reference_entity {
+                            Some(scene) => match state.reference_entity {
                                 Some(reference) => {
                                     Some(scene.get_entity_name(reference).unwrap_or_default())
                                 }
@@ -440,13 +440,13 @@ impl InterfaceManager {
 
                             if ui
                                 .add_enabled(
-                                    state.camera.reference_entity.is_some(),
+                                    state.reference_entity.is_some(),
                                     egui::Button::new(egui::RichText::new("❌").color(text_color)),
                                 )
                                 .on_hover_text("Stop focusing this body")
                                 .clicked()
                             {
-                                state.camera.next_reference_entity = Some(ReferenceChange::Clear);
+                                state.next_reference_entity = Some(ReferenceChange::Clear);
                             }
                         });
                     });
@@ -559,7 +559,7 @@ impl InterfaceManager {
         UICTX.with(|uictx| {
             let mut cam_pos = state.camera.pos;
             let mut cam_target = state.camera.target;
-            if let Some(reference) = state.camera.reference_translation {
+            if let Some(reference) = state.reference_translation {
                 cam_pos += reference;
                 cam_target += reference;
             }
@@ -649,7 +649,7 @@ impl InterfaceManager {
                         ui.label(format!("Distance: {:.3} Mm", distance));
 
                         ui.horizontal(|ui| {
-                            if state.camera.reference_entity == Some(*selected_entity) {
+                            if state.reference_entity == Some(*selected_entity) {
                                 let mut style = uictx.style().deref().clone();
                                 let old_bg_fill = style.visuals.widgets.inactive.bg_fill;
                                 style.visuals.widgets.inactive.bg_fill =
@@ -680,11 +680,11 @@ impl InterfaceManager {
                     .unwrap();
 
                 if let Some(ent) = entity_to_focus {
-                    state.camera.next_reference_entity = Some(ent);
+                    state.next_reference_entity = Some(ent);
                 }
 
                 if let Some(ent) = entity_to_go_to {
-                    state.camera.entity_going_to = Some(ent);
+                    state.entity_going_to = Some(ent);
                 }
             }
 
@@ -804,7 +804,7 @@ impl InterfaceManager {
                                 if let Some(scene) = scene_man.get_main_scene_mut() {
                                     ui.label("Reference:");
 
-                                    if let Some(reference) = state.camera.reference_entity {
+                                    if let Some(reference) = state.reference_entity {
                                         ui.horizontal(|ui| {
                                             ui.label(format!(
                                                 "{:?}: {}",
@@ -818,7 +818,7 @@ impl InterfaceManager {
                                                 .button("🗑")
                                                 .on_hover_text("Stop focusing this entity");
                                             if clear_resp.clicked() {
-                                                state.camera.next_reference_entity =
+                                                state.next_reference_entity =
                                                     Some(ReferenceChange::Clear);
                                             }
                                         });
@@ -857,7 +857,7 @@ impl InterfaceManager {
                                         let but_res =
                                             ui.button("🎥").on_hover_text("Focus this entity");
                                         if but_res.clicked() {
-                                            state.camera.next_reference_entity =
+                                            state.next_reference_entity =
                                                 Some(ReferenceChange::FocusKeepLocation(selection));
                                         }
                                     });
@@ -1222,7 +1222,7 @@ fn handle_pointer_on_scene(state: &mut AppState, scene: &mut Scene) {
     );
 
     let mut start_world = state.camera.pos.clone();
-    if let Some(reference) = state.camera.reference_translation {
+    if let Some(reference) = state.reference_translation {
         start_world += reference;
     }
 
