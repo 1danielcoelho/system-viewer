@@ -492,6 +492,10 @@ pub fn local_storage_get(key: &str) -> Option<String> {
     local_storage().map(|storage| storage.get_item(key).ok())??
 }
 
+pub fn is_local_storage_enabled() -> bool {
+    return local_storage_get("storage_ok").is_some();
+}
+
 pub fn local_storage_enable() {
     local_storage().map(|storage| storage.set_item("storage_ok", "true"));
 }

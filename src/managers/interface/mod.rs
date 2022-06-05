@@ -6,7 +6,10 @@ use crate::managers::scene::{Entity, Scene, SceneManager};
 use crate::managers::{OrbitManager, ResourceManager};
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
-use crate::utils::web::{get_window, local_storage_clear, local_storage_enable, local_storage_get};
+use crate::utils::web::{
+    get_window, is_local_storage_enabled, local_storage_clear, local_storage_enable,
+    local_storage_get,
+};
 use crate::{GLCTX, UICTX};
 use egui::Widget;
 use lazy_static::__Deref;
@@ -40,7 +43,7 @@ impl InterfaceManager {
                     frame_times: vec![16.66; 15].into_iter().collect(),
                     time_of_last_update: -2.0,
                     last_frame_rate: 60.0,
-                    local_storage_ok: local_storage_get("storage_ok").is_some(),
+                    local_storage_ok: is_local_storage_enabled(),
                 };
 
                 if !new_man.local_storage_ok {
