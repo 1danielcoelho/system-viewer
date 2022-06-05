@@ -1,4 +1,4 @@
-use crate::components::light::LightType;
+use crate::components::light_component::LightType;
 use crate::managers::resource::mesh::{Primitive, PrimitiveAttribute};
 use crate::managers::resource::texture::{Texture, TextureUnit};
 use crate::managers::{details_ui::DetailsUI, resource::shaders::*};

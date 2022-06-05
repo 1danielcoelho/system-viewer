@@ -1,4 +1,4 @@
-use super::Mesh;
+use crate::managers::resource::mesh::Mesh;
 use crate::utils::raycasting::{
     aabb_ray_intersection, sphere_ray_intersection, triangle_ray_intersection, Ray,
 };

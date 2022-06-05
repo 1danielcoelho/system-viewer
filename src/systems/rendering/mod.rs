@@ -1,5 +1,5 @@
-mod rendering;
+mod rendering_system;
 mod framebuffer;
 
-pub use rendering::*;
+pub use rendering_system::*;
 pub use framebuffer::*;

@@ -1,4 +1,4 @@
-use crate::components::light::LightType;
+use crate::components::light_component::LightType;
 use crate::components::{
     KinematicComponent, LightComponent, MeshComponent, MetadataComponent, RigidBodyComponent,
     TransformComponent,

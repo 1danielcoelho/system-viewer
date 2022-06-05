@@ -1,7 +1,7 @@
-mod physics;
-mod rendering; 
-mod transform_update;
+mod physics_system;
+mod rendering;
+mod transform_update_system;
 
-pub use physics::*;
-pub use rendering::*; 
-pub use transform_update::*;
+pub use physics_system::*;
+pub use rendering::*;
+pub use transform_update_system::*;

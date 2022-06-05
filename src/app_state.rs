@@ -171,9 +171,10 @@ pub struct AppState {
     #[serde(skip)]
     pub pending_reset: bool, // Whether we want the state to be reset to default the next possible time
 
+    // Width and height of the canvas on the screen (clientWidth/clientHeight), not the resolution of the canvas,
+    // although we force these to be the same for now anyway
     #[serde(skip)]
     pub canvas_height: u32,
-
     #[serde(skip)]
     pub canvas_width: u32,
 

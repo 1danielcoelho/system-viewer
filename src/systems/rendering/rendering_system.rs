@@ -1,5 +1,5 @@
 use crate::app_state::AppState;
-use crate::components::light::LightType;
+use crate::components::light_component::LightType;
 use crate::components::{Component, MeshComponent, TransformComponent};
 use crate::managers::resource::material::{
     FrameUniformValues, Material, UniformName, UniformValue,
@@ -76,23 +76,21 @@ impl RenderingSystem {
     pub fn run(&mut self, state: &AppState, scene: &mut Scene) {
         GLCTX.with(|gl| {
             // Main pass
-            // For now draw directly to the main render target as that's faster and
-            // looks nicer as we can use the canvas' own antialiasing
-            // self.framebuffer.bind(gl);
+            self.framebuffer.bind(gl);
             let mut uniform_data = pre_draw(state, gl, scene);
             draw(gl, &mut uniform_data, scene);
             draw_points(state, gl, &mut uniform_data, scene);
             draw_skybox(state, gl, &mut uniform_data, scene);
-            // self.framebuffer.unbind(gl);
+            self.framebuffer.unbind(gl);
 
             // Blit to main render target
-            // post_draw(
-            //     state.canvas_width,
-            //     state.canvas_height,
-            //     gl,
-            //     self.blit_framebuffer_mat.as_ref(),
-            //     self.screenspace_quad.as_ref(),
-            // );
+            post_draw(
+                state.canvas_width,
+                state.canvas_height,
+                gl,
+                self.blit_framebuffer_mat.as_ref(),
+                self.screenspace_quad.as_ref(),
+            );
         });
     }
 }
