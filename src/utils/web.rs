@@ -399,6 +399,10 @@ pub fn setup_event_handlers() {
                 s.input.scroll_delta_x += event.delta_x() as i32;
                 s.input.scroll_delta_y += event.delta_y() as i32;
 
+                s.input.egui_events.push(egui::Event::Scroll {
+                    0: egui::Vec2::new(event.delta_x() as f32 * 0.5, -event.delta_y() as f32 * 0.5),
+                });
+
                 event.stop_propagation();
                 event.prevent_default();
             });

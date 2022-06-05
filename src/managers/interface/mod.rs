@@ -108,14 +108,7 @@ impl InterfaceManager {
         new_input.modifiers = state.input.modifiers;
 
         UICTX.with(|uictx| {
-            // TODO: Pointers are events now :(
-            // new_input.scroll_delta = egui::Vec2 {
-            //     x: state.input.scroll_delta_x as f32,
-            //     y: -state.input.scroll_delta_y as f32,
-            // };
-
             uictx.begin_frame(new_input);
-            // let rect = self.backend.ctx.available_rect();
 
             // Always record our new frame times
             self.frame_times.pop_back();
@@ -130,11 +123,8 @@ impl InterfaceManager {
                 self.last_frame_rate = new_frame_rate;
             }
 
-            let mut has_kb: bool = false;
-            let mut egui_consuming_pointer: bool = false;
-
-            has_kb = uictx.wants_keyboard_input();
-            egui_consuming_pointer = uictx.wants_pointer_input();
+            let has_kb: bool = uictx.wants_keyboard_input();
+            let egui_consuming_pointer: bool = uictx.wants_pointer_input();
 
             // Suppress our inputs if egui wants it instead
             {
