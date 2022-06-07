@@ -95,66 +95,40 @@ impl SceneManager {
 
             let mut need_go_to: bool = false;
 
-            // Loading previous scene from state --> Keep our state transform
-            if state.last_scene_identifier.as_str() == identifier {
-                info!(LogCat::Scene, "Loading last scene from state");
+            info!(LogCat::Scene, "Loading new scene from its defaults");
 
-                // Unpack our reference entity from its name
-                if let Some(reference_name) = &state.reference_entity_name {
-                    if let Some(found_ent) = main_scene.get_entity_from_name(&reference_name[..]) {
-                        state.next_reference_entity =
-                            Some(ReferenceChange::FocusKeepCoords(found_ent));
-
-                        debug!(
-                            LogCat::Scene,
-                            "Setting startup focused entity to '{:?}': '{}'",
-                            found_ent,
-                            reference_name
-                        );
-                    }
-                }
-
-                state.reference_entity_name = None;
+            if desc.camera_pos.is_some() && desc.camera_target.is_some() && desc.camera_up.is_some()
+            {
+                state.camera.pos = desc.camera_pos.unwrap();
+                state.camera.up = desc.camera_up.unwrap();
+                state.camera.target = desc.camera_target.unwrap();
+            } else {
+                need_go_to = true;
             }
-            // Loading a new scene from its defaults
-            else {
-                info!(LogCat::Scene, "Loading new scene from its defaults");
 
-                if desc.camera_pos.is_some()
-                    && desc.camera_target.is_some()
-                    && desc.camera_up.is_some()
-                {
-                    state.camera.pos = desc.camera_pos.unwrap();
-                    state.camera.up = desc.camera_up.unwrap();
-                    state.camera.target = desc.camera_target.unwrap();
-                } else {
-                    need_go_to = true;
-                }
+            if let Some(focus) = &desc.focus {
+                // Ugh.. this shouldn't be too often though
+                for (entity, component) in main_scene.metadata.iter() {
+                    if let Some(id) = component.get_metadata("body_id") {
+                        if id == focus {
+                            state.next_reference_entity =
+                                Some(ReferenceChange::FocusKeepCoords(*entity));
 
-                if let Some(focus) = &desc.focus {
-                    // Ugh.. this shouldn't be too often though
-                    for (entity, component) in main_scene.metadata.iter() {
-                        if let Some(id) = component.get_metadata("body_id") {
-                            if id == focus {
-                                state.next_reference_entity =
-                                    Some(ReferenceChange::FocusKeepCoords(*entity));
-
-                                if need_go_to {
-                                    state.entity_going_to = Some(*entity);
-                                }
-
-                                debug!(
-                                    LogCat::Scene,
-                                    "Setting initial focused entity to '{:?}'",
-                                    main_scene.get_entity_name(*entity)
-                                );
-                                break;
+                            if need_go_to {
+                                state.entity_going_to = Some(*entity);
                             }
+
+                            debug!(
+                                LogCat::Scene,
+                                "Setting initial focused entity to '{:?}'",
+                                main_scene.get_entity_name(*entity)
+                            );
+                            break;
                         }
                     }
-                } else {
-                    state.next_reference_entity = Some(ReferenceChange::Clear);
                 }
+            } else {
+                state.next_reference_entity = Some(ReferenceChange::Clear);
             }
 
             // TODO: Proper handling of time (would involve rolling simulation/orbits forward/back

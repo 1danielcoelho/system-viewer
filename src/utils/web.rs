@@ -1,3 +1,4 @@
+use crate::utils::log::*;
 use crate::{app_state::AppState, STATE};
 use crate::{app_state::ButtonState, wasm_bindgen::JsCast};
 use js_sys::{ArrayBuffer, Uint8Array};
@@ -48,14 +49,18 @@ pub async fn request_text(url: &str) -> Result<String, JsValue> {
 
     let request = Request::new_with_str_and_init(url, &opts)?;
 
+    debug!(LogCat::Io, "Created request for {url}");
     let resp_value = JsFuture::from(get_window().fetch_with_request(&request)).await?;
+    debug!(LogCat::Io, "Finished awaiting request for {url}");
 
     // `resp_value` is a `Response` object.
     assert!(resp_value.is_instance_of::<Response>());
     let resp: Response = resp_value.dyn_into().unwrap();
 
     // Convert this other `Promise` into a rust `Future`.
+    debug!(LogCat::Io, "Started converting request {url} into text");
     let text = JsFuture::from(resp.text()?).await?.as_string().unwrap();
+    debug!(LogCat::Io, "Finished awaiting request {url} into text");
     return Ok(text);
 }
 

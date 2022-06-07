@@ -133,7 +133,6 @@ pub struct AppState {
 
     #[serde(skip)]
     pub reference_entity: Option<Entity>, // If this is Some, our pos/up/target are wrt. reference_translation
-    pub reference_entity_name: Option<String>, // Only used when serializing reference_entity, as actual Entity ids are not expected to be consistent
 
     #[serde(skip)]
     pub reference_translation: Option<Vector3<f64>>,
@@ -191,7 +190,6 @@ impl AppState {
                 p_inv: Matrix4::identity(),
             },
             reference_entity: None,
-            reference_entity_name: None,
             reference_translation: None,
             next_reference_entity: None,
             entity_going_to: None,

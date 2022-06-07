@@ -44,11 +44,6 @@ pub fn main_js() {
 
 #[wasm_bindgen]
 pub async fn start() -> Result<(), JsValue> {
-    info!(LogCat::Engine, "{}", "Engine info");
-    debug!(LogCat::Io, "Io debug msg");
-    info!(LogCat::Resources, "{:?}", Some("you shouldnt see me"));
-    error!(LogCat::Engine, "Here's what an error looks like: {}", 5);
-
     info!(LogCat::Engine, "Initializing state...");
     STATE.with(|s| {
         let mut s = s.borrow_mut();
@@ -58,78 +53,91 @@ pub async fn start() -> Result<(), JsValue> {
     info!(LogCat::Engine, "Setting up events...");
     setup_event_handlers();
 
-    info!(LogCat::Engine, "Initializing WebGl rendering context...");
-    // GLCTX.with(|gl| {
-    //     let mut gl = gl.borrow_mut();
-    //     gl.replace(get_gl_context());
-    // });
-
     info!(LogCat::Engine, "Initializing engine...");
     ENGINE.with(|e| {
         let mut e = e.borrow_mut();
         e.replace(Engine::new());
     });
 
-    // TODO: Actually request all asset types at the same time
-    let body_databases = vec![
-        "public/database/artificial.json",
-        "public/database/asteroids.json",
-        "public/database/comets.json",
-        "public/database/jovian_satellites.json",
-        "public/database/major_bodies.json",
-        "public/database/other_satellites.json",
-        "public/database/saturnian_satellites.json",
+    #[derive(Copy, Clone)]
+    enum AssetType {
+        BodyDatabase,
+        Scene,
+        StateVectors,
+        OscElements,
+    }
+    struct AssetRequest(&'static str, AssetType);
+    let requests = vec![
+        AssetRequest("public/database/artificial.json", AssetType::BodyDatabase),
+        AssetRequest("public/database/asteroids.json", AssetType::BodyDatabase),
+        AssetRequest("public/database/comets.json", AssetType::BodyDatabase),
+        AssetRequest(
+            "public/database/jovian_satellites.json",
+            AssetType::BodyDatabase,
+        ),
+        AssetRequest("public/database/major_bodies.json", AssetType::BodyDatabase),
+        AssetRequest(
+            "public/database/other_satellites.json",
+            AssetType::BodyDatabase,
+        ),
+        AssetRequest(
+            "public/database/saturnian_satellites.json",
+            AssetType::BodyDatabase,
+        ),
+        AssetRequest(
+            "public/database/state_vectors.json",
+            AssetType::StateVectors,
+        ),
+        AssetRequest("public/database/osc_elements.json", AssetType::OscElements),
+        AssetRequest("public/scenes/earth_centric.ron", AssetType::Scene),
+        AssetRequest("public/scenes/full_solar_system.ron", AssetType::Scene),
+        AssetRequest("public/scenes/gltf_test.ron", AssetType::Scene),
+        AssetRequest("public/scenes/light_test.ron", AssetType::Scene),
+        AssetRequest("public/scenes/planet_line_up.ron", AssetType::Scene),
+        AssetRequest("public/scenes/planets_and_satellites.ron", AssetType::Scene),
     ];
-    let body_database_results: Vec<String> =
-        join_all(body_databases.iter().map(|url| request_text(url)))
-            .await
-            .into_iter()
-            .collect::<Result<Vec<String>, JsValue>>()
-            .unwrap();
+    struct AssetResponse {
+        url: &'static str,
+        data: String,
+        asset_type: AssetType,
+    }
 
-    let state_vector_url = "public/database/state_vectors.json";
-    let state_vector_text = request_text(state_vector_url).await?;
+    let promises = join_all(requests.iter().map(|ar| async move {
+        match request_text(ar.0).await {
+            Ok(res) => Ok(AssetResponse {
+                url: ar.0,
+                data: res,
+                asset_type: ar.1,
+            }),
+            Err(err) => Err(err),
+        }
+    }));
 
-    let osc_elements_url = "public/database/osc_elements.json";
-    let osc_elements_text = request_text(osc_elements_url).await?;
-
-    let scenes = vec![
-        "public/scenes/earth_centric.ron",
-        "public/scenes/full_solar_system.ron",
-        "public/scenes/gltf_test.ron",
-        "public/scenes/light_test.ron",
-        "public/scenes/planet_line_up.ron",
-        "public/scenes/planets_and_satellites.ron",
-    ];
-    let scene_results: Vec<String> = join_all(scenes.iter().map(|url| request_text(url)))
+    let results: Vec<AssetResponse> = promises
         .await
         .into_iter()
-        .collect::<Result<Vec<String>, JsValue>>()
+        .collect::<Result<Vec<AssetResponse>, JsValue>>()
         .unwrap();
 
     ENGINE.with(|e| {
         let mut ref_mut = e.borrow_mut();
         let e = ref_mut.as_mut().unwrap();
 
-        for it in body_databases.iter().zip(body_database_results.iter()) {
-            let (url, text) = it;
-            e.receive_text(url, "body_database", text.as_str());
-        }
-
-        e.receive_text(
-            state_vector_url,
-            "vectors_database",
-            state_vector_text.as_str(),
-        );
-        e.receive_text(
-            osc_elements_url,
-            "elements_database",
-            osc_elements_text.as_str(),
-        );
-
-        for it in scenes.iter().zip(scene_results.iter()) {
-            let (url, text) = it;
-            e.receive_text(url, "scene", text.as_str());
+        for resp in results.iter() {
+            match resp.asset_type {
+                AssetType::BodyDatabase => {
+                    e.receive_text(resp.url, "body_database", resp.data.as_str());
+                }
+                AssetType::Scene => {
+                    e.receive_text(resp.url, "scene", resp.data.as_str());
+                }
+                AssetType::StateVectors => {
+                    e.receive_text(resp.url, "vectors_database", resp.data.as_str());
+                }
+                AssetType::OscElements => {
+                    e.receive_text(resp.url, "elements_database", resp.data.as_str());
+                }
+            }
         }
 
         e.try_loading_last_scene();
