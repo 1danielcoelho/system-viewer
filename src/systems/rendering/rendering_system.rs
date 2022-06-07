@@ -45,6 +45,7 @@ impl RenderingSystem {
         });
 
         // Fetch resources we'll need for our render passes
+        // TODO: Get rid of this
         let screenspace_quad = res_man.get_or_create_mesh("quad");
         let blit_framebuffer_mat =
             res_man.instantiate_material("default_screenspace", "default_screenspace");

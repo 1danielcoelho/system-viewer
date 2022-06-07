@@ -8,7 +8,7 @@ use crate::utils::log::*;
 use crate::utils::raycasting::{raycast, Ray};
 use crate::utils::units::{julian_date_number_to_date, Jdn, J2000_JDN};
 use crate::utils::web::{
-    get_window, is_local_storage_enabled, local_storage_clear, local_storage_enable,
+    get_document, is_local_storage_enabled, local_storage_clear, local_storage_enable,
     local_storage_get,
 };
 use crate::{GLCTX, UICTX};
@@ -102,8 +102,7 @@ impl InterfaceManager {
 
         // If we have pointer lock then we don't really want to use the UI (we're rotating/orbiting/etc.)
         // so don't give the updated mouse position to egui
-        let window = get_window();
-        let doc = window.document().unwrap(); // TODO: Make a get_document?
+        let doc = get_document();
         if let None = doc.pointer_lock_element() {
             new_input.events.append(&mut state.input.egui_events);
         }

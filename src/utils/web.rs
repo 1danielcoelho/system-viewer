@@ -23,6 +23,10 @@ pub fn get_window() -> web_sys::Window {
     web_sys::window().expect("no global `window` exists")
 }
 
+pub fn get_document() -> web_sys::Document {
+    get_window().document().unwrap()
+}
+
 pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
     get_window()
         .request_animation_frame(f.as_ref().unchecked_ref())
