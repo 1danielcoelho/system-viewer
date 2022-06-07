@@ -171,7 +171,7 @@ impl InterfaceManager {
         state: &mut AppState,
         scene_man: &mut SceneManager,
         res_man: &mut ResourceManager,
-        orbit_man: &OrbitManager, // TODO: This shouldn't be done this way, man
+        orbit_man: &OrbitManager,
     ) {
         self.draw_main_ui(state, scene_man, res_man, orbit_man);
 
@@ -180,7 +180,6 @@ impl InterfaceManager {
 
             let clipped_primitives = uictx.tessellate(output.shapes);
 
-            // TODO: pixels_per_point
             self.painter.paint_and_update_textures(
                 [state.canvas_width, state.canvas_height],
                 state.pixels_per_point,
