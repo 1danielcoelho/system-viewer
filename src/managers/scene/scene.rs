@@ -45,6 +45,7 @@ pub struct Scene {
 
     // Not sure where these should be. I think once I expand the rendering capabilities
     // to add shadows, multiple passes and stuff it will become more clear
+    // TODO: Need to put these on the resource manager maybe? Or just have some type of skybox/points components
     pub skybox_trans: Option<Matrix4<f64>>,
     pub skybox_mesh: Option<Rc<RefCell<Mesh>>>,
     pub skybox_mat: Option<Rc<RefCell<Material>>>,

@@ -586,7 +586,7 @@ impl InterfaceManager {
 
                 // I think there should be a much simpler way of finding the label position using trig,
                 // but I couldn't do it without trashing precision
-                // TODO: Use last_drawn_position or whatever it is used to draw points to draw this
+                // TODO: Use last_ndc_position or whatever it is used to draw points to draw this
                 let scale = (trans.scale.x + trans.scale.y + trans.scale.z) / 3.0;
                 let mut obj_to_cam = cam_pos - Point3::from(trans.trans);
                 let distance = obj_to_cam.magnitude();
