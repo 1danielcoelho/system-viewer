@@ -1,5 +1,4 @@
 use crate::components::Component;
-use crate::managers::scene::component_storage::ComponentStorage;
 use crate::managers::{details_ui::DetailsUI, scene::Scene};
 use crate::utils::transform::Transform;
 use na::{Matrix3, Vector3};
@@ -8,7 +7,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RigidBodyComponent {
-    enabled: bool,
     pub collision_enabled: bool,
 
     // Constants
@@ -40,7 +38,6 @@ impl RigidBodyComponent {
 impl Default for RigidBodyComponent {
     fn default() -> Self {
         return Self {
-            enabled: false,
             collision_enabled: false,
             mass: 1.0,
             inv_inertia: Matrix3::identity(),
@@ -54,22 +51,8 @@ impl Default for RigidBodyComponent {
 }
 
 impl Component for RigidBodyComponent {
-    type ComponentType = RigidBodyComponent;
-
-    fn set_enabled(&mut self, enabled: bool) {
-        self.enabled = enabled;
-    }
-
-    fn get_enabled(&self) -> bool {
-        return self.enabled;
-    }
-
-    fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&scene.rigidbody);
-    }
-
-    fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&mut scene.rigidbody);
+    fn get_component_type() -> u64 {
+        2
     }
 }
 

@@ -4,9 +4,7 @@ use crate::components::{
 };
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
-use crate::managers::scene::component_storage::{
-    ComponentStorage, HashStorage, PackedStorage, SparseStorage,
-};
+
 use crate::utils::log::*;
 use na::*;
 use serde::{Deserialize, Serialize};
@@ -24,6 +22,37 @@ impl PartialEq for Entity {
     }
 }
 
+pub struct EntityBuilder {
+    pub name: String,
+    pub parent: Option<Entity>,
+    components: HashMap<u64, Box<dyn Component>>,
+}
+impl EntityBuilder {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            parent: None,
+            components: HashMap::new(),
+        }
+    }
+
+    pub fn set_parent(&mut self, parent: Option<Entity>) -> &mut Self {
+        self.parent = parent;
+        self
+    }
+
+    pub fn add_component<T: Component>(&mut self) -> &mut impl Component {
+        self.components
+            .try_insert(T::get_component_type(), Box::new(T::new()))
+            .unwrap()
+    }
+}
+
+pub struct ComponentGroup {
+    entity_to_index: HashMap<Entity, u32>, // Something like this
+    pub storage: anymap::AnyMap,
+}
+
 #[derive(Clone)]
 pub struct EntityEntry {
     pub live: bool,
@@ -32,6 +61,7 @@ pub struct EntityEntry {
     pub name: Option<String>,
     pub parent: Option<Entity>,
     pub children: Vec<Entity>,
+    pub components: u64, // These are flags
 }
 
 #[derive(Clone)]
@@ -52,14 +82,7 @@ pub struct Scene {
     pub points_mesh: Option<Rc<RefCell<Mesh>>>,
     pub points_mat: Option<Rc<RefCell<Material>>>,
 
-    // Until there is a proper way to split member borrows in Rust I think
-    // hard-coding the component types in here is the simplest way of doing things, sadly
-    pub rigidbody: PackedStorage<RigidBodyComponent>,
-    pub kinematic: PackedStorage<KinematicComponent>,
-    pub mesh: SparseStorage<MeshComponent>,
-    pub transform: SparseStorage<TransformComponent>,
-    pub light: HashStorage<LightComponent>,
-    pub metadata: HashStorage<MetadataComponent>,
+    component_groups: HashMap<u64, ComponentGroup>,
 }
 
 // Main interface
@@ -80,80 +103,12 @@ impl Scene {
             points_mesh: None,
             points_mat: None,
 
-            rigidbody: PackedStorage::new(),
-            kinematic: PackedStorage::new(),
-            mesh: SparseStorage::new(entity_to_index.clone()),
-            transform: SparseStorage::new(entity_to_index.clone()),
-            light: HashStorage::new(),
-            metadata: HashStorage::new(),
+            component_groups: HashMap::new(),
         }
     }
 
     pub fn get_entity_entries(&self) -> &Vec<EntityEntry> {
         return &self.entity_storage;
-    }
-
-    /** Used when injecting scenes into eachother */
-    // TODO: Remove all of this stuff what was I even thinking
-    pub fn move_from_other(&mut self, other_man: Self) {
-        // Better off going one by one, as trying to find a block large enough to fit other_man at once may be too slow,
-        // and reallocating a new block every time would lead to unbounded memory usage. This way we also promote entity
-        // packing
-
-        debug!(LogCat::Scene, "Moving from other");
-
-        // Allocate new entities, keep an array of their newly allocated indices
-        let num_other_ents = other_man.get_num_entities();
-        self.reserve_space_for_entities(num_other_ents);
-
-        // Create mapping... maps
-        let mut other_index_to_new_index: Vec<u32> = Vec::new();
-        let mut other_ent_to_new_ent: HashMap<Entity, Entity> = HashMap::new();
-        {
-            let mut other_index_to_new_ent: Vec<Entity> = Vec::new();
-            other_index_to_new_index.resize(num_other_ents as usize, 0);
-            other_index_to_new_ent.resize(num_other_ents as usize, Entity(0));
-
-            for other_index in 0..num_other_ents {
-                let other_name = other_man.get_entity_from_index(other_index).unwrap();
-                let new_ent = self.new_entity(other_man.get_entity_name(other_name));
-                other_index_to_new_index[other_index as usize] =
-                    self.entity_to_index.borrow()[&new_ent];
-                other_index_to_new_ent[other_index as usize] = new_ent;
-            }
-
-            for (other_ent, other_index) in other_man.entity_to_index.borrow().iter() {
-                other_ent_to_new_ent
-                    .insert(*other_ent, other_index_to_new_ent[*other_index as usize]);
-            }
-        }
-
-        // Replicate parent-child relationships
-        for other_index in 0..num_other_ents {
-            if let Some(other_parent_index) = other_man.get_parent_index_from_index(other_index) {
-                let new_index = other_index_to_new_index[other_index as usize];
-                let new_parent_index = other_index_to_new_index[other_parent_index as usize];
-
-                // TODO: This could be optimized
-                let child_ent = self.get_entity_from_index(new_index).unwrap();
-                let parent_ent = self.get_entity_from_index(new_parent_index).unwrap();
-                self.set_entity_parent(parent_ent, child_ent);
-            }
-        }
-
-        // Move component data over
-        self.kinematic
-            .move_from_other(other_man.kinematic, &other_ent_to_new_ent);
-        self.rigidbody
-            .move_from_other(other_man.rigidbody, &other_ent_to_new_ent);
-        self.mesh
-            .move_from_other(other_man.mesh, &other_index_to_new_index);
-        self.transform
-            .move_from_other(other_man.transform, &other_index_to_new_index);
-        self.light
-            .move_from_other(other_man.light, &other_ent_to_new_ent);
-
-        // TODO: Update entity references in components
     }
 }
 
@@ -190,6 +145,7 @@ impl Scene {
                     current: Entity(0),
                     parent: None,
                     children: Vec::new(),
+                    components: 0,
                 },
             );
         }
@@ -215,15 +171,19 @@ impl Scene {
         return new_entry.current;
     }
 
-    // Returns a new Entity. It may occupy an existing, vacant spot or be a brand new
-    // reallocation. Repeatedly calling this always returns entities with increasing indices
-    pub fn new_entity(&mut self, name: Option<&str>) -> Entity {
+    pub fn start_new_entity(&mut self, name: &str) -> EntityBuilder {
+        EntityBuilder::new(name)
+    }
+
+    pub fn finish_new_entity(&mut self, builder: EntityBuilder) -> Entity {
         let target_index = match self.free_indices.pop() {
             Some(Reverse { 0: vacant_index }) => vacant_index,
             None => self.entity_storage.len() as u32,
         };
 
-        return self.new_entity_at_index(target_index, name);
+        let new_ent = self.new_entity_at_index(target_index, builder.name);
+
+        new_ent
     }
 
     pub fn get_entity_name(&self, entity: Entity) -> Option<&str> {
@@ -536,6 +496,10 @@ impl Scene {
 
 // Component interface
 impl Scene {
+    pub fn is_component_enabled<T: Component>(&self, entity: Entity) -> bool {
+        self.get_entity_entry(entity).unwrap().components & T::get_component_type() != 0
+    }
+
     pub fn get_component<T>(&self, entity: Entity) -> Option<&T>
     where
         T: Component<ComponentType = T>,

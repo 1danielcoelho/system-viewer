@@ -1,13 +1,10 @@
 use crate::components::Component;
-use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::{details_ui::DetailsUI, scene::Scene};
+use crate::managers::details_ui::DetailsUI;
 use na::Vector3;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KinematicComponent {
-    enabled: bool,
-
     pub lin_vel: Vector3<f64>, // Mm/s
     pub ang_vel: Vector3<f64>, // rad/s
 }
@@ -22,7 +19,6 @@ impl KinematicComponent {
 impl Default for KinematicComponent {
     fn default() -> Self {
         return Self {
-            enabled: false,
             lin_vel: Vector3::new(0.0, 0.0, 0.0),
             ang_vel: Vector3::new(0.0, 0.0, 0.0),
         };
@@ -30,22 +26,8 @@ impl Default for KinematicComponent {
 }
 
 impl Component for KinematicComponent {
-    type ComponentType = KinematicComponent;
-
-    fn set_enabled(&mut self, enabled: bool) {
-        self.enabled = enabled;
-    }
-
-    fn get_enabled(&self) -> bool {
-        return self.enabled;
-    }
-
-    fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&scene.kinematic);
-    }
-
-    fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&mut scene.kinematic);
+    fn get_component_type() -> u64 {
+        32
     }
 }
 

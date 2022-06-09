@@ -1,7 +1,5 @@
 use crate::components::Component;
 use crate::managers::details_ui::DetailsUI;
-use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::scene::Scene;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default)]
@@ -28,20 +26,8 @@ impl MetadataComponent {
 }
 
 impl Component for MetadataComponent {
-    type ComponentType = MetadataComponent;
-
-    fn set_enabled(&mut self, _enabled: bool) {}
-
-    fn get_enabled(&self) -> bool {
-        return true;
-    }
-
-    fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&scene.metadata);
-    }
-
-    fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&mut scene.metadata);
+    fn get_component_type() -> u64 {
+        4
     }
 }
 

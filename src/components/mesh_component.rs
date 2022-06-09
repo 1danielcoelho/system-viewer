@@ -2,16 +2,12 @@ use super::Component;
 use crate::managers::details_ui::DetailsUI;
 use crate::managers::resource::material::Material;
 use crate::managers::resource::mesh::Mesh;
-use crate::managers::scene::component_storage::ComponentStorage;
-use crate::managers::scene::Scene;
 use egui::Ui;
 use na::*;
 use std::{cell::RefCell, rc::Rc};
 
 #[derive(Debug, Clone)]
 pub struct MeshComponent {
-    enabled: bool,
-
     // Keep track of where we were last drawn so that we can easily drawn a point
     // on this position later
     pub last_ndc_position: Vector4<f32>,
@@ -81,7 +77,6 @@ impl MeshComponent {
 impl Default for MeshComponent {
     fn default() -> Self {
         return Self {
-            enabled: false,
             last_ndc_position: Vector4::new(0.0, 0.0, 0.0, 1.0),
             raycasting_visible: true,
             visible: true,
@@ -92,22 +87,8 @@ impl Default for MeshComponent {
 }
 
 impl Component for MeshComponent {
-    type ComponentType = MeshComponent;
-
-    fn set_enabled(&mut self, enabled: bool) {
-        self.enabled = enabled;
-    }
-
-    fn get_enabled(&self) -> bool {
-        return self.enabled;
-    }
-
-    fn get_storage(scene: &Scene) -> Box<&dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&scene.mesh);
-    }
-
-    fn get_storage_mut(scene: &mut Scene) -> Box<&mut dyn ComponentStorage<Self::ComponentType>> {
-        return Box::new(&mut scene.mesh);
+    fn get_component_type() -> u64 {
+        8
     }
 }
 
